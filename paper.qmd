@@ -292,9 +292,9 @@ Outputs:
 - challenger EV curves vs $p$ and $S/B$
 - false-claim survival vs $p$ and challenger effort
 
-![](analysis/fig/e1_challenger_ev.png){fig-cap="E1: Challenger expected value (EV) on false claims as juror accuracy varies."}
+![E1: Challenger expected value (EV) on false claims as juror accuracy varies.](analysis/fig/e1_challenger_ev.png)
 
-![](analysis/fig/e1_false_survival.png){fig-cap="E1: False-claim survival probability after a single challenge window."}
+![E1: False-claim survival probability after a single challenge window.](analysis/fig/e1_false_survival.png)
 
 ### E2: relevance coherence game (robustness + $K$ sensitivity)
 
@@ -315,9 +315,9 @@ Outputs:
 - relevance signal error vs fraction competent and $K$
 - incompetent stake share over rounds (competence filter)
 
-![](analysis/fig/e2_relevance_error.png){fig-cap="E2: Mean relevance error vs fraction competent, across coherence thresholds K."}
+![E2: Mean relevance error vs fraction competent, across coherence thresholds K.](analysis/fig/e2_relevance_error.png)
 
-![](analysis/fig/e2_competence_filter.png){fig-cap="E2: Competence filter: final competent stake share (K=1.25)."}
+![E2: Competence filter: final competent stake share (K=1.25).](analysis/fig/e2_competence_filter.png)
 
 ### E3: ambiguity stress test (templates + Under-specified)
 
@@ -328,7 +328,7 @@ Outputs:
 - wrong-resolution rate on ambiguous claims (baseline vs defended)
 - overall error impact as ambiguity prevalence varies
 
-![](analysis/fig/e3_ambiguity.png){fig-cap="E3: Overall wrong-resolution rate as ambiguity prevalence increases (baseline vs defended)."}
+![E3: Overall wrong-resolution rate as ambiguity prevalence increases (baseline vs defended).](analysis/fig/e3_ambiguity.png)
 
 ## Reproducibility
 
