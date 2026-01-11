@@ -1,29 +1,63 @@
-/* Editorial reading polish for Quarto HTML.
-   Target: paper.qmd rendered with embed-resources enabled. */
+/* Match Prove Us Wrong visual character (proveuswrong.io).
+   Keep Quarto output self-contained except for Google Fonts import. */
 
-/* Typography */
+@import url("https://fonts.googleapis.com/css2?family=Monoton&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+
+:root {
+  --puw-bg: #171717;
+  --puw-fg: #ececec;
+  --puw-muted: #727272;
+  --puw-muted-2: #666666;
+  --puw-accent: #ff355e;
+  --puw-accent-2: #827bd3;
+  --puw-accent-3: #90eed0;
+
+  --puw-surface: #1f1f1f;
+  --puw-border: rgba(236, 236, 236, 0.18);
+  --puw-border-strong: rgba(236, 236, 236, 0.32);
+}
+
+html {
+  font-size: 16px;
+}
+
 body {
-  font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  font-size: 18px;
-  line-height: 1.7;
+  background-color: var(--puw-bg) !important;
+  color: var(--puw-fg);
+  margin: 0;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
-    "Apple Color Emoji", "Segoe UI Emoji";
-  letter-spacing: -0.01em;
+/* Apply the site’s mono character broadly (but keep icons intact). */
+body a,
+body button,
+body h1,
+body h2,
+body h3,
+body h4,
+body h5,
+body h6,
+body li,
+body nav,
+body p,
+body small,
+body span,
+body td,
+body th {
+  font-family: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
 }
 
-/* Make section numbers less visually dominant */
+/* Title block */
+h1.title {
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+/* De-emphasize section numbers */
 .header-section-number {
-  opacity: 0.55;
+  color: var(--puw-muted);
   font-weight: 400;
   font-variant-numeric: tabular-nums;
 }
@@ -31,29 +65,31 @@ h6 {
 /* Paragraph rhythm */
 main.content p {
   margin-bottom: 0.95rem;
+  line-height: 1.75;
 }
 
-/* Lists */
-main.content ul,
-main.content ol {
-  margin-bottom: 1rem;
-}
-
-main.content li + li {
-  margin-top: 0.2rem;
-}
-
-main.content ul ul,
-main.content ol ol,
-main.content ul ol,
-main.content ol ul {
-  margin-top: 0.35rem;
-}
-
-/* Links: keep them readable but not shouty */
+/* Links: PUW-style underline + accent hover */
 main.content a {
-  text-decoration-thickness: 0.08em;
+  color: var(--puw-fg);
+  text-decoration: underline;
+  text-decoration-color: transparent;
   text-underline-offset: 0.18em;
+  text-decoration-thickness: 0.08em;
+}
+
+main.content a:hover {
+  color: var(--puw-accent);
+  text-decoration-color: var(--puw-fg);
+  transition: text-decoration-color 0.6s ease !important;
+}
+
+/* Heading spacing */
+h1,
+h2,
+h3 {
+  margin-top: 1.6rem;
+  margin-bottom: 0.65rem;
+  font-weight: 400;
 }
 
 /* Figures */
@@ -65,12 +101,17 @@ figcaption {
   margin-top: 0.6rem;
   font-size: 0.95rem;
   line-height: 1.35;
-  opacity: 0.85;
+  color: var(--puw-muted);
 }
 
 /* Tables */
 table {
   font-size: 0.95rem;
+}
+
+table th,
+table td {
+  border-color: var(--puw-border) !important;
 }
 
 @media (max-width: 768px) {
@@ -84,28 +125,68 @@ table {
 /* Code */
 code {
   font-size: 0.95em;
+  color: var(--puw-fg);
+  background: rgba(236, 236, 236, 0.08);
+  padding: 0.1em 0.35em;
+  border-radius: 6px;
+}
+
+pre {
+  background: #111 !important;
+  border: 1px solid var(--puw-border);
+  border-radius: 12px;
+  padding: 1rem;
 }
 
 pre code {
-  font-size: 0.9em;
+  background: transparent;
+  padding: 0;
 }
 
 /* Callouts */
 .callout {
+  background: var(--puw-surface);
+  border: 1px solid var(--puw-border);
   border-radius: 12px;
 }
 
-.callout .callout-title-container {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
-    "Apple Color Emoji", "Segoe UI Emoji";
+.callout.callout-note {
+  border-left: 4px solid var(--puw-accent-2);
+}
+
+.callout.callout-warning {
+  border-left: 4px solid var(--puw-accent);
 }
 
 /* TOC usability */
+#quarto-margin-sidebar {
+  border-left: 1px solid var(--puw-border);
+}
+
 #quarto-margin-sidebar #TOC {
   font-size: 0.95rem;
   line-height: 1.35;
   max-height: calc(100vh - 4rem);
   overflow-y: auto;
   padding-right: 0.5rem;
+}
+
+/* Avoid broken links on Cloudflare publish (we only publish index.html). */
+.quarto-alternate-formats {
+  display: none;
+}
+
+/* Anchor navigation glow (proveuswrong.io-like) */
+@keyframes puwGlow {
+  0% {
+    color: var(--puw-accent);
+  }
+  100% {
+    color: var(--puw-fg);
+  }
+}
+
+:target {
+  animation: puwGlow 3s ease-in;
 }
 

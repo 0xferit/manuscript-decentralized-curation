@@ -8,7 +8,7 @@ format:
   html:
     output-file: paper
     embed-resources: true
-    theme: litera
+    theme: darkly
     css: styles.css
     page-layout: article
     grid:
