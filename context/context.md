@@ -40,4 +40,5 @@
 - `legacy/*_21699486*` artifacts are the **last released** snapshot/export (pre-Quarto) and may lag the master.
 - Next release step (when desired): generate a new `<hash>` snapshot + matching HTML export from the updated master, then update the two artifact pointers above.
 - Quarto path (new): install Quarto + render `my new version.md` to `outputs/` (HTML/PDF/DOCX) from the single source.
+- Continuous publish (HTML): commits to `main` are rendered to `outputs/paper.html` and published to the `cf-pages` branch as `public/index.html` (for Cloudflare Pages).
 

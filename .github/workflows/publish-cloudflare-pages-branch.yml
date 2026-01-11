@@ -1,0 +1,63 @@
+name: Publish HTML (Cloudflare Pages branch)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "publish"
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render HTML
+        run: quarto render "my new version.md" --to html
+
+      - name: Stage publish content
+        run: |
+          mkdir -p /tmp/cf-public
+          cp "outputs/paper.html" "/tmp/cf-public/index.html"
+
+      - name: Publish to cf-pages branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin cf-pages:cf-pages || true
+
+          if git show-ref --verify --quiet refs/heads/cf-pages; then
+            git checkout cf-pages
+          else
+            git checkout --orphan cf-pages
+          fi
+
+          git rm -rf . || true
+          git clean -fdx || true
+
+          mkdir -p public
+          cp "/tmp/cf-public/index.html" "public/index.html"
+
+          git add public/index.html
+
+          if git diff --cached --quiet; then
+            echo "No changes to publish."
+            exit 0
+          fi
+
+          git commit -m "chore(publish): update site"
+          git push origin cf-pages
+

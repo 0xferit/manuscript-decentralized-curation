@@ -23,6 +23,7 @@ This project is a Markdown workspace for a multi-part article series on the info
 - If you cut a release, follow the “Release procedure (hash-versioned)” in `README.md`, then update `context/context.md` to point to the latest release.
 - Do not assume “today’s date” inside the manuscript; verify if a claim depends on currentness.
 - Prefer rendering via Quarto (`quarto render`) so outputs stay consistent across formats.
+- Publishing: commits to `main` trigger HTML publish to the `cf-pages` branch (see `README.md`).
 
 ### Writing constraints (default)
 

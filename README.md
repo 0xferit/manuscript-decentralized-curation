@@ -31,6 +31,27 @@ Outputs are written to `outputs/` and currently standardized as:
 - `outputs/paper.pdf`
 - `outputs/paper.docx`
 
+## Publish procedure (every commit → HTML)
+
+We publish the latest manuscript HTML on every commit to `main`, using **Cloudflare Pages**.
+
+### One-time setup (Cloudflare Pages)
+
+In Cloudflare Pages, connect this repository and configure:
+
+- **Production branch:** `cf-pages`
+- **Build command:** `exit 0`
+- **Build output directory:** `public`
+
+### Ongoing workflow
+
+1. Make changes to `my new version.md`
+2. Commit + push to `main`
+3. GitHub Actions renders HTML and updates the `cf-pages` branch (`public/index.html`)
+4. Cloudflare Pages deploys the updated `cf-pages` branch
+
+The publishing workflow file is: `.github/workflows/publish-cloudflare-pages-branch.yml`
+
 ## License
 
 - **Manuscript (text/figures):** CC BY 4.0 (attribution required). See `LICENSE`.
@@ -62,7 +83,6 @@ Do not edit the manuscript between steps (1) and (2).
 mkdir -p "releases/<hash>"
 cp "my new version.md" "releases/<hash>/my new version.md"
 cp "outputs/paper.html" "releases/<hash>/paper.html"
-cp -R "outputs/paper_files" "releases/<hash>/paper_files"
 cp "outputs/paper.docx" "releases/<hash>/paper.docx"
 cp "outputs/paper.pdf" "releases/<hash>/paper.pdf"
 cp "_quarto.yml" "releases/<hash>/_quarto.yml"
