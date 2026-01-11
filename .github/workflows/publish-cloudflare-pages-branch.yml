@@ -54,6 +54,9 @@ jobs:
           mkdir -p /tmp/cf-public
           cp "outputs/paper.html" "/tmp/cf-public/index.html"
 
+      - name: Restore working tree for branch switch
+        run: git restore "_build-info.md"
+
       - name: Publish to cf-pages branch
         run: |
           git fetch origin cf-pages:cf-pages || true
