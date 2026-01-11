@@ -14,6 +14,7 @@
 - `analysis/run_all.py` — simulations + figure generation (E1–E3).
 - `requirements.txt` — pinned Python dependencies for evaluation.
 - `_quarto.yml` — Quarto render configuration (single-source, multi-format).
+- `styles.css` — custom CSS for the HTML output (embedded into `outputs/paper.html`).
 - `references.bib` — bibliography for Quarto/Pandoc citations.
 - `legacy/decentralized-curation-series-in-7-articles_21699486.md` — last released snapshot of the manuscript (pre-Quarto).
 - `legacy/Decentralized_Curation_7_Part_Series_21699486.html` — reader-mode-friendly HTML built from that released snapshot (pre-Quarto).
@@ -39,6 +40,7 @@
 - Paper source (`paper.qmd`) is now paper-structured (Abstract → Conclusion + Appendix) and includes an explicit Related Work section with BibTeX-backed citations.
 - Evaluation is implemented as deterministic simulations (E1–E3) that generate figures and a short in-paper summary via `analysis/run_all.py`.
 - Incorporated thesis-style critique fixes: explicitly frames outputs as **stake-weighted signals** (not philosophical knowledge), expands **Vagueness = Rejection** into a formal claim-schema section, adds commit–reveal/bribery limitations, and strengthens the Limitations section with citations.
+- HTML is styled for a more editorial reading experience via `_quarto.yml` (Bootswatch theme + grid) and `styles.css` (typography, spacing, callouts, figures/tables).
 - `legacy/*_21699486*` artifacts are the **last released** snapshot/export (pre-Quarto) and may lag the master.
 - Quarto path (new): install Quarto + render `paper.qmd` to `outputs/` (HTML/PDF/DOCX) from the single source.
 - Continuous publish (HTML): commits to `main` run simulations, render `outputs/paper.html`, and publish to `cf-pages` as `public/index.html` (for Cloudflare Pages).

@@ -34,6 +34,19 @@ Outputs are written to `outputs/` and currently standardized as:
 - `outputs/paper.pdf`
 - `outputs/paper.docx`
 
+## Styling (HTML)
+
+- **Theme + layout:** `_quarto.yml` → `format.html` (Bootswatch theme, grid, TOC).
+- **Custom CSS:** `styles.css` (typography, spacing, callouts, figures/tables).
+
+To preview styling changes locally:
+
+```bash
+python3 analysis/run_all.py
+quarto render --to html
+open "outputs/paper.html"
+```
+
 ## Publish procedure (every commit → HTML)
 
 We publish the latest manuscript HTML on every commit to `main`, using **Cloudflare Pages**.

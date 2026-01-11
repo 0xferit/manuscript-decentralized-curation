@@ -124,11 +124,19 @@ Academic and socio-legal critique of cryptoeconomic courts emphasizes the same c
 
 The unit of curation is not “a post.” It is a **claim** with enough structure to be adjudicated.
 
+::: {.callout-note title="Definition: Claim"}
+A **claim** is a single proposition plus enough scope and an explicit resolution policy so that an independent third party can decide Valid/Invalid/Under-specified without guessing hidden assumptions.
+:::
+
 - **Claim**: statement + scope (timeframe, definitions, jurisdiction) + resolution policy + selected pool.
 - **Evidence bundle**: public references plus integrity commitments (hashes) to prevent silent swaps.
 - **Verdict**: **Valid / Invalid / Under-specified**.
 
 “Under-specified” is critical: ambiguity is treated as a failure, not something jurors should guess.
+
+::: {.callout-warning title="Definition: Under-specified"}
+**Under-specified** means the claim cannot be adjudicated under the pool’s policy because required information is missing or ambiguous (e.g., timeframe, definition, canonical source class). It is a *verdict*, not a “maybe.”
+:::
 
 ## Evidence policy (policy, not vibes)
 
@@ -139,6 +147,10 @@ Each pool/domain publishes an evidence policy specifying:
 - Thresholds for Valid vs Under-specified
 
 This converts “legal definition disputes” into policy compliance disputes with explicit rules.
+
+::: {.callout-note title="Definition: Evidence policy"}
+An **evidence policy** defines what counts as admissible evidence in a pool, how conflicts are resolved (tie-break rules), and what threshold separates Valid from Under-specified. It is intentionally explicit: jurors adjudicate *policy compliance* rather than inventing semantics mid-dispute.
+:::
 
 ## Trust assumptions
 
@@ -336,9 +348,11 @@ Outputs:
 - challenger EV curves vs $p$ and $S/B$
 - false-claim survival vs $p$ and challenger effort
 
-![E1: Challenger expected value (EV) on false claims as juror accuracy varies.](analysis/fig/e1_challenger_ev.png)
+Figures @fig-e1-ev and @fig-e1-survival visualize these sweeps.
 
-![E1: False-claim survival probability after a single challenge window.](analysis/fig/e1_false_survival.png)
+![E1: Challenger expected value (EV) on false claims as juror accuracy varies.](analysis/fig/e1_challenger_ev.png){#fig-e1-ev}
+
+![E1: False-claim survival probability after a single challenge window.](analysis/fig/e1_false_survival.png){#fig-e1-survival}
 
 ### E2: relevance coherence game (robustness + $K$ sensitivity)
 
@@ -359,9 +373,11 @@ Outputs:
 - relevance signal error vs fraction competent and $K$
 - incompetent stake share over rounds (competence filter)
 
-![E2: Mean relevance error vs fraction competent, across coherence thresholds K.](analysis/fig/e2_relevance_error.png)
+Figures @fig-e2-error and @fig-e2-filter show robustness and selection effects.
 
-![E2: Competence filter: final competent stake share (K=1.25).](analysis/fig/e2_competence_filter.png)
+![E2: Mean relevance error vs fraction competent, across coherence thresholds K.](analysis/fig/e2_relevance_error.png){#fig-e2-error}
+
+![E2: Competence filter: final competent stake share (K=1.25).](analysis/fig/e2_competence_filter.png){#fig-e2-filter}
 
 ### E3: ambiguity stress test (templates + Under-specified)
 
@@ -372,7 +388,9 @@ Outputs:
 - wrong-resolution rate on ambiguous claims (baseline vs defended)
 - overall error impact as ambiguity prevalence varies
 
-![E3: Overall wrong-resolution rate as ambiguity prevalence increases (baseline vs defended).](analysis/fig/e3_ambiguity.png)
+Figure @fig-e3-ambiguity summarizes the ambiguity effect and the benefit of Under-specified.
+
+![E3: Overall wrong-resolution rate as ambiguity prevalence increases (baseline vs defended).](analysis/fig/e3_ambiguity.png){#fig-e3-ambiguity}
 
 ## Reproducibility
 

@@ -8,6 +8,13 @@ format:
   html:
     output-file: paper
     embed-resources: true
+    theme: litera
+    css: styles.css
+    page-layout: article
+    grid:
+      body-width: 820px
+      margin-width: 300px
+      gutter-width: 1.5rem
     toc: true
     toc-depth: 3
     number-sections: true
