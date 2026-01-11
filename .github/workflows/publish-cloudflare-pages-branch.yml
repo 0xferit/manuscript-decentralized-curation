@@ -42,7 +42,7 @@ jobs:
 
       - name: Stamp build info (commit SHA)
         run: |
-          SHORT_SHA="${GITHUB_SHA:0:8}"
+          SHORT_SHA="${GITHUB_SHA:0:7}"
           COMMIT_URL="https://github.com/proveuswrong/manuscript-decentralized-curation/commit/${GITHUB_SHA}"
           echo "::: {.callout-note}" > "_build-info.md"
           echo "**Version:** ${SHORT_SHA} ([commit](${COMMIT_URL}))" >> "_build-info.md"
