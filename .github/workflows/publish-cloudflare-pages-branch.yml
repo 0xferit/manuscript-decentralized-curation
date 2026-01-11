@@ -42,9 +42,13 @@ jobs:
 
       - name: Stamp build info (commit SHA)
         run: |
-          echo "Built from \`${GITHUB_SHA}\`." > "_build-info.md"
+          SHORT_SHA="${GITHUB_SHA:0:8}"
+          COMMIT_URL="https://github.com/proveuswrong/manuscript-decentralized-curation/commit/${GITHUB_SHA}"
+          echo "::: {.callout-note}" > "_build-info.md"
+          echo "**Version:** ${SHORT_SHA} ([commit](${COMMIT_URL}))" >> "_build-info.md"
           echo "" >> "_build-info.md"
-          echo "Generated at: \`$(date -u +%Y-%m-%dT%H:%M:%SZ)\`." >> "_build-info.md"
+          echo "**Built at (UTC):** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "_build-info.md"
+          echo ":::" >> "_build-info.md"
 
       - name: Render HTML
         run: quarto render --to html
