@@ -1,0 +1,17 @@
+.DS_Store
+
+# Quarto
+.quarto/
+_site/
+outputs/
+
+# LaTeX build artifacts (from Quarto PDF)
+*.aux
+*.log
+*.toc
+
+# Archived generated outputs (do not version)
+legacy/quarto-outputs-pre-normalization/
+
+/.quarto/
+**/*.quarto_ipynb

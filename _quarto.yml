@@ -1,0 +1,28 @@
+project:
+  type: default
+  output-dir: outputs
+  render:
+    - "my new version.md"
+
+format:
+  html:
+    output-file: paper
+    embed-resources: true
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    anchor-sections: true
+    html-math-method: katex
+  pdf:
+    output-file: paper
+    toc: true
+    toc-depth: 3
+    number-sections: true
+  docx:
+    output-file: paper
+    toc: true
+    toc-depth: 3
+    number-sections: true
+
+bibliography: references.bib
+
