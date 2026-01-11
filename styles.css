@@ -15,6 +15,19 @@
   --puw-surface: #1f1f1f;
   --puw-border: rgba(236, 236, 236, 0.18);
   --puw-border-strong: rgba(236, 236, 236, 0.32);
+  --puw-font: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+
+  /* Align Quarto/Bootstrap defaults with proveuswrong.io palette. */
+  --bs-body-bg: var(--puw-bg);
+  --bs-body-color: var(--puw-fg);
+  --bs-body-font-family: var(--puw-font);
+  --bs-font-monospace: var(--puw-font);
+  --bs-secondary-color: var(--puw-muted);
+  --bs-link-color: var(--puw-fg);
+  --bs-link-hover-color: var(--puw-accent);
+  --bs-border-color: var(--puw-border);
+  --bs-heading-color: var(--puw-fg);
 }
 
 html {
@@ -28,6 +41,8 @@ body {
   margin: 0;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  caret-color: transparent;
+  font-family: var(--puw-font);
 }
 
 * {
@@ -50,8 +65,26 @@ body small,
 body span,
 body td,
 body th {
-  font-family: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
+  font-family: var(--puw-font);
+  color: var(--puw-fg);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+a:hover {
+  color: var(--puw-accent);
+}
+
+*:focus-visible {
+  outline: 2px dashed var(--puw-fg);
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* Title block */
@@ -69,28 +102,24 @@ h1.title {
 
 /* Paragraph rhythm */
 main.content p {
-  margin-bottom: 0.95rem;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
   line-height: 1.75;
 }
 
-/* Links: PUW-style underline + accent hover */
-main.content a {
-  color: var(--puw-fg);
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-underline-offset: 0.18em;
-  text-decoration-thickness: 0.08em;
-}
-
-main.content a:hover {
-  color: var(--puw-accent);
-  text-decoration-color: var(--puw-fg);
-  transition: text-decoration-color 0.6s ease !important;
-}
-
 /* External link icon (from proveuswrong/website static/link.svg, embedded) */
-main.content a[href^="http"]::after,
-main.content a[href^="http"]:hover::after {
+main.content a[href]:not(
+  :where(
+    [href^="#"],
+    [href^="/"]:not([href^="//"])
+  )
+)::after,
+main.content a[href]:not(
+  :where(
+    [href^="#"],
+    [href^="/"]:not([href^="//"])
+  )
+):hover::after {
   display: inline-table;
   vertical-align: text-bottom;
   width: 0.7em;
@@ -98,12 +127,30 @@ main.content a[href^="http"]:hover::after {
   margin-left: 0.4em;
 }
 
-main.content a[href^="http"]::after {
+main.content a[href]:not(
+  :where(
+    [href^="#"],
+    [href^="/"]:not([href^="//"])
+  )
+)::after {
   content: url("data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NTMuNiA0NTMuNiI+PHBhdGggZmlsbD0nd2hpdGUnIGQ9Ik00MTMuMjgsMzkzLjEyYTIwLjA4LDIwLjA4LDAsMCwxLTIwLjE2LDIwLjE2SDYwLjQ4YTIwLjA4LDIwLjA4LDAsMCwxLTIwLjE2LTIwLjE2VjYwLjQ4QTIwLjA4LDIwLjA4LDAsMCwxLDYwLjQ4LDQwLjMyaDEzMVYwaC0xMzFBNjAuMjMsNjAuMjMsMCwwLDAsMCw2MC40OFYzOTMuMTJBNjAuMjMsNjAuMjMsMCwwLDAsNjAuNDgsNDUzLjZIMzkzLjEyYTYwLjIzLDYwLjIzLDAsMCwwLDYwLjQ4LTYwLjQ4di0xMzFINDEzLjI4WiIvPjxwYXRoIGZpbGw9J3doaXRlJyBkPSJNMjYyLjA4LDBWNDAuMzJIMzg0LjcyTDIyNi4yNCwxOTguOGwyOC41NiwyOC41Nkw0MTMuMjgsNjguODhWMTkxLjUySDQ1My42VjBaIi8+PC9zdmc+");
 }
 
-main.content a[href^="http"]:hover::after {
+main.content a[href]:not(
+  :where(
+    [href^="#"],
+    [href^="/"]:not([href^="//"])
+  )
+):hover::after {
   content: url("data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NTMuNiA0NTMuNiI+PHBhdGggZmlsbCA9JyNmZjM1NWUnIGQ9Ik00MTMuMjgsMzkzLjEyYTIwLjA4LDIwLjA4LDAsMCwxLTIwLjE2LDIwLjE2SDYwLjQ4YTIwLjA4LDIwLjA4LDAsMCwxLTIwLjE2LTIwLjE2VjYwLjQ4QTIwLjA4LDIwLjA4LDAsMCwxLDYwLjQ4LDQwLjMyaDEzMVYwaC0xMzFBNjAuMjMsNjAuMjMsMCwwLDAsMCw2MC40OFYzOTMuMTJBNjAuMjMsNjAuMjMsMCwwLDAsNjAuNDgsNDUzLjZIMzkzLjEyYDYwLjIzLDYwLjIzLDAsMCwwLDYwLjQ4LTYwLjQ4di0xMzFINDEzLjI4WiIvPjxwYXRoIGZpbGwgPScjZmYzNTVlJyBkPSJNMjYyLjA4LDBWNDAuMzJIMzg0LjcyTDIyNi4yNCwxOTguOGwyOC41NiwyOC41Nkw0MTMuMjgsNjguODhWMTkxLjUySDQ1My42VjBaIi8+PC9zdmc+");
+}
+
+/* Internal links get the underline treatment (per proveuswrong.io). */
+main.content p a[href]:where([href^="#"], [href^="/"]:not([href^="//"])),
+main.content li a[href]:where([href^="#"], [href^="/"]:not([href^="//"])) {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 0.08em;
 }
 
 /* Heading spacing */
@@ -113,6 +160,18 @@ h3 {
   margin-top: 1.6rem;
   margin-bottom: 0.65rem;
   font-weight: 400;
+}
+
+h1 {
+  font-size: 2.3rem;
+}
+
+h2 {
+  font-size: 1.74rem;
+}
+
+h3 {
+  font-size: 1.32rem;
 }
 
 /* Figures */
@@ -125,6 +184,10 @@ figcaption {
   font-size: 0.95rem;
   line-height: 1.35;
   color: var(--puw-muted);
+}
+
+small {
+  font-size: 0.57rem;
 }
 
 /* Tables */
@@ -212,4 +275,3 @@ pre code {
 :target {
   animation: puwGlow 3s ease-in;
 }
-
