@@ -4,7 +4,8 @@ This workspace is a manuscript + supporting context docs. It is configured as a 
 
 ## Source of truth
 
-- **Manuscript:** `my new version.md`
+- **Paper source:** `paper.qmd`
+- **Legacy manuscript source:** `my new version.md` (raw material / prior canonical draft)
 - **Quarto config:** `_quarto.yml`
 - **Bibliography:** `references.bib`
 - **Supporting docs:** `context/`
@@ -23,6 +24,8 @@ quarto install tinytex
 ### Render all formats (HTML/PDF/DOCX)
 
 ```bash
+python3 -m pip install -r requirements.txt
+python3 analysis/run_all.py
 quarto render
 ```
 
@@ -45,7 +48,7 @@ In Cloudflare Pages, connect this repository and configure:
 
 ### Ongoing workflow
 
-1. Make changes to `my new version.md`
+1. Make changes to `paper.qmd` (and/or `references.bib`, `analysis/`)
 2. Commit + push to `main`
 3. GitHub Actions renders HTML and updates the `cf-pages` branch (`public/index.html`)
 4. Cloudflare Pages deploys the updated `cf-pages` branch

@@ -2,7 +2,7 @@ project:
   type: default
   output-dir: outputs
   render:
-    - "my new version.md"
+    - "paper.qmd"
 
 format:
   html:

@@ -5,10 +5,21 @@
 _site/
 outputs/
 
+# Evaluation outputs (generated)
+analysis/out/
+analysis/fig/
+
 # LaTeX build artifacts (from Quarto PDF)
 *.aux
 *.log
 *.toc
+
+# Root-level Quarto artifacts (should render into outputs/)
+paper.html
+paper.pdf
+paper.docx
+paper_files/
+paper.tex
 
 # Archived generated outputs (do not version)
 legacy/quarto-outputs-pre-normalization/

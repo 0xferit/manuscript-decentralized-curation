@@ -1,0 +1,371 @@
+---
+title: "Decentralized Curation: Trustless Transformation of Information into Knowledge"
+bibliography: references.bib
+---
+
+{{< include _build-info.md >}}
+
+# Abstract
+
+Modern systems fail downstream (governance, funding, coordination) because they fail upstream: they do not reliably transform raw information into **decision-grade knowledge**. This paper frames that transformation as **curation**, identifies why centralized curation predictably breaks (opacity, capture, gaming, censorship, fragility), and proposes a direction for fixing it: **trustless curation via decentralization**.
+
+The core idea is mechanism design: make it **profitable to be right** and **expensive to be wrong**. We separate two distinct qualities of information: **accuracy** (human judgment, treated as binary classification under an evidence standard, resolved via dispute resolution) and **relevance** (non-binary importance, produced by policy-guided coherence games). The result is a protocol-level “knowledge layer” that any interface can consume, rather than a single platform’s private truth.
+
+This is not a claim that blockchains “solve truth.” It is a claim that incentives can produce a scalable, auditable approximation: a system where falsehoods become liabilities, truth becomes an asset, and ambiguity is punished as harshly as error.
+
+# Introduction
+
+Uncoordinated actions cancel out. Coordinated actions compound.
+
+But coordination is not where things usually break.
+
+To coordinate, people first need to share a picture of reality: what is happening, what matters, what might work. That shared picture does not magically appear. It's produced by **curation**—by what we pay attention to, believe, and ignore.
+
+**Curation transforms raw information into knowledge.**
+
+So you can think of most hard problems as two-phase:
+
+1. **Curation:** Transform information into knowledge—converge on what is true and important enough to act on
+2. **Coordination:** Align actions, given that shared knowledge
+
+The thesis of this paper is blunt: **the bottleneck is almost always phase one.** We keep trying to fix coordination with better governance, better voting, better funding mechanisms, while standing on a broken knowledge layer.
+
+## Information abundance, knowledge scarcity
+
+The internet solved access to *information* but not access to *knowledge*.
+
+- **Information** is a signal—data, a claim, a data point. Raw and unverified.
+- **Knowledge** is information that has been verified, contextualized, and integrated into a coherent understanding.
+
+Institutions once performed much of this transformation. The process was imperfect but legible: newspapers, journals, and universities converted information into knowledge through editorial selection, peer review, and pedagogy. Today we have far more information and far weaker mechanisms to convert it into decision-grade knowledge.
+
+## When common knowledge fails
+
+Coordination often fails because people confuse shared knowledge with common knowledge. In game theory, **common knowledge** means not just that I know $X$, but that you know $X$, and we both know that we both know $X$, and so on. This recursive loop is what makes coordination safe.
+
+Experimental evidence suggests humans routinely act as if common knowledge exists when it does not, producing an **illusion of shared knowledge** that masks incompatible understanding [@bolander2020common].
+
+## Why this matters (who loses, who wins)
+
+When curation breaks, damage is not evenly distributed.
+
+- **Users lose twice**: first in time (filtering, uncertainty), then in decision quality (beliefs built on corrupted inputs).
+- **Honest creators lose**: rigorous work competes against sensational work optimized for distribution.
+- **Platforms win engagement but lose trust**: long-run legitimacy erodes. Global trust in news hovers around 40% [@reuters2024digitalnews].
+- **Society loses coherence**: groups build incompatible knowledge slices and then collide instead of coordinating.
+
+## Contributions
+
+This paper contributes:
+
+- **A framing**: curation (information → knowledge) as the upstream bottleneck behind coordination failures.
+- **A separation of powers**: **Accuracy (global, binary)** vs **Relevance (local, non-binary)** with distinct mechanisms.
+- **A protocol architecture**: claims, evidence, disputes, and pooled staking to reduce capture and liability.
+- **A security posture**: treat ambiguity as an attack surface (“Vagueness = Rejection”) and treat interface capture as a first-class risk.
+- **An evaluation program**: a reproducible simulation suite for incentive alignment, coherence dynamics, and ambiguity failure modes.
+
+# Roadmap
+
+Section 2 frames the problem and failure modes of centralized curation. Section 3 defines the system model (actors, artifacts, and trust assumptions). Section 4 describes mechanisms for accuracy and relevance. Section 5 maps threats to defenses. Section 6 evaluates key parameters via simulation. Section 7 closes with limitations and open problems.
+
+# Background and problem statement
+
+## Failure modes of centralized curation
+
+When one entity controls the transformation of information into knowledge, failure becomes predictable:
+
+1. **Opacity**: rules and ranking are hidden.
+2. **Capture**: incentives diverge from knowledge quality.
+3. **Gaming**: actors optimize against a single mechanism.
+4. **Censorship**: unilateral suppression becomes feasible.
+5. **Fragility**: single points of failure (policy changes, acquisitions, algorithm swaps).
+
+## What good curation must optimize for
+
+At a minimum, good curation produces claims that are:
+
+1. **Well-posed** (falsifiable; not vague)
+2. **Evidence-backed** under an explicit policy
+3. **Coherent** with other validated claims
+4. **Current** (truth decays; claims become stale)
+5. **Auditable** (who asserted what, why, with what evidence)
+
+For extended epistemology and data quality foundations, see Appendix A.
+
+# Related work
+
+This work sits at the intersection of incentive design, oracle/dispute mechanisms, and information quality.
+
+**Token-curated registries (TCRs).** TCRs propose token-incentivized curation of lists [@goldin2017tcr]. We generalize the unit from “is item in list?” to **claims + evidence + disputes** and explicitly separate accuracy from relevance.
+
+**Decentralized dispute resolution and Schelling-point mechanisms.** Systems like Kleros operationalize decentralized arbitration using commit–reveal voting, staking, and appeals [@kleros2019shortpaper; @kleros2024yellowpaper]. The theoretical root is focal-point coordination (“Schelling points”) [@schelling1960strategy], but real deployments surface a practical failure mode: ambiguity in what is being resolved. This paper treats semantic precision and claim templates as first-class security constraints rather than afterthoughts.
+
+**Prediction-market oracle resolution.** Many “market resolution” disputes are semantic and policy disputes (what counts as “yes/no”), not disputes about reality. Optimistic oracle designs (e.g., UMA) formalize propose–dispute flows and escalation [@umaOptimisticOracleDocs; @umaWhitepaperRepo], reinforcing the need to make resolution criteria explicit at claim creation time.
+
+**Peer prediction and information elicitation.** Peer prediction provides mechanisms for eliciting information when ground truth is costly or unavailable [@miller2005peerprediction]. Our approach differs in tying rewards to explicit evidence standards and contestability, rather than relying purely on mutual consistency.
+
+**Data quality.** Industrial data quality literature emphasizes that “quality” is multi-dimensional and consumer-context dependent [@wang1996beyondaccuracy]. We adopt this as motivation for separating accuracy (binary, evidence-based) from relevance (policy-dependent, non-binary).
+
+# System model and assumptions
+
+## Actors
+
+- **Authors** submit claims and put a bounty at risk.
+- **Curators** validate and challenge; they may also serve as jurors via dispute resolution.
+- **Readers** consume outputs and may participate as curators.
+
+## Artifacts: claims, evidence, verdicts
+
+The unit of curation is not “a post.” It is a **claim** with enough structure to be adjudicated.
+
+- **Claim**: statement + scope (timeframe, definitions, jurisdiction) + resolution policy + selected pool.
+- **Evidence bundle**: public references plus integrity commitments (hashes) to prevent silent swaps.
+- **Verdict**: **Valid / Invalid / Under-specified**.
+
+“Under-specified” is critical: ambiguity is treated as a failure, not something jurors should guess.
+
+## Evidence policy (policy, not vibes)
+
+Each pool/domain publishes an evidence policy specifying:
+
+- Accepted evidence types (datasets, primary documents, expert testimony, etc.)
+- Canonical sources and tie-break rules
+- Thresholds for Valid vs Under-specified
+
+This converts “legal definition disputes” into policy compliance disputes with explicit rules.
+
+## Trust assumptions
+
+This design does not eliminate trust; it **constrains** it.
+
+- We minimize trust in any single validator by using aggregation, contestability, and public auditability.
+- We treat dispute resolution as a black box DDR system (e.g., Kleros) with its own incentives and failure modes.
+- We assume evidence authenticity is imperfect and must be contested, not assumed.
+
+# Mechanisms
+
+## Overview: separation of powers
+
+Centralized platforms mash accuracy and relevance into a single engagement metric. We separate them:
+
+- **Accuracy**: global, binary classification under an evidence standard, resolved via dispute processes.
+- **Relevance**: local, non-binary importance produced by a policy-guided coherence game.
+
+## Claim templates (ambiguity as an attack surface)
+
+A jury can only resolve what is specified. If the claim is ambiguous, jurors will rationally coordinate on a shared interpretation—which can be wrong.
+
+So claims must carry enough structure that “correct” is not a matter of vibes:
+
+- Single proposition (no bundled claims)
+- Explicit scope (time, location, units/definitions)
+- Explicit resolution policy (what sources/procedures count)
+
+If missing, the correct verdict is not True/False; it is **Under-specified**.
+
+## Common criticism: “consensus ≠ correctness”
+
+Schelling-style mechanisms maximize *coherence* with other voters, not truth directly. If the question is ambiguous or requires specialized expertise, naive coordination can converge on the wrong interpretation.
+
+This design responds in three ways:
+
+1. **Question design as a security primitive:** ill-posed claims are rejected or resolved as Under-specified, not forced into True/False.
+2. **Escalation attracts expertise:** appeals raise stakes; higher rounds can rationally support deeper work (“high-court effect”).
+3. **Policy-defined domains:** when disputes are inherently normative (e.g., “what counts as X under policy”), jurors adjudicate policy compliance, not metaphysical truth.
+
+## Flow 1: submission and confidence signaling
+
+The interface displays a **Confidence Score** $C$ to guide attention:
+
+$$
+C = f(\text{bounty at risk},\ \text{time uncontested},\ \text{validator signal})
+$$
+
+Invariants:
+
+- **Monotone**: higher bounty / more uncontested time / stronger validator signal → higher confidence.
+- **Gated**: low bounty or zero validator attention never becomes “high confidence” just by aging.
+
+## Flow 2: pooled staking (liability and chilling effects)
+
+Validators stake on pools rather than individual items. The protocol randomly drafts eligible validators/jurors for specific decisions, creating “herd immunity” against targeted liability.
+
+## Flow 3: challenge, dispute, appeals
+
+Any user can challenge a claim by staking resources and submitting counter-evidence (or asserting the claim is under-specified).
+
+DDR selects jurors from an eligible pool and uses commit–reveal voting to reduce copy-the-majority dynamics [@kleros2019shortpaper]. Appeals increase stakes and can overturn lazy consensus, creating a “high-court effect” where higher rounds attract more expertise.
+
+## Flow 4: relevance via coherence game
+
+Relevance is a policy-guided coherence game (a focal-point coordination problem) [@schelling1960strategy]:
+
+1. Pool defines a relevance policy.
+2. Curators stake to submit ratings $v_i$ with weights $w_i$.
+3. Aggregate:
+   - $\mu = \frac{\sum_i w_i v_i}{\sum_i w_i}$
+   - $\sigma = \sqrt{\frac{\sum_i w_i (v_i - \mu)^2}{\sum_i w_i}}$
+4. Coherence rule: choose $K$; curator $i$ is coherent iff $|v_i - \mu| \le K\sigma$.
+5. Incoherent stake is slashed and redistributed to coherent participants.
+
+## Incentives: stake, reputation, and competence filtering
+
+The mechanism relies on two kinds of capital:
+
+- **Financial stake** (transferable): the direct bounty/challenge incentives.
+- **Reputation** (non-transferable): accumulated accuracy over time, usable as stake within limits.
+
+Reputation acts as both (a) a barrier-reducer for cash-poor experts and (b) a Sybil friction: building it is slow; losing it can be abrupt.
+
+Separately, the relevance game produces a **competence filter**: incoherent participants lose stake on average and eventually exit, while competent participants accrete stake. This is not a guarantee of truth; it is a selection pressure favoring competence under a stated policy.
+
+## Governance and UX: protocol vs interface
+
+Two pragmatic issues dominate real deployments:
+
+1. **Governance capture**: if governance touches too much surface area, token distributions can become a de facto court of law. The design response is to minimize governance to parameter updates and policy templates, while keeping most decisions contestable and auditable.
+
+2. **Interface capture and toxic content**: a neutral protocol can be used to publish toxic or illegal content. The design response is to separate infrastructure from distribution:
+
+- **Protocol**: censorship-resistant storage of claims, stakes, verdicts.
+- **Interfaces**: opinionated filters for compliance, taste, and safety.
+
+This also mitigates “meta-curation”: even if a dominant interface is biased, alternative interfaces can independently index the same on-chain record and reproduce the same dispute history and confidence signals.
+
+## Funding: advertiser staking (“Proof of Truth”)
+
+A persistent failure mode of verification markets is “no yield in peacetime”: if there are few disputes, curators may leave.
+
+One funding path is to treat commercial claims as stakable assertions. An advertiser makes a claim and posts stake; truthful claims return stake, false claims are slashable. This can provide continuous verification demand even when political/news disputes are quiet.
+
+# Threat model and security analysis
+
+## Threat model
+
+We assume adversaries can be rational, coordinated, well-funded, and persistent. We target:
+
+- Economic attacks: rich liars, collusion/bribery, low-stake spam, free riding.
+- Game-theoretic attacks: lazy majorities, herding, consensus-over-correctness.
+- Social/legal attacks: chilling effects, toxic content, interface capture.
+- Epistemic attacks: ambiguity/context collapse, temporal decay.
+
+Out of scope: breaking cryptography, coercion at gunpoint, and global-scale censorship of all clients.
+
+## Stress tests (attack mapping)
+
+We maintain an explicit attack-defense log in `context/attack-and-defense-log.md`. This paper maps those attacks to defenses in the mechanism design and evaluates key parameters in simulation.
+
+# Evaluation
+
+This section defines the evaluation program and the concrete experiments implemented in the repository.
+
+{{< include analysis/out/eval_summary.md >}}
+
+## Research questions
+
+- **RQ1 (dispute economics):** Under what parameter regimes does it become economically rational to challenge provably false claims, and how does that affect false-claim survival?
+- **RQ2 (relevance robustness):** How robust is the relevance coherence mechanism to mixtures of competent vs noisy curators, and how sensitive is it to the coherence threshold $K$?
+- **RQ3 (ambiguity defense):** Does allowing an **Under-specified** verdict (and requiring claim templates) reduce wrong outcomes on ambiguous claims compared to forced True/False resolution?
+
+## Metrics
+
+- **False claim survival rate**: fraction of false claims that remain labeled Valid after a challenge window.
+- **Challenger expected value (EV)**: expected profit/loss of challenging a claim given bounty, challenge stake, and jury accuracy.
+- **Relevance signal error**: $|\mu - r|$ (or MSE) between aggregate relevance $\mu$ and ground-truth relevance $r$ under a synthetic model.
+- **Competence filter speed**: how quickly incompetent stake share decays under repeated relevance rounds.
+- **Ambiguity error rate**: fraction of ambiguous claims incorrectly resolved as Valid/Invalid instead of Under-specified.
+
+## Experiments
+
+### E1: accuracy dispute simulation (economics + survival)
+
+We simulate a stream of claims (true/false), challengers who challenge when EV is positive, and juries with per-juror correctness probability $p$ (majority vote). We sweep:
+
+- bounty $B$
+- challenge stake $S$
+- jury size $N$
+- juror accuracy $p$
+- challenger detection/effort parameters
+
+Outputs:
+
+- challenger EV curves vs $p$ and $S/B$
+- false-claim survival vs $p$ and challenger effort
+
+![](analysis/fig/e1_challenger_ev.png){fig-cap="E1: Challenger expected value (EV) on false claims as juror accuracy varies."}
+
+![](analysis/fig/e1_false_survival.png){fig-cap="E1: False-claim survival probability after a single challenge window."}
+
+### E2: relevance coherence game (robustness + $K$ sensitivity)
+
+We simulate $M$ curators with evolving weights $w_i$ playing repeated relevance rounds on items with ground-truth relevance $r \in [0,10]$.
+
+- competent curators vote $r + \epsilon$ (noise)
+- incompetent curators vote uniformly at random
+
+We sweep:
+
+- fraction of competent curators
+- noise level
+- $K$ in the coherence rule
+- number of rounds
+
+Outputs:
+
+- relevance signal error vs fraction competent and $K$
+- incompetent stake share over rounds (competence filter)
+
+![](analysis/fig/e2_relevance_error.png){fig-cap="E2: Mean relevance error vs fraction competent, across coherence thresholds K."}
+
+![](analysis/fig/e2_competence_filter.png){fig-cap="E2: Competence filter: final competent stake share (K=1.25)."}
+
+### E3: ambiguity stress test (templates + Under-specified)
+
+We generate a mixture of well-posed and ambiguous claims. Baseline forces True/False even when ambiguous; the defended system allows Under-specified and penalizes ambiguity at submission.
+
+Outputs:
+
+- wrong-resolution rate on ambiguous claims (baseline vs defended)
+- overall error impact as ambiguity prevalence varies
+
+![](analysis/fig/e3_ambiguity.png){fig-cap="E3: Overall wrong-resolution rate as ambiguity prevalence increases (baseline vs defended)."}
+
+## Reproducibility
+
+All simulations and figure generation are deterministic (fixed RNG seeds) and run in CI on every commit to `main`. The generated figures are embedded into the published HTML.
+
+# Limitations and open problems
+
+- **Oracle capture**: DDR is attackable; mitigations include slippage, economic suicide, and forking.
+- **Free riding**: verified truth is a public good; sustainability may require mixed funding.
+- **Temporal decay**: claims become stale; incentives must reward withdrawal or profitable debunking.
+- **Governance capture**: token-weighted governance can plutocratize; minimize governance surface area.
+- **Domain expertise**: hard domains (law, medicine, finance) require credible expertise signals; pooled staking and reputation help, but do not replace expert institutions.
+
+# Conclusion
+
+The core move is to treat curation as infrastructure: a mechanism that converts funding into decision-grade knowledge with explicit, auditable incentives. The aim is not to eliminate trust but to make dishonesty expensive, correctness profitable, and ambiguity slashable.
+
+# Appendix A: Epistemic and data-quality foundations
+
+This appendix summarizes the epistemology and data-quality grounding used to define “good curation.” It is intentionally separated from the main paper flow.
+
+## A.1 Epistemology (knowledge as justified true belief)
+
+Traditional epistemology treats knowledge as **justified true belief** (JTB):
+
+- **Truth**: correspondence to reality.
+- **Justification**: adequate rational support (foundational evidence, coherence, reliability).
+- **Belief**: the claim is asserted, not merely entertained.
+
+For curation systems, this motivates explicit evidence standards and traceable reasoning, not mere aggregation of opinions.
+
+## A.2 Data quality dimensions
+
+Industrial data quality frameworks emphasize measurable dimensions such as accuracy, completeness, consistency, timeliness, validity, and uniqueness.
+
+For curation, these become operational requirements on claim schemas (required fields), evidence policies, and decay/refresh mechanisms.
+
+## A.3 Credibility checklist
+
+Practical credibility frameworks include accuracy, authority, objectivity, currency, and coverage/scope. In this design, many of these become explicit fields in the claim template and evidence policy rather than implicit social signals.

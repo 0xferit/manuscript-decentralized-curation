@@ -10,7 +10,9 @@
 
 ## Canonical artifacts (current)
 
-- `my new version.md` — editable master manuscript.
+- `paper.qmd` — editable master paper source (Quarto).
+- `analysis/run_all.py` — simulations + figure generation (E1–E3).
+- `requirements.txt` — pinned Python dependencies for evaluation.
 - `_quarto.yml` — Quarto render configuration (single-source, multi-format).
 - `references.bib` — bibliography for Quarto/Pandoc citations.
 - `legacy/decentralized-curation-series-in-7-articles_21699486.md` — last released snapshot of the manuscript (pre-Quarto).
@@ -34,11 +36,9 @@
 
 ## Current status / next steps
 
-- Manuscript exists as a consolidated 7-part series (not split into `articleN.md`).
-- Master (`my new version.md`) explicitly incorporates all items in `context/attack-and-defense-log.md` (now **15** attacks incl. “Consensus ≠ Correctness” / legal semantics).
-- Master recently gained paper-style scaffolding: abstract, contributions, threat model, stress-test map; tighter mechanism definitions (claim templates, evidence policy, confidence score invariants, relevance math); and a small references section.
+- Paper source (`paper.qmd`) is now paper-structured (Abstract → Conclusion + Appendix) and includes an explicit Related Work section with BibTeX-backed citations.
+- Evaluation is implemented as deterministic simulations (E1–E3) that generate figures and a short in-paper summary via `analysis/run_all.py`.
 - `legacy/*_21699486*` artifacts are the **last released** snapshot/export (pre-Quarto) and may lag the master.
-- Next release step (when desired): generate a new `<hash>` snapshot + matching HTML export from the updated master, then update the two artifact pointers above.
-- Quarto path (new): install Quarto + render `my new version.md` to `outputs/` (HTML/PDF/DOCX) from the single source.
-- Continuous publish (HTML): commits to `main` are rendered to `outputs/paper.html` and published to the `cf-pages` branch as `public/index.html` (for Cloudflare Pages).
+- Quarto path (new): install Quarto + render `paper.qmd` to `outputs/` (HTML/PDF/DOCX) from the single source.
+- Continuous publish (HTML): commits to `main` run simulations, render `outputs/paper.html`, and publish to `cf-pages` as `public/index.html` (for Cloudflare Pages).
 
