@@ -1,6 +1,6 @@
 # PUW Articles (Quarto setup)
 
-This workspace is a manuscript + supporting context docs. It is configured as a Quarto project so you can render **HTML / PDF / DOCX** from a single source.
+This workspace is a manuscript + supporting context docs. It is configured as a Quarto project so you can render **HTML / PDF** from a single source.
 
 ## Source of truth
 
@@ -21,7 +21,7 @@ This workspace is a manuscript + supporting context docs. It is configured as a 
 quarto install tinytex
 ```
 
-### Render all formats (HTML/PDF/DOCX)
+### Render all formats (HTML/PDF)
 
 ```bash
 python3 -m pip install -r requirements.txt
@@ -32,7 +32,6 @@ quarto render
 Outputs are written to `outputs/` and currently standardized as:
 - `outputs/paper.html`
 - `outputs/paper.pdf`
-- `outputs/paper.docx`
 
 ## Styling (HTML)
 
@@ -101,7 +100,6 @@ Do not edit the manuscript between steps (1) and (2).
 mkdir -p "releases/<hash>"
 cp "paper.qmd" "releases/<hash>/paper.qmd"
 cp "outputs/paper.html" "releases/<hash>/paper.html"
-cp "outputs/paper.docx" "releases/<hash>/paper.docx"
 cp "outputs/paper.pdf" "releases/<hash>/paper.pdf"
 cp "_quarto.yml" "releases/<hash>/_quarto.yml"
 cp "references.bib" "releases/<hash>/references.bib"

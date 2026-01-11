@@ -25,11 +25,6 @@ format:
     toc: true
     toc-depth: 3
     number-sections: true
-  docx:
-    output-file: paper
-    toc: true
-    toc-depth: 3
-    number-sections: true
 
 bibliography: references.bib
 
