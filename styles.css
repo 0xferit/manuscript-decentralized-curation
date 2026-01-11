@@ -18,7 +18,8 @@
 }
 
 html {
-  font-size: 16px;
+  /* Mirror proveuswrong.io fluid typography (15px → 18px, 320px → 1200px). */
+  font-size: clamp(15px, calc(13.91px + 0.341vw), 18px);
 }
 
 body {
@@ -27,6 +28,10 @@ body {
   margin: 0;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+* {
+  transition: color 0.1s ease, background-color 0.1s ease, opacity 0.1s ease;
 }
 
 /* Apply the site’s mono character broadly (but keep icons intact). */
@@ -81,6 +86,24 @@ main.content a:hover {
   color: var(--puw-accent);
   text-decoration-color: var(--puw-fg);
   transition: text-decoration-color 0.6s ease !important;
+}
+
+/* External link icon (from proveuswrong/website static/link.svg, embedded) */
+main.content a[href^="http"]::after,
+main.content a[href^="http"]:hover::after {
+  display: inline-table;
+  vertical-align: text-bottom;
+  width: 0.7em;
+  height: auto;
+  margin-left: 0.4em;
+}
+
+main.content a[href^="http"]::after {
+  content: url("data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NTMuNiA0NTMuNiI+PHBhdGggZmlsbD0nd2hpdGUnIGQ9Ik00MTMuMjgsMzkzLjEyYTIwLjA4LDIwLjA4LDAsMCwxLTIwLjE2LDIwLjE2SDYwLjQ4YTIwLjA4LDIwLjA4LDAsMCwxLTIwLjE2LTIwLjE2VjYwLjQ4QTIwLjA4LDIwLjA4LDAsMCwxLDYwLjQ4LDQwLjMyaDEzMVYwaC0xMzFBNjAuMjMsNjAuMjMsMCwwLDAsMCw2MC40OFYzOTMuMTJBNjAuMjMsNjAuMjMsMCwwLDAsNjAuNDgsNDUzLjZIMzkzLjEyYTYwLjIzLDYwLjIzLDAsMCwwLDYwLjQ4LTYwLjQ4di0xMzFINDEzLjI4WiIvPjxwYXRoIGZpbGw9J3doaXRlJyBkPSJNMjYyLjA4LDBWNDAuMzJIMzg0LjcyTDIyNi4yNCwxOTguOGwyOC41NiwyOC41Nkw0MTMuMjgsNjguODhWMTkxLjUySDQ1My42VjBaIi8+PC9zdmc+");
+}
+
+main.content a[href^="http"]:hover::after {
+  content: url("data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NTMuNiA0NTMuNiI+PHBhdGggZmlsbCA9JyNmZjM1NWUnIGQ9Ik00MTMuMjgsMzkzLjEyYTIwLjA4LDIwLjA4LDAsMCwxLTIwLjE2LDIwLjE2SDYwLjQ4YTIwLjA4LDIwLjA4LDAsMCwxLTIwLjE2LTIwLjE2VjYwLjQ4QTIwLjA4LDIwLjA4LDAsMCwxLDYwLjQ4LDQwLjMyaDEzMVYwaC0xMzFBNjAuMjMsNjAuMjMsMCwwLDAsMCw2MC40OFYzOTMuMTJBNjAuMjMsNjAuMjMsMCwwLDAsNjAuNDgsNDUzLjZIMzkzLjEyYDYwLjIzLDYwLjIzLDAsMCwwLDYwLjQ4LTYwLjQ4di0xMzFINDEzLjI4WiIvPjxwYXRoIGZpbGwgPScjZmYzNTVlJyBkPSJNMjYyLjA4LDBWNDAuMzJIMzg0LjcyTDIyNi4yNCwxOTguOGwyOC41NiwyOC41Nkw0MTMuMjgsNjguODhWMTkxLjUySDQ1My42VjBaIi8+PC9zdmc+");
 }
 
 /* Heading spacing */
