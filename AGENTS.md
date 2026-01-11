@@ -5,7 +5,8 @@ This project is a Markdown workspace for a multi-part article series on the info
 ### Source of truth
 
 - `context/context.md` is the always-up-to-date handoff/context doc for agents and collaborators.
-- `my new version.md` is the **editable master manuscript** (make substantive changes here).
+- `paper.qmd` is the **editable master paper source** (make substantive changes here).
+- `legacy/manuscript-7-part-series.md` is the **legacy series draft** (pre-paper).
 - `context/attack-and-defense-log.md` tracks red-team attacks/defenses integrated into the manuscript.
 - `context/` contains supporting reference docs (Anti-Sybil, DDR, etc.).
 - `legacy/` contains archived pre-Quarto artifacts (older snapshots/exports).

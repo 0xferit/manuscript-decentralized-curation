@@ -5,7 +5,7 @@ This workspace is a manuscript + supporting context docs. It is configured as a 
 ## Source of truth
 
 - **Paper source:** `paper.qmd`
-- **Legacy manuscript source:** `my new version.md` (raw material / prior canonical draft)
+- **Legacy series draft:** `legacy/manuscript-7-part-series.md` (pre-paper draft)
 - **Quarto config:** `_quarto.yml`
 - **Bibliography:** `references.bib`
 - **Supporting docs:** `context/`
@@ -62,12 +62,12 @@ The publishing workflow file is: `.github/workflows/publish-cloudflare-pages-bra
 
 ## Release procedure (hash-versioned)
 
-**Definition:** the *unreleased master* is always `my new version.md`. A *release* is a frozen snapshot keyed by a content hash, plus rendered outputs.
+**Definition:** the *unreleased master* is `paper.qmd`. A *release* is a frozen snapshot keyed by a content hash, plus rendered outputs.
 
 1. **Compute the release id**
 
 ```bash
-shasum -a 256 "my new version.md"
+shasum -a 256 "paper.qmd"
 ```
 
 Use the first 8 hex chars of the SHA-256 as `<hash>`.
@@ -75,6 +75,8 @@ Use the first 8 hex chars of the SHA-256 as `<hash>`.
 2. **Render from the master**
 
 ```bash
+python3 -m pip install -r requirements.txt
+python3 analysis/run_all.py
 quarto render
 ```
 
@@ -84,12 +86,15 @@ Do not edit the manuscript between steps (1) and (2).
 
 ```bash
 mkdir -p "releases/<hash>"
-cp "my new version.md" "releases/<hash>/my new version.md"
+cp "paper.qmd" "releases/<hash>/paper.qmd"
 cp "outputs/paper.html" "releases/<hash>/paper.html"
 cp "outputs/paper.docx" "releases/<hash>/paper.docx"
 cp "outputs/paper.pdf" "releases/<hash>/paper.pdf"
 cp "_quarto.yml" "releases/<hash>/_quarto.yml"
 cp "references.bib" "releases/<hash>/references.bib"
+cp "requirements.txt" "releases/<hash>/requirements.txt"
+mkdir -p "releases/<hash>/analysis"
+cp "analysis/run_all.py" "releases/<hash>/analysis/run_all.py"
 ```
 
 4. **Update pointers**
