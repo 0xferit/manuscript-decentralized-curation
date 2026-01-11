@@ -11,7 +11,7 @@ Modern systems fail downstream (governance, funding, coordination) because they 
 
 The core idea is mechanism design: make it **profitable to be right** and **expensive to be wrong**. We separate two distinct qualities of information: **accuracy** (human judgment, treated as binary classification under an evidence standard, resolved via dispute resolution) and **relevance** (non-binary importance, produced by policy-guided coherence games). The result is a protocol-level “knowledge layer” that any interface can consume, rather than a single platform’s private truth.
 
-This is not a claim that blockchains “solve truth.” It is a claim that incentives can produce a scalable, auditable approximation: a system where falsehoods become liabilities, truth becomes an asset, and ambiguity is punished as harshly as error.
+This is not a claim that blockchains “solve truth,” nor that a dispute mechanism produces philosophically robust knowledge. The claim is narrower and testable: incentives can produce **auditable, stake-weighted signals** (labels + confidence scores) that are expensive to fake. In this framing, falsehoods become liabilities, truth becomes an asset, and ambiguity is punished as harshly as error.
 
 # Introduction
 
@@ -22,6 +22,8 @@ But coordination is not where things usually break.
 To coordinate, people first need to share a picture of reality: what is happening, what matters, what might work. That shared picture does not magically appear. It's produced by **curation**—by what we pay attention to, believe, and ignore.
 
 **Curation transforms raw information into knowledge.**
+
+In this paper, “knowledge” is used operationally: a claim becomes decision-grade only after it is (a) well-posed, (b) tied to an explicit evidence policy, and (c) contestable under incentives. The protocol outputs are therefore **signals**—not guarantees.
 
 So you can think of most hard problems as two-phase:
 
@@ -100,11 +102,15 @@ This work sits at the intersection of incentive design, oracle/dispute mechanism
 
 **Decentralized dispute resolution and Schelling-point mechanisms.** Systems like Kleros operationalize decentralized arbitration using commit–reveal voting, staking, and appeals [@kleros2019shortpaper; @kleros2024yellowpaper]. The theoretical root is focal-point coordination (“Schelling points”) [@schelling1960strategy], but real deployments surface a practical failure mode: ambiguity in what is being resolved. This paper treats semantic precision and claim templates as first-class security constraints rather than afterthoughts.
 
+Academic and socio-legal critique of cryptoeconomic courts emphasizes the same core tension: jurors are rewarded for *coordination* (what others will vote), not epistemic correctness directly [@bergolla2022kleros; @kleros2021cryptoeconomics]. Experimental work on focal points also suggests that coordination becomes harder when interests diverge, even when focal points exist [@rojoarjona2021focalpoints].
+
 **Prediction-market oracle resolution.** Many “market resolution” disputes are semantic and policy disputes (what counts as “yes/no”), not disputes about reality. Optimistic oracle designs (e.g., UMA) formalize propose–dispute flows and escalation [@umaOptimisticOracleDocs; @umaWhitepaperRepo], reinforcing the need to make resolution criteria explicit at claim creation time.
 
 **Peer prediction and information elicitation.** Peer prediction provides mechanisms for eliciting information when ground truth is costly or unavailable [@miller2005peerprediction]. Our approach differs in tying rewards to explicit evidence standards and contestability, rather than relying purely on mutual consistency.
 
 **Data quality.** Industrial data quality literature emphasizes that “quality” is multi-dimensional and consumer-context dependent [@wang1996beyondaccuracy]. We adopt this as motivation for separating accuracy (binary, evidence-based) from relevance (policy-dependent, non-binary).
+
+**Engagement and equilibrium failures in TCRs.** Game-theoretic analyses of Token-Curated Registries surface equilibria where challenges are rare, participation decays, or wealth concentrates [@asgaonkar2018tcrgametheory]. Proposed fixes include explicit incentives for participation (e.g., inflationary rewards) [@wang2019enhancing]. We treat these as cautionary prior art rather than solved problems.
 
 # System model and assumptions
 
@@ -151,7 +157,7 @@ Centralized platforms mash accuracy and relevance into a single engagement metri
 - **Accuracy**: global, binary classification under an evidence standard, resolved via dispute processes.
 - **Relevance**: local, non-binary importance produced by a policy-guided coherence game.
 
-## Claim templates (ambiguity as an attack surface)
+## Vagueness = Rejection: claim templates as a security primitive
 
 A jury can only resolve what is specified. If the claim is ambiguous, jurors will rationally coordinate on a shared interpretation—which can be wrong.
 
@@ -163,9 +169,37 @@ So claims must carry enough structure that “correct” is not a matter of vibe
 
 If missing, the correct verdict is not True/False; it is **Under-specified**.
 
+### A minimal claim schema
+
+At minimum, each claim should include:
+
+- **Statement**: a single proposition with explicit subject and predicate.
+- **Scope**: time window, jurisdiction/location, and any required units/definitions.
+- **Resolution policy pointer**: which evidence policy applies (pool + version).
+- **Canonical sources / tie-break rules**: enough to avoid “guessing what counts.”
+- **Evidence bundle**: references + integrity commitments (so evidence cannot be silently swapped).
+
+### Who sets the specificity threshold?
+
+Specificity is not objective. The system treats it as policy:
+
+- Each pool publishes a **claim template** (required fields) and an **evidence policy** (what evidence counts and how conflicts are resolved).
+- The template is versioned and governable, but must remain narrow: the more it expands, the more it becomes an expert gatekeeper.
+
+### Defending against strategic ambiguity
+
+Allowing Under-specified as an outcome creates a cheap way to reject ambiguous claims, but also introduces adversarial behavior (borderline claims, dispute spam). Mitigations include:
+
+- **Ambiguity slashing**: if a claim is ruled Under-specified, the author loses stake (it is treated as a failure, not “close enough”).
+- **Fast-path challenges**: Under-specified challenges can be cheaper than full accuracy challenges (lower evidentiary burden).
+- **Template linting**: UIs can run deterministic checks before a claim is accepted (missing timeframe, missing source class, undefined terms).
+- **Policy-defined semantics for inherently fuzzy terms**: if a domain requires fuzziness, it must define it explicitly (turning semantics into policy compliance).
+
 ## Common criticism: “consensus ≠ correctness”
 
 Schelling-style mechanisms maximize *coherence* with other voters, not truth directly. If the question is ambiguous or requires specialized expertise, naive coordination can converge on the wrong interpretation.
+
+This critique is not hypothetical; it appears in analyses of cryptoeconomic courts [@bergolla2022kleros; @kleros2021cryptoeconomics]. It is also consistent with evidence from coordination experiments showing that focal points may be insufficient under conflict of interest [@rojoarjona2021focalpoints].
 
 This design responds in three ways:
 
@@ -196,6 +230,8 @@ Any user can challenge a claim by staking resources and submitting counter-evide
 
 DDR selects jurors from an eligible pool and uses commit–reveal voting to reduce copy-the-majority dynamics [@kleros2019shortpaper]. Appeals increase stakes and can overturn lazy consensus, creating a “high-court effect” where higher rounds attract more expertise.
 
+Commit–reveal is not an anti-bribery primitive. It reduces simple herding, but cannot prevent off-chain coordination or delayed payments conditioned on revealed votes [@consensysPlcrVoting; @consensysDiligenceTcrAudit]. In practice, additional defenses are needed (e.g., credible identity/reputation weighting, randomized deadlines, penalties for non-reveal, and stake sizing that makes bribery uneconomical).
+
 ## Flow 4: relevance via coherence game
 
 Relevance is a policy-guided coherence game (a focal-point coordination problem) [@schelling1960strategy]:
@@ -215,7 +251,13 @@ The mechanism relies on two kinds of capital:
 - **Financial stake** (transferable): the direct bounty/challenge incentives.
 - **Reputation** (non-transferable): accumulated accuracy over time, usable as stake within limits.
 
-Reputation acts as both (a) a barrier-reducer for cash-poor experts and (b) a Sybil friction: building it is slow; losing it can be abrupt.
+Reputation acts as both (a) a barrier-reducer for cash-poor experts and (b) a Sybil friction: building it is slow; losing it can be abrupt. A simple operationalization is to treat vote weight as:
+
+$$
+w_i = s_i + \alpha \cdot \mathrm{rep}_i \quad \text{with caps and decay}
+$$
+
+where $s_i$ is stake, $\mathrm{rep}_i$ is topic-scoped non-transferable reputation, and $\alpha$ is a pool parameter. The goal is not to eliminate plutocracy risk, but to reduce the “only whales can matter” failure mode observed in TCR discussions [@asgaonkar2018tcrgametheory].
 
 Separately, the relevance game produces a **competence filter**: incoherent participants lose stake on average and eventually exit, while competent participants accrete stake. This is not a guarantee of truth; it is a selection pressure favoring competence under a stated policy.
 
@@ -237,6 +279,8 @@ This also mitigates “meta-curation”: even if a dominant interface is biased,
 A persistent failure mode of verification markets is “no yield in peacetime”: if there are few disputes, curators may leave.
 
 One funding path is to treat commercial claims as stakable assertions. An advertiser makes a claim and posts stake; truthful claims return stake, false claims are slashable. This can provide continuous verification demand even when political/news disputes are quiet.
+
+This funding model is speculative. It requires real economic modeling of (a) which claims advertisers would rationally stake on, (b) how stake sizes compare to legal/compliance alternatives, and (c) whether peacetime yields are sufficient to retain competent curators.
 
 # Threat model and security analysis
 
@@ -336,8 +380,33 @@ All simulations and figure generation are deterministic (fixed RNG seeds) and ru
 
 # Limitations and open problems
 
-- **Oracle capture**: DDR is attackable; mitigations include slippage, economic suicide, and forking.
+## The output is a signal, not “knowledge” in the philosophical sense
+
+Even with strong incentives, the protocol produces **stake-weighted, contestable labels**. When evidence is ambiguous, participants are lazy, or incentives are mis-set, the system can converge on the wrong equilibrium. This is a feature of Schelling-style mechanisms, not an implementation detail [@bergolla2022kleros; @kleros2021cryptoeconomics].
+
+## Schelling points can diverge from correctness
+
+Coordination on “what others will vote” can diverge from correctness, especially in domains requiring expertise or involving conflicts of interest [@rojoarjona2021focalpoints]. Appeals can help, but require careful stake sizing and empirical calibration.
+
+## Commit–reveal does not solve bribery
+
+Commit–reveal reduces copying but does not prevent off-chain coordination, delayed bribes, or non-reveal failure modes [@consensysPlcrVoting; @consensysDiligenceTcrAudit].
+
+## TCR-style participation failures remain a risk
+
+Low participation, wealth concentration, and social clique dynamics can still emerge. Prior work proposes mechanisms (e.g., inflationary incentives) to increase engagement [@wang2019enhancing], but real deployments need field evidence and adversarial analysis.
+
+## Forking is a social, not purely technical, fail-safe
+
+Forking can be a last resort, but it requires coordination, introduces legitimacy disputes, and can create path dependence. It should not be treated as an automatic security guarantee.
+
+## Sustainability is an open question
+
 - **Free riding**: verified truth is a public good; sustainability may require mixed funding.
+- **Advertiser staking**: promising but speculative; needs economic modeling and deployment evidence.
+
+## Temporal decay and governance capture
+
 - **Temporal decay**: claims become stale; incentives must reward withdrawal or profitable debunking.
 - **Governance capture**: token-weighted governance can plutocratize; minimize governance surface area.
 - **Domain expertise**: hard domains (law, medicine, finance) require credible expertise signals; pooled staking and reputation help, but do not replace expert institutions.
