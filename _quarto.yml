@@ -8,8 +8,8 @@ format:
   html:
     output-file: paper
     embed-resources: true
-    theme: darkly
-    css: styles.css
+    theme: default
+    # To use the PUW theme: theme: [default, themes/puw.scss]
     page-layout: article
     grid:
       body-width: 820px
@@ -27,4 +27,3 @@ format:
     number-sections: true
 
 bibliography: references.bib
-

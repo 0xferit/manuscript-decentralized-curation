@@ -13,7 +13,7 @@ This project is a Markdown workspace for a multi-part article series on the info
 - `releases/` (when present) contains frozen hash-versioned releases (snapshot + rendered outputs).
 - Quarto project files:
   - `_quarto.yml` (render config)
-  - `styles.css` (HTML styling; aligned with `proveuswrong/website`)
+  - `themes/puw.scss` (PUW custom HTML theme; aligned with `proveuswrong/website`)
   - `references.bib` (citations)
   - `analysis/run_all.py` + `requirements.txt` (deterministic simulations; generates `analysis/out/*` + `analysis/fig/*` on each run)
   - `_build-info.md` (overwritten in CI; shows deployed version + build time)

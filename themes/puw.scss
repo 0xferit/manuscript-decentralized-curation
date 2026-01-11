@@ -31,7 +31,7 @@
 }
 
 html {
-  /* Mirror proveuswrong.io fluid typography (15px → 18px, 320px → 1200px). */
+  /* Mirror proveuswrong.io fluid typography (15px to 18px, 320px to 1200px). */
   font-size: clamp(15px, calc(13.91px + 0.341vw), 18px);
 }
 
@@ -49,7 +49,7 @@ body {
   transition: color 0.1s ease, background-color 0.1s ease, opacity 0.1s ease;
 }
 
-/* Apply the site’s mono character broadly (but keep icons intact). */
+/* Apply the site's mono character broadly (but keep icons intact). */
 body a,
 body button,
 body h1,
