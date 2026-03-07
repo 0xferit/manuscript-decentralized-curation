@@ -397,7 +397,9 @@ This section defines the evaluation program and the concrete experiments impleme
 ## Research questions
 
 - **RQ1 (dispute economics):** Under what parameter regimes does it become economically rational to challenge provably false claims, and how does that affect false-claim survival?
+- **RQ1a (adversarial persistence):** Is the dispute mechanism economically punitive at scale — does a well-funded adversary submitting many false claims lose money, or can volume overcome per-claim losses?
 - **RQ2 (relevance robustness):** How robust is the relevance coherence mechanism to mixtures of competent vs noisy curators, and how sensitive is it to the coherence threshold $K$?
+- **RQ2a (collusion resistance):** At what colluding fraction does the coherence game break — can a coordinated bloc manipulate the relevance signal and retain stake?
 - **RQ3 (ambiguity defense):** Does allowing an **Under-specified** verdict (and requiring claim templates) reduce wrong outcomes on ambiguous claims compared to forced True/False resolution?
 
 ## Metrics
@@ -431,9 +433,19 @@ Figures @fig-e1-ev and @fig-e1-survival visualize these sweeps.
 
 ![E1: False-claim survival probability after a single challenge window.](analysis/fig/e1_false_survival.png){#fig-e1-survival}
 
+### E1-Adv: repeated attack by a well-funded adversary
+
+E1 models individual challenges; E1-Adv tests what happens when a well-funded adversary submits many false claims simultaneously. We simulate an adversary submitting 50 false claims, each with bounty $B$, across varying jury accuracy levels. For each claim, the adversary either goes undetected (with probability $1 - p_{\text{detect}}$) or is challenged and faces a jury.
+
+The key question is whether the system is economically punitive at scale: does the adversary profit from volume, or does each detected false claim compound losses?
+
+Figure @fig-e1-adv shows that even at $p = 0.60$, the adversary's cumulative balance is deeply negative. At $p = 0.80$, the adversary loses approximately $35 \times$ bounty per attack on average. Unchallenged claims survive but accumulate minimal confidence (low bounty $\times$ time), making them low-signal rather than validated.
+
+![E1-Adv: Survival rate and adversary profit/loss across 50 repeated false-claim attacks.](analysis/fig/e1_adversarial.png){#fig-e1-adv}
+
 ### E2: relevance coherence game (robustness + $K$ sensitivity)
 
-We simulate $M$ curators with evolving weights $w_i$ playing repeated relevance rounds on items with ground-truth relevance $r \in [0,10]$.
+We simulate $M$ curators with evolving weights $w_i$ playing repeated relevance rounds on items with ground-truth relevance $r \in [0,1]$.
 
 - competent curators vote $r + \epsilon$ (noise)
 - incompetent curators vote uniformly at random
@@ -455,6 +467,18 @@ Figures @fig-e2-error and @fig-e2-filter show robustness and selection effects.
 ![E2: Mean relevance error vs fraction competent, across coherence thresholds K.](analysis/fig/e2_relevance_error.png){#fig-e2-error}
 
 ![E2: Competence filter: final competent stake share (K=1.25).](analysis/fig/e2_competence_filter.png){#fig-e2-filter}
+
+### E2-Adv: coherence game under adversarial collusion
+
+E2 tests noise tolerance; E2-Adv tests deliberate manipulation. A colluding bloc of curators coordinates on biased ratings (shifting assessments toward 1.0 by a fixed bias of +0.30) to see whether the coherence mechanism resists or breaks.
+
+We sweep the colluding fraction from 0% to 30% with 60% honest-competent curators and $K = 1.25$.
+
+Figure @fig-e2-adv shows two regimes. Below 20% collusion, the mechanism contains the damage: signal error increases modestly (from 0.042 to 0.061) and colluder stake decays sharply (from 20% to 1.8%). The coherence filter ejects them because their coordinated bias pushes them outside the $K\sigma$ band defined by the honest majority. At 30% collusion, the mechanism breaks: colluders become large enough to shift $\mu$ toward their biased target, redefining the "coherent" band around themselves. Their stake share rises to 79% and signal error triples.
+
+This identifies a concrete threshold: the coherence game is robust to colluding minorities but vulnerable to colluding pluralities. Defenses for large-scale collusion (weight caps, identity diversity requirements, multi-pool cross-validation) are discussed in the Threat Model but remain untested.
+
+![E2-Adv: Signal error and colluder stake share under coordinated manipulation.](analysis/fig/e2_adversarial.png){#fig-e2-adv}
 
 ### E3: ambiguity stress test (templates + Under-specified)
 
@@ -535,7 +559,7 @@ Hard domains (law, medicine, finance) require credible expertise signals. Pooled
 
 The core claim of this paper is that the bottleneck behind most coordination failures is not governance, voting, or funding mechanisms; it is the upstream transformation of raw information into decision-grade knowledge. We call this transformation curation, and argue that centralized curation predictably breaks through opacity, capture, gaming, censorship, fragility, and the absence of contestability.
 
-The proposed direction is mechanism design: separate accuracy (binary, evidence-based, resolved via dispute resolution) from relevance (non-binary, policy-guided, resolved via coherence games), and align incentives so that correctness is profitable, dishonesty is expensive, and ambiguity is slashable. The evaluation experiments show that under reasonable parameterizations, challengers have positive expected value against false claims, the coherence game filters incompetent participants over time, and allowing Under-specified as a verdict substantially reduces wrong resolutions on ambiguous claims.
+The proposed direction is mechanism design: separate accuracy (binary, evidence-based, resolved via dispute resolution) from relevance (non-binary, policy-guided, resolved via coherence games), and align incentives so that correctness is profitable, dishonesty is expensive, and ambiguity is slashable. The evaluation experiments show that under reasonable parameterizations, challengers have positive expected value against false claims, the coherence game filters incompetent participants over time, and allowing Under-specified as a verdict substantially reduces wrong resolutions on ambiguous claims. Adversarial simulations demonstrate that the dispute mechanism is economically punitive against well-funded attackers and that the coherence game ejects colluding minorities—but also identify a concrete vulnerability: colluding blocs above approximately 20–30% of stake can capture the relevance signal.
 
 The design depends on assumptions that remain untested in deployment: that stake sizes will be large enough to attract competent participation, that dispute resolution produces accurate verdicts at acceptable cost, that claim templates can be made precise enough without becoming expert gatekeepers, and that the cold-start problem (bootstrapping liquidity and participation simultaneously) can be overcome. None of these are guaranteed.
 
@@ -543,7 +567,7 @@ The most important open problems are deployment evidence (no live system yet val
 
 # Appendix A: Epistemic and data-quality foundations
 
-This appendix summarizes the epistemology and data-quality grounding used to define “good curation.” It is intentionally separated from the main paper flow.
+This appendix maps the epistemological and data-quality grounding to the protocol’s concrete mechanisms. The main body defines what the system does; this appendix explains why those choices follow from established frameworks.
 
 ## A.1 Epistemology (knowledge as justified true belief)
 
@@ -553,14 +577,41 @@ Traditional epistemology treats knowledge as **justified true belief** (JTB):
 - **Justification**: adequate rational support (foundational evidence, coherence, reliability).
 - **Belief**: the claim is asserted, not merely entertained.
 
-For curation systems, this motivates explicit evidence standards and traceable reasoning, not mere aggregation of opinions.
+The protocol operationalizes each component:
+
+| JTB component | Protocol mechanism | Section reference |
+|---|---|---|
+| **Truth** | Binary accuracy verdict (Valid/Invalid) resolved by DDR under an evidence standard | Flow 3 |
+| **Justification** | Evidence bundles with integrity commitments; evidence policies define admissible sources and tie-break rules | Evidence policy; Claim templates |
+| **Belief** | Authorship requires stake; a claim is not merely asserted but economically committed to | Flow 1 |
+
+The departure from classical JTB is deliberate: the protocol does not claim to produce truth. It produces **stake-weighted, contestable labels** (signals) under an explicit evidence standard. The philosophical gap between "justified" and "true" is absorbed by the DDR system, whose accuracy is an inherited assumption, not a guarantee.
 
 ## A.2 Data quality dimensions
 
-Industrial data quality frameworks emphasize measurable dimensions such as accuracy, completeness, consistency, timeliness, validity, and uniqueness.
+Industrial data quality frameworks — notably @wang1996beyondaccuracy — decompose quality into measurable dimensions. The following table maps key dimensions to protocol mechanisms:
 
-For curation, these become operational requirements on claim schemas (required fields), evidence policies, and decay/refresh mechanisms.
+| Quality dimension | Definition (Wang & Strong) | Protocol operationalization |
+|---|---|---|
+| **Accuracy** | Extent to which data is correct and reliable | Binary verdict via dispute resolution (Flow 3) |
+| **Objectivity** | Extent to which data is unbiased and impartial | Separation of accuracy (evidence-based) from relevance (policy-guided); commit-reveal prevents herding |
+| **Timeliness** | Extent to which data is current | Confidence score decays implicitly: stale claims become profitable challenge targets (temporal decay) |
+| **Completeness** | Extent to which data is not missing | Claim templates enforce required fields; Under-specified verdict rejects incomplete claims |
+| **Relevance** | Extent to which data is applicable to the task | Coherence game (Flow 4) produces a relevance score under a pool-specific curation policy |
+| **Believability** | Extent to which data is regarded as credible | Confidence score $C = \sum_t B_t \cdot \Delta t$ accumulates as a function of bounty and uncontested time |
+| **Consistency** | Extent to which data is coherent with other data | Coherence rule ($|v_i - \mu| \le K\sigma$) penalizes incoherent assessments |
+| **Interpretability** | Extent to which data is in appropriate language/units | Claim schema requires explicit scope (time, jurisdiction, units/definitions) |
+
+Not all dimensions are equally covered. **Reputation** (of the source) and **accessibility** (ease of retrieval) are partially addressed by the reputation system and interface layer, respectively, but remain weaker than the directly incentivized dimensions.
 
 ## A.3 Credibility checklist
 
-Practical credibility frameworks include accuracy, authority, objectivity, currency, and coverage/scope. In this design, many of these become explicit fields in the claim template and evidence policy rather than implicit social signals.
+Practical credibility frameworks (e.g., the CRAAP test used in information literacy) include accuracy, authority, objectivity, currency, and coverage/scope. In this design, these map to explicit protocol structures rather than implicit social signals:
+
+- **Accuracy** → dispute resolution verdict
+- **Authority** → reputation score ($\mathrm{rep}_i$), topic-scoped and non-transferable
+- **Objectivity** → separation of powers (accuracy vs. relevance), commit-reveal voting
+- **Currency** → temporal decay via challenge economics; confidence score rewards recency
+- **Coverage** → evidence policy defines admissible sources; claim template requires scope
+
+The key shift from traditional credibility assessment to this protocol is that credibility indicators become **verifiable on-chain** (stakes, verdicts, vote histories) rather than depending on the consumer’s judgment of the source’s trustworthiness. This does not eliminate the need for judgment — evidence policy design and pool governance still require it — but it makes the judgment auditable.

@@ -66,4 +66,11 @@
   6. Added juror independence caveat — inline note after EV formula + new Limitations subsection ("Juror independence assumption").
   7. Dropped "fast-path challenges" bullet (Under-specified challenges cheaper than accuracy challenges) — removed as non-essential and confusing.
   8. Expanded reputation/alpha analysis — added tradeoff discussion ($\alpha = 0$ vs high $\alpha$), decay rationale, explicit flagging as open parameter design problem.
-- **Next:** Cherry-pick remaining Tier 3 fixes (contributions list, adversarial eval acknowledgment, appendix mappings). Build presentation for March 10.
+- **Round 3 revisions (March 2026):** Three major changes to `paper.qmd` and `analysis/run_all.py`:
+  1. **E2 scale fix:** Changed coherence game simulation from [0,10] to [0,1] scale to match the formalized Flow 4 protocol. Updated `noise_sigma` from 0.8 to 0.08 (proportional). Updated paper text.
+  2. **Adversarial simulations (E1-Adv, E2-Adv):** Added two new experiments with strategic adversaries:
+     - **E1-Adv (repeated attack):** Well-funded adversary submits 50 false claims. Result: system is economically punitive at all jury accuracy levels (adversary loses ~35× bounty per attack at p=0.80).
+     - **E2-Adv (colluding bloc):** Coordinated curators bias ratings by +0.30. Result: mechanism ejects colluding minorities (<20%); at 30% collusion, mechanism breaks (colluders capture 79% stake share, signal error triples). Identifies concrete robustness threshold.
+     - Added RQ1a and RQ2a to Research Questions. Added figures `e1_adversarial.png`, `e2_adversarial.png`. Updated eval summary with adversarial data points. Updated Conclusion.
+  3. **Appendix A expansion:** Replaced 3 placeholder subsections with full mapping tables: JTB components → protocol mechanisms, Wang & Strong quality dimensions → protocol operationalization, CRAAP credibility checklist → on-chain verifiable indicators.
+- **Next:** Build presentation for March 10. Remaining optional: contributions list refinement, confidence score spec appendix.

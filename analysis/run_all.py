@@ -64,6 +64,10 @@ def save_metadata() -> None:
     (OUT_DIR / "metadata.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
+# ---------------------------------------------------------------------------
+# E1: Accuracy dispute simulation
+# ---------------------------------------------------------------------------
+
 @dataclass(frozen=True)
 class E1Params:
     n_jurors: int = 5
@@ -131,18 +135,104 @@ def run_e1(params: E1Params) -> None:
     plt.close()
 
 
+# ---------------------------------------------------------------------------
+# E1-Adv: Repeated attack by a well-funded adversary
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class E1AdvParams:
+    n_jurors: int = 5
+    bounty: float = 100.0
+    stake_ratio: float = 0.25
+    p_detect: float = 0.35
+    n_attacks: int = 50         # adversary submits this many false claims
+    p_juror_range: tuple[float, ...] = (0.60, 0.70, 0.80, 0.90)
+
+
+def run_e1_adversarial(params: E1AdvParams) -> None:
+    """
+    Simulate a well-funded adversary who submits many false claims.
+    For each juror accuracy level, compute:
+    - expected number of false claims that survive
+    - adversary's cumulative profit/loss
+    - system's cumulative slashing revenue
+    """
+    rng = np.random.default_rng(42)
+    rows: list[dict] = []
+
+    for p in params.p_juror_range:
+        p_majority = majority_correct_probability(params.n_jurors, p)
+        b = params.bounty
+        s = b * params.stake_ratio
+        adv_balance = 0.0
+        survived = 0
+        challenged_count = 0
+
+        for _ in range(params.n_attacks):
+            detected = rng.random() < params.p_detect
+            if detected:
+                challenged_count += 1
+                jury_correct = rng.random() < p_majority
+                if jury_correct:
+                    # Adversary loses bounty to challenger
+                    adv_balance -= b
+                else:
+                    # Adversary keeps bounty, wins challenge stake
+                    adv_balance += s
+                    survived += 1
+            else:
+                # Claim survives unchallenged (but with low confidence score)
+                survived += 1
+
+        rows.append({
+            "p_juror_correct": p,
+            "n_attacks": params.n_attacks,
+            "survived": survived,
+            "survival_rate": survived / params.n_attacks,
+            "challenged": challenged_count,
+            "adversary_balance": adv_balance,
+            "adversary_balance_per_attack": adv_balance / params.n_attacks,
+        })
+
+    df = pd.DataFrame(rows)
+    df.to_csv(OUT_DIR / "e1_adversarial_results.csv", index=False)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.0, 4.5))
+
+    ax1.bar([f"p={p:.2f}" for p in params.p_juror_range], df["survival_rate"], color="#4C72B0")
+    ax1.set_ylabel("False claim survival rate")
+    ax1.set_title(f"E1-Adv: Survival rate ({params.n_attacks} attacks)")
+    ax1.set_ylim(0.0, 1.0)
+    ax1.axhline(1.0 - params.p_detect, color="gray", linestyle="--", linewidth=0.8, label="Unchallenged rate")
+    ax1.legend(frameon=False, fontsize=9)
+
+    colors = ["#C44E52" if v < 0 else "#55A868" for v in df["adversary_balance"]]
+    ax2.bar([f"p={p:.2f}" for p in params.p_juror_range], df["adversary_balance"], color=colors)
+    ax2.set_ylabel("Adversary cumulative balance")
+    ax2.set_title(f"E1-Adv: Adversary profit/loss ({params.n_attacks} attacks)")
+    ax2.axhline(0.0, color="black", linewidth=0.8)
+
+    plt.tight_layout()
+    plt.savefig(FIG_DIR / "e1_adversarial.png", dpi=200)
+    plt.close()
+
+
+# ---------------------------------------------------------------------------
+# E2: Relevance coherence game (scale: [0, 1])
+# ---------------------------------------------------------------------------
+
 @dataclass(frozen=True)
 class E2Params:
     n_curators: int = 200
     rounds: int = 200
     slash_rate: float = 0.03
-    noise_sigma: float = 0.8
+    noise_sigma: float = 0.08   # noise on [0,1] scale (was 0.8 on [0,10])
     ks: tuple[float, ...] = (0.8, 1.0, 1.25, 1.5)
     competent_fracs: tuple[float, ...] = (0.1, 0.3, 0.5, 0.7, 0.9)
 
 
-def _truncate_0_10(x: np.ndarray) -> np.ndarray:
-    return np.clip(x, 0.0, 10.0)
+def _truncate_0_1(x: np.ndarray) -> np.ndarray:
+    return np.clip(x, 0.0, 1.0)
 
 
 def run_e2(params: E2Params) -> None:
@@ -163,11 +253,11 @@ def run_e2(params: E2Params) -> None:
             abs_errors: list[float] = []
 
             for t in range(params.rounds):
-                r_true = float(rng.uniform(0.0, 10.0))
+                r_true = float(rng.uniform(0.0, 1.0))
 
                 v = np.empty(params.n_curators, dtype=float)
-                v[is_comp] = _truncate_0_10(rng.normal(loc=r_true, scale=params.noise_sigma, size=is_comp.sum()))
-                v[~is_comp] = rng.uniform(0.0, 10.0, size=(~is_comp).sum())
+                v[is_comp] = _truncate_0_1(rng.normal(loc=r_true, scale=params.noise_sigma, size=is_comp.sum()))
+                v[~is_comp] = rng.uniform(0.0, 1.0, size=(~is_comp).sum())
 
                 w_sum = float(w.sum())
                 mu = float((w * v).sum() / w_sum)
@@ -210,7 +300,7 @@ def run_e2(params: E2Params) -> None:
         sub = df[df["K"] == k].sort_values("competent_frac")
         plt.plot(sub["competent_frac"], sub["mean_abs_error"], marker="o", label=f"K={k:g}")
     plt.xlabel("Fraction competent curators")
-    plt.ylabel("Mean |mu - r|")
+    plt.ylabel("Mean |μ − r|")
     plt.title("E2: Relevance signal error vs competence and K")
     plt.legend(frameon=False, ncol=2)
     plt.tight_layout()
@@ -230,6 +320,134 @@ def run_e2(params: E2Params) -> None:
     plt.savefig(FIG_DIR / "e2_competence_filter.png", dpi=200)
     plt.close()
 
+
+# ---------------------------------------------------------------------------
+# E2-Adv: Coherence game under adversarial collusion
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class E2AdvParams:
+    n_curators: int = 200
+    rounds: int = 200
+    slash_rate: float = 0.03
+    noise_sigma: float = 0.08
+    K: float = 1.25
+    competent_frac: float = 0.6
+    colluding_fracs: tuple[float, ...] = (0.0, 0.05, 0.10, 0.15, 0.20, 0.30)
+    collusion_bias: float = 0.3  # colluders add this bias toward 1.0
+
+
+def run_e2_adversarial(params: E2AdvParams) -> None:
+    """
+    A colluding bloc of curators coordinates on biased ratings
+    (shifting toward 1.0 by a fixed bias). We measure:
+    - How much they shift the aggregate mu from ground truth
+    - How quickly they lose stake (or gain it if the bloc is large enough)
+    - Whether the competence filter ejects them
+    """
+    rows: list[dict] = []
+
+    for col_frac in params.colluding_fracs:
+        seed = int(10_000 * col_frac + 777)
+        rng = np.random.default_rng(seed)
+
+        n_comp = int(round(params.n_curators * params.competent_frac))
+        n_collude = int(round(params.n_curators * col_frac))
+        # Colluders replace some of the competent curators
+        n_comp_actual = max(0, n_comp - n_collude)
+        n_incomp = params.n_curators - n_comp_actual - n_collude
+
+        # Assign types: 0=competent, 1=incompetent, 2=colluder
+        types = np.array(
+            [0] * n_comp_actual + [1] * n_incomp + [2] * n_collude,
+            dtype=int,
+        )
+        rng.shuffle(types)
+
+        w = np.ones(params.n_curators, dtype=float)
+        abs_errors: list[float] = []
+        colluder_stakes: list[float] = []
+
+        for t in range(params.rounds):
+            r_true = float(rng.uniform(0.0, 1.0))
+
+            v = np.empty(params.n_curators, dtype=float)
+            comp_mask = types == 0
+            incomp_mask = types == 1
+            col_mask = types == 2
+
+            v[comp_mask] = _truncate_0_1(
+                rng.normal(loc=r_true, scale=params.noise_sigma, size=comp_mask.sum())
+            )
+            v[incomp_mask] = rng.uniform(0.0, 1.0, size=incomp_mask.sum())
+            # Colluders: they know the approximate truth but add a coordinated bias
+            if col_mask.any():
+                biased_target = min(1.0, r_true + params.collusion_bias)
+                v[col_mask] = _truncate_0_1(
+                    rng.normal(loc=biased_target, scale=params.noise_sigma * 0.5, size=col_mask.sum())
+                )
+
+            w_sum = float(w.sum())
+            mu = float((w * v).sum() / w_sum)
+            sigma = float(np.sqrt(((w * (v - mu) ** 2).sum() / w_sum)))
+
+            if sigma == 0.0:
+                coherent = np.ones(params.n_curators, dtype=bool)
+            else:
+                coherent = np.abs(v - mu) <= (params.K * sigma)
+
+            incoherent = ~coherent
+            slashed = params.slash_rate * w[incoherent]
+            total_slashed = float(slashed.sum())
+            w[incoherent] -= slashed
+
+            if total_slashed > 0 and coherent.any():
+                coherent_w = w[coherent]
+                w[coherent] += total_slashed * (coherent_w / float(coherent_w.sum()))
+
+            abs_errors.append(abs(mu - r_true))
+            if col_mask.any():
+                colluder_stakes.append(float(w[col_mask].sum()))
+
+        col_share_final = float(w[types == 2].sum() / float(w.sum())) if n_collude > 0 else 0.0
+        rows.append({
+            "colluding_frac": col_frac,
+            "mean_abs_error": float(np.mean(abs_errors)),
+            "final_colluder_stake_share": col_share_final,
+            "initial_colluder_stake_share": col_frac,
+            "mean_abs_error_last_50": float(np.mean(abs_errors[-50:])),
+        })
+
+    df = pd.DataFrame(rows)
+    df.to_csv(OUT_DIR / "e2_adversarial_results.csv", index=False)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.0, 4.5))
+
+    ax1.plot(df["colluding_frac"], df["mean_abs_error"], marker="o", color="#4C72B0", label="Full run")
+    ax1.plot(df["colluding_frac"], df["mean_abs_error_last_50"], marker="s", color="#55A868", label="Last 50 rounds")
+    ax1.set_xlabel("Fraction of colluding curators")
+    ax1.set_ylabel("Mean |μ − r|")
+    ax1.set_title(f"E2-Adv: Signal error under collusion (K={params.K})")
+    ax1.legend(frameon=False, fontsize=9)
+
+    ax2.plot(df["colluding_frac"], df["initial_colluder_stake_share"], marker="o",
+             linestyle="--", color="gray", label="Initial share")
+    ax2.plot(df["colluding_frac"], df["final_colluder_stake_share"], marker="o",
+             color="#C44E52", label="Final share")
+    ax2.set_xlabel("Fraction of colluding curators")
+    ax2.set_ylabel("Colluder stake share")
+    ax2.set_title(f"E2-Adv: Colluder stake decay (K={params.K})")
+    ax2.set_ylim(0.0, max(0.4, df["initial_colluder_stake_share"].max() * 1.2))
+    ax2.legend(frameon=False, fontsize=9)
+
+    plt.tight_layout()
+    plt.savefig(FIG_DIR / "e2_adversarial.png", dpi=200)
+    plt.close()
+
+
+# ---------------------------------------------------------------------------
+# E3: Ambiguity stress test
+# ---------------------------------------------------------------------------
 
 @dataclass(frozen=True)
 class E3Params:
@@ -290,11 +508,17 @@ def run_e3(params: E3Params) -> None:
     plt.close()
 
 
+# ---------------------------------------------------------------------------
+# Evaluation summary
+# ---------------------------------------------------------------------------
+
 def write_eval_summary() -> None:
     params_e1 = E1Params()
     e1 = pd.read_csv(OUT_DIR / "e1_results.csv")
     e2 = pd.read_csv(OUT_DIR / "e2_results.csv")
     e3 = pd.read_csv(OUT_DIR / "e3_results.csv")
+    e1_adv = pd.read_csv(OUT_DIR / "e1_adversarial_results.csv")
+    e2_adv = pd.read_csv(OUT_DIR / "e2_adversarial_results.csv")
 
     # Pick representative summary points (deterministic).
     e1_sub = e1[e1["stake_over_bounty"] == 0.25].copy()
@@ -302,13 +526,17 @@ def write_eval_summary() -> None:
     e1_point = e1_sub.sort_values("p_delta").iloc[0]
     e2_point = e2[(e2["K"] == 1.25) & (e2["competent_frac"] == 0.7)].iloc[0]
     e3_point = e3[e3["ambig_frac"] == 0.25].iloc[0]
+    e1_adv_point = e1_adv[e1_adv["p_juror_correct"] == 0.80].iloc[0]
+    e2_adv_point = e2_adv[e2_adv["colluding_frac"] == 0.15].iloc[0]
 
     summary = f"""\
 ### Evaluation snapshot (representative points)
 
 - **E1:** At $p=0.80$ (per-juror), $N={params_e1.n_jurors}$, $S/B=0.25$, challenger EV on false claims is **{e1_point['ev_false'] / params_e1.bounty:.2f}× bounty** and false-claim survival (one window, $p_\\mathrm{{detect}}={params_e1.p_detect:.2f}$) is **{e1_point['false_survival']:.2f}**.
-- **E2:** At initial competence 0.70 and $K=1.25$, mean relevance error is **{e2_point['mean_abs_error']:.2f}** and final competent stake share is **{e2_point['final_competent_stake_share']:.2f}**.
+- **E2:** At initial competence 0.70 and $K=1.25$, mean relevance error is **{e2_point['mean_abs_error']:.3f}** and final competent stake share is **{e2_point['final_competent_stake_share']:.2f}**.
 - **E3:** At ambiguity rate 0.25, baseline wrong-rate is **{e3_point['baseline_wrong_rate']:.2f}** vs defended **{e3_point['defended_wrong_rate']:.2f}** (Under-specified enabled).
+- **E1-Adv:** A well-funded adversary submitting {int(e1_adv_point['n_attacks'])} false claims at $p=0.80$ achieves a survival rate of **{e1_adv_point['survival_rate']:.2f}** with cumulative balance of **{e1_adv_point['adversary_balance']:.0f}** (negative = system wins).
+- **E2-Adv:** A 15% colluding bloc (bias = +0.30) shifts mean error from {e2_adv[(e2_adv['colluding_frac']==0.0)].iloc[0]['mean_abs_error']:.3f} to **{e2_adv_point['mean_abs_error']:.3f}** over 200 rounds, but their stake share decays from {e2_adv_point['initial_colluder_stake_share']:.2f} to **{e2_adv_point['final_colluder_stake_share']:.3f}**.
 """
     (OUT_DIR / "eval_summary.md").write_text(summary, encoding="utf-8")
 
@@ -318,11 +546,12 @@ def main() -> None:
     save_metadata()
 
     run_e1(E1Params())
+    run_e1_adversarial(E1AdvParams())
     run_e2(E2Params())
+    run_e2_adversarial(E2AdvParams())
     run_e3(E3Params())
     write_eval_summary()
 
 
 if __name__ == "__main__":
     main()
-
