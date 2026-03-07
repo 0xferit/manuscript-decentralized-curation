@@ -541,6 +541,27 @@ def write_eval_summary() -> None:
     (OUT_DIR / "eval_summary.md").write_text(summary, encoding="utf-8")
 
 
+def write_reading_time() -> None:
+    """Count words in paper.qmd and emit an estimated reading time."""
+    paper = ROOT / "paper.qmd"
+    text = paper.read_text(encoding="utf-8")
+    # Strip YAML front matter
+    if text.startswith("---"):
+        end = text.index("---", 3)
+        text = text[end + 3 :]
+    # Strip Quarto shortcodes, LaTeX math blocks, and image refs
+    import re
+    text = re.sub(r"\{\{<.*?>\}\}", "", text)
+    text = re.sub(r"\$\$[^$]*?\$\$", "", text, flags=re.DOTALL)
+    text = re.sub(r"!\[.*?\]\(.*?\)", "", text)
+    words = len(text.split())
+    # ~250 wpm for dense technical prose; add 0.5 min per figure
+    n_figures = len(re.findall(r"\{#fig-", paper.read_text(encoding="utf-8")))
+    minutes = round(words / 250 + n_figures * 0.5)
+    snippet = f"::: {{.callout-note appearance=\"minimal\"}}\n**Estimated reading time: ~{minutes} min** ({words:,} words, {n_figures} figures)\n:::\n"
+    (OUT_DIR / "reading_time.md").write_text(snippet, encoding="utf-8")
+
+
 def main() -> None:
     ensure_dirs()
     save_metadata()
@@ -551,6 +572,7 @@ def main() -> None:
     run_e2_adversarial(E2AdvParams())
     run_e3(E3Params())
     write_eval_summary()
+    write_reading_time()
 
 
 if __name__ == "__main__":

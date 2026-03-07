@@ -5,6 +5,8 @@ bibliography: references.bib
 
 {{< include _build-info.md >}}
 
+{{< include analysis/out/reading_time.md >}}
+
 # Abstract
 
 We have more information than any civilization in history, and yet we are worse at making sense of it. This is not a paradox. It is a known failure mode: quantity crowds out quality when the two are hard to distinguish, and producing quality is expensive while producing quantity is cheap.
