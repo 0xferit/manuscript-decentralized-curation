@@ -73,4 +73,19 @@
      - **E2-Adv (colluding bloc):** Coordinated curators bias ratings by +0.30. Result: mechanism ejects colluding minorities (<20%); at 30% collusion, mechanism breaks (colluders capture 79% stake share, signal error triples). Identifies concrete robustness threshold.
      - Added RQ1a and RQ2a to Research Questions. Added figures `e1_adversarial.png`, `e2_adversarial.png`. Updated eval summary with adversarial data points. Updated Conclusion.
   3. **Appendix A expansion:** Replaced 3 placeholder subsections with full mapping tables: JTB components → protocol mechanisms, Wang & Strong quality dimensions → protocol operationalization, CRAAP credibility checklist → on-chain verifiable indicators.
-- **Next:** Build presentation for March 10. Remaining optional: contributions list refinement, confidence score spec appendix.
+- **Round 4 revisions (March 2026):** Fourteen edits to `paper.qmd` and `references.bib`:
+  1. **Scoping paragraph:** Added explicit statement that coordination (phase two) is out of scope; the paper addresses only the information-to-knowledge transformation.
+  2. **Contributions list updated:** Added formalized coherence game, public good framing (Groves-Ledyard), and adversarial evaluation program as named contributions.
+  3. **Advertiser staking expanded:** Added economic argument (when staking is rational vs. third-party certification), ad fraud statistics ($170B projected losses by 2028), and explicit limitations. Elevated from sketch to proper subsection.
+  4. **Author disclosure:** Added callout noting multi-year operational experience with Kleros (informs design, not empirical validation).
+  5. **Reputation limitation:** New Limitations subsection flagging that the reputation mechanism ($\alpha$, decay) is specified but not experimentally validated.
+  6. **Simulation limitations:** New Limitations subsection noting E1-Adv single-seed variance.
+  7. **Notation table:** Added @tbl-notation before Mechanisms with all symbols ($B$, $S$, $C$, $v_i$, $w_i$, $\mu$, $\sigma$, $K$, $\alpha$, $R$, $N$, $p$, $d$, $n$).
+  8. **Flow 1 formalized:** Added 5-step protocol (claim authoring → template validation → submission → confidence accumulation → outcome). Clarified $C$ unit (token·time), constant-bounty simplification ($C = B \cdot T$), and cross-pool non-comparability.
+  9. **Flow 2 formalized:** Added 5-step protocol (pool creation → staking with cooldown → random drafting → participation → payout/slashing) plus design rationale subsection.
+  10. **Groves-Ledyard paragraph split:** Broke 12-sentence wall into 3 focused paragraphs (mechanism, public good claim, protocol application).
+  11. **Roadmap capitalization fixed:** Section names now match actual headings.
+  12. **Dead references removed:** `shumailov2023recursion` and `kosmarski2020tcrjournal` removed from `references.bib`.
+  13. **E2-Adv clarified:** Explained that colluders are competent-with-bias (not random), detailed population composition at each collusion level, added note that honest curators become the ones ejected when the mechanism breaks.
+  14. Paper grew from 620 to 688 lines; `references.bib` trimmed from 19 to 17 entries.
+- **Next:** Build presentation for March 10.

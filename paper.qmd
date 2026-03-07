@@ -40,6 +40,8 @@ So you can think of most hard problems as two-phase:
 
 The thesis of this paper is blunt: **the bottleneck is almost always phase one.** We keep trying to fix coordination with better governance, better voting, better funding mechanisms, while standing on a broken knowledge layer.
 
+This paper addresses phase one only. Phase two — coordination given shared knowledge — is a rich field with mature tools (voting, multi-sig governance, futarchy, quadratic funding) that work well *when the input knowledge is reliable*. The hard part is not choosing what to do; it is agreeing on what is true. This manuscript focuses entirely on the information-to-knowledge transformation and proposes no coordination mechanism.
+
 ## Information abundance, knowledge scarcity
 
 The internet solved access to *information* but not access to *knowledge*.
@@ -64,6 +66,10 @@ When curation breaks, damage is not evenly distributed.
 - **Platforms win engagement but lose trust**: long-run legitimacy erodes. Global trust in news hovers around 40% [@reuters2024digitalnews].
 - **Society loses coherence**: groups build incompatible knowledge slices and then collide instead of coordinating.
 
+::: {.callout-note appearance="minimal"}
+**Disclosure.** The author has multi-year operational experience with Kleros, a deployed decentralized dispute resolution system. This experience informs the design choices and threat model but does not constitute empirical validation. No deployment data from Kleros is used in this paper.
+:::
+
 ## Contributions
 
 This paper contributes:
@@ -71,12 +77,14 @@ This paper contributes:
 - **A framing**: curation (information → knowledge) as the upstream bottleneck behind coordination failures.
 - **A separation of powers**: **Accuracy (global, binary)** vs **Relevance (local, non-binary)** with distinct mechanisms.
 - **A protocol architecture**: claims, evidence, disputes, and pooled staking to reduce capture and liability.
+- **A formalized coherence game**: a fully specified Schelling-point mechanism for relevance assessment, with commit-reveal protocol, equilibrium argument, and explicit collusion threshold (~20–30% of stake).
+- **A public good framing**: curated knowledge as a non-excludable good subject to free-rider dynamics, with structural parallels to the Groves-Ledyard deviation penalty.
 - **A security posture**: treat ambiguity as an attack surface (“Vagueness = Rejection”) and treat interface capture as a first-class risk.
-- **An evaluation program**: a reproducible simulation suite for incentive alignment, coherence dynamics, and ambiguity failure modes.
+- **An adversarial evaluation program**: a reproducible simulation suite covering incentive alignment, coherence dynamics, ambiguity failure modes, repeated economic attacks, and coordinated collusion.
 
 # Roadmap
 
-Background and Problem Statement frames the problem and failure modes of centralized curation. System Model and Assumptions defines actors, artifacts, and trust assumptions. Mechanisms describes the accuracy and relevance separation, claim templates, staking, disputes, and the coherence game. Threat Model and Security Analysis maps attacks to defenses. Evaluation tests key parameters via simulation. Limitations and Open Problems closes with honest constraints and future work.
+Background and problem statement frames the problem and failure modes of centralized curation. System model and assumptions defines actors, artifacts, and trust assumptions. Mechanisms describes the accuracy and relevance separation, claim templates, staking, disputes, and the coherence game. Threat model and security analysis maps attacks to defenses. Evaluation tests key parameters via simulation. Limitations and open problems closes with honest constraints and future work.
 
 # Background and problem statement
 
@@ -109,7 +117,11 @@ For extended epistemology and data quality foundations, see Appendix A.
 
 This work sits at the intersection of incentive design, oracle/dispute mechanisms, and information quality.
 
-**Mechanism design for public goods.** The idea that self-interest can be harnessed for socially optimal outcomes in public goods provision was formalized by @groves1977freeriderproblem. Their paper solved the classical free rider problem — the assumption, dominant since @samuelson1954publicgoods, that public goods would always be undersupplied because rational agents conceal their true preferences. Groves and Ledyard constructed a class of allocation-and-tax mechanisms where truthful preference revelation is the Nash equilibrium: each consumer's tax includes a penalty proportional to how much their reported valuation deviates from the mean of the others' reports. Lying costs more than truth-telling. Both Welfare Theorems hold. Curated knowledge, when published on a permissionless protocol, is a public good: non-rivalrous by nature (one reader's consumption does not diminish another's) and non-excludable by architecture (no gatekeeper can restrict access to on-chain claims and verdicts). The classical prediction therefore applies: without intervention, curation will be undersupplied. This protocol applies the Groves-Ledyard insight to knowledge production. The coherence game penalizes curators whose relevance assessments deviate excessively from the group mean, structurally analogous to the quadratic deviation penalty in the Groves-Ledyard tax rule. The bounty-and-challenge mechanism makes it individually rational to verify rather than free-ride. The key difference: Groves-Ledyard assume a single, well-defined public good with cardinal preferences; curation operates over a high-dimensional claim space with two quality dimensions, adversarial participants, and no central allocator.
+**Mechanism design for public goods.** The idea that self-interest can be harnessed for socially optimal outcomes in public goods provision was formalized by @groves1977freeriderproblem. Their paper solved the classical free rider problem — the assumption, dominant since @samuelson1954publicgoods, that public goods would always be undersupplied because rational agents conceal their true preferences. Groves and Ledyard constructed a class of allocation-and-tax mechanisms where truthful preference revelation is the Nash equilibrium: each consumer's tax includes a penalty proportional to how much their reported valuation deviates from the mean of the others' reports. Lying costs more than truth-telling. Both Welfare Theorems hold.
+
+Curated knowledge, when published on a permissionless protocol, is a public good: non-rivalrous by nature (one reader's consumption does not diminish another's) and non-excludable by architecture (no gatekeeper can restrict access to on-chain claims and verdicts). The classical prediction therefore applies: without intervention, curation will be undersupplied.
+
+This protocol applies the Groves-Ledyard insight to knowledge production. The coherence game penalizes curators whose relevance assessments deviate excessively from the group mean, structurally analogous to the quadratic deviation penalty in the Groves-Ledyard tax rule. The bounty-and-challenge mechanism makes it individually rational to verify rather than free-ride. The key difference: Groves-Ledyard assume a single, well-defined public good with cardinal preferences; curation operates over a high-dimensional claim space with two quality dimensions, adversarial participants, and no central allocator.
 
 **Token-curated registries (TCRs).** TCRs propose token-incentivized curation of lists [@goldin2017tcr]. We generalize the unit from “is item in list?” to **claims + evidence + disputes** and explicitly separate accuracy from relevance.
 
@@ -183,6 +195,29 @@ This design does not eliminate trust; it **constrains** it.
 
 # Mechanisms
 
+## Notation
+
+| Symbol | Meaning |
+|---|---|
+| $B$ ($B_t$) | Bounty posted by the claim author (at interval $t$) |
+| $S$ | Challenge stake posted by a challenger |
+| $C$ | Confidence score: $C = \sum_t B_t \cdot \Delta t$ |
+| $v_i$ | Curator $i$'s relevance rating, $v_i \in [0, 1]$ |
+| $w_i$ | Curator $i$'s vote weight: $w_i = s_i + \alpha \cdot \mathrm{rep}_i$ |
+| $s_i$ | Curator $i$'s financial stake |
+| $\mathrm{rep}_i$ | Curator $i$'s non-transferable reputation (topic-scoped) |
+| $\alpha$ | Pool parameter: reputation-to-weight conversion factor |
+| $\mu$ | Weighted mean of relevance ratings |
+| $\sigma$ | Weighted standard deviation of relevance ratings |
+| $K$ | Coherence threshold: curator $i$ is coherent iff $|v_i - \mu| \le K\sigma$ |
+| $R$ | Optional protocol reward added to the coherence game pot |
+| $N$ | Jury size (odd integer) |
+| $p$ | Per-juror correctness probability |
+| $d$ ($p_{\text{detect}}$) | Probability a false claim is detected and challenged |
+| $n$ | Number of curators drafted for a relevance round |
+
+: Key notation used throughout. {#tbl-notation}
+
 ## Overview: separation of powers
 
 Centralized platforms mash accuracy and relevance into a single engagement metric. We separate them:
@@ -241,13 +276,27 @@ This design responds in three ways:
 
 ## Flow 1: submission and confidence signaling
 
-The interface displays a **Confidence Score** $C$ to guide reader attention. The score accumulates over discrete time intervals: for each interval $t$ that a claim remains uncontested, the score increases by the product of the bounty at risk and the interval duration:
+### Protocol
+
+1. **Claim authoring.** The author selects a pool, drafts a claim conforming to the pool’s claim template, attaches an evidence bundle with integrity commitments (hashes), and specifies a bounty $B$.
+2. **Template validation.** The interface (or an on-chain check) verifies that the claim satisfies the pool’s required fields (scope, resolution policy, canonical sources). Claims that fail template validation are rejected before posting.
+3. **Submission.** The author locks bounty $B$ on-chain. The claim enters the challenge window. The confidence score clock starts.
+4. **Confidence accumulation.** For each discrete interval $\Delta t$ that the claim remains uncontested, the confidence score increases by $B_t \cdot \Delta t$.
+5. **Outcome.** If no challenge is filed within the window, the claim is marked Valid by default (optimistic finality). The author may withdraw the bounty after the window closes, which stops confidence accumulation.
+
+### Confidence score
+
+The interface displays a **Confidence Score** $C$ to guide reader attention:
 
 $$
 C = \sum_{t} B_t \cdot \Delta t
 $$
 
-where $B_t$ is the bounty at risk during interval $t$ and $\Delta t$ is the interval length. The score is a raw cumulative measure; the protocol does not impose a threshold for “high confidence.” Readers and interfaces decide what score is sufficient for their purposes. As the system matures and accumulates data, statistical inference over historical score distributions can provide context (e.g., percentile rankings), but this is not available at launch.
+where $B_t$ is the bounty at risk during interval $t$ and $\Delta t$ is the interval length. In the common case the bounty is constant ($B_t = B$ for all $t$), and the formula reduces to $C = B \cdot T$ where $T$ is total uncontested time. The subscript $t$ generalizes to cases where the author tops up or partially withdraws bounty.
+
+The unit of $C$ is token·time (e.g., ETH·hours). This is intentionally non-normalized: $C$ is not a probability and is not comparable across pools with different token denominations. Within a single pool, higher $C$ means more skin-in-the-game-over-time. Cross-pool comparison requires normalization by interfaces (e.g., percentile within pool).
+
+The score is a raw cumulative measure; the protocol does not impose a threshold for “high confidence.” Readers and interfaces decide what score is sufficient for their purposes. As the system matures and accumulates data, statistical inference over historical score distributions can provide context (e.g., percentile rankings), but this is not available at launch.
 
 Invariants:
 
@@ -258,9 +307,17 @@ Invariants:
 
 Validators stake on **pools** (topic-scoped domains) rather than individual claims. This structural choice addresses two problems simultaneously: targeted legal liability and concentrated risk.
 
-**Pool formation.** A pool is created by governance with an evidence policy, a claim template, and initial parameters ($K$, $\alpha$, minimum stake). Validators join a pool by locking stake; they are then eligible for random drafting on any claim within that pool.
+### Protocol
 
-**Random drafting.** When a claim requires validation or a dispute requires jurors, the protocol draws from the pool's eligible set using on-chain randomness (e.g., VRF-based). The validator/juror does not choose which claim to evaluate; the protocol assigns it. This is analogous to jury duty: participation is voluntary (opt-in to the pool), but assignment is random.
+1. **Pool creation.** Governance creates a pool with an evidence policy, a claim template, and initial parameters ($K$, $\alpha$, minimum stake).
+2. **Staking.** A validator locks stake $s_i$ on the pool. The validator is now eligible for random drafting on any claim within that pool. Stake can be withdrawn after a cooldown period (preventing stake-and-flee attacks).
+3. **Random drafting.** When a claim requires validation or a dispute requires jurors, the protocol draws from the pool’s eligible set using on-chain randomness (e.g., VRF-based), weighted by stake. The validator/juror does not choose which claim to evaluate; the protocol assigns it.
+4. **Participation.** The drafted validator evaluates the assigned claim (accuracy dispute or relevance round) under the pool’s evidence policy.
+5. **Payout/slashing.** Coherent or correct validators receive rewards (from slashed stakes or protocol rewards $R$). Incoherent or incorrect validators lose stake proportionally.
+
+### Design rationale
+
+**Jury duty analogy.** Participation is voluntary (opt-in to the pool), but assignment is random. This is analogous to jury duty and is critical for liability diffusion.
 
 **Liability diffusion.** Because validators do not choose specific claims, targeted legal pressure (e.g., “you validated claim X, so you are liable for defamation”) is diffused across the entire pool. The larger the pool, the weaker the per-validator liability signal. This creates a form of “herd immunity”: attacking any single validator for a specific verdict requires attributing intent to what is effectively a lottery assignment. This does not eliminate legal risk entirely, but it raises the cost of targeted chilling effects substantially.
 
@@ -352,9 +409,13 @@ This also mitigates “meta-curation”: even if a dominant interface is biased,
 
 A persistent failure mode of verification markets is “no yield in peacetime”: if there are few disputes, curators may leave.
 
-One funding path is to treat commercial claims as stakable assertions. An advertiser makes a claim and posts stake; truthful claims return stake, false claims are slashable. This can provide continuous verification demand even when political/news disputes are quiet.
+One funding path is to treat commercial claims as stakable assertions. An advertiser makes a product claim (“our battery lasts 48 hours under normal use”), structures it as a protocol claim with scope and evidence policy, and posts stake. If the claim survives the challenge window, the stake is returned and the claim carries a confidence score. If a challenger proves it false, the advertiser loses stake to the challenger.
 
-This funding model is speculative. It requires real economic modeling of (a) which claims advertisers would rationally stake on, (b) how stake sizes compare to legal/compliance alternatives, and (c) whether peacetime yields are sufficient to retain competent curators.
+**When is staking rational for an advertiser?** An advertiser with a truthful claim faces expected cost $B \cdot (1 - p_{\text{survive}})$, where $B$ is the stake and $p_{\text{survive}}$ is the probability of surviving challenges. For a genuinely true claim with clear evidence, $p_{\text{survive}}$ approaches 1, making the expected cost near zero. The alternative — third-party certification, legal compliance, or FTC substantiation — has fixed costs regardless of truth value. The crossover point: staking is cheaper when the claim is verifiable and the stake is smaller than the cost of equivalent third-party certification. It is more expensive (and intended to be) when the claim is false or ambiguous.
+
+**Why this matters for the protocol.** Digital advertising loses an estimated 20–30% of spend to fraud and invalid traffic, with projected losses exceeding $170 billion annually by 2028. The core problem is structural: the entity reporting ad performance (the platform) profits from inflated metrics. Advertiser staking inverts this: the advertiser commits capital to the truth of a specific, auditable claim, and the protocol’s existing challenge infrastructure provides continuous verification. This creates demand for curation labor even when political or news disputes are quiet.
+
+**Limitations.** This funding model is exploratory. Open questions include: which claim types are stakeable (factual product claims are straightforward; subjective claims like “best in class” are not), whether stake sizes will be large enough to attract competent challengers, how this interacts with existing advertising regulation (staking does not replace legal compliance), and whether peacetime yields are sufficient to retain curators.
 
 # Threat model and security analysis
 
@@ -472,13 +533,13 @@ Figures @fig-e2-error and @fig-e2-filter show robustness and selection effects.
 
 ### E2-Adv: coherence game under adversarial collusion
 
-E2 tests noise tolerance; E2-Adv tests deliberate manipulation. A colluding bloc of curators coordinates on biased ratings (shifting assessments toward 1.0 by a fixed bias of +0.30) to see whether the coherence mechanism resists or breaks.
+E2 tests noise tolerance; E2-Adv tests deliberate manipulation. A colluding bloc of curators coordinates on biased ratings (shifting assessments toward 1.0 by a fixed bias of +0.30) to see whether the coherence mechanism resists or breaks. Critically, colluders in this simulation are *competent-with-bias*: they observe the true relevance and systematically shift it, rather than voting randomly. This makes them harder to eject than incompetent curators because their votes are internally consistent.
 
-We sweep the colluding fraction from 0% to 30% with 60% honest-competent curators and $K = 1.25$.
+We sweep the colluding fraction from 0% to 30% with 60% honest-competent curators (the remainder are incompetent) and $K = 1.25$. As colluding fraction increases, colluders replace honest-competent curators, so at 30% collusion the composition is 30% honest-competent, 10% incompetent, and 30% colluding.
 
-Figure @fig-e2-adv shows two regimes. Below 20% collusion, the mechanism contains the damage: signal error increases modestly (from 0.042 to 0.061) and colluder stake decays sharply (from 20% to 1.8%). The coherence filter ejects them because their coordinated bias pushes them outside the $K\sigma$ band defined by the honest majority. At 30% collusion, the mechanism breaks: colluders become large enough to shift $\mu$ toward their biased target, redefining the "coherent" band around themselves. Their stake share rises to 79% and signal error triples.
+Figure @fig-e2-adv shows two regimes. Below 20% collusion, the mechanism contains the damage: signal error increases modestly (from 0.042 to 0.061) and colluder stake decays sharply (from 20% to 1.8%). The coherence filter ejects them because their coordinated bias pushes them outside the $K\sigma$ band defined by the honest majority. At 30% collusion, the mechanism breaks: the colluding bloc is large enough to shift $\mu$ toward their biased target, redefining the "coherent" band around themselves. Honest curators are now the ones who fall outside the band. Colluder stake share rises to 79% and signal error triples.
 
-This identifies a concrete threshold: the coherence game is robust to colluding minorities but vulnerable to colluding pluralities. Defenses for large-scale collusion (weight caps, identity diversity requirements, multi-pool cross-validation) are discussed in the Threat Model but remain untested.
+This identifies a concrete threshold: the coherence game is robust to colluding minorities but vulnerable to colluding pluralities. The vulnerability is amplified because colluders are competent (their votes cluster tightly), making them indistinguishable from honest curators in any single round. Defenses for large-scale collusion (weight caps, identity diversity requirements, multi-pool cross-validation) are discussed in the Threat Model but remain untested.
 
 ![E2-Adv: Signal error and colluder stake share under coordinated manipulation.](analysis/fig/e2_adversarial.png){#fig-e2-adv}
 
@@ -556,6 +617,14 @@ Token-weighted governance can plutocratize. The design minimizes governance surf
 ## Domain expertise
 
 Hard domains (law, medicine, finance) require credible expertise signals. Pooled staking and reputation help, but do not replace expert institutions. The system may work well for domains where evidence is publicly verifiable and poorly for domains where evidence requires specialized training to evaluate.
+
+## Reputation mechanism is unvalidated
+
+The reputation weight ($w_i = s_i + \alpha \cdot \mathrm{rep}_i$ with decay) is specified as a mechanism but not experimentally tested. All simulations (E1–E3, including adversarial variants) model financial stake only ($\alpha = 0$ effectively). Whether reputation accelerates the competence filter, at what $\alpha$ value reputation gaming becomes a risk, and how decay rate affects equilibrium are open empirical questions.
+
+## Simulation limitations
+
+E1-Adv uses a single random seed and a single Monte Carlo run of 50 attacks. While the directional result (adversary loses money) is robust across parameter ranges, the specific magnitudes (e.g., “$35\times$ bounty loss”) carry sampling variance that is not characterized by confidence intervals. Extending to multi-seed runs with reported variance is straightforward but not yet implemented.
 
 # Conclusion
 
