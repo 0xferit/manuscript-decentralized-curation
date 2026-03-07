@@ -583,6 +583,16 @@ These objectives conflict fundamentally:
 
 This section positions the design relative to the existing literature. The goal is not comprehensiveness but clarity: where does this work sit, what does it borrow, and where does it diverge?
 
+### Mechanism Design for Public Goods
+
+The idea that self-interest can be harnessed for socially optimal outcomes in public goods provision was formalized by [Groves & Ledyard (1977)](https://www.jstor.org/stable/1914085). Their paper solved the classical free rider problem — the assumption, dominant since [Samuelson (1954)](https://www.jstor.org/stable/1925895), that public goods would always be undersupplied because rational agents conceal their true preferences. Groves-Ledyard constructed a class of allocation-and-tax mechanisms where truthful preference revelation is the Nash equilibrium: each consumer's tax includes a penalty proportional to how much their reported valuation deviates from the mean of the others' reports. Lying costs more than truth-telling. Both Welfare Theorems hold.
+
+Curated knowledge is a public good. It is non-excludable (anyone can consume it once produced) and non-rivalrous (one person's use does not diminish another's). The classical prediction applies: without intervention, curation will be undersupplied. Rational agents will consume curated knowledge without contributing to its production — the "lazy curator" problem this protocol explicitly addresses.
+
+This protocol applies the Groves-Ledyard insight to knowledge production. The coherence game penalizes curators whose relevance assessments deviate excessively from the group mean — structurally analogous to the quadratic deviation penalty in the Groves-Ledyard tax rule. The bounty-and-challenge mechanism for accuracy makes it individually rational to verify rather than free-ride, because challengers capture the stakes of those who curate dishonestly. In both cases, the mechanism designer does not need to observe truth directly. The mechanism makes truth-telling the cheapest strategy.
+
+The key difference: Groves-Ledyard assume a single, well-defined public good with cardinal preferences. Curation operates over a high-dimensional claim space with two distinct quality dimensions (accuracy and relevance), adversarial participants, and no central allocator. The mechanism design challenge is correspondingly harder — but the foundational insight is the same.
+
 ### Token-Curated Registries
 
 [TCRs (Goldin, 2017)](https://medium.com/@ilovebagels/token-curated-registries-1-0-61a232f8dac7) are the most direct ancestor. They proposed stake-weighted curation for maintaining quality lists — a powerful idea that struggled in practice. The [Gitcoin mechanism analysis](https://gitcoin.co/mechanisms/token-curated-registry) provides a comprehensive overview of TCR mechanics and deployment history. adChain, the first live TCR (2018), suffered from low participation and curator apathy. [Kosmarski & Gordiychuk (2020)](https://onlinelibrary.wiley.com/doi/10.1002/leap.1302) proposed TCRs for scholarly journals, identifying real problems in peer review incentives but inheriting TCR structural limitations.
