@@ -555,10 +555,10 @@ def write_reading_time() -> None:
     text = re.sub(r"\$\$[^$]*?\$\$", "", text, flags=re.DOTALL)
     text = re.sub(r"!\[.*?\]\(.*?\)", "", text)
     words = len(text.split())
-    # ~250 wpm for dense technical prose; add 0.5 min per figure
+    # ~200 wpm for dense technical prose; add 0.5 min per figure
     n_figures = len(re.findall(r"\{#fig-", paper.read_text(encoding="utf-8")))
-    minutes = round(words / 250 + n_figures * 0.5)
-    snippet = f"::: {{.callout-note appearance=\"minimal\"}}\n**Estimated reading time: ~{minutes} min** ({words:,} words, {n_figures} figures)\n:::\n"
+    minutes = round(words / 200 + n_figures * 0.5)
+    snippet = f"**Estimated reading time: ~{minutes} min** ({words:,} words, {n_figures} figures)\n"
     (OUT_DIR / "reading_time.md").write_text(snippet, encoding="utf-8")
 
 

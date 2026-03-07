@@ -3,9 +3,10 @@ title: "Decentralized Curation: Trustless Transformation of Information into Kno
 bibliography: references.bib
 ---
 
+::: {.callout-note appearance="minimal"}
 {{< include _build-info.md >}}
-
 {{< include analysis/out/reading_time.md >}}
+:::
 
 # Abstract
 
