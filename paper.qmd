@@ -68,7 +68,7 @@ This paper contributes:
 
 # Roadmap
 
-Section 2 frames the problem and failure modes of centralized curation. Section 3 defines the system model (actors, artifacts, and trust assumptions). Section 4 describes mechanisms for accuracy and relevance. Section 5 maps threats to defenses. Section 6 evaluates key parameters via simulation. Section 7 closes with limitations and open problems.
+Background and Problem Statement frames the problem and failure modes of centralized curation. System Model and Assumptions defines actors, artifacts, and trust assumptions. Mechanisms describes the accuracy and relevance separation, claim templates, staking, disputes, and the coherence game. Threat Model and Security Analysis maps attacks to defenses. Evaluation tests key parameters via simulation. Limitations and Open Problems closes with honest constraints and future work.
 
 # Background and problem statement
 
@@ -87,11 +87,13 @@ When one entity controls the transformation of information into knowledge, failu
 
 At a minimum, good curation produces claims that are:
 
-1. **Well-posed** (falsifiable; not vague)
-2. **Evidence-backed** under an explicit policy
-3. **Coherent** with other validated claims
-4. **Current** (truth decays; claims become stale)
-5. **Auditable** (who asserted what, why, with what evidence)
+1. **Well-posed**: falsifiable and unambiguous. A claim that cannot be adjudicated without guessing hidden assumptions has zero epistemic value; it merely creates dispute surface.
+2. **Evidence-backed**: tied to an explicit evidence policy that defines admissible sources and tie-break rules. Without this, "evidence" degenerates into persuasion.
+3. **Coherent**: consistent with other validated claims in the same domain. Incoherence signals either error or scope violation.
+4. **Current**: truth decays; claims become stale. A curation system that cannot expire or re-challenge outdated claims accumulates epistemic debt.
+5. **Auditable**: every assertion, verdict, and stake movement is publicly traceable. Without auditability, all other criteria are unverifiable.
+6. **Contestable**: any participant can challenge a claim by posting stake and counter-evidence, triggering structured dispute resolution. Without contestability, errors persist until the curator independently chooses to act (failure mode #6 above).
+7. **Incentive-aligned**: the mechanism makes it profitable to curate correctly and expensive to curate incorrectly. Misaligned incentives undermine every other criterion because rational actors will optimize for reward, not for truth.
 
 For extended epistemology and data quality foundations, see Appendix A.
 
@@ -117,9 +119,13 @@ Academic and socio-legal critique of cryptoeconomic courts emphasizes the same c
 
 ## Actors
 
-- **Authors** submit claims and put a bounty at risk.
-- **Curators** validate and challenge; they may also serve as jurors via dispute resolution.
-- **Readers** consume outputs and may participate as curators.
+- **Authors** submit claims, attach evidence bundles, select a pool, and put a bounty at risk.
+- **Validators** stake on pools and signal support for claims (contributing to confidence scores). They are not adjudicators; they are attesters.
+- **Challengers** contest claims by posting counter-stake and counter-evidence (or asserting under-specification), triggering dispute resolution.
+- **Jurors** are drawn from the DDR system (e.g., Kleros) to adjudicate disputes. They are distinct from validators: jurors resolve contested claims, validators signal on uncontested ones.
+- **Interface operators** build consumer-facing applications that filter, rank, and display protocol outputs. They control UX and compliance but not the underlying record.
+- **Governance participants** vote on protocol parameter updates (e.g., $\alpha$, $K$, pool creation rules). Their surface area is intentionally minimal.
+- **Readers** consume outputs via interfaces and may participate in any of the above roles.
 
 ## Artifacts: claims, evidence, verdicts
 
@@ -158,7 +164,7 @@ An **evidence policy** defines what counts as admissible evidence in a pool, how
 This design does not eliminate trust; it **constrains** it.
 
 - We minimize trust in any single validator by using aggregation, contestability, and public auditability.
-- We treat dispute resolution as a black box DDR system (e.g., Kleros) with its own incentives and failure modes.
+- We treat dispute resolution as a **black box DDR system** (e.g., Kleros) and require only three properties: (1) jurors are stake-weighted and randomly selected, (2) verdicts are one of Valid/Invalid/Under-specified, and (3) appeals with escalating stakes are available. The internal incentive design and failure modes of the DDR system are inherited, not controlled.
 - We assume evidence authenticity is imperfect and must be contested, not assumed.
 
 # Mechanisms
@@ -235,15 +241,29 @@ Invariants:
 
 ## Flow 2: pooled staking (liability and chilling effects)
 
-Validators stake on pools rather than individual items. The protocol randomly drafts eligible validators/jurors for specific decisions, creating “herd immunity” against targeted liability.
+Validators stake on **pools** (topic-scoped domains) rather than individual claims. This structural choice addresses two problems simultaneously: targeted legal liability and concentrated risk.
+
+**Pool formation.** A pool is created by governance with an evidence policy, a claim template, and initial parameters ($K$, $\alpha$, minimum stake). Validators join a pool by locking stake; they are then eligible for random drafting on any claim within that pool.
+
+**Random drafting.** When a claim requires validation or a dispute requires jurors, the protocol draws from the pool's eligible set using on-chain randomness (e.g., VRF-based). The validator/juror does not choose which claim to evaluate; the protocol assigns it. This is analogous to jury duty: participation is voluntary (opt-in to the pool), but assignment is random.
+
+**Liability diffusion.** Because validators do not choose specific claims, targeted legal pressure (e.g., “you validated claim X, so you are liable for defamation”) is diffused across the entire pool. The larger the pool, the weaker the per-validator liability signal. This creates a form of “herd immunity”: attacking any single validator for a specific verdict requires attributing intent to what is effectively a lottery assignment. This does not eliminate legal risk entirely, but it raises the cost of targeted chilling effects substantially.
 
 ## Flow 3: challenge, dispute, appeals
 
-Any user can challenge a claim by staking resources and submitting counter-evidence (or asserting the claim is under-specified).
+The challenge-dispute flow is the core enforcement mechanism. It proceeds in numbered steps:
 
-DDR selects jurors from an eligible pool and uses commit–reveal voting to reduce copy-the-majority dynamics [@kleros2019shortpaper]. Appeals increase stakes and can overturn lazy consensus, creating a “high-court effect” where higher rounds attract more expertise.
+1. **Challenge**: any user posts a challenge stake $S$ against a claim with bounty $B$, submitting counter-evidence or asserting under-specification.
+2. **Juror selection**: the DDR system draws jurors from the eligible pool using on-chain randomness.
+3. **Commit phase**: each juror commits a hash of their vote (Valid / Invalid / Under-specified) within the voting window.
+4. **Reveal phase**: jurors reveal their votes. Non-reveals forfeit stake (penalizing abstention-as-strategy).
+5. **Verdict**: majority vote determines the outcome.
+6. **Payout**: if the challenger wins (claim ruled Invalid or Under-specified), the challenger receives $B + S$ minus fees. If the challenger loses, the claim author receives $S$.
+7. **Appeal**: either party can appeal by posting a higher stake (e.g., $2 \times$ previous round). Appeals draw a larger juror panel and raise the expertise threshold (the “high-court effect”).
 
-Commit–reveal is not an anti-bribery primitive. It reduces simple herding, but cannot prevent off-chain coordination or delayed payments conditioned on revealed votes [@consensysPlcrVoting; @consensysDiligenceTcrAudit]. In practice, additional defenses are needed (e.g., credible identity/reputation weighting, randomized deadlines, penalties for non-reveal, and stake sizing that makes bribery uneconomical).
+The economic model is straightforward: a challenger with detection probability $d$ and jury accuracy $p$ has expected value $\text{EV} = d \cdot [p \cdot B - (1-p) \cdot S]$. Experiment E1 sweeps these parameters and shows the regimes where challenging is rational.
+
+**Commit-reveal limitations.** Commit-reveal reduces simple herding but is not an anti-bribery primitive. It cannot prevent off-chain coordination or delayed payments conditioned on revealed votes [@consensysPlcrVoting; @consensysDiligenceTcrAudit]. Additional defenses are needed: credible identity/reputation weighting, randomized deadlines, penalties for non-reveal, and stake sizing that makes bribery uneconomical relative to the dispute value.
 
 ## Flow 4: relevance via coherence game
 
@@ -256,6 +276,12 @@ Relevance is a policy-guided coherence game (a focal-point coordination problem)
    - $\sigma = \sqrt{\frac{\sum_i w_i (v_i - \mu)^2}{\sum_i w_i}}$
 4. Coherence rule: choose $K$; curator $i$ is coherent iff $|v_i - \mu| \le K\sigma$.
 5. Incoherent stake is slashed and redistributed to coherent participants.
+
+**Why coherence approximates relevance.** The Schelling argument is that when participants have skin in the game and a shared policy definition, their rational strategy is to estimate the "true" relevance as honestly as possible, because that is the focal point other competent participants will converge on. Coherence is not relevance directly; it is a proxy that works when the policy is specific enough to create a strong focal point and the participant pool is competent enough to converge on it.
+
+**Whale manipulation risk.** Because the aggregate $\mu$ is a weighted mean, a single high-weight participant can shift it substantially. Mitigations include: (a) per-participant weight caps ($w_i \le w_{\max}$), preventing any single actor from dominating the mean; and (b) the competence filter (incoherent participants lose stake over time), which limits the duration of any manipulation. Weight caps introduce a tradeoff: too low and competent high-stakers are penalized; too high and whale manipulation is feasible.
+
+**Accuracy-relevance interaction.** A claim can be accurate but irrelevant, or relevant but inaccurate. The two scores are independent: accuracy is resolved via dispute (Flow 3), relevance via the coherence game. An interface consuming both signals can gate on accuracy first (only display claims above an accuracy threshold) and then rank by relevance, or allow users to set their own thresholds.
 
 ## Incentives: stake, reputation, and competence filtering
 
@@ -310,7 +336,24 @@ Out of scope: breaking cryptography, coercion at gunpoint, and global-scale cens
 
 ## Stress tests (attack mapping)
 
-We maintain an explicit attack-defense log in `context/attack-and-defense-log.md`. This paper maps those attacks to defenses in the mechanism design and evaluates key parameters in simulation.
+@tbl-attack-defense summarizes the principal attacks and their defenses. A full attack-defense log with detailed narratives is maintained in the project repository.
+
+| # | Attack | Defense | Mechanism reference |
+|---|--------|---------|-------------------|
+| 1 | **Lazy majority**: curators copy the majority vote without checking facts | Commit-reveal voting prevents copying; diligent challengers punish rubber-stamping by seizing stake | Flow 3 (challenge/dispute) |
+| 2 | **Echo chambers**: biased pools curate lies under a permissive policy | Global accuracy is enforced cross-pool via DDR; pools control relevance policy but not accuracy verdicts | Separation of powers |
+| 3 | **Liquidity crisis**: low-stakes lies survive because no one bothers to challenge | Low stake = low confidence score; unchallenged low-stake claims are treated as noise, not validation | Flow 1 (confidence signaling) |
+| 4 | **Oracle capture (51% attack)**: adversary buys majority of DDR tokens | Economically suicidal (slippage + token collapse); community can fork to a new token | Trust assumptions; forking |
+| 5 | **Wealth concentration**: competent curators accumulate all capital | Reputation as non-transferable capital lowers barrier for cash-poor experts; weight caps limit plutocracy | Incentives (stake + reputation) |
+| 6 | **Chilling effect (liability)**: staking on truth exposes curators to lawsuits | Pooled staking + random drafting creates "herd immunity" against targeted liability | Flow 2 (pooled staking) |
+| 7 | **Interface capture (meta-curation)**: dominant interface re-centralizes control | Protocol stores all claims/verdicts on-chain; alternative interfaces can independently index the same record | Governance and UX |
+| 8 | **Deflationary spiral**: no disputes in peacetime, curators leave | Advertiser staking provides continuous verification demand even when political disputes are quiet | Funding (advertiser staking) |
+| 9 | **Context collapse**: technically true but misleadingly vague claims | Vagueness = Rejection; under-specified claims are slashed, not forced into True/False | Claim templates |
+| 10 | **Sybil flooding**: adversary creates many identities to overwhelm voting | Stake-weighted voting makes Sybil multiplication expensive; reputation is slow to build and non-transferable | Incentives; pooled staking |
+| 11 | **Oracle manipulation (bribery)**: off-chain payments to jurors for desired verdicts | Commit-reveal + randomized juror selection + stake sizing that makes bribery uneconomical; acknowledged as incomplete defense | Flow 3; Limitations |
+| 12 | **Temporal decay**: stale claims persist as "validated" long after truth changes | Stale claims become profitable challenge targets; authors are incentivized to withdraw obsolete claims | Confidence signaling; challenge economics |
+
+: Principal attacks, defenses, and mechanism references. {#tbl-attack-defense}
 
 # Evaluation
 
@@ -399,6 +442,10 @@ All simulations and figure generation are deterministic (fixed RNG seeds) and ru
 
 # Limitations and open problems
 
+## No deployment evidence
+
+This paper presents mechanism design and simulation results. No live deployment exists. The mechanisms have not been tested with real users, real stakes, or real adversaries. All claims about incentive alignment, competence filtering, and ambiguity defense are conditional on parameters that have only been swept in simulation, not calibrated against field data.
+
 ## The output is a signal, not “knowledge” in the philosophical sense
 
 Even with strong incentives, the protocol produces **stake-weighted, contestable labels**. When evidence is ambiguous, participants are lazy, or incentives are mis-set, the system can converge on the wrong equilibrium. This is a feature of Schelling-style mechanisms, not an implementation detail [@bergolla2022kleros; @kleros2021cryptoeconomics].
@@ -407,13 +454,25 @@ Even with strong incentives, the protocol produces **stake-weighted, contestable
 
 Coordination on “what others will vote” can diverge from correctness, especially in domains requiring expertise or involving conflicts of interest [@rojoarjona2021focalpoints]. Appeals can help, but require careful stake sizing and empirical calibration.
 
-## Commit–reveal does not solve bribery
+## Commit-reveal does not solve bribery
 
-Commit–reveal reduces copying but does not prevent off-chain coordination, delayed bribes, or non-reveal failure modes [@consensysPlcrVoting; @consensysDiligenceTcrAudit].
+Commit-reveal reduces copying but does not prevent off-chain coordination, delayed bribes, or non-reveal failure modes [@consensysPlcrVoting; @consensysDiligenceTcrAudit].
 
 ## TCR-style participation failures remain a risk
 
 Low participation, wealth concentration, and social clique dynamics can still emerge. Prior work proposes mechanisms (e.g., inflationary incentives) to increase engagement [@wang2019enhancing], but real deployments need field evidence and adversarial analysis.
+
+## Cold start
+
+The mechanism requires simultaneous bootstrapping of authors (who need readers), validators (who need claims to validate), challengers (who need false claims to challenge), and readers (who need curated content). This chicken-and-egg problem is common in platform design but particularly acute here because the value proposition depends on stake liquidity and dispute activity, both of which are near zero at launch.
+
+## Scalability
+
+Every claim, stake, and verdict is on-chain. At scale, gas costs and throughput limitations may make the system prohibitively expensive for low-value claims. Layer-2 solutions or optimistic rollups could help, but introduce their own trust assumptions and latency tradeoffs.
+
+## UX friction
+
+Staking, claim authoring with structured templates, and dispute participation impose cognitive and financial costs that exceed what most users are accustomed to. If the UX burden is too high, participation will be limited to specialists, undermining the “anyone can challenge” premise.
 
 ## Forking is a social, not purely technical, fail-safe
 
@@ -421,18 +480,29 @@ Forking can be a last resort, but it requires coordination, introduces legitimac
 
 ## Sustainability is an open question
 
-- **Free riding**: verified truth is a public good; sustainability may require mixed funding.
-- **Advertiser staking**: promising but speculative; needs economic modeling and deployment evidence.
+Verified truth is a public good; sustainability may require mixed funding. Advertiser staking is promising but speculative and needs economic modeling and deployment evidence.
 
-## Temporal decay and governance capture
+## Temporal decay
 
-- **Temporal decay**: claims become stale; incentives must reward withdrawal or profitable debunking.
-- **Governance capture**: token-weighted governance can plutocratize; minimize governance surface area.
-- **Domain expertise**: hard domains (law, medicine, finance) require credible expertise signals; pooled staking and reputation help, but do not replace expert institutions.
+Claims become stale; incentives must reward withdrawal or profitable debunking. Without active refresh mechanisms, the system accumulates epistemic debt.
+
+## Governance capture
+
+Token-weighted governance can plutocratize. The design minimizes governance surface area, but parameter updates and pool creation still require governance, and these decisions can be captured.
+
+## Domain expertise
+
+Hard domains (law, medicine, finance) require credible expertise signals. Pooled staking and reputation help, but do not replace expert institutions. The system may work well for domains where evidence is publicly verifiable and poorly for domains where evidence requires specialized training to evaluate.
 
 # Conclusion
 
-The core move is to treat curation as infrastructure: a mechanism that converts funding into decision-grade knowledge with explicit, auditable incentives. The aim is not to eliminate trust but to make dishonesty expensive, correctness profitable, and ambiguity slashable.
+The core claim of this paper is that the bottleneck behind most coordination failures is not governance, voting, or funding mechanisms; it is the upstream transformation of raw information into decision-grade knowledge. We call this transformation curation, and argue that centralized curation predictably breaks through opacity, capture, gaming, censorship, fragility, and the absence of contestability.
+
+The proposed direction is mechanism design: separate accuracy (binary, evidence-based, resolved via dispute resolution) from relevance (non-binary, policy-guided, resolved via coherence games), and align incentives so that correctness is profitable, dishonesty is expensive, and ambiguity is slashable. The evaluation experiments show that under reasonable parameterizations, challengers have positive expected value against false claims, the coherence game filters incompetent participants over time, and allowing Under-specified as a verdict substantially reduces wrong resolutions on ambiguous claims.
+
+The design depends on assumptions that remain untested in deployment: that stake sizes will be large enough to attract competent participation, that dispute resolution produces accurate verdicts at acceptable cost, that claim templates can be made precise enough without becoming expert gatekeepers, and that the cold-start problem (bootstrapping liquidity and participation simultaneously) can be overcome. None of these are guaranteed.
+
+The most important open problems are deployment evidence (no live system yet validates these mechanisms at scale), adversarial robustness beyond the simulated parameter sweeps, UX friction (staking, claim authoring, and dispute participation impose cognitive and financial costs that may limit adoption), and the sustainability of curation as a public good. These are not implementation details; they are conditions for the thesis to hold.
 
 # Appendix A: Epistemic and data-quality foundations
 

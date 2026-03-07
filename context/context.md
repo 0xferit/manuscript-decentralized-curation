@@ -39,8 +39,19 @@
 
 - Paper source (`paper.qmd`) is now paper-structured (Abstract → Conclusion + Appendix) and includes an explicit Related Work section with BibTeX-backed citations.
 - Evaluation is implemented as deterministic simulations (E1–E3) that generate figures and a short in-paper summary via `analysis/run_all.py`.
-- Incorporated thesis-style critique fixes: explicitly frames outputs as **stake-weighted signals** (not philosophical knowledge), expands **Vagueness = Rejection** into a formal claim-schema section, adds commit–reveal/bribery limitations, and strengthens the Limitations section with citations.
+- Incorporated thesis-style critique fixes: explicitly frames outputs as **stake-weighted signals** (not philosophical knowledge), expands **Vagueness = Rejection** into a formal claim-schema section, adds commit-reveal/bribery limitations, and strengthens the Limitations section with citations.
+- **Reading group prep (March 2026):** Tier 1 + Tier 2 fixes applied:
+  - **Conclusion** expanded from 2 sentences to 4 paragraphs (thesis restatement, mechanism summary, key assumptions, open problems).
+  - **Roadmap** no longer uses explicit section numbers; uses section names only.
+  - **Quality criteria** (Section 4.2) expanded from 5 terse items to 7 with explanations; added **contestability** and **incentive alignment**.
+  - **Threat model** now includes a 12-row attack-defense summary table inline (no longer defers to repo file).
+  - **System model actors** split into 7 roles: authors, validators, challengers, jurors, interface operators, governance participants, readers. DDR black-box properties stated explicitly.
+  - **Pooled staking** (Flow 2) expanded to full subsection: pool formation, random drafting, liability diffusion.
+  - **Flow 3** (challenge/dispute) presented as numbered protocol steps with economic model (EV formula).
+  - **Flow 4** (relevance) adds Schelling argument for coherence, whale manipulation risk + weight caps, accuracy-relevance interaction.
+  - **Limitations** expanded: "no deployment evidence" added as first item; cold start, scalability, UX friction added; temporal decay, governance capture, domain expertise unbundled into separate subsections.
 - HTML uses the default Quarto theme + grid; the PUW theme is saved in `themes/puw.scss` (enable via `_quarto.yml`).
 - `legacy/*_21699486*` artifacts are the **last released** snapshot/export (pre-Quarto) and may lag the master.
 - Quarto path (new): install Quarto + render `paper.qmd` to `outputs/` (HTML/PDF) from the single source.
 - Continuous publish (HTML): commits to `main` run simulations, render `outputs/paper.html`, and publish to `cf-pages` as `public/index.html` (for Cloudflare Pages).
+- **Next:** Cherry-pick Tier 3 fixes (contributions list, related work gaps, confidence score spec, incentive params, adversarial eval acknowledgment, appendix mappings). Build presentation for March 10.
