@@ -74,13 +74,14 @@ Section 2 frames the problem and failure modes of centralized curation. Section 
 
 ## Failure modes of centralized curation
 
-When one entity controls the transformation of information into knowledge, failure becomes predictable:
+When one entity controls the transformation of information into knowledge, failure becomes predictable. The following modes are not independent; in centralized systems they reinforce each other.
 
-1. **Opacity**: rules and ranking are hidden.
-2. **Capture**: incentives diverge from knowledge quality.
-3. **Gaming**: actors optimize against a single mechanism.
-4. **Censorship**: unilateral suppression becomes feasible.
-5. **Fragility**: single points of failure (policy changes, acquisitions, algorithm swaps).
+1. **Opacity**: the mapping from evidence to editorial outcome is hidden. Users cannot audit why content was promoted, suppressed, or ranked, so they cannot detect systematic error.
+2. **Capture**: the curator's survival incentives (revenue, regulation, ideology) structurally diverge from knowledge quality. Curation optimizes for the curator's objectives, not the consumer's epistemic needs.
+3. **Gaming**: a single mechanism creates a single attack surface. Actors optimize against it at scale, and the resulting arms race pushes the mechanism toward deeper opacity.
+4. **Censorship**: unilateral suppression (or promotion) is feasible and, under opacity, undetectable.
+5. **Fragility**: the knowledge layer inherits every single point of failure of the curator: policy changes, acquisitions, personnel turnover, algorithm rewrites.
+6. **No contestability**: when curation is wrong, there is no structured way to challenge, appeal, or force correction. Errors persist until the curator independently chooses to act.
 
 ## What good curation must optimize for
 
