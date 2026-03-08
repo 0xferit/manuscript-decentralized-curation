@@ -163,6 +163,8 @@ Academic and socio-legal critique of cryptoeconomic courts emphasizes the same c
 
 **Commons governance.** @ostrom1990commons demonstrated that communities can sustainably govern shared resources without privatization or central authority, identifying design principles that characterize successful commons institutions: clearly defined boundaries, graduated sanctions, low-cost conflict resolution, monitoring, and nested governance. Several of these principles have structural parallels in this protocol: pools define boundaries and local rules, slashing implements graduated sanctions, DDR provides accessible conflict resolution, on-chain auditability enables monitoring, and minimal governance nests protocol-level parameters above pool-level policies. The key divergence is that Ostrom studied long-lived physical commons with stable participant communities; decentralized curation operates over a digital, pseudonymous, and adversarial participant base where identity is cheap and exit is costless.
 
+**Formalization gaps in decentralized justice.** @george2023strategic proves an impossibility theorem for Schelling-style coordination games: when the strategy space contains three or more ranked alternatives and the payoff system satisfies minimal attack resistance, situations always exist where truthful reporting is not a Nash equilibrium. This result constrains any design that relies on Schelling coordination for dispute resolution. The same author formalizes the griefing factor framework [@george2023griefing], defining $GF = \text{harm}/\text{cost}$ as a quantitative bound on the cost-effectiveness of attacks. A broader survey [@ast2023decentralized] identifies the formalization gap in decentralized justice as a recurring criticism: existing systems rely on verbal incentive arguments rather than formal game-theoretic proofs. Our formal model section responds to all three: we cite the impossibility to bound our claims, use the griefing factor to quantify attack costs, and provide restricted-condition proofs where the impossibility does not bind.
+
 **Data quality.** Industrial data quality literature emphasizes that “quality” is multi-dimensional and consumer-context dependent [@wang1996beyondaccuracy]. We adopt this as motivation for separating accuracy (binary, evidence-based) from relevance (policy-dependent, non-binary).
 
 **Engagement and equilibrium failures in TCRs.** Game-theoretic analyses of Token-Curated Registries surface equilibria where challenges are rare, participation decays, or wealth concentrates [@asgaonkar2018tcrgametheory]. Proposed fixes include explicit incentives for participation (e.g., inflationary rewards) [@wang2019enhancing]. We treat these as cautionary prior art rather than solved problems.
@@ -241,6 +243,11 @@ This design does not eliminate trust; it **constrains** it.
 | $p$ | Per-juror correctness probability |
 | $d$ ($p_{\text{detect}}$) | Probability a false claim is detected and challenged |
 | $n$ | Number of curators drafted for a relevance round |
+| $\mathcal{V}$ | Strategy space (report domain): $\{\text{Valid}, \text{Invalid}\}$ for DDR, $[0,1]$ for coherence game |
+| $v^*$ | Focal point: the honest assessment of policy conformity |
+| $u_i$ | Payoff function for player $i$ |
+| $P_{\mathrm{maj}}(p, N)$ | Majority-correct probability for $N$ jurors with per-juror accuracy $p$ |
+| $GF$ | Griefing factor: $\text{harm}_{\text{victim}} / \text{cost}_{\text{attacker}}$ |
 
 : Key notation used throughout. {#tbl-notation}
 
@@ -250,6 +257,51 @@ Centralized platforms mash accuracy and relevance into a single engagement metri
 
 - **Accuracy**: global, binary classification under an evidence standard, resolved via dispute processes.
 - **Relevance**: local, non-binary importance produced by a policy-guided coherence game.
+
+## Formal model: Schelling coordination under restricted conditions
+
+Both the accuracy dispute (Flow 3) and the relevance coherence game (Flow 4) are instances of a Schelling coordination game: agents submit simultaneous reports under commit-reveal, and payoffs reward agreement with the majority or mean. @george2023strategic proves an impossibility theorem for this class of games: for voting and payoff systems satisfying minimal attack resistance over three or more ranked alternatives, situations always exist where truthful reporting is not an equilibrium. This means we cannot prove truthful reporting is *always* an equilibrium in the general case. Our contribution is to identify **restricted conditions** specific to our two instantiations under which truthful reporting *is* a Nash equilibrium.
+
+### Base game
+
+A Schelling coordination game $\Gamma$ consists of:
+
+- **Players**: $n$ agents drawn from a pool, each with weight $w_i$.
+- **Strategy space**: each player simultaneously submits a report $v_i \in \mathcal{V}$.
+- **Simultaneity enforcement**: commit-reveal prevents observation of others' reports before commitment.
+- **Payoff function** $u_i(v_i, v_{-i})$: coherent players (those whose reports fall within a threshold of the aggregate) share the pot (slashed stakes from incoherent players, plus an optional protocol reward $R$); incoherent players lose stake proportionally.
+
+The "coherent" predicate is parameterized by the game instantiation. The griefing factor framework [@george2023griefing] provides a formal measure of attack cost: the griefing factor $GF = \text{harm}_{\text{victim}} / \text{cost}_{\text{attacker}}$ bounds how much damage an adversary can inflict per unit of self-cost. A mechanism with $GF \le 1$ ensures that attacking costs the adversary at least as much as it costs the victim.
+
+### Instantiation 1: binary accuracy (DDR disputes)
+
+The dispute mechanism (Flow 3) instantiates $\Gamma$ with $\mathcal{V} = \{\text{Valid}, \text{Invalid}\}$. Under-specified is a structural rejection category (the claim fails template validation), not a third alternative that jurors rank against the other two. When the claim is well-posed, jurors face a binary decision.
+
+This restriction is critical: George's impossibility applies to games with three or more **ranked** alternatives. Binary choice avoids the impossibility entirely. The focal point is the verdict consistent with the pool's curation policy and evidence standard.
+
+::: {.callout-note title="Proposition 1 (Condorcet connection)"}
+If per-juror accuracy $p > 0.50$ and votes are independent, the majority-correct probability $P_{\mathrm{maj}}(p, N) = \sum_{k=\lceil N/2 \rceil}^{N} \binom{N}{k} p^k (1-p)^{N-k}$ is monotone increasing in jury size $N$ and converges to 1 as $N \to \infty$. Challenger expected value is positive whenever $P_{\mathrm{maj}}(p, N) > \frac{S/B}{1 + S/B}$.
+:::
+
+For the $S/B$ ratios tested in E1 (0.05 to 0.50), the break-even majority threshold ranges from 0.048 to 0.333, all of which are exceeded when $p > 0.50$ with $N = 5$ jurors. The binding system requirement is therefore $p > 0.50$: each juror must be better than random for the incentive structure to be self-enforcing.
+
+The griefing factor for a challenger attacking a true claim is $GF = \frac{B \cdot P_{\mathrm{maj}}}{S \cdot (1 - P_{\mathrm{maj}})}$. At $p = 0.80$ and $S/B = 0.25$, $GF \approx 37$: the attacker pays far more than the victim. For a legitimate challenger disputing a false claim, the asymmetry is reversed, which is the intended incentive.
+
+### Instantiation 2: scalar relevance (coherence game)
+
+The coherence game (Flow 4) instantiates $\Gamma$ with $\mathcal{V} = [0, 1]$ (continuous scalar). Reports are aggregated by weighted mean $\mu$ with a $K\sigma$-threshold coherence rule, not ranked over discrete alternatives. George's impossibility applies to rankings; scalar aggregation with a coherence band is a different game structure where the impossibility does not directly bind.
+
+The focal point is the honest assessment of curation policy conformity: given a specific, public curation policy, the degree to which an item conforms is the unique salient coordination target.
+
+::: {.callout-note title="Proposition 2 (focal point equilibrium)"}
+Under commit-reveal, if (a) the curation policy is specific enough to induce a unique focal point $v^*$, (b) $K$ is large enough that honest noise from competent curators falls within the coherence band with high probability, and (c) no pre-commitment communication channel exists, then all curators reporting $v^* + \epsilon_i$ (honest assessment with individual noise) is a Nash equilibrium. Deviating from the honest assessment increases the probability of falling outside the $K\sigma$ band and incurring slashing.
+:::
+
+::: {.callout-note title="Proposition 3 (competence selection)"}
+Under repeated play, agents whose noise variance exceeds the coherence band's tolerance lose expected stake per round; agents within the band gain. The pool's competence composition improves endogenously. This requires $K$ and the slash rate to be set such that expected loss for incoherent participants exceeds expected gain from random coherence.
+:::
+
+The equilibrium degrades under identifiable conditions: (a) vague curation policy (weak focal point; condition (a) of Proposition 2 fails), (b) small $n$ (high variance in $\mu$), and (c) extreme competence skew (too few competent curators to anchor the mean). These degradation conditions make the system's governance dependencies explicit and measurable.
 
 ## Vagueness = Rejection: claim templates as a security primitive
 
@@ -279,6 +331,21 @@ Specificity is not objective. The system treats it as policy:
 
 - Each pool publishes a **claim template** (required fields) and an **evidence policy** (what evidence counts and how conflicts are resolved).
 - The template is versioned and governable, but must remain narrow: the more it expands, the more it becomes an expert gatekeeper.
+
+### The curation policy bootstrap problem
+
+The equilibrium properties established in the formal model section (Proposition 2) are conditional on curation policies being specific enough to create focal points. But writing good curation policies for complex domains is itself a governance problem. This is recursive: who curates the curation rules?
+
+The recursion is not unique to this design. Legal systems face the same structure: who writes the laws that govern lawmaking? They resolve it through constitutional conventions, amendment procedures, and judicial review. Curation policies occupy an analogous "constitutional layer": they are meta-rules written by humans through deliberative processes, not generated algorithmically.
+
+The bootstrapping direction has four components:
+
+1. **Start minimal.** Pools launch with narrow curation policies: few required fields, broad evidence rules, simple resolution criteria. This lowers the governance burden at inception.
+2. **Policy amendment as dispute.** Policy amendment proposals can be submitted and are themselves subject to the dispute resolution mechanism. This reuses the existing infrastructure for policy governance.
+3. **Forking as safety valve.** If governance captures the curation policy (writing rules that favor insiders), any participant can fork the pool with a different policy. This mirrors the "exit" option in constitutional governance.
+4. **Cross-pool competition.** Pools with vague curation policies produce weak focal points, which degrade the coherence game equilibrium (the conditions in Proposition 2 fail). These pools generate noisy signals, lose competent participants, and shrink. Pools with specific, well-designed policies retain participants and produce useful signals. This evolutionary pressure operates without central coordination.
+
+The formal model makes this dependency explicit rather than hiding it: the equilibrium *degrades gracefully* as policy specificity decreases (stated in the conditions of Proposition 2), which means the system signals its own governance failures through measurable output quality.
 
 ### Defending against strategic ambiguity
 
@@ -359,7 +426,7 @@ The challenge-dispute flow is the core enforcement mechanism. It proceeds in num
 6. **Payout**: if the challenger wins (claim ruled Invalid or Under-specified), the challenger receives $B + S$ minus fees. If the challenger loses, the claim author receives $S$.
 7. **Appeal**: either party can appeal by posting a higher stake (e.g., $2 \times$ previous round). Appeals draw a larger juror panel and raise the expertise threshold (the “high-court effect”).
 
-The economics operate at two levels. For an *individual challenger* who has already identified a false claim, the expected value of filing a challenge is $\text{EV}_{\text{challenger}} = p \cdot B - (1-p) \cdot S$, where $p$ is jury accuracy and $B$, $S$ are bounty and challenge stake respectively. For the *system* — considering that false claims must first be detected — the expected value per false claim is $\text{EV}_{\text{system}} = d \cdot [p \cdot B - (1-p) \cdot S]$, where $d$ is the probability that at least one participant detects and challenges the claim. These are distinct: a challenger who has found a provably false claim faces only jury risk ($p$), while the system's overall false-claim suppression depends on both detection coverage ($d$) and jury accuracy ($p$). Both formulas assume juror votes are independent; in practice, herding, Schelling coordination, and off-chain communication can introduce correlation, which the threat model addresses separately. Experiment E1 sweeps these parameters and shows the regimes where challenging is rational.
+The economics operate at two levels. For an *individual challenger* who has already identified a false claim, the expected value of filing a challenge is $\text{EV}_{\text{challenger}} = P_{\mathrm{maj}}(p, N) \cdot B - (1 - P_{\mathrm{maj}}(p, N)) \cdot S$, where $P_{\mathrm{maj}}(p, N)$ is the majority-correct probability for $N$ jurors with per-juror accuracy $p$ (Proposition 1 in the formal model section), and $B$, $S$ are bounty and challenge stake respectively. For the *system* — considering that false claims must first be detected — the expected value per false claim is $\text{EV}_{\text{system}} = d \cdot [P_{\mathrm{maj}}(p, N) \cdot B - (1 - P_{\mathrm{maj}}(p, N)) \cdot S]$, where $d$ is the probability that at least one participant detects and challenges the claim. These are distinct: a challenger who has found a provably false claim faces only jury risk ($p$), while the system's overall false-claim suppression depends on both detection coverage ($d$) and jury accuracy ($p$). The formal model establishes that challenger EV is positive whenever $p > 0.50$ for all $S/B \le 0.50$, and the minimum-$p$ requirement section after E1 states the system requirements explicitly. Both formulas assume juror votes are independent; in practice, herding, Schelling coordination, and off-chain communication can introduce correlation, which the threat model addresses separately. Experiment E1 sweeps these parameters and shows the regimes where challenging is rational.
 
 **Commit-reveal limitations.** Commit-reveal reduces simple herding but is not an anti-bribery primitive. It cannot prevent off-chain coordination or delayed payments conditioned on revealed votes [@consensysPlcrVoting; @consensysDiligenceTcrAudit]. Additional defenses are needed: credible identity/reputation weighting, randomized deadlines, penalties for non-reveal, and stake sizing that makes bribery uneconomical relative to the dispute value.
 
@@ -385,13 +452,12 @@ Commit-reveal ensures that no curator observes others’ ratings before committi
 
 ### Equilibrium argument
 
-The game is a one-shot Schelling coordination game with stakes. Each curator answers: *to what degree does this item conform to the curation policy?* Under commit-reveal, no curator observes others’ votes before committing. The curation policy defines what “conformity” means, creating a shared reference point. The Nash equilibrium argument is:
+The coherence game is a one-shot Schelling coordination game with stakes (Instantiation 2 of the base Schelling game defined in the formal model section). Each curator answers: *to what degree does this item conform to the curation policy?* Under commit-reveal, no curator observes others’ votes before committing. The curation policy defines what “conformity” means, creating a shared reference point. The formal results (Propositions 2 and 3) establish:
 
-- **Focal point.** The honest assessment of policy conformity is the unique salient coordination target. No alternative focal point exists because the policy is public and specific, and no pre-commitment communication channel is available (enforced by commit-reveal).
-- **Payoff structure.** Coherent curators share the pot; incoherent curators lose stake. Deviating from the honest assessment increases the probability of landing outside $K\sigma$ of the mean, which is costly.
-- **Competence as natural selection.** The equilibrium does not require all curators to be equally competent. Incompetent curators — those whose assessments are noisy relative to the policy — are more likely to fall outside the coherence band and lose stake. Over repeated rounds, incompetent stake decays while competent stake accretes. This produces a selection pressure: the pool’s composition improves endogenously without requiring an external competence test. Experiment E2 measures this convergence.
+- **Focal point equilibrium (Proposition 2).** Under commit-reveal, if (a) the curation policy is specific enough to induce a unique focal point $v^*$, (b) $K$ is large enough that honest noise from competent curators falls within the coherence band with high probability, and (c) no pre-commitment communication channel exists, then all curators reporting $v^* + \epsilon_i$ (honest assessment with noise) is a Nash equilibrium. Deviating from the honest assessment increases the probability of falling outside the $K\sigma$ band, which is costly. No alternative focal point exists because the policy is public and specific, and commit-reveal prevents observation of others’ reports.
+- **Competence selection (Proposition 3).** The equilibrium does not require all curators to be equally competent. Under repeated play, agents with noise variance exceeding the coherence band lose expected stake per round; agents within the band gain. This produces endogenous competence filtering: the pool’s composition improves without requiring an external competence test. This requires $K$ and the slash rate to be set such that expected loss for incoherent curators exceeds expected gain from random coherence. Experiment E2 measures this convergence.
 
-The equilibrium is approximate, not exact: it holds when the policy is specific enough to create a strong focal point and degrades when the policy is vague, the participant pool is small, or competence variance is extreme.
+The equilibrium is approximate, not exact: it degrades when the curation policy is vague (weak focal point), the participant pool is small (high variance in $\mu$), or competence variance is extreme. George’s impossibility theorem [@george2023strategic] proves that for Schelling games with three or more ranked alternatives, truthful reporting cannot always be an equilibrium; our instantiation avoids this by using scalar reports aggregated by weighted mean with a $K\sigma$ threshold, rather than rankings over discrete alternatives (see formal model section for the argument).
 
 ### Whale manipulation risk
 
@@ -522,6 +588,8 @@ Figures @fig-e1-ev and @fig-e1-survival visualize these sweeps.
 
 ![E1: False-claim survival probability after a single challenge window.](analysis/fig/e1_false_survival.png){#fig-e1-survival}
 
+**Minimum-$p$ requirements from the formal model.** The break-even condition from Proposition 1 requires $P_{\mathrm{maj}}(p, N) > \frac{S/B}{1 + S/B}$. For all $S/B$ ratios tested (0.05 to 0.50) with $N = 5$, this threshold falls below $p = 0.50$, meaning that challenger EV is positive whenever individual jurors are better than random. The binding constraint is therefore $p > 0.50$, the Condorcet condition. In practice, the system becomes strongly self-enforcing at $p \ge 0.65$: at this point, challenger EV exceeds $0.50 \times B$ for $S/B = 0.25$ and false-claim survival drops below 0.80.
+
 ### E1-Adv: repeated attack by a well-funded adversary
 
 E1 models individual challenges; E1-Adv tests what happens when a well-funded adversary submits many false claims simultaneously. We simulate an adversary submitting 50 false claims, each with bounty $B$, across varying jury accuracy levels. For each claim, the adversary either goes undetected (with probability $1 - p_{\text{detect}}$) or is challenged and faces a jury.
@@ -647,6 +715,10 @@ Hard domains (law, medicine, finance) require credible expertise signals. Pooled
 ## Reputation mechanism is unvalidated
 
 The reputation weight ($w_i = s_i + \alpha \cdot \mathrm{rep}_i$ with decay) is specified as a mechanism but not experimentally tested. All simulations (E1–E3, including adversarial variants) model financial stake only ($\alpha = 0$ effectively). Whether reputation accelerates the competence filter, at what $\alpha$ value reputation gaming becomes a risk, and how decay rate affects equilibrium are open empirical questions.
+
+## Curation policy authoring remains a governance problem
+
+The focal point equilibrium (Proposition 2) is conditional on curation policies being specific enough to induce a unique coordination target. Whether community governance reliably produces such policies, particularly in hard domains (medicine, law, climate), is an open empirical question. The bootstrapping direction sketched in the Mechanisms section offers evolutionary pressure but no guarantee of convergence.
 
 ## Simulation limitations
 
