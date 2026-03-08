@@ -12,61 +12,34 @@ bibliography: references.bib
 :::
 
 ::: {.callout-important appearance="simple"}
-**Working draft.** Under active development. This is too long and I know it. Distillation in progress. [Feedback welcome.](mailto:ferit@cryptolab.net)
+**Working draft.** Under active development. [Feedback welcome.](mailto:ferit@cryptolab.net)
 :::
 
 # Abstract
 
-The internet solved access to information but not access to knowledge. Curation, the transformation of raw information into decision-grade knowledge, is the bottleneck; generative AI makes it structurally worse by decoupling the form of quality (fluent prose, plausible citations) from its substance (correctness, coherence). When curation is centralized, two failure modes emerge: incompetence (the curator’s incentives diverge from knowledge quality) and weaponization (the curator exploits control over the information-to-knowledge pipeline).
+Curation — the transformation of raw information into decision-grade knowledge — is the bottleneck behind most coordination failures. Centralized curation predictably fails through incompetence (incentive divergence from knowledge quality) and weaponization (exploiting control over the information-to-knowledge pipeline); generative AI makes this structurally worse by decoupling quality's form from its substance.
 
-We propose a general framework for trustless decentralized curation consisting of four steps: (1) problem definition: identify the curation bottleneck in a target domain; (2) use case selection: select a domain where decentralized curation is both needed and feasible; (3) quality identification: decompose quality into dimensions amenable to decentralized enforcement; (4) mechanism design: design distinct mechanisms for each identified dimension. The framework is domain-agnostic; we instantiate it for news and information curation, where quality identification yields two dimensions: accuracy (global, binary) and relevance (local, non-binary). This decomposition is not assumed as universal; it is a consequence of applying the quality identification step to news. For accuracy, we design a decentralized dispute resolution mechanism under an explicit evidence standard. For relevance, we design a policy-guided coherence game: a Schelling-point mechanism where curators independently rate conformity to a public curation policy, and outliers are slashed. A 2023 partial deployment (Truth Post) tested the accuracy layer only; its failure to bootstrap participation directly informed the full design.
+We propose a four-step framework for trustless decentralized curation: problem definition, use case selection, quality identification, and mechanism design. Instantiating it for news curation yields two quality dimensions: accuracy (global, binary, dispute-resolved) and relevance (local, non-binary, resolved by a policy-guided coherence game where curators rate conformity to a public curation policy and outliers are slashed). A 2023 partial deployment (Truth Post) tested the accuracy layer only; its failure to bootstrap directly informed the full design.
 
-Adversarial simulations show that the dispute mechanism is economically punitive against well-funded attackers, that the coherence game ejects colluding minorities but breaks above a concrete stake threshold, and that a reputation mechanism can accelerate cash-poor expert entry at a quantified equity-accuracy tradeoff.
-
-This paper addresses only the information-to-knowledge transformation (curation); coordination given shared knowledge is out of scope.
+Adversarial simulations show the dispute mechanism is economically punitive against well-funded attackers, the coherence game ejects colluding minorities but breaks above ~20-30% of stake, and a reputation mechanism accelerates cash-poor expert entry at a quantified equity-accuracy tradeoff. This paper addresses curation only; coordination given shared knowledge is out of scope.
 
 # Introduction
 
-You search for a cafe and your maps app returns a list sorted by ratings. You research a medical question and a search engine ranks the answers. You choose a university and a magazine's ranking steers the decision. You did not produce any of this knowledge; you consumed it. And you had no practical alternative: the cost of independently verifying every input to every decision you make exceeds any individual's capacity. Curation is not a convenience; it is a dependency you cannot opt out of. Every curator you rely on injects their own biases, errors, and incentives into your decisions, and you have no structured way to detect it.
+You search for a cafe and your maps app returns a list sorted by ratings. You research a medical question and a search engine ranks the answers. You choose a university and a magazine's ranking steers the decision. You did not produce any of this knowledge; you consumed it. And you had no practical alternative: the cost of independently verifying every input to every decision you make exceeds any individual's capacity. Curation is not a convenience; it is a dependency you cannot opt out of.
 
-Uncoordinated actions cancel out. Coordinated actions compound.
+To coordinate, people first need a shared picture of reality. That shared picture is produced by **curation** — the transformation of raw information into knowledge. Most hard problems are two-phase: (1) **curation** — converge on what is true and important enough to act on; (2) **coordination** — align actions given that shared knowledge. The thesis of this paper: **the bottleneck is almost always phase one.** We keep trying to fix coordination with better governance and voting while standing on a broken knowledge layer. We propose a framework for trustless decentralized curation and instantiate it for news, where the bottleneck is most visible and the cost of failure most broadly distributed. This paper addresses phase one only; coordination given shared knowledge is out of scope.
 
-But coordination is not where things usually break.
-
-To coordinate, people first need to share a picture of reality: what is happening, what matters, what might work. That shared picture does not magically appear. It's produced by **curation**—by what we pay attention to, believe, and ignore.
-
-**Curation transforms raw information into knowledge.**
-
-In this paper, “knowledge” is used operationally: a claim becomes decision-grade only after it is (a) well-posed, (b) tied to an explicit evidence policy, and (c) contestable under incentives. The protocol outputs are therefore **signals**—not guarantees.
-
-So you can think of most hard problems as two-phase:
-
-1. **Curation:** Transform information into knowledge—converge on what is true and important enough to act on
-2. **Coordination:** Align actions, given that shared knowledge
-
-The thesis of this paper is blunt: **the bottleneck is almost always phase one.** We keep trying to fix coordination with better governance, better voting, better funding mechanisms, while standing on a broken knowledge layer. To address this, we propose a general framework for trustless decentralized curation and instantiate it for news and information curation, where the bottleneck is most visible and the cost of failure most broadly distributed.
-
-This paper addresses phase one only. Phase two — coordination given shared knowledge — is a rich field with mature tools that work well *when the input knowledge is reliable*. Yet most governance failures blamed on coordination are better explained by a corrupted or missing knowledge layer upstream. This manuscript focuses entirely on the information-to-knowledge transformation and proposes no coordination mechanism.
+In this paper, "knowledge" is used operationally: a claim becomes decision-grade only after it is (a) well-posed, (b) tied to an explicit evidence policy, and (c) contestable under incentives. The protocol outputs are therefore **signals** — not guarantees.
 
 ## Information abundance, knowledge scarcity
 
-The internet solved access to *information* but not access to *knowledge*. Anyone with a connection now has access to more raw information than the average researcher did a generation ago. But an endless pile of unsorted books and a library contain the same material; the difference is the structure that organizes, verifies, and contextualizes it. Information is raw: a claim, a data point, a signal. Knowledge is information that has been verified, contextualized, and integrated into a coherent understanding. The transformation from one to the other is curation.
+The internet solved access to *information* but not access to *knowledge*. Information is raw: a claim, a data point, a signal. Knowledge is information that has been verified, contextualized, and integrated into a coherent understanding. The transformation from one to the other is curation. Institutions once performed this transformation through editorial selection, peer review, and pedagogy. Today we have far more information and far weaker mechanisms to convert it.
 
-Institutions once performed much of this transformation. The process was imperfect but legible: newspapers, journals, and universities converted information into knowledge through editorial selection, peer review, and pedagogy. Today we have far more information and far weaker mechanisms to convert it into decision-grade knowledge.
-
-Recent advances in generative AI have made this problem structurally worse. Historically, the cost of producing information served as a crude quality filter, a kind of proof-of-work: writing a convincing academic paper required understanding the subject; writing functional software required knowing how to program. Competence and output were coupled because producing the signal required the same effort that made it credible. AI severs that coupling. People can now produce well-structured papers, fluent prose, and working code without understanding what they have produced. The *form* of quality: proper formatting, confident language, plausible citations, is now trivially cheap to generate. The *substance* of quality: correctness, coherence, domain understanding, is not. The flood of machine-generated content that looks credible but lacks grounding makes the curation bottleneck not merely important but urgent: the volume of information that needs to be filtered, verified, and organized is growing faster than any existing curation process can handle.
-
-To design a curation system that resists these failures, we need to be precise about what "knowledge" means in operational terms.
+Generative AI makes this structurally worse. Historically, the cost of producing information served as a crude quality filter: writing a convincing paper required understanding the subject. AI severs that coupling — the *form* of quality (proper formatting, confident language, plausible citations) is now trivially cheap to generate, while the *substance* (correctness, coherence, domain understanding) is not. The volume of information that needs filtering is growing faster than any existing curation process can handle.
 
 ## Operationalizing knowledge: from JTB to contestable signals
 
-Traditional epistemology treats knowledge as **justified true belief** (JTB):
-
-- **Truth**: correspondence to reality.
-- **Justification**: adequate rational support (foundational evidence, coherence, reliability).
-- **Belief**: the claim is asserted, not merely entertained.
-
-The protocol proposed in this paper operationalizes each component:
+Traditional epistemology treats knowledge as **justified true belief** (JTB). The protocol operationalizes each component:
 
 | JTB component | Protocol mechanism | Section reference |
 |---|---|---|
@@ -74,71 +47,53 @@ The protocol proposed in this paper operationalizes each component:
 | **Justification** | Evidence bundles with integrity commitments; evidence policies define admissible sources and tie-break rules | Evidence policy; Claim templates |
 | **Belief** | Authorship requires stake; a claim is not merely asserted but economically committed to | Flow 1 |
 
-The departure from classical JTB is deliberate: the protocol does not claim to produce truth. It produces **stake-weighted, contestable labels** (signals) under an explicit evidence standard. The philosophical gap between "justified" and "true" is absorbed by the DDR system, whose accuracy is an inherited assumption, not a guarantee.
-
-This operationalization inherits a well-known limitation. The classical JTB definition is subject to Gettier cases [@gettier1963justified]: situations where a belief is true, justified, but accidentally so, because the justification does not actually connect to the truth. A curated claim can be stake-validated and true by coincidence while the supporting evidence is misleading. The protocol does not resolve Gettier cases. The dispute mechanism offers a partial corrective: a challenger who identifies that the stated evidence is disconnected from the claim's truth can force re-evaluation, but only if someone notices the disconnect and finds it worth the stake to challenge. Gettier-style failures therefore persist as a residual risk rather than a solvable problem: the protocol's goal is not to produce certain knowledge but to produce signals that are more expensive to fake than to verify honestly.
+The protocol does not claim to produce truth. It produces **stake-weighted, contestable labels** under an explicit evidence standard. This operationalization inherits Gettier cases [@gettier1963justified] — a claim can be stake-validated and true by coincidence while the supporting evidence is misleading — as a residual risk rather than a solvable problem.
 
 ## When common knowledge fails
 
-Coordination often fails because people confuse shared knowledge with common knowledge. In game theory, **common knowledge** — formalized by @aumann1976agreeing — means not just that I know $X$, but that you know $X$, and we both know that we both know $X$, and so on, *ad infinitum*. This infinite recursive structure is what makes coordination safe: without it, even mutually known facts can fail to support coordinated action.
-
-Theoretical models of recursive belief reasoning suggest humans routinely act as if common knowledge exists when it does not, producing an **illusion of shared knowledge** that masks incompatible understanding [@bolander2020common]. Bolander et al. model bounded-depth reasoning in coordination games with imperfect information, showing that limited recursion leads to systematic overestimation of shared knowledge; whether this transfers to field settings with real stakes is an open empirical question.
+Coordination often fails because people confuse shared knowledge with common knowledge. In game theory, **common knowledge** [@aumann1976agreeing] requires not just mutual knowledge of $X$ but infinite recursive awareness of that knowledge. Theoretical models suggest humans routinely overestimate the depth of shared knowledge [@bolander2020common], producing an illusion that masks incompatible understanding.
 
 ## Why this matters
 
-Not all curation needs to be reliable. A curated music playlist reflects someone's taste; the curator's subjectivity is the product, and there is no failure mode. But in domains where decisions allocate real resources, bad curation does not merely misinform: it misallocates. A restaurant ranking that rewards mediocrity drives out the best restaurants, who incur the highest costs and depend on recognition to sustain them. A university ranking that mismeasures quality redirects students, faculty, and funding to the wrong institutions. A scientific prize that curates badly makes researchers optimize for recognition rather than knowledge. In every case, the pattern is the same: bad curation is a selection pressure against excellence.
+In domains where decisions allocate real resources, bad curation is a selection pressure against excellence: restaurant rankings that reward mediocrity drive out quality restaurants; university rankings that mismeasure quality redirect students and funding. Users lose in time and decision quality; honest creators lose to sensational work optimized for distribution; trust erodes (global trust in news hovers around 40% [@reuters2024digitalnews]).
 
-When curation breaks, the damage is not evenly distributed. Users lose twice: first in time spent filtering noise, then in decision quality built on corrupted inputs. Honest creators lose because rigorous work competes against sensational work optimized for distribution. Platforms win engagement but lose trust: global trust in news hovers around 40% [@reuters2024digitalnews]. Society loses coherence as groups build incompatible knowledge slices and then collide instead of coordinating.
-
-The dependency is unavoidable. Individually verifying every piece of information we act on would be prohibitively inefficient; reusing someone else's curation is how humans make knowledge practical. But this dependency is also the vulnerability. When curation is centralized, two failure modes emerge. The first is incompetence: the curator's incentives diverge from knowledge quality; platforms optimize for engagement, newsrooms for attention, algorithms for clicks. The second is weaponization: when one entity controls what becomes "known," the distance between curation and propaganda collapses to a question of intent [-@chomsky1988manufacturing]. The critical insight is that incompetence and weaponization are indistinguishable from the consumer's perspective. You cannot tell whether your feed is poorly curated or deliberately curated against your interests. This is not a bug in any particular platform; it is an inherent property of centralized curation.
+When curation is centralized, two failure modes emerge: *incompetence* (the curator's incentives diverge from knowledge quality) and *weaponization* (the curator exploits control over what becomes "known" [-@chomsky1988manufacturing]). The critical insight: these are indistinguishable from the consumer's perspective. This is not a bug in any particular platform; it is an inherent property of centralized curation.
 
 ## Contributions
 
-This paper contributes:
-
-- **A general framework for trustless decentralized curation**: a four-step process (problem definition, use case selection, quality identification, mechanism design) motivated by the thesis that curation, the transformation of information into knowledge, is the upstream bottleneck behind coordination failures. The framework is domain-agnostic; the remaining contributions instantiate it for news and information curation. Use case selection is guided by three feasibility conditions: (1) the relevant evidence must be publicly verifiable (claims that depend on private or privileged information cannot be contested by arbitrary participants), and (2) falsification must be substantially cheaper than exhaustive verification (the dispute mechanism is economically viable only when disproving a false claim costs less than proving a true one from scratch). A domain satisfying both conditions is a candidate for decentralized curation; one violating either requires additional infrastructure (e.g., credentialed expert pools, trusted data feeds) that reintroduces centralization at the evidence layer.
-- **A news curation instantiation**: applying the framework to news yields a quality decomposition into accuracy (global, binary) and relevance (local, non-binary), a protocol architecture (claims, evidence, disputes, pooled staking), a coherence game for relevance with an explicit collusion threshold (~20-30% of stake), security design principles (semantic ambiguity as attack vector; protocol/interface separation against capture), and a public good analysis with structural parallels to the Groves-Ledyard deviation penalty.
-- **An adversarial evaluation**: a reproducible simulation suite covering incentive alignment, coherence dynamics, ambiguity failure modes, repeated economic attacks, and coordinated collusion.
-- **A deployment retrospective**: Truth Post (2023) deployed the accuracy layer only; its failure to bootstrap participation provides empirical evidence on cold-start dynamics and directly informed the full design.
+- **A general framework for trustless decentralized curation**: a four-step process (problem definition, use case selection, quality identification, mechanism design). Use case selection requires: (1) publicly verifiable evidence, and (2) falsification substantially cheaper than exhaustive verification. The framework is domain-agnostic; the remaining contributions instantiate it for news curation.
+- **A news curation instantiation**: quality decomposition into accuracy (global, binary) and relevance (local, non-binary), with a coherence game for relevance (collusion threshold ~20-30% of stake), security design principles (semantic ambiguity as attack vector; protocol/interface separation), and a public good analysis with parallels to the Groves-Ledyard deviation penalty.
+- **An adversarial evaluation**: reproducible simulations covering incentive alignment, coherence dynamics, ambiguity failure modes, repeated economic attacks, and coordinated collusion.
+- **A deployment retrospective**: Truth Post (2023) deployed the accuracy layer only; its failure to bootstrap participation directly informed the full design.
 
 
 # Background and problem statement
 
 ## Failure modes of centralized curation
 
-The root structural property is **opacity**. When one entity controls the transformation of information into knowledge, the mapping from evidence to editorial outcome is hidden from the consumer. This is not a design choice that better interfaces could fix; it is inherent in centralized control. The consumer cannot audit why content was promoted, suppressed, or ranked, and therefore cannot detect systematic error. Opacity is the precondition for every failure mode that follows.
-
-Opacity enables **capture**: when the transformation process is hidden, the curator can optimize for its own objectives (revenue, regulatory compliance, ideology) rather than the consumer's epistemic needs, and the divergence is undetectable. Opacity also creates a single attack surface, enabling **gaming**: external actors optimize against one mechanism at scale, and the resulting arms race pushes the curator toward deeper opacity to stay ahead, a reinforcing loop that makes the system progressively less transparent.
-
-Unilateral control enables **censorship**: suppression or promotion of specific content is feasible and, under opacity, undetectable. Single-entity control also creates **fragility**: the knowledge layer inherits every failure of the curator: policy changes, acquisitions, personnel turnover, algorithm rewrites. There is no redundancy; when the curator fails, the knowledge output fails with it.
-
-Finally, centralized curation offers **no contestability**. When curation is wrong, there is no structured mechanism for challenge, appeal, or forced correction. Errors persist until the curator independently chooses to act. This is not a missing feature; it is a consequence of the same unilateral control that makes the other failures possible.
+The root structural property is **opacity**: when one entity controls the transformation of information into knowledge, the consumer cannot audit why content was promoted, suppressed, or ranked, and therefore cannot detect systematic error. Opacity enables **capture** (the curator optimizes for its own objectives rather than the consumer's epistemic needs) and **gaming** (external actors optimize against a single mechanism at scale). Unilateral control enables **censorship** and creates **fragility** (the knowledge layer inherits every failure of the curator). Finally, centralized curation offers **no contestability**: errors persist until the curator independently chooses to act.
 
 ## Why quality collapses: adverse selection in information markets
 
-Consider two restaurants competing in the same neighborhood. One invests in quality: fresh ingredients, trained staff, rigorous hygiene. The other cuts corners. If the curation mechanism ranking them (a review platform, a guide, a ranking algorithm) cannot distinguish the two, the cost difference is pure competitive disadvantage for the quality restaurant: higher expenses without proportional recognition. Over time, the quality restaurant faces a binary choice: reduce quality to match the competitor's cost structure, or exit. The low-quality restaurant does not win because consumers prefer it; it wins because the curation layer failed to make quality visible. This pattern operates in every domain where quality is expensive to produce and difficult to observe: journalism, scientific research, software, education, professional services.
+Consider two restaurants competing in the same neighborhood. One invests in quality; the other cuts corners. If the curation mechanism ranking them cannot distinguish the two, the cost difference is a pure competitive disadvantage for the quality restaurant. Over time, the quality restaurant must reduce quality or exit — not because consumers prefer inferior food, but because the curation layer failed to make quality visible.
 
-The mechanism is the same adverse selection that @akerlof1970lemons identified in used-car markets. When buyers cannot distinguish quality before purchase, sellers of low-quality goods face lower costs and capture the market; high-quality sellers, unable to recover their costs, exit. The same dynamic operates on information: producing low-quality content is cheap, producing high-quality content is expensive, and consumers cannot reliably tell them apart. The predictable result is a market where quantity crowds out quality: not because consumers prefer noise, but because the cost asymmetry between production and verification selects for it.
-
-Centralized curation intensifies rather than corrects this failure. Opacity prevents consumers from observing quality. Capture means the curator's own incentives favor cheap-to-produce, high-engagement content over expensive-to-produce, high-accuracy content. The curator is not a neutral quality filter; it is a participant in the same adverse selection dynamic, optimizing for its own survival metrics.
+The mechanism is adverse selection [@akerlof1970lemons]: when curation cannot distinguish quality, high-quality producers face higher costs without proportional recognition and exit. This pattern operates in every domain where quality is expensive to produce and difficult to observe: journalism, scientific research, software, education. Centralized curation intensifies rather than corrects this failure: opacity prevents consumers from observing quality, and capture means the curator's incentives favor cheap-to-produce, high-engagement content.
 
 ## What good curation must optimize for
 
-Not all curation needs these properties. A curated music playlist works because the stakes are low: a bad song costs three minutes. A friend's restaurant recommendation works because the curator has no structural incentive to mislead and the relationship provides accountability. A bookshop's staff picks work because the curator's reputation is directly tied to the quality of the recommendations. These conditions do not hold in the domains this paper targets.
-
 When curation drives resource allocation decisions, when consumers cannot independently verify quality, and when the curator's incentives can diverge from the consumer's, the failure modes described in the previous section become inevitable unless the system satisfies specific process properties. Each property addresses a specific failure: **well-posed** claims (falsifiable and unambiguous) prevent disputes from degenerating into semantic games; **auditable** processes (every assertion, verdict, and stake movement publicly traceable) counter opacity; **contestable** outputs (any participant can challenge by posting stake and counter-evidence) counter the absence of correction mechanisms; and **incentive-aligned** mechanisms (correctness is profitable, dishonesty is expensive) counter capture. Without these properties, any system operating in high-stakes, low-verifiability domains will reproduce the same failures under a different name.
 
-**Domain-specific quality criteria (news and information curation).** Applying the framework's quality identification step to the news domain yields three additional criteria, the first two of which become the target dimensions for mechanism design:
+**Domain-specific quality criteria (news and information curation).** Applying the framework's quality identification step to news yields three criteria:
 
-1. **Evidence-backed**: tied to an explicit evidence policy that defines admissible sources and tie-break rules. Without this, "evidence" degenerates into persuasion. This criterion is operationalized as the *accuracy* dimension.
-2. **Coherent**: consistent with other validated claims in the same domain. Incoherence signals either error or scope violation. This criterion is operationalized as the *relevance* dimension.
-3. **Current**: truth decays; claims become stale. A curation system that cannot expire or re-challenge outdated claims accumulates epistemic debt.
+1. **Evidence-backed**: tied to an explicit evidence policy defining admissible sources and tie-break rules. Operationalized as the *accuracy* dimension.
+2. **Coherent**: consistent with other validated claims in the same domain. Operationalized as the *relevance* dimension.
+3. **Current**: truth decays; claims become stale.
 
-A different instantiation of the framework (e.g., for scientific claims, product reviews, or legal evidence) would retain the process properties but identify different domain-specific criteria, and the mechanism design would follow from those choices.
+A different instantiation (e.g., scientific claims, product reviews) would identify different domain-specific criteria.
 
-To illustrate domain-agnosticism concretely, consider a second instantiation: **advertising claim verification.** Advertising is among the most resource-intensive information activities that produces no direct consumer value; it consumes resources to persuade rather than to inform, and the cost is borne by honest actors and consumers alike regardless of the claim's truth value. Applying the four-step framework: (1) *problem definition*: advertisers make product claims that consumers cannot efficiently verify, and the entity intermediating the claims (the ad platform) profits from volume rather than accuracy; (2) *use case selection*: factual product claims satisfy both feasibility conditions (evidence is publicly verifiable, and a single counterexample falsifies a claim far more cheaply than exhaustive verification); (3) *quality identification*: the binding dimension is accuracy (is the claim true?), not relevance (ads are already targeted by the platform); (4) *mechanism design*: the advertiser posts a bond with the claim, and the existing dispute infrastructure provides continuous verification. For a true claim, the bond is returned and the cost approaches zero; for a false claim, the advertiser loses the bond to the challenger. This inverts the cost structure: honest advertisers pay nearly nothing, while dishonest advertisers bear the full cost, the opposite of the current regime where compliance costs are fixed regardless of truth value. The advertiser staking mechanism described in the Funding section implements exactly this instantiation. The key structural difference from the news instantiation is that advertising curation collapses to a single quality dimension (accuracy), eliminating the need for the coherence game entirely.
+To illustrate domain-agnosticism, consider **advertising claim verification.** Applying the four-step framework: the advertiser posts a bond with a structured product claim; if the claim survives the challenge window, the bond is returned (cost approaches zero for truthful claims); if falsified, the advertiser loses the bond. This inverts the cost structure relative to current compliance regimes where costs are fixed regardless of truth value. The advertiser staking mechanism in the Funding section implements this instantiation, which collapses to a single quality dimension (accuracy).
 
-The remainder of this paper develops mechanisms for the news and information curation instantiation.
+The remainder of this paper develops mechanisms for the news curation instantiation.
 
 Extended data-quality and credibility mappings (Wang & Strong dimensions, CRAAP checklist) are available in [Supplementary Material A](supplementary-material.md).
 
@@ -146,53 +101,24 @@ Extended data-quality and credibility mappings (Wang & Strong dimensions, CRAAP 
 
 ## Actors
 
-- **Authors** submit claims, attach evidence bundles, select a pool, and put a bounty at risk.
-- **Validators** stake on pools, making themselves eligible for random drafting. Their stake contributes to pool liquidity and, when drafted, they participate in relevance rounds (as curators in Flow 4) or serve as the eligible population from which jurors are drawn for disputes. They are not adjudicators of accuracy — that role belongs to jurors — but their continued staking signals confidence in the pool's curation quality. Validators and curators are the same actors in different contexts: a validator becomes a curator when drafted for a relevance round.
-- **Challengers** contest claims by posting counter-stake and counter-evidence (or asserting under-specification), triggering dispute resolution.
-- **Jurors** are drawn from the DDR system (e.g., Kleros) to adjudicate disputes. They are distinct from validators: jurors resolve contested claims, validators signal on uncontested ones.
-- **Interface operators** build consumer-facing applications that filter, rank, and display protocol outputs. They control UX and compliance but not the underlying record.
-- **Governance participants** vote on protocol parameter updates (e.g., $\alpha$, $K$, pool creation rules). Their surface area is intentionally minimal.
-- **Readers** consume outputs via interfaces and may participate in any of the above roles.
+- **Authors** submit claims with evidence bundles and a bounty at risk.
+- **Validators** stake on pools, becoming eligible for random drafting into relevance rounds (as curators, Flow 4) or the juror-eligible population for disputes.
+- **Challengers** contest claims by posting counter-stake and counter-evidence, triggering dispute resolution.
+- **Jurors** are drawn from the DDR system (e.g., Kleros) to adjudicate disputes; they are distinct from validators.
+- **Interface operators** build consumer-facing applications; they control UX and compliance but not the underlying record.
+- **Governance participants** vote on protocol parameter updates ($\alpha$, $K$, pool creation rules).
 
 ## Artifacts: claims, evidence, verdicts
 
-The unit of curation is not “a post.” It is a **claim** with enough structure to be adjudicated.
+The unit of curation is a **claim**: a single proposition + scope (timeframe, definitions, jurisdiction) + resolution policy + selected pool. Each claim has an **evidence bundle** (public references + integrity hashes) and receives a **verdict**: Valid / Invalid / Under-specified. Under-specified means the claim cannot be adjudicated because required information is missing or ambiguous; ambiguity is a failure, not something jurors should guess.
 
-::: {.callout-note title="Definition: Claim"}
-A **claim** is a single proposition plus enough scope and an explicit resolution policy so that an independent third party can decide Valid/Invalid/Under-specified without guessing hidden assumptions.
-:::
+## Evidence policy
 
-- **Claim**: statement + scope (timeframe, definitions, jurisdiction) + resolution policy + selected pool.
-- **Evidence bundle**: public references plus integrity commitments (hashes) to prevent silent swaps.
-- **Verdict**: **Valid / Invalid / Under-specified**.
-
-“Under-specified” is critical: ambiguity is treated as a failure, not something jurors should guess.
-
-::: {.callout-warning title="Definition: Under-specified"}
-**Under-specified** means the claim cannot be adjudicated under the pool’s policy because required information is missing or ambiguous (e.g., timeframe, definition, canonical source class). It is a *verdict*, not a “maybe.”
-:::
-
-## Evidence policy (policy, not vibes)
-
-Each pool/domain publishes an evidence policy specifying:
-
-- Accepted evidence types (datasets, primary documents, expert testimony, etc.)
-- Canonical sources and tie-break rules
-- Thresholds for Valid vs Under-specified
-
-This converts “legal definition disputes” into policy compliance disputes with explicit rules.
-
-::: {.callout-note title="Definition: Evidence policy"}
-An **evidence policy** defines what counts as admissible evidence in a pool, how conflicts are resolved (tie-break rules), and what threshold separates Valid from Under-specified. It is intentionally explicit: jurors adjudicate *policy compliance* rather than inventing semantics mid-dispute.
-:::
+Each pool publishes an **evidence policy** specifying accepted evidence types, canonical sources, tie-break rules, and thresholds for Valid vs Under-specified. Jurors adjudicate *policy compliance* rather than inventing semantics mid-dispute.
 
 ## Trust assumptions
 
-This design does not eliminate trust; it **constrains** it.
-
-- We minimize trust in any single validator by using aggregation, contestability, and public auditability.
-- We treat dispute resolution as a **black box DDR system** (e.g., Kleros) and require only three properties: (1) jurors are stake-weighted and randomly selected, (2) verdicts are one of Valid/Invalid/Under-specified, and (3) appeals with escalating stakes are available. The internal incentive design and failure modes of the DDR system are inherited, not controlled.
-- We assume evidence authenticity is imperfect and must be contested, not assumed.
+This design does not eliminate trust; it **constrains** it. We treat dispute resolution as a **black box DDR system** (e.g., Kleros) requiring only: (1) stake-weighted random juror selection, (2) Valid/Invalid/Under-specified verdicts, and (3) appeals with escalating stakes. Evidence authenticity is imperfect and must be contested, not assumed.
 
 # Mechanisms
 
@@ -226,16 +152,16 @@ This design does not eliminate trust; it **constrains** it.
 
 ## Overview: separation of powers
 
-The framework's quality identification step, applied to news and information curation, identifies two quality dimensions that centralized platforms conflate into a single engagement metric:
+The quality identification step identifies two dimensions that centralized platforms conflate into engagement:
 
 - **Accuracy**: global, binary classification under an evidence standard, resolved via dispute processes.
 - **Relevance**: local, non-binary importance produced by a policy-guided coherence game.
 
-This separation is not an axiom; it is the result of analyzing what "quality" means in the news domain. Accuracy is global because a factual claim is either valid or invalid regardless of who reads it. Relevance is local because importance depends on the reader's context, the pool's curation policy, and the moment. A different domain would decompose quality differently: a scientific curation system might add reproducibility as a third dimension; a legal evidence system might replace relevance with admissibility. The mechanisms that follow are designed for this specific two-dimensional decomposition.
+Accuracy is global because a factual claim is valid or invalid regardless of who reads it. Relevance is local because importance depends on context, curation policy, and moment. A different domain would decompose quality differently (e.g., reproducibility for science, admissibility for legal evidence).
 
 ## Formal model: Schelling coordination under restricted conditions
 
-Both the accuracy dispute (Flow 3) and the relevance coherence game (Flow 4) are instances of a Schelling coordination game: agents submit simultaneous reports under commit-reveal, and payoffs reward agreement with the majority or mean. @george2023strategic proves an impossibility theorem for this class of games: for voting and payoff systems satisfying minimal attack resistance over three or more ranked alternatives, situations always exist where truthful reporting is not an equilibrium. This means we cannot prove truthful reporting is *always* an equilibrium in the general case. Our contribution is to identify **restricted conditions** specific to our two instantiations under which truthful reporting *is* a Nash equilibrium.
+Both the accuracy dispute (Flow 3) and the relevance coherence game (Flow 4) are Schelling coordination games: agents submit simultaneous reports under commit-reveal, and payoffs reward agreement. @george2023strategic proves an impossibility theorem: for three or more ranked alternatives, truthful reporting cannot always be an equilibrium. Our contribution is to identify **restricted conditions** under which truthful reporting *is* a Nash equilibrium.
 
 ### Base game
 
@@ -250,11 +176,11 @@ The "coherent" predicate is parameterized by the game instantiation. The griefin
 
 ### Instantiation 1: binary accuracy (DDR disputes)
 
-The dispute mechanism (Flow 3) instantiates $\Gamma$ with $\mathcal{V} = \{\text{Valid}, \text{Invalid}\}$. Under-specified is a structural rejection category (the claim fails template validation), not a third alternative that jurors rank against the other two. When the claim is well-posed, jurors face a binary decision.
+The dispute mechanism (Flow 3) instantiates $\Gamma$ with $\mathcal{V} = \{\text{Valid}, \text{Invalid}\}$. Under-specified is a structural rejection (template validation failure), not a ranked alternative — so George's impossibility does not apply. The DDR mechanism exploits the asymmetry between falsification and verification: it is justified for claims where falsification is cheap (a counterexample suffices) but exhaustive verification is expensive. The claim must be falsifiable not merely in principle but at a cost rational given the bounty.
 
-This restriction is critical: George's impossibility applies to games with three or more **ranked** alternatives. Binary choice avoids the impossibility entirely. The focal point is the verdict consistent with the pool's curation policy and evidence standard.
+For the $S/B$ ratios tested in E1 (0.05 to 0.50), the break-even majority threshold ranges from 0.048 to 0.333, all exceeded when $p > 0.50$ with $N = 5$. The binding requirement is $p > 0.50$: each juror must be better than random for the incentive structure to be self-enforcing.
 
-The DDR mechanism exploits an asymmetry between falsification and verification. It is justified for claims where falsification is practically cheap (a challenger can present a counterexample) but exhaustive verification is expensive (confirming truth requires checking all cases or sources). If a claim admits a compact proof anyone can check, the dispute game is unnecessary; if no feasible counter-evidence exists within the stake's economic constraints, the game is inert. News claims fit naturally: "Product X contains no lead" is cheap to falsify (one positive test) but expensive to verify exhaustively. This echoes Popper's demarcation criterion with a practical addition: the claim must be falsifiable not merely in principle but at a cost that makes the game rational given the bounty.
+The griefing factor for a challenger attacking a true claim is $GF = \frac{B \cdot P_{\mathrm{maj}}}{S \cdot (1 - P_{\mathrm{maj}})}$. At $p = 0.80$ and $S/B = 0.25$, $GF \approx 37$: the attacker pays far more than the victim. For a legitimate challenger, the asymmetry is reversed — the intended incentive.
 
 ::: {.callout-note title="Proposition 1 (Condorcet connection)"}
 If per-juror accuracy $p > 0.50$ and votes are independent, the majority-correct probability $P_{\mathrm{maj}}(p, N) = \sum_{k=\lceil N/2 \rceil}^{N} \binom{N}{k} p^k (1-p)^{N-k}$ is monotone increasing in jury size $N$ and converges to 1 as $N \to \infty$. Challenger expected value is positive whenever $P_{\mathrm{maj}}(p, N) > \frac{S/B}{1 + S/B}$.
@@ -262,7 +188,9 @@ If per-juror accuracy $p > 0.50$ and votes are independent, the majority-correct
 
 For the $S/B$ ratios tested in E1 (0.05 to 0.50), the break-even majority threshold ranges from 0.048 to 0.333, all of which are exceeded when $p > 0.50$ with $N = 5$ jurors. The binding system requirement is therefore $p > 0.50$: each juror must be better than random for the incentive structure to be self-enforcing.
 
-The griefing factor for a challenger attacking a true claim is $GF = \frac{B \cdot P_{\mathrm{maj}}}{S \cdot (1 - P_{\mathrm{maj}})}$. At $p = 0.80$ and $S/B = 0.25$, $GF \approx 37$: the attacker pays far more than the victim. For a legitimate challenger disputing a false claim, the asymmetry is reversed, which is the intended incentive.
+For the $S/B$ ratios tested in E1 (0.05 to 0.50), the break-even majority threshold ranges from 0.048 to 0.333, all exceeded when $p > 0.50$ with $N = 5$. The binding requirement is $p > 0.50$: each juror must be better than random for the incentive structure to be self-enforcing.
+
+The griefing factor for a challenger attacking a true claim is $GF = \frac{B \cdot P_{\mathrm{maj}}}{S \cdot (1 - P_{\mathrm{maj}})}$. At $p = 0.80$ and $S/B = 0.25$, $GF \approx 37$: the attacker pays far more than the victim. For a legitimate challenger, the asymmetry is reversed — the intended incentive. For a legitimate challenger disputing a false claim, the asymmetry is reversed, which is the intended incentive.
 
 ### Instantiation 2: scalar relevance (coherence game)
 
@@ -282,254 +210,120 @@ The equilibrium degrades under identifiable conditions: (a) vague curation polic
 
 ## Vagueness = Rejection: claim templates as a security primitive
 
-A jury can only resolve what is specified. If the claim is ambiguous, jurors will rationally coordinate on a shared interpretation—which can be wrong.
-
-So claims must carry enough structure that “correct” is not a matter of vibes:
-
-- Single proposition (no bundled claims)
-- Explicit scope (time, location, units/definitions)
-- Explicit resolution policy (what sources/procedures count)
-
-If missing, the correct verdict is not True/False; it is **Under-specified**.
-
-### A minimal claim schema
-
-At minimum, each claim should include:
-
-- **Statement**: a single proposition with explicit subject and predicate.
-- **Scope**: time window, jurisdiction/location, and any required units/definitions.
-- **Resolution policy pointer**: which evidence policy applies (pool + version).
-- **Canonical sources / tie-break rules**: enough to avoid “guessing what counts.”
-- **Evidence bundle**: references + integrity commitments (so evidence cannot be silently swapped).
-
-### Who sets the specificity threshold?
-
-Specificity is not objective. The system treats it as policy:
-
-- Each pool publishes a **claim template** (required fields) and an **evidence policy** (what evidence counts and how conflicts are resolved).
-- The template is versioned and governable, but must remain narrow: the more it expands, the more it becomes an expert gatekeeper.
+A jury can only resolve what is specified. Claims must carry enough structure that "correct" is not a matter of vibes: single proposition, explicit scope (time, location, units/definitions), and explicit resolution policy. If missing, the correct verdict is **Under-specified**. Each pool publishes a versioned **claim template** (required fields) and **evidence policy** (admissible evidence, tie-break rules).
 
 ### The curation policy bootstrap problem
 
-The equilibrium properties established in the formal model section (Proposition 2) are conditional on curation policies being specific enough to create focal points. But writing good curation policies for complex domains is itself a governance problem. This is recursive: who curates the curation rules?
-
-The recursion is not unique to this design. Legal systems face the same structure: who writes the laws that govern lawmaking? They resolve it through constitutional conventions, amendment procedures, and judicial review. Curation policies occupy an analogous "constitutional layer": they are meta-rules written by humans through deliberative processes, not generated algorithmically.
-
-The bootstrapping direction has four components:
-
-1. **Start minimal.** Pools launch with narrow curation policies: few required fields, broad evidence rules, simple resolution criteria. This lowers the governance burden at inception.
-2. **Policy amendment as dispute.** Policy amendment proposals can be submitted and are themselves subject to the dispute resolution mechanism. This reuses the existing infrastructure for policy governance.
-3. **Forking as safety valve.** If governance captures the curation policy (writing rules that favor insiders), any participant can fork the pool with a different policy. This mirrors the "exit" option in constitutional governance.
-4. **Cross-pool competition.** Pools with vague curation policies produce weak focal points, which degrade the coherence game equilibrium (the conditions in Proposition 2 fail). These pools generate noisy signals, lose competent participants, and shrink. Pools with specific, well-designed policies retain participants and produce useful signals. This evolutionary pressure operates without central coordination.
-
-The formal model makes this dependency explicit rather than hiding it: the equilibrium *degrades gracefully* as policy specificity decreases (stated in the conditions of Proposition 2), which means the system signals its own governance failures through measurable output quality.
+Writing good curation policies is itself a governance problem. The bootstrapping direction has four components: (1) **start minimal** — pools launch with narrow policies; (2) **policy amendment as dispute** — proposals are subject to the existing dispute mechanism; (3) **forking as safety valve** — participants can fork pools with captured policies; (4) **cross-pool competition** — pools with vague policies produce weak focal points (Proposition 2 degrades), lose participants, and shrink. The equilibrium degrades gracefully, making governance failures measurable through output quality.
 
 ### Defending against strategic ambiguity
 
-Allowing Under-specified as an outcome creates a cheap way to reject ambiguous claims, but also introduces adversarial behavior (borderline claims, dispute spam). Mitigations include:
+Allowing Under-specified as an outcome creates a cheap way to reject ambiguous claims, but also introduces adversarial behavior (borderline claims, dispute spam). Mitigations:
 
-- **Ambiguity slashing**: if a claim is ruled Under-specified, the author loses stake (it is treated as a failure, not “close enough”).
-- **Template linting**: UIs can run deterministic checks before a claim is accepted (missing timeframe, missing source class, undefined terms).
-- **Policy-defined semantics for inherently fuzzy terms**: if a domain requires fuzziness, it must define it explicitly (turning semantics into policy compliance).
+- **Ambiguity slashing**: if a claim is ruled Under-specified, the author loses stake (failure, not "close enough").
+- **Template linting**: UIs run deterministic checks before acceptance (missing timeframe, missing source class, undefined terms).
+- **Policy-defined semantics**: if a domain requires fuzziness, it must define it explicitly (turning semantics into policy compliance).
 
-## Common criticism: “consensus ≠ correctness”
+## Common criticism: "consensus ≠ correctness"
 
-Schelling-style mechanisms maximize *coherence* with other voters, not truth directly. If the question is ambiguous or requires specialized expertise, naive coordination can converge on the wrong interpretation.
-
-This critique is not hypothetical; it appears in analyses of cryptoeconomic courts [@bergolla2022kleros; @kleros2021cryptoeconomics]. It is also consistent with evidence from coordination experiments showing that focal points may be insufficient under conflict of interest [@rojoarjona2021focalpoints].
-
-This design responds in three ways:
-
-1. **Question design as a security primitive:** ill-posed claims are rejected or resolved as Under-specified, not forced into True/False.
-2. **Escalation attracts expertise:** appeals raise stakes; higher rounds can rationally support deeper work (“high-court effect”).
-3. **Policy-defined domains:** when disputes are inherently normative (e.g., “what counts as X under policy”), jurors adjudicate policy compliance, not metaphysical truth.
+Schelling-style mechanisms maximize *coherence*, not truth directly [@bergolla2022kleros; @kleros2021cryptoeconomics; @rojoarjona2021focalpoints]. This design responds: (1) ill-posed claims are rejected as Under-specified; (2) appeals raise stakes, attracting expertise; (3) jurors adjudicate policy compliance, not metaphysical truth.
 
 ## Flow 1: submission and confidence signaling
 
 ### Protocol
 
-1. **Claim authoring.** The author selects a pool, drafts a claim conforming to the pool’s claim template, attaches an evidence bundle with integrity commitments (hashes), and specifies a bounty $B$.
-2. **Template validation.** The interface (or an on-chain check) verifies that the claim satisfies the pool’s required fields (scope, resolution policy, canonical sources). Claims that fail template validation are rejected before posting.
-3. **Submission.** The author locks bounty $B$ on-chain. The claim enters the challenge window. The confidence score clock starts.
-4. **Confidence accumulation.** For each discrete interval $\Delta t$ that the claim remains uncontested, the confidence score increases by $B_t \cdot \Delta t$.
-5. **Outcome (optimistic finality).** If no challenge is filed within the window, the claim is marked Valid by default. This is an explicit design choice — *optimistic finality* — borrowed from optimistic rollup and oracle designs (e.g., UMA [@umaOptimisticOracleDocs]): the system assumes correctness unless someone stakes capital to dispute it. The tradeoff is direct: optimistic finality minimizes latency and cost for honest claims (no jury needed in the common case), but it means false claims survive whenever challengers are absent, distracted, or under-capitalized. The confidence score partially compensates: unchallenged claims with low bounty or short survival time carry low $C$, signaling to readers that absence of challenge is not the same as rigorous validation. The author may withdraw the bounty after the window closes, which stops confidence accumulation.
+1. **Claim authoring.** The author selects a pool, drafts a claim conforming to the template, attaches an evidence bundle, and specifies a bounty $B$.
+2. **Template validation.** The interface verifies required fields; non-conforming claims are rejected.
+3. **Submission.** The author locks $B$ on-chain; the confidence score clock starts.
+4. **Confidence accumulation.** $C$ increases by $B_t \cdot \Delta t$ for each uncontested interval.
+5. **Outcome (optimistic finality).** If no challenge is filed within the window, the claim is marked Valid by default. This is an explicit design choice — *optimistic finality* — borrowed from optimistic rollup and oracle designs (e.g., UMA [@umaOptimisticOracleDocs]): the system assumes correctness unless someone stakes capital to dispute it. The tradeoff: optimistic finality minimizes latency and cost for honest claims (no jury needed in the common case), but false claims survive whenever challengers are absent or under-capitalized. The confidence score partially compensates: unchallenged claims with low bounty carry low $C$, signaling that absence of challenge is not rigorous validation.
 
 ### Confidence score
-
-The interface displays a **Confidence Score** $C$ to guide reader attention:
 
 $$
 C = \sum_{t} B_t \cdot \Delta t
 $$
 
-where $B_t$ is the bounty at risk during interval $t$ and $\Delta t$ is the interval length. In the common case the bounty is constant ($B_t = B$ for all $t$), and the formula reduces to $C = B \cdot T$ where $T$ is total uncontested time. The subscript $t$ generalizes to cases where the author tops up or partially withdraws bounty.
-
-The unit of $C$ is token·time (e.g., ETH·hours). This is intentionally non-normalized: $C$ is not a probability and is not comparable across pools with different token denominations. Within a single pool, higher $C$ means more skin-in-the-game-over-time. Cross-pool comparison requires normalization by interfaces (e.g., percentile within pool). A reference normalization for interfaces that need cross-pool ranking is $C_{\text{norm}} = C / \text{median}(C_{\text{pool}})$, where $\text{median}(C_{\text{pool}})$ is the median confidence score among active claims in the same pool. This percentile-based approach is computed by the interface, not the protocol, and requires sufficient claim volume in each pool to be meaningful.
-
-The score is a raw cumulative measure; the protocol does not impose a threshold for “high confidence.” Readers and interfaces decide what score is sufficient for their purposes. As the system matures and accumulates data, statistical inference over historical score distributions can provide context (e.g., percentile rankings), but this is not available at launch.
-
-Invariants:
-
-- **Monotone (within uncontested periods)**: while a claim is uncontested, $C$ increases monotonically with bounty and time. If a claim is challenged, confidence accumulation pauses; if the claim is reinstated (challenge rejected), accumulation resumes from the prior value. A successful challenge (claim ruled Invalid or Under-specified) terminates the claim and $C$ becomes moot.
-- **Gated**: a claim with zero bounty accumulates no confidence regardless of time elapsed.
+The unit is token·time (e.g., ETH·hours), intentionally non-normalized. Within a pool, higher $C$ means more skin-in-the-game-over-time. Cross-pool comparison requires interface-level normalization (e.g., $C_{\text{norm}} = C / \text{median}(C_{\text{pool}})$). $C$ is intentionally non-normalized — it is not a probability and is not comparable across pools with different token denominations. Cross-pool comparison requires interface-level normalization. Invariants: $C$ is monotone during uncontested periods (pauses during challenges, terminates on Invalid/Under-specified) and gated (zero bounty = zero confidence).
 
 ## Flow 2: pooled staking (liability and chilling effects)
 
-Validators stake on **pools** (topic-scoped domains) rather than individual claims. This structural choice addresses two problems simultaneously: targeted legal liability and concentrated risk.
+Validators stake on **pools** (topic-scoped domains) rather than individual claims.
 
-### Protocol
+1. **Pool creation.** Governance creates a pool with evidence policy, claim template, and parameters ($K$, $\alpha$, minimum stake).
+2. **Staking.** A validator locks stake $s_i$, becoming eligible for random drafting. Withdrawals require a cooldown period.
+3. **Random drafting.** The protocol draws from the pool using on-chain randomness (VRF-based), weighted by stake.
+4. **Payout/slashing.** Coherent/correct validators earn rewards; incoherent/incorrect validators lose stake.
 
-1. **Pool creation.** Governance creates a pool with an evidence policy, a claim template, and initial parameters ($K$, $\alpha$, minimum stake).
-2. **Staking.** A validator locks stake $s_i$ on the pool. The validator is now eligible for random drafting on any claim within that pool. Stake can be withdrawn after a cooldown period (preventing stake-and-flee attacks).
-3. **Random drafting.** When a claim requires validation or a dispute requires jurors, the protocol draws from the pool’s eligible set using on-chain randomness (e.g., VRF-based), weighted by stake. The validator/juror does not choose which claim to evaluate; the protocol assigns it.
-4. **Participation.** The drafted validator evaluates the assigned claim (accuracy dispute or relevance round) under the pool’s evidence policy.
-5. **Payout/slashing.** Coherent or correct validators receive rewards (from slashed stakes or protocol rewards $R$). Incoherent or incorrect validators lose stake proportionally.
-
-### Design rationale
-
-**Jury duty analogy.** Participation is voluntary (opt-in to the pool), but assignment is random. This is analogous to jury duty and is critical for liability diffusion.
-
-**Liability diffusion.** Because validators do not choose specific claims, targeted legal pressure (e.g., “you validated claim X, so you are liable for defamation”) is diffused across the entire pool. The larger the pool, the weaker the per-validator liability signal. This creates a form of “herd immunity”: attacking any single validator for a specific verdict requires attributing intent to what is effectively a lottery assignment. This does not eliminate legal risk entirely, but it raises the cost of targeted chilling effects substantially.
+**Liability diffusion.** Because validators do not choose specific claims, targeted legal pressure (e.g., "you validated claim X, so you are liable for defamation") is diffused across the entire pool. The larger the pool, the weaker the per-validator liability signal, raising the cost of targeted chilling effects substantially.
 
 ## Flow 3: challenge, dispute, appeals
 
-The challenge-dispute flow is the core enforcement mechanism. It proceeds in numbered steps:
-
-1. **Challenge**: any user posts a challenge stake $S$ against a claim with bounty $B$, submitting counter-evidence or asserting under-specification.
-2. **Juror selection**: the DDR system draws jurors from the eligible pool using on-chain randomness.
-3. **Commit phase**: each juror commits a hash of their vote (Valid / Invalid / Under-specified) within the voting window.
-4. **Reveal phase**: jurors reveal their votes. Non-reveals forfeit stake (penalizing abstention-as-strategy).
+1. **Challenge**: any user posts stake $S$ against a claim with bounty $B$, submitting counter-evidence.
+2. **Juror selection**: the DDR system draws jurors using on-chain randomness.
+3. **Commit phase**: jurors commit vote hashes within the voting window.
+4. **Reveal phase**: jurors reveal votes; non-reveals forfeit stake.
 5. **Verdict**: majority vote determines the outcome.
-6. **Payout**: if the challenger wins (claim ruled Invalid or Under-specified), the challenger receives $B + S$ minus fees. If the challenger loses, the claim author receives $S$.
-7. **Appeal**: either party can appeal by posting a higher stake (e.g., $2 \times$ previous round). Appeals draw a larger juror panel and raise the expertise threshold (the “high-court effect”). To prevent indefinite escalation, the mechanism imposes an upper bound: either a maximum appeal count (e.g., 4 rounds, consistent with Kleros's deployed design) or a cost ceiling where the cumulative appeal cost exceeds a pool parameter $A_{\max}$ (e.g., $10 \times$ the original bounty). Beyond this ceiling, the last verdict stands. The choice between count-based and cost-based limits is a pool-level parameter.
+6. **Payout**: challenger wins → receives $B + S$ minus fees; challenger loses → author receives $S$.
+7. **Appeal**: either party appeals by posting higher stake (e.g., $2\times$ previous), drawing a larger panel. Upper bound: maximum appeal count or cost ceiling $A_{\max}$.
 
-The economics operate at two levels. For an *individual challenger* who has already identified a false claim, the expected value of filing a challenge is $\text{EV}_{\text{challenger}} = P_{\mathrm{maj}}(p, N) \cdot B - (1 - P_{\mathrm{maj}}(p, N)) \cdot S$, where $P_{\mathrm{maj}}(p, N)$ is the majority-correct probability for $N$ jurors with per-juror accuracy $p$ (Proposition 1 in the formal model section), and $B$, $S$ are bounty and challenge stake respectively. For the *system* — considering that false claims must first be detected — the expected value per false claim is $\text{EV}_{\text{system}} = d \cdot [P_{\mathrm{maj}}(p, N) \cdot B - (1 - P_{\mathrm{maj}}(p, N)) \cdot S]$, where $d$ is the probability that at least one participant detects and challenges the claim. These are distinct: a challenger who has found a provably false claim faces only jury risk ($p$), while the system's overall false-claim suppression depends on both detection coverage ($d$) and jury accuracy ($p$). The formal model establishes that challenger EV is positive whenever $p > 0.50$ for all $S/B \le 0.50$, and the minimum-$p$ requirement section after E1 states the system requirements explicitly. Both formulas assume juror votes are independent; in practice, herding, Schelling coordination, and off-chain communication can introduce correlation, which the threat model addresses separately. Experiment E1 sweeps these parameters and shows the regimes where challenging is rational.
+**Economics.** For an individual challenger: $\text{EV}_{\text{challenger}} = P_{\mathrm{maj}}(p, N) \cdot B - (1 - P_{\mathrm{maj}}(p, N)) \cdot S$. For the system (including detection): $\text{EV}_{\text{system}} = d \cdot [P_{\mathrm{maj}}(p, N) \cdot B - (1 - P_{\mathrm{maj}}(p, N)) \cdot S]$, where $d$ is detection probability. These are distinct: a challenger who has found a provably false claim faces only jury risk ($p$), while the system's false-claim suppression depends on both detection coverage ($d$) and jury accuracy ($p$). Challenger EV is positive whenever $p > 0.50$ for all $S/B \le 0.50$; the minimum-$p$ requirement is stated after E1. Juror vote independence is assumed; herding and off-chain coordination are addressed in the threat model.
 
-**Commit-reveal limitations.** Commit-reveal reduces simple herding but is not an anti-bribery primitive. It cannot prevent off-chain coordination or delayed payments conditioned on revealed votes [@consensysPlcrVoting; @consensysDiligenceTcrAudit]. Additional defenses are needed: credible identity/reputation weighting, randomized deadlines, penalties for non-reveal, and stake sizing that makes bribery uneconomical relative to the dispute value.
+**Commit-reveal limitations.** Commit-reveal reduces herding but is not an anti-bribery primitive; it cannot prevent off-chain coordination [@consensysPlcrVoting; @consensysDiligenceTcrAudit].
 
 ## Flow 4: relevance via coherence game
 
-Relevance is produced by a policy-guided coherence game — a Schelling-point coordination mechanism [@schelling1960strategy] applied to the question: *to what degree does this item conform to the pool’s curation policy?*
+Relevance is produced by a policy-guided coherence game — a Schelling-point mechanism [@schelling1960strategy]: *to what degree does this item conform to the pool's curation policy?*
 
 ### Protocol
 
-1. **Eligibility.** To participate, a curator stakes $s_i$ on a pool. Staking more increases the probability of being drafted (analogous to holding more lottery tickets). Curators opt in to the pool; the protocol assigns specific items.
-2. **Drafting.** When an item requires relevance assessment, the protocol draws $n$ curators from the pool’s eligible set using on-chain randomness (e.g., VRF-based), weighted by stake.
-3. **Commit phase.** Each drafted curator commits a hash $h_i = H(v_i \| \text{salt}_i)$ of their rating $v_i \in [0, 1]$, where $v_i$ represents the degree of conformity to the pool’s curation policy (0 = no conformity, 1 = full conformity). Commits are posted on-chain within a fixed window.
-4. **Reveal phase.** Curators reveal $(v_i, \text{salt}_i)$. The protocol verifies $H(v_i \| \text{salt}_i) = h_i$. Non-reveals forfeit stake (penalizing abstention-as-strategy).
-5. **Aggregation.** Let $w_i$ be curator $i$’s weight. Compute:
-   - Weighted mean: $\mu = \frac{\sum_i w_i v_i}{\sum_i w_i}$
-   - Weighted standard deviation: $\sigma = \sqrt{\frac{\sum_i w_i (v_i - \mu)^2}{\sum_i w_i}}$
-6. **Coherence rule.** Curator $i$ is *coherent* iff $|v_i - \mu| \le K\sigma$, where $K$ is a pool parameter (the coherence threshold). Curators outside this band are *incoherent*.
-7. **Payout.** Incoherent curators surrender their stakes. The pot — composed of slashed stakes plus an optional protocol reward $R$ (a configurable incentive lever) — is distributed among coherent curators, proportional to their weights.
+1. **Eligibility.** Curators stake $s_i$ on a pool. Staking more increases drafting probability.
+2. **Drafting.** The protocol draws $n$ curators using on-chain randomness (VRF-based), weighted by stake.
+3. **Commit phase.** Each curator commits $h_i = H(v_i \| \text{salt}_i)$ for rating $v_i \in [0, 1]$, where $v_i$ represents degree of conformity to the curation policy (0 = none, 1 = full).
+4. **Reveal phase.** Curators reveal $(v_i, \text{salt}_i)$. The protocol verifies $H(v_i \| \text{salt}_i) = h_i$. Non-reveals forfeit stake.
+5. **Aggregation.** Compute weighted mean $\mu = \frac{\sum_i w_i v_i}{\sum_i w_i}$ and weighted standard deviation $\sigma = \sqrt{\frac{\sum_i w_i (v_i - \mu)^2}{\sum_i w_i}}$.
+6. **Coherence rule.** Curator $i$ is *coherent* iff $|v_i - \mu| \le K\sigma$, where $K$ is a pool parameter.
+7. **Payout.** Incoherent curators surrender stakes. The pot (slashed stakes + optional protocol reward $R$) is distributed among coherent curators proportional to weight.
 
 ### Premature reveal and collusion defense
 
-Commit-reveal ensures that no curator observes others’ ratings before committing, preserving the Schelling-point assumption: without trusted communication, the rational strategy is to estimate the focal point independently. Premature reveal (leaking one’s committed value before the reveal phase) enables coordination, bribery, or herding. The defense is report-based: any participant can submit evidence of a leaked vote (e.g., a signed message, off-chain communication) to trigger a dispute. If upheld, the offending curator’s stake is slashed. This is acknowledged as an incomplete defense against off-chain coordination; it raises the cost of collusion but does not eliminate it.
+Commit-reveal prevents observation of others' ratings before committing. Premature reveal (leaking committed values) enables coordination; the defense is report-based slashing. This is acknowledged as an incomplete defense against off-chain coordination.
 
 ### Equilibrium argument
 
-The coherence game is a one-shot Schelling coordination game with stakes (Instantiation 2 of the base Schelling game defined in the formal model section). Each curator answers: *to what degree does this item conform to the curation policy?* Under commit-reveal, no curator observes others’ votes before committing. The curation policy defines what “conformity” means, creating a shared reference point. The formal results (Propositions 2 and 3) establish:
-
-- **Focal point equilibrium (Proposition 2).** Under commit-reveal, if (a) the curation policy is specific enough to induce a unique focal point $v^*$, (b) $K$ is large enough that honest noise from competent curators falls within the coherence band with high probability, and (c) no pre-commitment communication channel exists, then all curators reporting $v^* + \epsilon_i$ (honest assessment with noise) is a Nash equilibrium. Deviating from the honest assessment increases the probability of falling outside the $K\sigma$ band, which is costly. No alternative focal point exists because the policy is public and specific, and commit-reveal prevents observation of others’ reports.
-- **Competence selection (Proposition 3).** The equilibrium does not require all curators to be equally competent. Under repeated play, agents with noise variance exceeding the coherence band lose expected stake per round; agents within the band gain. This produces endogenous competence filtering: the pool’s composition improves without requiring an external competence test. This requires $K$ and the slash rate to be set such that expected loss for incoherent curators exceeds expected gain from random coherence. Experiment E2 measures this convergence.
-
-The equilibrium is approximate, not exact: it degrades when the curation policy is vague (weak focal point), the participant pool is small (high variance in $\mu$), or competence variance is extreme. George’s impossibility theorem [@george2023strategic] proves that for Schelling games with three or more ranked alternatives, truthful reporting cannot always be an equilibrium; our instantiation avoids this by using scalar reports aggregated by weighted mean with a $K\sigma$ threshold, rather than rankings over discrete alternatives (see formal model section for the argument).
+Under commit-reveal, the curation policy defines the focal point. Propositions 2 and 3 establish: (a) honest assessment is a Nash equilibrium when the policy is specific enough, $K$ accommodates honest noise, and no pre-commitment channel exists; (b) under repeated play, incompetent curators lose stake and exit, producing endogenous competence filtering. George's impossibility [@george2023strategic] does not bind because the coherence game uses scalar aggregation with a $K\sigma$ threshold, not rankings over discrete alternatives.
 
 ### Focal-point uniqueness: scope and limitations
 
-Condition (a) of Proposition 2 assumes the curation policy induces a unique focal point $v^*$. This is a design heuristic, not a theorem. In practice, specific policies reduce but do not eliminate interpretive ambiguity. A curation policy that asks "rate this restaurant’s food quality on [0,1]" can produce multi-modal response distributions if raters disagree on what "food quality" means (taste vs nutritional value vs ingredient sourcing). The coherence mechanism handles moderate multi-modality through the $K\sigma$ band: incoherent outliers are slashed regardless of which mode they belong to. But it does not guarantee unimodal convergence, and when interpretations are genuinely bimodal, the result is a wide $\sigma$ that makes the coherence band less discriminating rather than a unique focal point.
-
-We state this as an explicit limitation rather than a formal condition because: (i) no known result provides necessary and sufficient conditions on policy text for unimodal interpretation distributions, and (ii) the practical impact depends on domain specificity, which varies across pools. The empirical signal of this failure is measurable: high $\sigma$ in the coherence game indicates policy ambiguity, and pools can respond by tightening their policies. The focal-point assumption is therefore best understood as a design heuristic that is validated only under the simulation’s ground-truth relevance model. Whether it holds in deployed pools with diverse curator backgrounds and interests is an open empirical question. To make this limitation constructive, we identify a sufficient condition and a counterexample.
-
-*Sufficient condition (informal sketch).* For single-attribute policies with a publicly enumerable value space (e.g., "rate this claim's evidence strength on {0, 0.25, 0.5, 0.75, 1.0}"), the focal point is unique when the attribute definition is unambiguous and all curators share access to the same evidence. Under these conditions, the interpretation distribution $P(\hat{v}_i \mid \text{policy})$ is approximately unimodal because the policy eliminates the principal source of multi-modality: disagreement over what is being measured. The discrete value space further constrains the response distribution to a known support.
-
-*Counterexample.* Consider a policy "rate this article's journalistic quality on [0,1]." Quality is multi-dimensional (source diversity, factual accuracy, prose clarity, analytical depth). A curator who weights source diversity will rate an article with a single authoritative source low; a curator who weights factual accuracy will rate it high. The interpretation distribution becomes bimodal even among honest, competent curators because the policy conflates distinct quality dimensions. The coherence band captures only the wider $\sigma$, not the underlying structure.
-
-*Design implication.* Policies that satisfy the sufficient condition (single-attribute, enumerable, unambiguous) are the recommended starting point for new pools. Policies that violate it should be decomposed into constituent dimensions, each scored separately. This connects the focal-point limitation to the quality identification step of the four-step framework.
-
-Formally proving that a class of policies guarantees unimodal interpretation would strengthen this result from a design heuristic to a theorem; this remains open and would constitute a significant contribution to the decentralized oracle literature.
+Condition (a) of Proposition 2 assumes the curation policy induces a unique focal point. This is a design heuristic, not a theorem. Multi-modal response distributions arise when raters disagree on attribute definitions. *Sufficient condition*: single-attribute policies with a publicly enumerable value space and unambiguous attribute definitions produce approximately unimodal interpretation distributions. *Counterexample*: "rate journalistic quality" conflates dimensions (source diversity, accuracy, prose clarity) and produces bimodal distributions among honest curators. *Design implication*: policies that satisfy the sufficient condition are the recommended starting point; multi-dimensional policies should be decomposed into constituent dimensions scored separately.
 
 ### Whale manipulation risk
 
-Because $\mu$ is a weighted mean, a single high-weight participant can shift it substantially. Mitigations include: (a) per-participant weight caps ($w_i \le w_{\max}$), preventing any single actor from dominating the mean; and (b) the competence filter (incoherent participants lose stake over time), which limits the duration of any manipulation. Weight caps introduce a tradeoff: too low and competent high-stakers are penalized; too high and whale manipulation is feasible.
+A high-weight participant can shift $\mu$ substantially. Mitigations: (a) per-participant weight caps ($w_i \le w_{\max}$), (b) competence filter (incoherent participants lose stake over time).
 
 ### Accuracy-relevance interaction
 
-A claim can be accurate but irrelevant, or relevant but inaccurate. The two scores are independent: accuracy is resolved via dispute (Flow 3), relevance via the coherence game. An interface consuming both signals can gate on accuracy first (only display claims above an accuracy threshold) and then rank by relevance, or allow users to set their own thresholds.
+Accuracy (Flow 3) and relevance (Flow 4) are independent scores. Interfaces can gate on accuracy first, then rank by relevance.
 
 ## Incentives: stake, reputation, and competence filtering
 
-The mechanism relies on two kinds of capital:
-
-- **Financial stake** (transferable): the direct bounty/challenge incentives.
-- **Reputation** (non-transferable): accumulated accuracy over time, usable as stake within limits.
-
-Reputation acts as both (a) a barrier-reducer for cash-poor experts and (b) a Sybil friction: building it is slow; losing it can be abrupt. A simple operationalization is to treat vote weight as:
-
-$$
-w_i = s_i + \alpha \cdot \mathrm{rep}_i \quad \text{with caps and decay}
-$$
-
-where $s_i$ is stake, $\mathrm{rep}_i$ is topic-scoped non-transferable reputation, and $\alpha$ is a pool parameter. The tradeoffs around $\alpha$ are direct: when $\alpha = 0$, only financial stake matters and cash-poor experts have no influence; as $\alpha$ increases, reputation contributes more weight, lowering the barrier for competent participants but also increasing the system’s sensitivity to reputation inflation or gaming. Decay (time- or round-based erosion of $\mathrm{rep}_i$) bounds the maximum influence of historical accuracy and prevents permanent entrenchment. The goal is not to eliminate plutocracy risk, but to reduce the “only whales can matter” failure mode observed in TCR discussions [@asgaonkar2018tcrgametheory]. The exact calibration of $\alpha$, decay rate, and weight caps is deployment-dependent and remains an open parameter design problem.
-
-Separately, the relevance game produces a **competence filter**: incoherent participants lose stake on average and eventually exit, while competent participants accrete stake. This is not a guarantee of truth; it is a selection pressure favoring competence under a stated policy.
+The mechanism uses two kinds of capital: **financial stake** (transferable) and **reputation** (non-transferable, topic-scoped, accumulated from accuracy). Vote weight: $w_i = s_i + \alpha \cdot \mathrm{rep}_i$ with caps and decay, where $\alpha$ is a pool parameter. When $\alpha = 0$, only stake matters and cash-poor experts have no influence; as $\alpha$ increases, reputation lowers the barrier but increases sensitivity to gaming. Decay bounds maximum influence of historical accuracy. The relevance game also produces a **competence filter**: incoherent participants lose stake and exit.
 
 ## Governance and UX: protocol vs interface
 
-Two pragmatic issues dominate real deployments:
+The design minimizes governance surface area to parameter updates and policy templates. **Interface capture** is mitigated by separating the censorship-resistant protocol (on-chain claims, stakes, verdicts) from opinionated interfaces (compliance, taste, safety filters). Alternative interfaces can independently index the same on-chain record.
 
-1. **Governance capture**: if governance touches too much surface area, token distributions can become a de facto court of law. The design response is to minimize governance to parameter updates and policy templates, while keeping most decisions contestable and auditable.
+## Funding: advertiser staking (bonded product claims)^[We avoid the term "proof of truth" because the protocol does not prove truth; it produces a stake-weighted, contestable signal.]
 
-2. **Interface capture and toxic content**: a neutral protocol can be used to publish toxic or illegal content. The design response is to separate infrastructure from distribution:
-
-- **Protocol**: censorship-resistant storage of claims, stakes, verdicts.
-- **Interfaces**: opinionated filters for compliance, taste, and safety.
-
-This also mitigates “meta-curation”: even if a dominant interface is biased, alternative interfaces can independently index the same on-chain record and reproduce the same dispute history and confidence signals.
-
-## Funding: advertiser staking (bonded product claims)^[We avoid the term “proof of truth” used in earlier drafts because the protocol does not prove truth; it produces a stake-weighted, contestable signal. “Bonded” reflects the economic commitment, not an epistemic guarantee.]
-
-A persistent failure mode of verification markets is “no yield in peacetime”: if there are few disputes, curators may leave.
-
-One funding path is to treat commercial claims as stakable assertions. An advertiser makes a product claim (“our battery lasts 48 hours under normal use”), structures it as a protocol claim with scope and evidence policy, and posts stake. If the claim survives the challenge window, the stake is returned and the claim carries a confidence score. If a challenger proves it false, the advertiser loses stake to the challenger.
-
-**When is staking rational for an advertiser?** An advertiser with a truthful claim faces expected cost $B \cdot (1 - p_{\text{survive}})$, where $B$ is the stake and $p_{\text{survive}}$ is the probability of surviving challenges. For a genuinely true claim with clear evidence, $p_{\text{survive}}$ approaches 1, making the expected cost near zero. The alternative — third-party certification, legal compliance, or FTC substantiation — has fixed costs regardless of truth value. The crossover point: staking is cheaper when the claim is verifiable and the stake is smaller than the cost of equivalent third-party certification. It is more expensive (and intended to be) when the claim is false or ambiguous.
-
-**Why this matters for the protocol.** Digital advertising loses an estimated 20–30% of spend to fraud and invalid traffic, with projected losses exceeding $170 billion annually by 2028 [@juniperresearch2023adfraud]. The core problem is structural: the entity reporting ad performance (the platform) profits from inflated metrics. Advertiser staking inverts this: the advertiser commits capital to the truth of a specific, auditable claim, and the protocol’s existing challenge infrastructure provides continuous verification. This creates demand for curation labor even when political or news disputes are quiet.
-
-**Limitations.** This funding model is exploratory. Open questions include: which claim types are stakeable (factual product claims are straightforward; subjective claims like “best in class” are not), whether stake sizes will be large enough to attract competent challengers, how this interacts with existing advertising regulation (staking does not replace legal compliance), and whether peacetime yields are sufficient to retain curators.
+One funding path treats commercial claims as stakable assertions. An advertiser structures a product claim, posts stake, and either recovers it (true claim survives challenges, cost approaches zero) or loses it to the challenger (false claim). This inverts the cost structure: honest advertisers pay nearly nothing while dishonest advertisers bear the full cost. Digital advertising loses an estimated 20-30% of spend to fraud [@juniperresearch2023adfraud]; advertiser staking provides continuous verification demand even when news disputes are quiet.
 
 # Truth Post: a partial instantiation {#sec-truthpost}
 
-Truth Post (truthpost.news) launched in 2023 as a minimal viable implementation of the framework's news curation instantiation. It covered only the accuracy layer and was intended to validate the submission-and-challenge flow before building the full protocol. The deployment failed; the record below is included because the failure directly informed the design presented in this paper.
+Truth Post (truthpost.news) launched in 2023 as a minimal implementation of the accuracy layer only, intended to validate the submission-and-challenge flow. It implemented author submission with staked bounties and challenger disputes routed to Kleros. The deployment omitted all protocol components beyond the accuracy layer: relevance curation (the coherence game), treasury rewards, confidence scores, pooled staking, and interface redundancy.
 
-## What was built
+The deployment failed. Activity was sparse: fewer than 10 claims submitted, fewer than 5 challenges filed over approximately six months. The frontend stopped loading due to a subgraph indexing failure. The project was abandoned due to maintenance overhead and lack of investor interest.
 
-Truth Post implemented two components of the protocol:
-
-- **Author submission with staked bounties.** Users submitted claims and attached a token bounty as a credibility signal (a partial implementation of Flow 1).
-- **Challenger disputes routed to Kleros.** Anyone could challenge a claim by staking tokens, triggering dispute resolution via the Kleros General court (a partial implementation of Flow 3).
-
-This was the bare minimum of the protocol: the accuracy layer without the relevance layer.
-
-## What was not built
-
-The deployment omitted all protocol components beyond the accuracy layer: relevance curation (the coherence game), treasury rewards, confidence scores, pooled staking, and interface redundancy.
-
-## What happened
-
-The deployment did not achieve sustained usage. Activity was sparse: fewer than 10 claims were submitted, and fewer than 5 challenges were filed during the deployment's approximately six-month active period. The web frontend eventually stopped loading due to a subgraph indexing failure, a common failure mode for decentralized applications that depend on The Graph for on-chain data indexing. The project was abandoned due to maintenance overhead and lack of investor interest. It did not validate the full design; it validated only that the accuracy submission-and-challenge flow could be deployed on existing infrastructure.
-
-## Lessons
-
-Three lessons from Truth Post directly inform the full design presented in this paper.
-
-**The cold-start problem is real.** Without a critical mass of curators and challengers, the system lacked the economic activity needed to generate meaningful confidence signals. A claim with zero challenges and zero validators has a confidence score of approximately zero: correct, but useless. This is a classic two-sided marketplace problem, and it motivates two design choices: pooled staking (Flow 2), which reduces cold-start friction by letting validators commit to domains rather than individual claims, and the confidence score design (Flow 1), which provides a meaningful signal even with thin participation because a single unchallenged claim with a large bounty still carries information.
-
-**Relevance curation may be the engagement driver.** Accuracy alone generated insufficient activity. Most claims were not interesting enough to challenge. The relevance layer, which turns the system into something users actively interact with by ranking and surfacing what matters, may be necessary for bootstrapping. This observation motivates the coherence game (Flow 4) not merely as a design refinement but as a product necessity: people do not visit a platform to verify boring truths; they visit to find out what is important.
-
-**Protocol/interface separation is a survival requirement.** Truth Post had a single frontend operated by the development team. When the subgraph broke, the entire user-facing product went down, a single point of failure that contradicted the protocol's own design philosophy. This motivates the protocol-vs-interface separation principle described in the Governance and UX section: the protocol must be designed so that anyone can deploy a frontend, and no single frontend failure kills the system.
+Three lessons directly inform the full design. **The cold-start problem is real**: without critical mass, the system lacked economic activity to generate meaningful confidence signals, motivating pooled staking (Flow 2) and the confidence score design (Flow 1). **Relevance curation may be the engagement driver**: accuracy alone generated insufficient activity; the relevance layer (Flow 4) may be necessary for bootstrapping because people visit platforms to find what is important, not to verify boring truths. **Protocol/interface separation is a survival requirement**: a single frontend with a single subgraph dependency was a single point of failure, motivating the protocol-vs-interface separation principle.
 
 # Related work
 
@@ -539,29 +333,21 @@ This work sits at the intersection of incentive design, oracle/dispute mechanism
 
 This protocol applies two Groves-Ledyard insights: (1) the *deviation penalty* — the coherence game slashes curators whose ratings fall outside $K\sigma$ of the weighted mean, paralleling the Groves-Ledyard tax; (2) the *truth-telling incentive* — honest assessment is the focal equilibrium because deviating increases slashing probability. Four structural differences limit the analogy: the coherence game includes each agent's own report in $\mu$ (creating whale-manipulation risk, mitigated by weight caps); curation operates over a high-dimensional claim space with ordinal preferences rather than cardinal preferences over a single good; the coherence game produces a stake-weighted signal rather than a Pareto-optimal allocation; and the binary slash/reward payoff changes strategic incentives relative to the continuous deviation cost in Groves-Ledyard.^[Specifically: (1) Groves-Ledyard exclude each agent's own report from the penalty mean; (2) they assume cardinal preferences over a single public good; (3) both Welfare Theorems hold in their setting but not here; (4) their agents minimize a continuous cost function rather than optimizing to fall within a coherence band.]
 
-**Token-curated registries (TCRs).** TCRs propose token-incentivized curation of lists [@goldin2017tcr]. We generalize the unit from "is item in list?" to **claims + evidence + disputes** and explicitly separate accuracy from relevance.
+**Token-curated registries (TCRs).** TCRs propose token-incentivized curation of lists [@goldin2017tcr]. We generalize the unit from "is item in list?" to claims + evidence + disputes, and separate accuracy from relevance.
 
-**Decentralized dispute resolution and Schelling-point mechanisms.** Systems like Kleros operationalize decentralized arbitration using commit–reveal voting, staking, and appeals [@kleros2019shortpaper; @kleros2024yellowpaper]. The theoretical root is focal-point coordination ("Schelling points") [@schelling1960strategy], but real deployments surface a practical failure mode: ambiguity in what is being resolved. This paper treats semantic precision and claim templates as first-class security constraints rather than afterthoughts.
+**Decentralized dispute resolution.** Systems like Kleros operationalize decentralized arbitration using commit-reveal voting, staking, and appeals [@kleros2019shortpaper; @kleros2024yellowpaper], rooted in focal-point coordination [@schelling1960strategy]. Real deployments surface a key failure mode: ambiguity in what is being resolved. This paper treats semantic precision as a first-class security constraint. Academic critique emphasizes that jurors are rewarded for *coordination*, not epistemic correctness directly [@bergolla2022kleros; @kleros2021cryptoeconomics; @rojoarjona2021focalpoints].
 
-Academic and socio-legal critique of cryptoeconomic courts emphasizes the same core tension: jurors are rewarded for *coordination* (what others will vote), not epistemic correctness directly [@bergolla2022kleros; @kleros2021cryptoeconomics]. Experimental work on focal points also suggests that coordination becomes harder when interests diverge, even when focal points exist [@rojoarjona2021focalpoints].
+**Escalation-based oracle resolution.** Reality.eth [@realityeth2023] implements crowd-sourced oracles using bond escalation, but operates at single-question granularity without curation-layer concerns (multi-dimensional quality, relevance scoring, evidence policies). The bond-escalation pattern informs Flow 3.
 
-**Escalation-based oracle resolution (Reality.eth).** Reality.eth [@realityeth2023] implements a crowd-sourced oracle for smart contracts using bond escalation: anyone can post an answer by locking a bond; anyone can override it by posting a higher bond; if no further override occurs within a timeout, the last answer stands. Disputed answers escalate to an external arbitrator (e.g., Kleros). This is decentralized dispute resolution (DDR) layer prior art — it solves answer-level dispute resolution for oracle queries — but it operates at the single-question granularity and does not address curation-layer concerns: multi-dimensional quality assessment, relevance scoring, pool-scoped evidence policies, or the coherence game. The bond-escalation pattern does, however, directly inform the challenge-and-appeal economics in Flow 3.
+**Prediction markets and futarchy.** Prediction markets aggregate information via trading on future events [@hanson2013futarchy]. Our work differs in scope: curation operates over a high-dimensional claim space using staking and disputes rather than continuous trading. Resolution ambiguity in prediction markets (e.g., Augur, Polymarket) motivates our emphasis on claim templates.
 
-**Prediction-market oracle resolution.** Many "market resolution" disputes are semantic and policy disputes (what counts as "yes/no"), not disputes about reality. Optimistic oracle designs (e.g., UMA) formalize propose–dispute flows and escalation [@umaOptimisticOracleDocs; @umaWhitepaperRepo], reinforcing the need to make resolution criteria explicit at claim creation time.
+**Peer prediction and BTS.** Peer prediction elicits information when ground truth is unavailable [@miller2005peerprediction]. @prelec2004bts proposed BTS, rewarding "surprisingly common" responses. A systematic comparison between BTS and the coherence game is an open direction.
 
-**Peer prediction and information elicitation.** Peer prediction provides mechanisms for eliciting information when ground truth is costly or unavailable [@miller2005peerprediction]. Our approach differs in tying rewards to explicit evidence standards and contestability, rather than relying purely on mutual consistency.
+**Commons governance.** @ostrom1990commons identified design principles for commons institutions (defined boundaries, graduated sanctions, low-cost conflict resolution, monitoring). This protocol has structural parallels but operates over a pseudonymous, adversarial participant base where identity is cheap and exit costless.
 
-**Bayesian Truth Serum (BTS).** @prelec2004bts proposed an alternative to peer prediction that does not require common priors: respondents report both a personal answer and a prediction of others' answers, and the mechanism rewards "surprisingly common" responses — answers that appear more frequently than collectively predicted. BTS is a potentially relevant alternative for information elicitation in settings where ground truth is unavailable. A systematic comparison between BTS-style elicitation and the coherence game's Schelling-point mechanism — particularly regarding robustness to strategic respondents, collusion thresholds, and applicability to continuous (rather than categorical) quality dimensions — is an open direction for future work.
+**Formalization gaps.** @george2023strategic proves an impossibility theorem for Schelling games with three or more ranked alternatives and formalizes the griefing factor framework [@george2023griefing]. @ast2023decentralized identifies the formalization gap as a recurring criticism. Our formal model responds: we cite the impossibility to bound our claims, use the griefing factor to quantify attack costs, and provide restricted-condition proofs where the impossibility does not bind.
 
-**Prediction markets and futarchy.** Prediction markets are a parallel approach to incentivized information aggregation: participants trade contracts whose payoffs depend on the outcome of future events, and prices converge toward crowd-estimated probabilities [@hanson2013futarchy]. Futarchy extends this to governance — "vote on values, bet on beliefs" — using decision-conditional markets to select policies that maximize a democratically chosen welfare measure. Our work differs in scope and cost structure: prediction markets require liquid trading around well-defined future events and are expensive to operate per question, whereas curation operates over a high-dimensional claim space (not just future events) and uses staking and dispute resolution rather than continuous trading. The resolution ambiguity problems observed in prediction market platforms (e.g., Augur, Polymarket) — where disputes are semantic rather than factual — directly motivate our emphasis on claim templates and explicit evidence policies.
-
-**Commons governance.** @ostrom1990commons demonstrated that communities can sustainably govern shared resources without privatization or central authority, identifying design principles that characterize successful commons institutions: clearly defined boundaries, graduated sanctions, low-cost conflict resolution, monitoring, and nested governance. Several of these principles have structural parallels in this protocol: pools define boundaries and local rules, slashing implements graduated sanctions, DDR provides accessible conflict resolution, on-chain auditability enables monitoring, and minimal governance nests protocol-level parameters above pool-level policies. The key divergence is that Ostrom studied long-lived physical commons with stable participant communities; decentralized curation operates over a digital, pseudonymous, and adversarial participant base where identity is cheap and exit is costless.
-
-**Formalization gaps in decentralized justice.** @george2023strategic proves an impossibility theorem for Schelling-style coordination games: when the strategy space contains three or more ranked alternatives and the payoff system satisfies minimal attack resistance, situations always exist where truthful reporting is not a Nash equilibrium. This result constrains any design that relies on Schelling coordination for dispute resolution. The same author formalizes the griefing factor framework [@george2023griefing], defining $GF = \text{harm}/\text{cost}$ as a quantitative bound on the cost-effectiveness of attacks. A broader survey [@ast2023decentralized] identifies the formalization gap in decentralized justice as a recurring criticism: existing systems rely on verbal incentive arguments rather than formal game-theoretic proofs. Our formal model section responds to all three: we cite the impossibility to bound our claims, use the griefing factor to quantify attack costs, and provide restricted-condition proofs where the impossibility does not bind.
-
-**Data quality.** Industrial data quality literature emphasizes that "quality" is multi-dimensional and consumer-context dependent [@wang1996beyondaccuracy]. We adopt this as motivation for separating accuracy (binary, evidence-based) from relevance (policy-dependent, non-binary).
-
-**Engagement and equilibrium failures in TCRs.** Game-theoretic analyses of Token-Curated Registries surface equilibria where challenges are rare, participation decays, or wealth concentrates [@asgaonkar2018tcrgametheory]. Proposed fixes include explicit incentives for participation (e.g., inflationary rewards) [@wang2019enhancing]. We treat these as cautionary prior art rather than solved problems.
+**Data quality and TCR failures.** @wang1996beyondaccuracy emphasizes multi-dimensional, context-dependent quality; we adopt this to separate accuracy from relevance. TCR analyses surface equilibria where challenges are rare and participation decays [@asgaonkar2018tcrgametheory; @wang2019enhancing].
 
 # Threat model and security analysis
 
@@ -602,227 +388,134 @@ Out of scope: breaking cryptography, coercion at gunpoint, and global-scale cens
 
 # Evaluation
 
-This section defines the evaluation program and the concrete experiments implemented in the repository.
-
 {{< include analysis/out/eval_summary.md >}}
 
 ## Research questions
 
-- **RQ1 (dispute economics):** Under what parameter regimes does it become economically rational to challenge provably false claims, and how does that affect false-claim survival?
-- **RQ1a (adversarial persistence):** Is the dispute mechanism economically punitive at scale — does a well-funded adversary submitting many false claims lose money, or can volume overcome per-claim losses?
-- **RQ2 (relevance robustness):** How robust is the relevance coherence mechanism to mixtures of competent vs noisy curators, and how sensitive is it to the coherence threshold $K$?
-- **RQ2a (collusion resistance):** At what colluding fraction does the coherence game break — can a coordinated bloc manipulate the relevance signal and retain stake?
-- **RQ3 (ambiguity defense):** Does allowing an **Under-specified** verdict (and requiring claim templates) reduce wrong outcomes on ambiguous claims compared to forced True/False resolution?
-- **RQ4 (reputation mechanism):** At what values of $\alpha$ and decay rate $\delta$ does the reputation mechanism meaningfully accelerate competence filtering for cash-poor experts, and at what values does it create exploitable reputation-gaming or Sybil-laundering vectors?
+- **RQ1 (dispute economics):** Under what parameter regimes is it rational to challenge false claims, and how does that affect false-claim survival?
+- **RQ1a (adversarial persistence):** Is the dispute mechanism punitive at scale?
+- **RQ2 (relevance robustness):** How robust is the coherence game to noisy curators and the threshold $K$?
+- **RQ2a (collusion resistance):** At what colluding fraction does the coherence game break?
+- **RQ3 (ambiguity defense):** Does Under-specified reduce wrong outcomes on ambiguous claims?
+- **RQ4 (reputation mechanism):** At what $\alpha$ and $\delta$ does reputation accelerate expert entry vs create gaming vectors?
 
-## Metrics
+## E1: accuracy dispute simulation
 
-- **False claim survival rate**: fraction of false claims that remain labeled Valid after a challenge window.
-- **Challenger expected value (EV)**: expected profit/loss of challenging a claim given bounty, challenge stake, and jury accuracy.
-- **Relevance signal error**: $|\mu - r|$ (or MSE) between aggregate relevance $\mu$ and ground-truth relevance $r$ under a synthetic model.
-- **Competence filter speed**: how quickly incompetent stake share decays under repeated relevance rounds.
-- **Ambiguity error rate**: fraction of ambiguous claims incorrectly resolved as Valid/Invalid instead of Under-specified.
-
-## Experiments
-
-### E1: accuracy dispute simulation (economics + survival)
-
-We simulate a stream of claims (true/false), challengers who challenge when EV is positive, and juries with per-juror correctness probability $p$ (majority vote). We sweep:
-
-- bounty $B$
-- challenge stake $S$
-- jury size $N$
-- juror accuracy $p$
-- challenger detection/effort parameters
-
-Outputs:
-
-- challenger EV curves vs $p$ and $S/B$
-- false-claim survival vs $p$ and challenger effort
-
-Figures @fig-e1-ev and @fig-e1-survival visualize these sweeps.
+We simulate a stream of claims (true/false), challengers who challenge when EV is positive, and juries with per-juror correctness $p$. We sweep bounty $B$, challenge stake $S$, jury size $N$, and juror accuracy $p$. Challenger EV is positive whenever $p > 0.50$ for all $S/B \le 0.50$ (@fig-e1-ev, @fig-e1-survival). For the $S/B$ ratios tested (0.05 to 0.50) with $N = 5$, the break-even threshold falls below $p = 0.50$. The binding constraint is the Condorcet condition: $p > 0.50$. The system becomes strongly self-enforcing at $p \ge 0.65$.
 
 ![E1: Challenger expected value (EV) on false claims as juror accuracy varies, for four stake-to-bounty ratios ($S/B$). $N = 5$ jurors, $p_{\text{detect}} = 0.35$. Higher $S/B$ ratios require higher juror accuracy for positive EV, but at $p \geq 0.65$ all tested ratios yield positive challenger EV, confirming that challenging false claims is rational across a wide parameter range.](analysis/fig/e1_challenger_ev.png){#fig-e1-ev}
 
 ![E1: False-claim survival probability after a single challenge window ($S/B = 0.25$, $N = 5$ jurors). As juror accuracy increases, the probability that a false claim survives a single detection-and-adjudication window decreases. At $p = 0.80$, survival probability is approximately 0.67, reflecting the combined effect of detection probability ($p_{\text{detect}} = 0.35$) and jury accuracy.](analysis/fig/e1_false_survival.png){#fig-e1-survival}
 
-**Minimum-$p$ requirements from the formal model.** The break-even condition from Proposition 1 requires $P_{\mathrm{maj}}(p, N) > \frac{S/B}{1 + S/B}$. For all $S/B$ ratios tested (0.05 to 0.50) with $N = 5$, this threshold falls below $p = 0.50$, meaning that challenger EV is positive whenever individual jurors are better than random. The binding constraint is therefore $p > 0.50$, the Condorcet condition. In practice, the system becomes strongly self-enforcing at $p \ge 0.65$: at this point, challenger EV exceeds $0.50 \times B$ for $S/B = 0.25$ and false-claim survival drops below 0.80.
+## E1-Adv: repeated attack by a well-funded adversary
 
-### E1-Adv: repeated attack by a well-funded adversary
-
-E1 models individual challenges; E1-Adv tests what happens when a well-funded adversary submits many false claims simultaneously. We simulate an adversary submitting 50 false claims, each with bounty $B$, across varying jury accuracy levels. For each claim, the adversary either goes undetected (with probability $1 - p_{\text{detect}}$) or is challenged and faces a jury.
-
-The key question is whether the system is economically punitive at scale: does the adversary profit from volume, or does each detected false claim compound losses?
-
-Figure @fig-e1-adv shows that even at $p = 0.60$, the adversary's cumulative balance is deeply negative. At $p = 0.80$, the adversary's cumulative balance is $-1{,}638 \pm 68$ (95% CI, $N = 100$ seeds), corresponding to approximately $33 \times$ bounty loss per attack. At $p = 0.90$, the loss deepens to $-1{,}749 \pm 71$. Unchallenged claims survive but accumulate minimal confidence (low bounty $\times$ time), making them low-signal rather than validated. The tight confidence intervals confirm that the punitive economics are robust across random seeds, not an artifact of a single Monte Carlo run.
+E1 models individual challenges; E1-Adv tests what happens when a well-funded adversary submits 50 false claims simultaneously. For each claim, the adversary either goes undetected (probability $1 - p_{\text{detect}}$) or is challenged and faces a jury. Even at $p = 0.60$, the adversary's cumulative balance is deeply negative. At $p = 0.80$: $-1{,}638 \pm 68$ (95% CI, $N = 100$ seeds), approximately $33\times$ bounty loss. At $p = 0.90$: $-1{,}749 \pm 71$. Unchallenged claims survive but accumulate minimal confidence (@fig-e1-adv).
 
 ![E1-Adv: Survival rate and adversary profit/loss across 50 repeated false-claim attacks. Error bars show 95% CI over $N = 100$ independent seeds. At all jury accuracy levels tested ($p = 0.60$ to $0.90$), the adversary's cumulative balance is deeply negative, confirming that volume attacks are economically punitive.](analysis/fig/e1_adversarial.png){#fig-e1-adv}
 
-### E2: relevance coherence game (robustness + $K$ sensitivity)
+## E2: relevance coherence game
 
-We simulate $M$ curators with evolving weights $w_i$ playing repeated relevance rounds on items with ground-truth relevance $r \in [0,1]$.
-
-- competent curators vote $r + \epsilon$ (noise)
-- incompetent curators vote uniformly at random
-
-We sweep:
-
-- fraction of competent curators
-- noise level
-- $K$ in the coherence rule
-- number of rounds
-
-Outputs:
-
-- relevance signal error vs fraction competent and $K$
-- incompetent stake share over rounds (competence filter)
-
-Figures @fig-e2-error and @fig-e2-filter show robustness and selection effects.
+We simulate $M$ curators with evolving weights playing repeated relevance rounds on items with ground-truth relevance $r \in [0,1]$. Competent curators vote $r + \epsilon$ (noise); incompetent curators vote uniformly at random. We sweep fraction of competent curators, noise level, coherence threshold $K$, and number of rounds. Higher competent fractions produce lower error at all $K$ values; tighter thresholds ($K = 0.8$) produce lower error when competent curators dominate but are less forgiving of honest noise (@fig-e2-error). Even from 10% initial competence, the coherence game concentrates stake among competent participants; at 50%+ initial competence, final competent stake share exceeds 0.95 (@fig-e2-filter).
 
 ![E2: Mean relevance error ($|\mu - r|$) vs initial fraction of competent curators, for four coherence thresholds $K$. 200 curators, 200 rounds. Higher competent fractions produce lower error at all $K$ values. Tighter thresholds ($K = 0.8$) produce lower error when competent curators dominate but are less forgiving of honest noise.](analysis/fig/e2_relevance_error.png){#fig-e2-error}
 
 ![E2: Final competent stake share after 200 rounds of coherence filtering ($K = 1.25$). Even when starting with only 10% competent curators, the coherence game concentrates stake among competent participants. At 50% initial competence and above, final competent stake share exceeds 0.95.](analysis/fig/e2_competence_filter.png){#fig-e2-filter}
 
-### E2-Adv: coherence game under adversarial collusion
+## E2-Adv: coherence game under adversarial collusion
 
-E2 tests noise tolerance; E2-Adv tests deliberate manipulation. A colluding bloc of curators coordinates on biased ratings (shifting assessments toward 1.0 by a fixed bias of +0.30) to see whether the coherence mechanism resists or breaks. Critically, colluders in this simulation are *competent-with-bias*: they observe the true relevance and systematically shift it, rather than voting randomly. This makes them harder to eject than incompetent curators because their votes are internally consistent.
+A colluding bloc coordinates on biased ratings (shift +0.30). Colluders are *competent-with-bias* — they observe true relevance and systematically shift it, making them harder to eject than random voters. We sweep colluding fraction from 0% to 30% with 60% honest-competent curators and $K = 1.25$.
 
-We sweep the colluding fraction from 0% to 30% with 60% honest-competent curators (the remainder are incompetent) and $K = 1.25$. As colluding fraction increases, colluders replace honest-competent curators, so at 30% collusion the composition is 30% honest-competent, 10% incompetent, and 30% colluding.
-
-Figure @fig-e2-adv shows two regimes ($N = 100$ seeds per collusion level, shaded bands show 95% CI). Below 20% collusion, the mechanism contains the damage: signal error increases modestly (from $0.037 \pm 0.000$ to $0.064 \pm 0.001$) and colluder stake decays sharply (from 20% to $2.5\%$). The coherence filter ejects them because their coordinated bias pushes them outside the $K\sigma$ band defined by the honest majority. At 30% collusion, the mechanism breaks: the colluding bloc is large enough to shift $\mu$ toward their biased target, redefining the "coherent" band around themselves. Honest curators are now the ones who fall outside the band. Colluder stake share rises to $0.80 \pm 0.005$ and signal error reaches $0.144 \pm 0.001$.
-
-This identifies a concrete threshold: the coherence game is robust to colluding minorities but vulnerable to colluding pluralities. The tight confidence intervals confirm that the 20-30% boundary is a stable property of the mechanism, not an artifact of a single seed. The vulnerability is amplified because colluders are competent (their votes cluster tightly), making them indistinguishable from honest curators in any single round. Defenses for large-scale collusion (weight caps, identity diversity requirements, multi-pool cross-validation) are discussed in the Threat Model but remain untested.
+Two regimes emerge ($N = 100$ seeds, 95% CI). Below 20% collusion, the mechanism ejects colluders: signal error increases modestly ($0.037 \pm 0.000$ to $0.064 \pm 0.001$) and colluder stake decays to 2.5%. At 30%, the mechanism breaks: the bloc shifts $\mu$ toward their biased target, redefining the coherent band around themselves. Colluder stake share rises to $0.80 \pm 0.005$ and signal error reaches $0.144 \pm 0.001$ (@fig-e2-adv). The 20-30% boundary is a stable property of the mechanism, confirmed by tight confidence intervals.
 
 ![E2-Adv: Signal error and colluder stake share under coordinated manipulation. Shaded bands show 95% CI over $N = 100$ independent seeds. Below 20% collusion, signal error increases modestly and colluders are ejected. At 30%, the mechanism breaks: colluders redefine the coherent band and capture $\sim$80% of stake.](analysis/fig/e2_adversarial.png){#fig-e2-adv}
 
-### E3: ambiguity stress test (templates + Under-specified)
+## E3: ambiguity stress test
 
-We generate a mixture of well-posed and ambiguous claims. Baseline forces True/False even when ambiguous; the defended system allows Under-specified and penalizes ambiguity at submission.
-
-Outputs:
-
-- wrong-resolution rate on ambiguous claims (baseline vs defended)
-- overall error impact as ambiguity prevalence varies
-
-Figure @fig-e3-ambiguity summarizes the ambiguity effect and the benefit of Under-specified.
+We generate a mixture of well-posed and ambiguous claims. Baseline forces True/False even when ambiguous; the defended system allows Under-specified and penalizes ambiguity at submission. At 25% ambiguity prevalence, wrong-resolution rate drops from 0.12 to 0.02 (83% improvement, @fig-e3-ambiguity). The improvement scales with ambiguity prevalence: at 50% ambiguous claims, the defended system reduces errors by over 90%.
 
 ![E3: Overall wrong-resolution rate as ambiguity prevalence increases. Baseline forces True/False on all claims; defended allows Under-specified. At 25% ambiguity, the defended system reduces wrong-resolution rate from 0.12 to 0.02 (83% improvement).](analysis/fig/e3_ambiguity.png){#fig-e3-ambiguity}
 
-### E4: Reputation mechanism validation (RQ4)
+## E4: reputation mechanism validation
 
-The reputation mechanism ($w_i = s_i + \alpha \cdot \mathrm{rep}_i$ with decay rate $\delta$) is specified in the Incentives section but absent from E1-E3, where all simulations assume $\alpha = 0$ (financial stake only). Experiment E4 addresses this gap with three sub-experiments, each running $N = 100$ independent seeds per parameter configuration.
+E4 addresses reputation ($w_i = s_i + \alpha \cdot \mathrm{rep}_i$ with decay $\delta$) with three sub-experiments ($N = 100$ seeds each).
 
-**E4a: Alpha and decay sweep.** We extend the E2 coherence game (200 curators, $K = 1.25$) to 500 rounds with reputation enabled. We sweep $\alpha \in \{0.0, 0.1, 0.25, 0.5, 1.0\}$ and $\delta \in \{0.0, 0.01, 0.05\}$, and include "cash-poor expert" agents who start with financial stake $s_i = 0.1$ (vs the median of 1.0) but are competent. We measure: (a) the round at which the first cash-poor expert reaches median weight (time-to-entry), (b) the Gini coefficient of the final weight distribution, and (c) mean relevance error.
-
-The results reveal a clear tradeoff. At $\alpha = 0$ (no reputation), cash-poor experts require approximately 137 rounds to reach median weight through stake redistribution alone, and the weight distribution is highly unequal (Gini $\approx 0.61$). At $\alpha = 0.5$ with $\delta = 0.01$, time-to-entry drops to 8 rounds (the zero variance across 100 seeds confirms this trajectory is deterministic at these parameters, driven entirely by the reputation accumulation formula rather than stochastic dynamics) and Gini falls to 0.17, confirming that reputation substantially reduces the "only whales can matter" failure mode. However, mean relevance error increases from 0.027 ($\alpha = 0$) to 0.088 ($\alpha = 0.5$), because reputation accumulates for any coherent curator, including those who are coherent by luck rather than competence. Mechanistically, reputation inflates the weight of lucky-but-incompetent curators who happened to fall within the $K\sigma$ band in early rounds; their accumulated $\mathrm{rep}_i$ then shifts $\mu$ away from ground truth in subsequent rounds, an effect that competence filtering eventually corrects but does not eliminate within the simulation horizon. Higher decay rates moderate this cost: at $\delta = 0.05$, the error at $\alpha = 0.5$ is 0.079, closer to the baseline. The choice of $\alpha$ therefore involves a quantifiable equity-accuracy tradeoff whose optimal point depends on the pool operator's priorities.
-
-Based on the E4a results, we offer the following deployment guidance. Pools for which expert inclusion is the primary objective (e.g., specialised scientific domains, expert communities) should target $\alpha \in [0.25, 0.50]$ with $\delta \geq 0.05$; the equity-accuracy tradeoff at these values is approximately $3\times$ worse error in exchange for approximately $17\times$ faster expert entry. Pools for which signal fidelity is the binding constraint (e.g., financial claims, high-stakes product comparisons) should use $\alpha \leq 0.10$. In all cases, the decay rate $\delta$ should be calibrated first: E4b shows that $\delta$ dominates $\alpha$ in controlling gaming persistence, with less than 5 rounds difference across $\alpha \in [0.25, 1.0]$ at any given $\delta$.
+**E4a: Alpha and decay sweep.** We extend the E2 coherence game (200 curators, $K = 1.25$) to 500 rounds with reputation enabled, sweeping $\alpha \in \{0.0, 0.1, 0.25, 0.5, 1.0\}$ and $\delta \in \{0.0, 0.01, 0.05\}$, including "cash-poor expert" agents who start with $s_i = 0.1$ (vs median 1.0) but are competent. At $\alpha = 0$, cash-poor experts need ~137 rounds to reach median weight (Gini $\approx 0.61$). At $\alpha = 0.5$, $\delta = 0.01$: time-to-entry drops to 8 rounds, Gini falls to 0.17, but mean error increases from 0.027 to 0.088 because reputation accumulates for any coherent curator, including those coherent by luck. Higher decay rates moderate this: at $\delta = 0.05$, error at $\alpha = 0.5$ is 0.079. Deployment guidance: expert-inclusion pools should target $\alpha \in [0.25, 0.50]$ with $\delta \geq 0.05$ (~$3\times$ worse error for ~$17\times$ faster entry); signal-fidelity pools should use $\alpha \leq 0.10$. The decay rate $\delta$ dominates $\alpha$ in controlling gaming persistence (@fig-e4a-heatmap, @fig-e4a-gini).
 
 ![E4a: Rounds until cash-poor expert reaches median weight, as a function of reputation weight $\alpha$ and decay rate $\delta$. Lower values (lighter colors) indicate faster entry. At $\alpha = 0$ (no reputation), cash-poor experts require $\sim$137 rounds; at $\alpha \geq 0.25$, entry occurs within 8-20 rounds.](analysis/fig/e4a_alpha_heatmap.png){#fig-e4a-heatmap}
 
 ![E4a: Gini coefficient of final weight distribution vs $\alpha$ for each decay rate. Error bars show 95% CI over $N = 100$ seeds. Reputation ($\alpha > 0$) substantially reduces weight inequality.](analysis/fig/e4a_gini.png){#fig-e4a-gini}
 
-**E4b: Reputation gaming attack.** A strategic attacker starts with accumulated reputation equivalent to 200 rounds of coherent voting ($\mathrm{rep}_0 = 200$) but now votes randomly (incompetently). We measure how many of 300 rounds the attacker retains above-median weight. Without decay ($\delta = 0$), the attacker retains above-median influence for all 300 rounds: permanent entrenchment. At $\delta = 0.05$, this drops to approximately 61 rounds ($\pm 1$, 95% CI), and at $\delta = 0.10$, to approximately 36 rounds. The decay rate dominates: $\alpha$ has relatively little effect on persistence ($< 5$ rounds difference across $\alpha \in [0.25, 1.0]$ at any given $\delta$). The practical implication is that any deployment with $\alpha > 0$ must use $\delta > 0$; without decay, reputation gaming is permanent.
+**E4b: Reputation gaming.** A strategic attacker starts with $\mathrm{rep}_0 = 200$ (equivalent to 200 rounds of coherent voting) but now votes randomly. Without decay ($\delta = 0$): permanent entrenchment (all 300 rounds above-median). At $\delta = 0.05$: ~61 rounds ($\pm 1$, 95% CI). At $\delta = 0.10$: ~36 rounds. The decay rate dominates ($< 5$ rounds difference across $\alpha$ values at any given $\delta$). Any deployment with $\alpha > 0$ must use $\delta > 0$ (@fig-e4b-gaming).
 
 ![E4b: Rounds (of 300) that a reputation-rich attacker retains above-median weight, as a function of decay rate and $\alpha$. Error bars show 95% CI. Without decay ($\delta = 0$), the attacker dominates indefinitely. At $\delta \geq 0.05$, influence is bounded to $\sim$60 rounds regardless of $\alpha$.](analysis/fig/e4b_gaming_decay.png){#fig-e4b-gaming}
 
-**E4c: Reputation laundering via Sybil buildup.** Twenty Sybil identities vote coherently for 100 rounds to accumulate reputation, then coordinate a biased attack for 100 rounds. At $\alpha = 0$, the Sybils' built-up reputation has no effect: attack-phase error is 0.023 and final Sybil weight share is 0.014. At $\alpha = 0.5$, the accumulated reputation amplifies the attack: error rises to 0.072 ($\pm 0.001$, 95% CI) and Sybil weight share reaches 0.092. At $\alpha = 1.0$, results are similar (error 0.073, share 0.094), indicating diminishing marginal returns for the attacker. Reputation makes Sybil laundering more effective, not less; the defense is decay ($\delta > 0$ erodes accumulated advantage) and topic-scoping (reputation built in one pool does not transfer to another).
+**E4c: Sybil laundering.** Twenty Sybil identities vote coherently for 100 rounds to accumulate reputation, then coordinate a biased attack for 100 rounds. At $\alpha = 0$: attack-phase error is 0.023, Sybil weight share 0.014 (no advantage). At $\alpha = 0.5$: error rises to 0.072 ($\pm 0.001$, 95% CI), Sybil weight share reaches 0.092. Reputation makes Sybil laundering more effective, not less; defense is decay + topic-scoping (@fig-e4c-sybil).
 
 ![E4c: Signal error during Sybil attack phase (left) and final Sybil weight share (right) as a function of $\alpha$. At $\alpha = 0$, Sybil buildup has no advantage; at $\alpha > 0$, accumulated reputation amplifies the attack. Gray dashed line shows initial Sybil population share.](analysis/fig/e4c_sybil_comparison.png){#fig-e4c-sybil}
 
 ## Reproducibility
 
-All simulations and figure generation are deterministic (fixed RNG seeds) and run in CI on every commit to `main`. The generated figures are embedded into the published HTML. Adversarial experiments (E1-Adv, E2-Adv) and all E4 sub-experiments use $N = 100$ independent seeds per parameter configuration, with reported means and 95% confidence intervals.
+All simulations are deterministic (fixed RNG seeds) and run in CI on every commit. Adversarial experiments and E4 use $N = 100$ seeds with reported means and 95% confidence intervals.
 
 # Limitations and open problems
 
 ## Limited deployment evidence
 
-This paper presents mechanism design and simulation results. A partial deployment (Truth Post, 2023) tested the accuracy layer only; it did not achieve sustained usage and was abandoned (see @sec-truthpost). No live deployment of the full protocol exists. The mechanisms have not been tested with real users, real stakes, or real adversaries at scale. All claims about incentive alignment, competence filtering, and ambiguity defense are conditional on parameters that have only been swept in simulation, not calibrated against field data.
+No live deployment of the full protocol exists. Truth Post (2023) tested the accuracy layer only and did not achieve sustained usage (see @sec-truthpost). All claims about incentive alignment and competence filtering are conditional on parameters swept in simulation only.
 
-## The output is a signal, not “knowledge” in the philosophical sense
+## Signal limitations
 
-Even with strong incentives, the protocol produces **stake-weighted, contestable labels**. When evidence is ambiguous, participants are lazy, or incentives are mis-set, the system can converge on the wrong equilibrium. This is a feature of Schelling-style mechanisms, not an implementation detail [@bergolla2022kleros; @kleros2021cryptoeconomics].
+The protocol produces **stake-weighted, contestable labels**, not knowledge. The system can converge on wrong equilibria when evidence is ambiguous, participants are lazy, or incentives are mis-set [@bergolla2022kleros; @kleros2021cryptoeconomics]. Coordination on "what others will vote" can diverge from correctness, especially with expertise requirements or conflicts of interest [@rojoarjona2021focalpoints].
 
-## Schelling points can diverge from correctness
+## Independence and bribery
 
-Coordination on “what others will vote” can diverge from correctness, especially in domains requiring expertise or involving conflicts of interest [@rojoarjona2021focalpoints]. Appeals can help, but require careful stake sizing and empirical calibration.
-
-## Juror independence assumption
-
-The challenger EV formula assumes juror votes are independent conditional on the claim’s true status. In practice, juror votes can be correlated through herding (voting with the perceived majority), shared information sources, or off-chain coordination. Correlated votes reduce effective jury size and can shift majority outcomes. The simulations in E1 use independent draws; extending to correlated-vote models is an open problem.
-
-## Commit-reveal does not solve bribery
-
-Commit-reveal reduces copying but does not prevent off-chain coordination, delayed bribes, or non-reveal failure modes [@consensysPlcrVoting; @consensysDiligenceTcrAudit].
-
-## TCR-style participation failures remain a risk
-
-Low participation, wealth concentration, and social clique dynamics can still emerge. Prior work proposes mechanisms (e.g., inflationary incentives) to increase engagement [@wang2019enhancing], but real deployments need field evidence and adversarial analysis.
+The challenger EV formula assumes independent juror votes. In practice, herding, shared information sources, and off-chain coordination introduce correlation, reducing effective jury size. Commit-reveal reduces copying but does not prevent off-chain coordination or delayed bribes [@consensysPlcrVoting; @consensysDiligenceTcrAudit].
 
 ## Cold start and deployment bootstrap
 
-The mechanism requires simultaneous bootstrapping of authors (who need readers), validators (who need claims to validate), challengers (who need false claims to challenge), and readers (who need curated content). This chicken-and-egg problem is common in platform design but particularly acute here because the value proposition depends on stake liquidity and dispute activity, both of which are near zero at launch. The 2023 Truth Post deployment (see @sec-truthpost) provides direct empirical evidence: a partial implementation covering only the accuracy layer, without treasury rewards or relevancy curation, attracted insufficient participation to bootstrap a self-sustaining market.
+The mechanism requires simultaneous bootstrapping of authors, validators, challengers, and readers — a chicken-and-egg problem that is particularly acute because the value proposition depends on stake liquidity and dispute activity.
 
-We propose two concrete bootstrapping strategies and assess their costs honestly.
+**Strategy 1: Seeded single-domain launch.** Launch with one narrow domain where a founding cohort of 10-20 participants can generate meaningful coverage, a known external dataset provides ground truth, and the evidence policy is unambiguous. Risk: too niche → no organic growth; too broad → quality collapses before sufficient stake liquidity.
 
-**Strategy 1: Seeded single-domain launch.** Launch with one narrow domain (e.g., a single product category or a specific academic sub-field) where: (a) the claim space is small enough that a founding cohort of 10-20 participants can generate meaningful coverage, (b) a known external dataset provides ground truth for initial claims, allowing the system to demonstrate its filtering function before organic content exists, and (c) the evidence policy is unambiguous, reducing governance overhead during the critical early phase. Cost: requires a funded founding cohort (grant, DAO treasury, or protocol subsidy). Risk: if the founding domain is too niche, no organic growth follows; if too broad, quality collapses before stake liquidity is sufficient.
+**Strategy 2: Retroactive validation.** Import existing public claims as unclaimed entries with zero bounty; anyone adopts by posting stake. This requires a claim adoption protocol (template conformance, provenance tracking, adoption stake sizing) flagged as a pre-deployment deliverable.
 
-**Strategy 2: Retroactive validation of existing claims.** Instead of waiting for authors to submit new claims, bootstrap by importing existing public claims (e.g., from product comparison sites, academic pre-print metadata, or public financial disclosures) as "unclaimed" entries with zero bounty. Anyone can adopt an entry by posting stake, which starts the confidence clock. Challengers have immediate targets. This strategy requires a claim adoption protocol that maps external claims to the internal claim template, handles evidence provenance, and assigns gas costs for adoption. Specifying this protocol is a concrete design problem for a follow-on deployment specification; the key open questions are template conformance verification (can imported claims satisfy evidence policy requirements without manual re-curation?), adoption stake sizing (what minimum bounty makes an adopted claim worth challenging?), and provenance tracking (how is the original source attributed when a claim is adopted rather than authored?). We flag this as a required pre-deployment deliverable rather than an in-scope contribution of this paper.
+Both strategies require subsidized participation during the bootstrap phase; neither is validated.
 
-Both strategies require subsidized participation during the bootstrap phase. The protocol does not generate organic revenue until claim volume and dispute activity reach a threshold where the advertiser staking model or public goods funding becomes viable. The bootstrap phase is a capital expenditure, not a self-sustaining equilibrium. The conditions under which either strategy fails are clear: Strategy 1 fails if the founding cohort does not attract organic participants before subsidies run out; Strategy 2 fails if imported claims are low quality and the adoption mechanism is not used.
+## Scalability and UX friction
 
-## Scalability
+On-chain operations create gas cost and throughput limitations for low-value claims. Staking, structured claim authoring, and dispute participation impose cognitive and financial costs that may limit adoption to specialists.
 
-Every claim, stake, and verdict is on-chain. At scale, gas costs and throughput limitations may make the system prohibitively expensive for low-value claims. Layer-2 solutions or optimistic rollups could help, but introduce their own trust assumptions and latency tradeoffs.
+## Governance and sustainability
 
-## UX friction
-
-Staking, claim authoring with structured templates, and dispute participation impose cognitive and financial costs that exceed what most users are accustomed to. If the UX burden is too high, participation will be limited to specialists, undermining the “anyone can challenge” premise.
-
-## Forking is a social, not purely technical, fail-safe
-
-Forking can be a last resort, but it requires coordination, introduces legitimacy disputes, and can create path dependence. It should not be treated as an automatic security guarantee.
-
-## Sustainability is an open question
-
-Verified truth is a public good; sustainability may require mixed funding. Advertiser staking is promising but speculative and needs economic modeling and deployment evidence.
-
-## Temporal decay
-
-Claims become stale; incentives must reward withdrawal or profitable debunking. Without active refresh mechanisms, the system accumulates epistemic debt. Two complementary mechanisms address this. First, an opt-in TTL (time-to-live) field in the claim template: the author specifies an expiration date after which the claim is automatically marked Expired and the bounty is returned. Not all claims are time-sensitive, but the evidence policy can encourage or require TTL for domains where timeliness matters (e.g., news, product specifications). Second, automated $C$ decay: the confidence score formula can incorporate a decay factor, $C = \sum_t B_t \cdot \Delta t \cdot e^{-\lambda(T_{\text{now}} - t)}$, where $\lambda$ is a pool parameter controlling the half-life of confidence. With $\lambda > 0$, old claims lose confidence automatically unless the author refreshes the bounty. The choice of $\lambda$ is pool-specific (news pools need fast decay; scientific pools need slow decay) and is a governance parameter.
-
-## Governance capture
-
-Token-weighted governance can plutocratize. The design minimizes governance surface area, but parameter updates and pool creation still require governance, and these decisions can be captured.
+Token-weighted governance can plutocratize. Forking is a social process with legitimacy disputes, not an automatic guarantee. Verified truth is a public good; sustainability may require mixed funding models.
 
 ## Domain expertise
 
-Hard domains (law, medicine, finance) require credible expertise signals. Pooled staking and reputation help, but do not replace expert institutions. The system may work well for domains where evidence is publicly verifiable and poorly for domains where evidence requires specialized training to evaluate.
+Hard domains (law, medicine, finance) require credible expertise signals. Pooled staking and reputation help but do not replace expert institutions.
 
 ## Reputation mechanism: validated with tradeoffs
 
-The reputation mechanism ($w_i = s_i + \alpha \cdot \mathrm{rep}_i$ with decay) is now evaluated in simulation (E4). Results confirm a quantifiable equity-accuracy tradeoff: at $\alpha = 0.5$, $\delta = 0.01$, cash-poor experts reach median weight in approximately 8 rounds (vs 137 at $\alpha = 0$), and weight inequality drops from Gini 0.61 to 0.17; but mean relevance error increases from 0.027 to 0.088. Reputation gaming is contained by decay: at $\delta \geq 0.05$, a reputation-rich attacker's above-median influence is bounded to approximately 60 of 300 rounds. Sybil laundering is amplified by reputation ($\alpha > 0$ increases attack-phase error from 0.023 to 0.072), confirming that topic-scoping and decay are necessary complements to any reputation system. Open questions remain: whether these simulation parameters transfer to real deployments with social dynamics (reputation as status), whether cross-domain reputation scoping is sufficient to prevent laundering in practice, and how $\alpha$ should be calibrated relative to pool-specific stake distributions.
+E4 confirms a quantifiable equity-accuracy tradeoff: at $\alpha = 0.5$, cash-poor experts reach median weight in ~8 rounds (vs 137 at $\alpha = 0$), but error increases from 0.027 to 0.088. Reputation gaming is bounded by decay ($\delta \geq 0.05$). Sybil laundering is amplified by reputation ($\alpha > 0$), confirming that topic-scoping and decay are necessary complements.
 
 ## Formal model limitations
 
 Three limitations concern gaps in the formal model. First, **curation policy authoring remains a governance problem**: the focal point equilibrium (Proposition 2) is conditional on curation policies being specific enough to induce a unique coordination target; whether community governance reliably produces such policies, particularly in hard domains (medicine, law, climate), is an open empirical question. Second, **focal-point uniqueness is assumed, not proven**: the coherence game's equilibrium depends on the curation policy inducing a unique focal point, but this is a design heuristic validated under the simulation's ground-truth relevance model, not a formal theorem; multi-modal interpretation distributions are possible in deployed pools with diverse curator backgrounds, and we treat high $\sigma$ as a measurable failure signal rather than a provable guarantee (see the focal-point discussion in the Mechanisms section). Third, **smart contract attack surfaces**: deployment requires smart contract implementations of staking, slashing, commit-reveal, and payout logic, which are attack surfaces for reentrancy, integer overflow, front-running (MEV), and storage manipulation. A production deployment requires formal verification, independent security audit, time-locked upgradability, and a bug bounty program. Core accounting invariants that must hold: (1) stake conservation, (2) slash boundedness (no negative balances), (3) commit-reveal integrity, (4) payout exclusivity, (5) cooldown monotonicity, and (6) confidence monotonicity.
 
+## Temporal decay
+
+Claims become stale. Two mechanisms address this: opt-in TTL (time-to-live) in claim templates, and automated confidence decay $C = \sum_t B_t \cdot \Delta t \cdot e^{-\lambda(T_{\text{now}} - t)}$ where $\lambda$ is a pool-specific governance parameter.
+
 ## Simulation limitations
 
-E1-Adv and E2-Adv now use $N = 100$ independent seeds per configuration, with reported means and 95% confidence intervals. E4 (all sub-experiments) uses the same multi-seed infrastructure. The directional results are robust across seeds; specific magnitudes (e.g., adversary cumulative balance, collusion threshold boundary) should be interpreted within the reported intervals. Extending to larger $N$ or alternative adversarial strategies is straightforward.
+E1-Adv, E2-Adv, and E4 use $N = 100$ independent seeds with reported means and 95% confidence intervals. Directional results are robust; specific magnitudes should be interpreted within reported intervals.
 
 # Conclusion
 
-The core claim of this paper is that the bottleneck behind most coordination failures is not governance, voting, or funding mechanisms; it is the upstream transformation of raw information into decision-grade knowledge. We call this transformation curation, and propose a general four-step framework for designing trustless curation systems: problem definition, use case selection, quality identification, and mechanism design. Instantiating this framework for news and information curation, we argue that centralized curation predictably breaks through opacity, capture, gaming, censorship, fragility, and the absence of contestability.
+The core claim: the bottleneck behind most coordination failures is not governance or voting but the upstream transformation of information into knowledge. We propose a four-step framework for trustless curation (problem definition, use case selection, quality identification, mechanism design) and instantiate it for news, separating accuracy (binary, evidence-based, dispute-resolved) from relevance (non-binary, policy-guided, coherence-game-resolved).
 
-The proposed direction is mechanism design: separate accuracy (binary, evidence-based, resolved via dispute resolution) from relevance (non-binary, policy-guided, resolved via coherence games), and align incentives so that correctness is profitable, dishonesty is expensive, and ambiguity is slashable. The evaluation experiments show that under reasonable parameterizations, challengers have positive expected value against false claims, the coherence game filters incompetent participants over time, and allowing Under-specified as a verdict substantially reduces wrong resolutions on ambiguous claims. Adversarial simulations ($N = 100$ seeds each) demonstrate that the dispute mechanism is economically punitive against well-funded attackers (cumulative loss of approximately $1{,}638 \pm 68$ per 50 false claims at $p = 0.80$, 95% CI) and that the coherence game ejects colluding minorities, but identify a concrete vulnerability: colluding blocs above approximately 20-30% of stake can capture the relevance signal.
+Simulations show that challengers have positive EV against false claims when $p > 0.50$, the coherence game filters incompetent participants, and Under-specified substantially reduces wrong resolutions. Adversarial simulations confirm the dispute mechanism is economically punitive ($-1{,}638 \pm 68$ per 50 false claims at $p = 0.80$) and the coherence game ejects colluding minorities but breaks above ~20-30% of stake. The reputation mechanism introduces a quantifiable equity-accuracy tradeoff: at $\alpha = 0.5$, cash-poor experts reach parity in ~8 rounds (vs 137 without reputation), but signal error increases from 0.027 to 0.088. Reputation gaming is bounded by decay ($\delta \geq 0.05$), but Sybil laundering is amplified ($\alpha > 0$), confirming that decay and topic-scoping are necessary complements.
 
-The reputation mechanism introduces a quantifiable equity-accuracy tradeoff: at $\alpha = 0.5$, cash-poor experts reach parity in approximately 8 rounds (vs 137 without reputation), but signal error increases from 0.027 to 0.088. Reputation gaming is bounded by decay ($\delta \geq 0.05$ limits attacker influence to approximately 60 of 300 rounds), but Sybil laundering is amplified ($\alpha > 0$ increases attack-phase error from 0.023 to 0.072). The optimal $\alpha$ is pool-specific and depends on whether equity or signal accuracy is the binding constraint.
-
-The design depends on assumptions that remain untested in deployment: that stake sizes will be large enough to attract competent participation, that dispute resolution produces accurate verdicts at acceptable cost, that claim templates can be made precise enough without becoming expert gatekeepers, that the cold-start problem can be overcome (two bootstrapping strategies are proposed but neither is validated), that the lessons from Truth Post's partial deployment generalize to different deployment contexts, and that the focal-point uniqueness assumption holds in deployed pools with diverse curator backgrounds. None of these are guaranteed.
-
-The most important open problems are deployment evidence (no live system yet validates these mechanisms at scale), adversarial robustness beyond the simulated parameter sweeps, UX friction (staking, claim authoring, and dispute participation impose cognitive and financial costs that may limit adoption), and the sustainability of curation as a public good. These are not implementation details; they are conditions for the thesis to hold.
+The design depends on assumptions untested in deployment: that stake sizes will attract competent participation, that dispute resolution produces accurate verdicts at acceptable cost, that claim templates can be made precise enough without becoming expert gatekeepers, that the cold-start problem can be overcome, and that the focal-point uniqueness assumption holds in diverse curator pools. The most important open problems are deployment evidence, UX friction, and the sustainability of curation as a public good.
 
 # Disclosure
 
