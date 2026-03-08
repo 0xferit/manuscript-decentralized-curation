@@ -4,6 +4,8 @@ project:
   render:
     - "paper.qmd"
 
+date-format: "MMMM D, YYYY [at] HH:mm"
+
 format:
   html:
     output-file: paper

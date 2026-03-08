@@ -46,9 +46,9 @@ jobs:
           COMMIT_URL="https://github.com/proveuswrong/manuscript-decentralized-curation/commit/${GITHUB_SHA}"
           echo "**Version:** ${SHORT_SHA} ([commit](${COMMIT_URL}))" > "_build-info.md"
 
-          # Stamp date-modified in paper.qmd with Lisbon time (WET/WEST)
-          LISBON_TIME=$(TZ='Europe/Lisbon' date '+%B %-d, %Y at %H:%M %Z')
-          sed -i "s|^date-modified:.*|date-modified: \"${LISBON_TIME}\"|" paper.qmd
+          # Stamp date-modified in paper.qmd with Lisbon time (ISO 8601)
+          LISBON_TIME=$(TZ='Europe/Lisbon' date '+%Y-%m-%dT%H:%M:%S')
+          sed -i "s|^date-modified:.*|date-modified: ${LISBON_TIME}|" paper.qmd
 
       - name: Render HTML
         run: quarto render --to html
