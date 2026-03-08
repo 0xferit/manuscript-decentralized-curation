@@ -142,7 +142,7 @@ To illustrate domain-agnosticism concretely, consider a second instantiation: **
 
 The remainder of this paper develops mechanisms for the news curation instantiation.
 
-For extended data-quality and credibility mappings, see the supplementary companion document.
+Extended data-quality and credibility mappings follow by applying the same four-step framework to additional domains and are omitted here for brevity.
 
 # System model and assumptions
 
@@ -450,7 +450,7 @@ We state this as an explicit limitation rather than a formal condition because: 
 
 *Design implication.* Policies that satisfy the sufficient condition (single-attribute, enumerable, unambiguous) are the recommended starting point for new pools. Policies that violate it should be decomposed into constituent dimensions, each scored separately. This connects the focal-point limitation to the quality identification step of the four-step framework.
 
-Formally proving that a class of policies guarantees unimodal interpretation would strengthen this result from a design heuristic to a theorem; this remains open and would constitute a significant contribution to the decentralized oracle literature. Until such a proof is available, the empirical high-$\sigma$ diagnostic (elevated $\sigma$ in the coherence game signalling policy ambiguity) is the required monitoring procedure for any deployed pool, not an optional enhancement.
+Formally proving that a class of policies guarantees unimodal interpretation would strengthen this result from a design heuristic to a theorem; this remains open and would constitute a significant contribution to the decentralized oracle literature. Until such a proof is available, the empirical high-$\sigma$ diagnostic (elevated $\sigma$ in the coherence game signaling policy ambiguity) is the required monitoring procedure for any deployed pool, not an optional enhancement.
 
 ### Whale manipulation risk
 
@@ -845,4 +845,4 @@ The author has multi-year engineering experience with Kleros, a deployed decentr
 
 # Appendix A: Data-quality and credibility foundations
 
-Data-quality dimension mappings [@wang1996beyondaccuracy] and credibility checklist mappings (CRAAP) are provided in the supplementary companion document (`appendix-data-quality.md`).
+Data-quality dimension mappings [@wang1996beyondaccuracy] and credibility checklist mappings (CRAAP) are provided in a supplementary companion document on data-quality and credibility foundations.

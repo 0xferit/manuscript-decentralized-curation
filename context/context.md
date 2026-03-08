@@ -175,5 +175,5 @@ _Note:_ `legacy/` contains older pre-Quarto snapshots/exports (including unversi
      - **N3b:** Moved Appendix A content (Wang & Strong data-quality table + CRAAP credibility checklist) to new `appendix-data-quality.md` companion document; replaced with brief pointer.
      - **N3c:** Merged three Limitations subsections (commit-reveal/bribery, TCR participation failures, cold start/bootstrap) into single "Deployment challenges" subsection of ~300 words.
   4. **Header callout:** Updated to reflect distillation progress.
-  5. Estimated word count reduction: ~1,200 words.
+  5. Measured word count reduction: 15,617 → 14,915 (~700 words).
 - **Next:** Build presentation for reading group.

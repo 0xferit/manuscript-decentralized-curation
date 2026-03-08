@@ -1,10 +1,15 @@
+---
+title: "Supplementary Companion: Data-quality and credibility foundations"
+bibliography: references.bib
+---
+
 # Supplementary Companion: Data-quality and credibility foundations
 
 This document extends the epistemological grounding from the Introduction (see "Operationalizing knowledge: from JTB to contestable signals") to data-quality and credibility frameworks.
 
 ## Data quality dimensions
 
-Industrial data quality frameworks — notably Wang & Strong (1996) — decompose quality into measurable dimensions. The following table maps key dimensions to protocol mechanisms:
+Industrial data quality frameworks — notably Wang & Strong [-@wang1996beyondaccuracy] — decompose quality into measurable dimensions. The following table maps key dimensions to protocol mechanisms:
 
 | Quality dimension | Definition (Wang & Strong) | Protocol operationalization |
 |---|---|---|
