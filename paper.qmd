@@ -1,7 +1,7 @@
 ---
 title: "Decentralized Curation: Trustless Transformation of Information into Knowledge"
 author: Ferit Tunçer
-date: 2026-03-08
+date-modified: 2026-03-08
 status: draft
 bibliography: references.bib
 ---
