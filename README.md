@@ -109,6 +109,4 @@ mkdir -p "releases/<hash>/analysis"
 cp "analysis/run_all.py" "releases/<hash>/analysis/run_all.py"
 ```
 
-4. **Update pointers**
-
-- Update `context/context.md` so “last released snapshot/export” points to the new `<hash>` artifacts (and optionally add a 1–3 bullet release note).
+4. **Tag the release** (optional): add a git tag for the hash.

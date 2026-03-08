@@ -11,7 +11,6 @@ This is a Quarto-based academic manuscript workspace. The paper (`paper.qmd`) pr
 | `paper.qmd` | Editable master paper source (Quarto Markdown) |
 | `references.bib` | BibTeX citations; validate DOIs, volumes, page ranges |
 | `analysis/run_all.py` | Deterministic simulations; generates `analysis/out/*` and `analysis/fig/*` |
-| `context/context.md` | Living handoff doc for collaborators |
 | `_quarto.yml` | Quarto render config (HTML + PDF only; no DOCX) |
 
 ## Writing constraints
