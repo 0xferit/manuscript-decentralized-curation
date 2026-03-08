@@ -20,7 +20,7 @@
 - `legacy/Decentralized_Curation_7_Part_Series_21699486.html` — reader-mode-friendly HTML built from that released snapshot (pre-Quarto).
 - `context/attack-and-defense-log.md` — red-team log; defenses are integrated into the manuscript.
 
-*Note:* `legacy/` contains older pre-Quarto snapshots/exports (including unversioned convenience copies).
+_Note:_ `legacy/` contains older pre-Quarto snapshots/exports (including unversioned convenience copies).
 
 ## Core model (definitions)
 
@@ -107,4 +107,26 @@
   1. **Unified Schelling game formalization (Issues #1+#2):** New "Formal model: Schelling coordination under restricted conditions" subsection in Mechanisms. Defines a base Schelling coordination game with two instantiations: binary accuracy (DDR disputes, avoids George's impossibility via binary choice) and scalar relevance (coherence game, avoids it via continuous aggregation rather than rankings). Three numbered propositions: Condorcet connection (Prop 1), focal point equilibrium (Prop 2), competence selection (Prop 3). Cites George (2023, Math. Soc. Sci.) impossibility theorem as the constraint the design responds to. Added griefing factor framework (George 2023, Frontiers in Blockchain) for attack cost quantification. Added 3 references: `george2023strategic`, `george2023griefing`, `ast2023decentralized`. Updated notation table with $\mathcal{V}$, $v^*$, $u_i$, $P_{\mathrm{maj}}$, $GF$. Updated Flow 3 to use $P_{\mathrm{maj}}$ notation and reference minimum-$p$ requirements. Updated Flow 4 equilibrium argument to reference Propositions 2 and 3. Added "Formalization gaps in decentralized justice" paragraph to Related Work. Added minimum-$p$ requirements paragraph after E1 results in Evaluation.
   2. **Curation policy bootstrap problem (Issue #3):** New subsection in Mechanisms naming the circularity (curation policies needed for equilibrium, but writing them is a governance problem). Frames as constitutional layer with 4-part bootstrapping direction (start minimal, amendment-as-dispute, forking as safety valve, cross-pool competition). New Limitations entry acknowledging the open empirical question.
   3. Paper grew from ~701 to ~780 lines; `references.bib` grew from 21 to 24 entries.
+- **Round 7 revisions (March 2026): K-Dense Web peer review response (Major Revision).** Addresses all 5 major issues (M1-M5), all 8 minor issues (m1-m8), and all 7 prioritized action items in one pass. Changes span `paper.qmd`, `analysis/run_all.py`, `references.bib`:
+  1. **M2 / Priority 1: Multi-seed statistical infrastructure.** Refactored E1-Adv and E2-Adv to run N=100 seeds with 95% confidence intervals. Extracted `_e1_adv_single_run()` and `_e2_adv_single_run()` helpers, added `_ci95()` utility. CSV columns now include `_mean`, `_std`, `_ci95` suffixes. Figures show error bars (E1-Adv) and shaded CI bands (E2-Adv). Key results: E1-Adv at p=0.80 adversary loses -1638±68 per attack; E2-Adv mechanism breaks at 30% collusion (colluder share 0.80±0.005).
+  2. **M1 / Priority 2: E4 reputation mechanism validation.** Three new experiments:
+     - **E4a (alpha sweep):** 5 alphas × 3 decay rates × 100 seeds, 500 rounds, 200 curators. Measures time-to-non-whale-entry, Gini coefficient, mean error. Cash-poor experts (s_i=0.1) reach median weight in 8 rounds at alpha=0.5 vs 137 at alpha=0.
+     - **E4b (reputation gaming):** Attacker with rep=200 votes randomly; measures rounds above median. At alpha=0.5, delta=0.05: attacker above-median for 61/300 rounds; delta=0 means permanent entrenchment.
+     - **E4c (Sybil laundering):** 20 Sybils vote honestly for 100 rounds, then attack. Error at alpha=0.5 is 0.072 (vs 0.023 at alpha=0).
+     - Added RQ4, E4 subsection with 4 figures, updated Limitations and Conclusion.
+  3. **M4 / Priority 4: JTB moved to main text.** New subsection "Operationalizing knowledge: from JTB to contestable signals" in Introduction. Includes JTB definition, mapping table, departure paragraph, Gettier paragraph. Appendix A.1 now cross-references Introduction. Added `gettier1963justified` to `references.bib` (25 entries total).
+  4. **M5 / Priority 3: Equilibrium caveat.** New "Focal-point uniqueness: scope and limitations" subsection after Proposition 2. States focal-point uniqueness is a design heuristic, not a theorem. Multi-modal distributions acknowledged. Formal proof flagged as open problem. Matching limitation subsection added.
+  5. **M3 / Priority 5: Cold-start bootstrapping expanded.** Replaced single-paragraph limitation with "Cold start and deployment bootstrap" containing two strategies (seeded single-domain launch, retroactive validation) and honest cost assessment.
+  6. **Priority 6: Threat model expansion.** Three new rows in attack-defense table: pool governance capture (#13), temporal sniping (#14), reputation laundering (#15).
+  7. **Priority 7: Smart contract security.** New Limitations subsection "Smart contract attack surface" covering reentrancy, overflow, MEV, storage manipulation.
+  8. **Minor issues (m1-m8):**
+     - m1: Cross-pool C normalization formula added (`C_norm = C / median(C_pool)`).
+     - m2: Appeal ceiling added (4 rounds or 10× original bounty).
+     - m3: "Proof of Truth" renamed to "bonded product claims" with footnote.
+     - m4: All 11 figure captions expanded with standalone interpretation.
+     - m5: Disclosure moved from Introduction callout to dedicated "Conflicts of Interest" section; expanded to include "no PNK tokens, no financial relationship."
+     - m6: Bolander citation softened from "experimental evidence" to "theoretical models of recursive belief reasoning."
+     - m7: 4th Groves-Ledyard structural difference added (cardinal utility vs binary slash/reward).
+     - m8: Temporal decay specified with opt-in TTL and exponential decay formula.
+  9. Paper grew from ~780 to ~890 lines; `references.bib` grew from 24 to 25 entries. Reading time: ~13,431 words, 315 equations, 11 figures, 2 tables.
 - **Next:** Build presentation for March 10.
