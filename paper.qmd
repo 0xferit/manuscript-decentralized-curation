@@ -140,7 +140,7 @@ To illustrate domain-agnosticism concretely, consider a second instantiation: **
 
 The remainder of this paper develops mechanisms for the news and information curation instantiation.
 
-For extended data-quality and credibility mappings, see Appendix A.
+Extended data-quality and credibility mappings (Wang & Strong dimensions, CRAAP checklist) are available in [Supplementary Material A](supplementary-material.md).
 
 # System model and assumptions
 
@@ -515,13 +515,7 @@ This was the bare minimum of the protocol: the accuracy layer without the releva
 
 ## What was not built
 
-The deployment deliberately omitted the remaining protocol components:
-
-- Relevance curation (the coherence game, Flow 4)
-- Author rewards from a protocol treasury to incentivize submission
-- The confidence score system
-- Pooled staking for curators (Flow 2)
-- Multiple frontends or interface redundancy
+The deployment omitted all protocol components beyond the accuracy layer: relevance curation (the coherence game), treasury rewards, confidence scores, pooled staking, and interface redundancy.
 
 ## What happened
 
@@ -541,13 +535,9 @@ Three lessons from Truth Post directly inform the full design presented in this 
 
 This work sits at the intersection of incentive design, oracle/dispute mechanisms, and information quality.
 
-**Mechanism design for public goods.** The idea that self-interest can be harnessed for socially optimal outcomes in public goods provision was formalized by @groves1977freeriderproblem. Their paper solved the classical free rider problem — the assumption, dominant since @samuelson1954publicgoods, that public goods would always be undersupplied because rational agents conceal their true preferences. Groves and Ledyard constructed a class of allocation-and-tax mechanisms where truthful preference revelation is the Nash equilibrium: each consumer's tax includes a penalty proportional to how much their reported valuation deviates from the mean of the others' reports. Lying costs more than truth-telling. Both Welfare Theorems hold.
+**Mechanism design for public goods.** @groves1977freeriderproblem solved the classical free rider problem [@samuelson1954publicgoods] by constructing mechanisms where each agent's tax includes a penalty proportional to how much their reported valuation deviates from the mean of others' reports, making truthful preference revelation a Nash equilibrium. Curated knowledge on a permissionless protocol is a public good (non-rivalrous, non-excludable), so the classical undersupply prediction applies.
 
-Curated knowledge, when published on a permissionless protocol, is a public good: non-rivalrous by nature (one reader's consumption does not diminish another's) and non-excludable by architecture (no gatekeeper can restrict access to on-chain claims and verdicts). The classical prediction therefore applies: without intervention, curation will be undersupplied.
-
-This protocol applies two specific Groves-Ledyard insights. First, the *deviation penalty*: Groves and Ledyard tax each agent proportionally to how much their reported valuation deviates from the mean of others' reports; the coherence game likewise slashes curators whose relevance ratings fall outside $K\sigma$ of the weighted mean. Second, the *truth-telling incentive*: in the Groves-Ledyard mechanism, truthful reporting is a Nash equilibrium because deviating increases one's tax; in the coherence game, honest assessment of policy conformity is the focal equilibrium because deviating increases the probability of falling outside the coherence band and losing stake.
-
-Four structural differences limit the analogy. (1) Groves-Ledyard exclude each agent's own report from the mean used to compute their penalty; the coherence game includes all reports in $\mu$, which creates a whale-manipulation risk absent in the original mechanism (mitigated by weight caps). (2) Groves-Ledyard assume cardinal preferences over a single, well-defined public good; curation operates over a high-dimensional claim space where quality has multiple dimensions and preferences are ordinal at best. (3) Groves-Ledyard prove Pareto optimality under their assumptions (both Welfare Theorems hold); the coherence game makes no such guarantee: it produces a stake-weighted signal, not an optimal allocation. (4) Groves-Ledyard agents report cardinal utility and the mechanism computes an optimal quantity via linear tax-payment functions; the coherence game uses a binary slash/reward outcome (coherent or incoherent) rather than a proportional penalty. This binary payoff structure changes the strategic incentives: agents optimize to fall within the $K\sigma$ band rather than to minimize a continuous deviation cost.
+This protocol applies two Groves-Ledyard insights: (1) the *deviation penalty* — the coherence game slashes curators whose ratings fall outside $K\sigma$ of the weighted mean, paralleling the Groves-Ledyard tax; (2) the *truth-telling incentive* — honest assessment is the focal equilibrium because deviating increases slashing probability. Four structural differences limit the analogy: the coherence game includes each agent's own report in $\mu$ (creating whale-manipulation risk, mitigated by weight caps); curation operates over a high-dimensional claim space with ordinal preferences rather than cardinal preferences over a single good; the coherence game produces a stake-weighted signal rather than a Pareto-optimal allocation; and the binary slash/reward payoff changes strategic incentives relative to the continuous deviation cost in Groves-Ledyard.^[Specifically: (1) Groves-Ledyard exclude each agent's own report from the penalty mean; (2) they assume cardinal preferences over a single public good; (3) both Welfare Theorems hold in their setting but not here; (4) their agents minimize a continuous cost function rather than optimizing to fall within a coherence band.]
 
 **Token-curated registries (TCRs).** TCRs propose token-incentivized curation of lists [@goldin2017tcr]. We generalize the unit from "is item in list?" to **claims + evidence + disputes** and explicitly separate accuracy from relevance.
 
@@ -814,26 +804,9 @@ Hard domains (law, medicine, finance) require credible expertise signals. Pooled
 
 The reputation mechanism ($w_i = s_i + \alpha \cdot \mathrm{rep}_i$ with decay) is now evaluated in simulation (E4). Results confirm a quantifiable equity-accuracy tradeoff: at $\alpha = 0.5$, $\delta = 0.01$, cash-poor experts reach median weight in approximately 8 rounds (vs 137 at $\alpha = 0$), and weight inequality drops from Gini 0.61 to 0.17; but mean relevance error increases from 0.027 to 0.088. Reputation gaming is contained by decay: at $\delta \geq 0.05$, a reputation-rich attacker's above-median influence is bounded to approximately 60 of 300 rounds. Sybil laundering is amplified by reputation ($\alpha > 0$ increases attack-phase error from 0.023 to 0.072), confirming that topic-scoping and decay are necessary complements to any reputation system. Open questions remain: whether these simulation parameters transfer to real deployments with social dynamics (reputation as status), whether cross-domain reputation scoping is sufficient to prevent laundering in practice, and how $\alpha$ should be calibrated relative to pool-specific stake distributions.
 
-## Curation policy authoring remains a governance problem
+## Formal model limitations
 
-The focal point equilibrium (Proposition 2) is conditional on curation policies being specific enough to induce a unique coordination target. Whether community governance reliably produces such policies, particularly in hard domains (medicine, law, climate), is an open empirical question. The bootstrapping direction sketched in the Mechanisms section offers evolutionary pressure but no guarantee of convergence.
-
-## Focal-point uniqueness is assumed, not proven
-
-The coherence game's equilibrium argument (Proposition 2) depends on the curation policy inducing a unique focal point. This is a design heuristic validated under the simulation's ground-truth relevance model, not a formal theorem. Multi-modal interpretation distributions are possible in deployed pools with diverse curator backgrounds. We treat this as a measurable failure mode (high $\sigma$ signals policy ambiguity) rather than a provable guarantee. See the “Focal-point uniqueness: scope and limitations” discussion in the Mechanisms section.
-
-## Smart contract attack surface
-
-Deployment on a programmable blockchain requires smart contract implementations of staking, slashing, commit-reveal, and payout logic. These contracts are attack surfaces for reentrancy, integer overflow, front-running (MEV), and storage manipulation. A production deployment requires: (a) formal verification of core accounting invariants (total stake conserved, slashing bounds respected), (b) independent security audit before mainnet deployment, (c) time-locked upgradability with governance approval, and (d) a bug bounty program. At minimum, the following accounting invariants must hold across all state transitions in any correct implementation:
-
-1. **Stake conservation**: the sum of all staked balances plus all pending payouts equals total protocol-held tokens at every block.
-2. **Slash boundedness**: slashing cannot remove more than a curator's current stake; no state transition produces negative balances.
-3. **Commit-reveal integrity**: a revealed vote must hash to the previously committed value; non-matching reveals are rejected, not silently accepted.
-4. **Payout exclusivity**: for any dispute, exactly one of {author payout, challenger payout} executes; double-claims are structurally impossible.
-5. **Cooldown monotonicity**: a curator's cooldown timer can only be extended by events involving their own staked claims; unrelated disputes do not reset it.
-6. **Confidence monotonicity**: $C$ increases monotonically during uncontested periods, pauses during active challenges, and terminates (never resumes) on Invalid/Under-specified verdicts.
-
-These are standard requirements for DeFi protocols but represent non-trivial engineering and audit costs that are not modeled in this paper's economic analysis.
+Three limitations concern gaps in the formal model. First, **curation policy authoring remains a governance problem**: the focal point equilibrium (Proposition 2) is conditional on curation policies being specific enough to induce a unique coordination target; whether community governance reliably produces such policies, particularly in hard domains (medicine, law, climate), is an open empirical question. Second, **focal-point uniqueness is assumed, not proven**: the coherence game's equilibrium depends on the curation policy inducing a unique focal point, but this is a design heuristic validated under the simulation's ground-truth relevance model, not a formal theorem; multi-modal interpretation distributions are possible in deployed pools with diverse curator backgrounds, and we treat high $\sigma$ as a measurable failure signal rather than a provable guarantee (see the focal-point discussion in the Mechanisms section). Third, **smart contract attack surfaces**: deployment requires smart contract implementations of staking, slashing, commit-reveal, and payout logic, which are attack surfaces for reentrancy, integer overflow, front-running (MEV), and storage manipulation. A production deployment requires formal verification, independent security audit, time-locked upgradability, and a bug bounty program. Core accounting invariants that must hold: (1) stake conservation, (2) slash boundedness (no negative balances), (3) commit-reveal integrity, (4) payout exclusivity, (5) cooldown monotonicity, and (6) confidence monotonicity.
 
 ## Simulation limitations
 
@@ -854,36 +827,3 @@ The most important open problems are deployment evidence (no live system yet val
 # Disclosure
 
 The author has multi-year engineering experience with Kleros, a deployed decentralized dispute resolution system. This experience informs the design choices and threat model but does not constitute empirical validation. No deployment data from Kleros is used in this paper. The author does not hold PNK tokens and has no ongoing financial relationship with Kleros.
-
-# Appendix A: Data-quality and credibility foundations
-
-This appendix extends the epistemological grounding from the Introduction (see "Operationalizing knowledge: from JTB to contestable signals") to data-quality and credibility frameworks.
-
-## A.2 Data quality dimensions
-
-Industrial data quality frameworks — notably @wang1996beyondaccuracy — decompose quality into measurable dimensions. The following table maps key dimensions to protocol mechanisms:
-
-| Quality dimension | Definition (Wang & Strong) | Protocol operationalization |
-|---|---|---|
-| **Accuracy** | Extent to which data is correct and reliable | Binary verdict via dispute resolution (Flow 3) |
-| **Objectivity** | Extent to which data is unbiased and impartial | Separation of accuracy (evidence-based) from relevance (policy-guided); commit-reveal prevents herding |
-| **Timeliness** | Extent to which data is current | Confidence score decays implicitly: stale claims become profitable challenge targets (temporal decay) |
-| **Completeness** | Extent to which data is not missing | Claim templates enforce required fields; Under-specified verdict rejects incomplete claims |
-| **Relevance** | Extent to which data is applicable to the task | Coherence game (Flow 4) produces a relevance score under a pool-specific curation policy |
-| **Believability** | Extent to which data is regarded as credible | Confidence score $C = \sum_t B_t \cdot \Delta t$ accumulates as a function of bounty and uncontested time |
-| **Consistency** | Extent to which data is coherent with other data | Coherence rule ($|v_i - \mu| \le K\sigma$) penalizes incoherent assessments |
-| **Interpretability** | Extent to which data is in appropriate language/units | Claim schema requires explicit scope (time, jurisdiction, units/definitions) |
-
-Not all dimensions are equally covered. **Reputation** (of the source) and **accessibility** (ease of retrieval) are partially addressed by the reputation system and interface layer, respectively, but remain weaker than the directly incentivized dimensions.
-
-## A.3 Credibility checklist
-
-Practical credibility frameworks (e.g., the CRAAP test used in information literacy) include accuracy, authority, objectivity, currency, and coverage/scope. In this design, these map to explicit protocol structures rather than implicit social signals:
-
-- **Accuracy** → dispute resolution verdict
-- **Authority** → reputation score ($\mathrm{rep}_i$), topic-scoped and non-transferable
-- **Objectivity** → separation of powers (accuracy vs. relevance), commit-reveal voting
-- **Currency** → temporal decay via challenge economics; confidence score rewards recency
-- **Coverage** → evidence policy defines admissible sources; claim template requires scope
-
-The key shift from traditional credibility assessment to this protocol is that credibility indicators become **verifiable on-chain** (stakes, verdicts, vote histories) rather than depending on the consumer’s judgment of the source’s trustworthiness. This does not eliminate the need for judgment — evidence policy design and pool governance still require it — but it makes the judgment auditable.
