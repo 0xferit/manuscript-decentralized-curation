@@ -92,6 +92,10 @@ When curation breaks, the damage is not evenly distributed. Users lose twice: fi
 
 The dependency is unavoidable. Individually verifying every piece of information we act on would be prohibitively inefficient; reusing someone else's curation is how humans make knowledge practical. But this dependency is also the vulnerability. When curation is centralized, two failure modes emerge. The first is incompetence: the curator's incentives diverge from knowledge quality; platforms optimize for engagement, newsrooms for attention, algorithms for clicks. The second is weaponization: when one entity controls what becomes "known," the distance between curation and propaganda collapses to a question of intent [-@chomsky1988manufacturing]. The critical insight is that incompetence and weaponization are indistinguishable from the consumer's perspective. You cannot tell whether your feed is poorly curated or deliberately curated against your interests. This is not a bug in any particular platform; it is an inherent property of centralized curation.
 
+::: {.callout-note appearance="minimal"}
+**Disclosure.** The author has multi-year engineering experience with Kleros, a deployed decentralized dispute resolution system. This experience informs the design choices and threat model but does not constitute empirical validation. No deployment data from Kleros is used in this paper. The author does not hold PNK tokens and has no ongoing financial relationship with Kleros.
+:::
+
 ## Contributions
 
 This paper contributes:
