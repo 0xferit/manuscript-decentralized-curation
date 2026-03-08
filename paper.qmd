@@ -12,7 +12,7 @@ bibliography: references.bib
 :::
 
 ::: {.callout-important appearance="simple"}
-**Working draft.** Under active development. This is too long and I know it. Distillation in progress. Feedback welcome.
+**Working draft.** Under active development. This is too long and I know it. Distillation in progress. [Feedback welcome.](mailto:ferit@cryptolab.net)
 :::
 
 # Abstract
