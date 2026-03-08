@@ -1,112 +1,43 @@
-# PUW Articles (Quarto setup)
+# Decentralized Curation
 
-This workspace is a manuscript + supporting context docs. It is configured as a Quarto project so you can render **HTML / PDF** from a single source.
+[![Build & Publish](https://github.com/0xferit/manuscript-decentralized-curation/actions/workflows/publish-cloudflare-pages-branch.yml/badge.svg)](https://github.com/0xferit/manuscript-decentralized-curation/actions/workflows/publish-cloudflare-pages-branch.yml)
 
-## Source of truth
+A Quarto-based academic manuscript proposing a decentralized, incentive-compatible protocol for information curation. The paper defines curation as the upstream bottleneck behind coordination failures and presents a four-step framework for trustless curation, instantiated for news.
 
-- **Paper source:** `paper.qmd`
-- **Legacy series draft:** `legacy/manuscript-7-part-series.md` (pre-paper draft)
-- **Quarto config:** `_quarto.yml`
-- **Bibliography:** `references.bib`
-- **Supporting docs:** `context/`
+## Building locally
 
-## Render outputs
-
-### Prerequisites
-
-- **Quarto** (macOS): `brew install quarto`
-- **PDF only:** a LaTeX installation (recommended: TinyTeX)
+Prerequisites: [Quarto](https://quarto.org/docs/get-started/), Python 3.11+, and (for PDF) a LaTeX distribution (`quarto install tinytex`).
 
 ```bash
-quarto install tinytex
+pip install -r requirements.txt
+python analysis/run_all.py   # deterministic simulations (figures + data)
+quarto render                # outputs: outputs/paper.html, outputs/paper.pdf
 ```
 
-### Render all formats (HTML/PDF)
+## Publishing
 
-```bash
-python3 -m pip install -r requirements.txt
-python3 analysis/run_all.py
-quarto render
-```
+Every push to `main` triggers a [GitHub Actions workflow](.github/workflows/publish-cloudflare-pages-branch.yml) that runs simulations, renders HTML, and pushes `public/index.html` to the `cf-pages` branch. Cloudflare Pages serves that branch.
 
-Outputs are written to `outputs/` and currently standardized as:
+## Repository layout
 
-- `outputs/paper.html`
-- `outputs/paper.pdf`
+| Path | Description |
+|---|---|
+| `paper.qmd` | Master paper source |
+| `references.bib` | BibTeX citations |
+| `analysis/run_all.py` | Simulation code (E1-E4, adversarial variants) |
+| `analysis/fig/`, `analysis/out/` | Generated figures and data (gitignored) |
+| `_quarto.yml` | Quarto render config (HTML + PDF) |
+| `themes/puw.scss` | Optional PUW HTML theme |
+| `context/` | Supporting docs (attack-defense log) |
+| `legacy/` | Pre-Quarto drafts and exports |
 
-## Styling (HTML)
+## Release procedure
 
-- **Theme + layout:** `_quarto.yml` → `format.html` (default theme, grid, TOC).
-- **Custom theme:** `themes/puw.scss` (PUW styling; enable with `theme: [default, themes/puw.scss]`).
-
-To preview styling changes locally:
-
-```bash
-python3 analysis/run_all.py
-quarto render --to html
-open "outputs/paper.html"
-```
-
-## Publish procedure (every commit → HTML)
-
-We publish the latest manuscript HTML on every commit to `main`, using **Cloudflare Pages**.
-
-### One-time setup (Cloudflare Pages)
-
-In Cloudflare Pages, connect this repository and configure:
-
-- **Production branch:** `cf-pages`
-- **Build command:** `exit 0`
-- **Build output directory:** `public`
-
-### Ongoing workflow
-
-1. Make changes to `paper.qmd` (and/or `references.bib`, `analysis/`)
-2. Commit + push to `main`
-3. GitHub Actions renders HTML and updates the `cf-pages` branch (`public/index.html`)
-4. Cloudflare Pages deploys the updated `cf-pages` branch
-
-The publishing workflow file is: `.github/workflows/publish-cloudflare-pages-branch.yml`
+1. Compute release id: first 8 hex chars of `shasum -a 256 paper.qmd`
+2. Build: `python analysis/run_all.py && quarto render`
+3. Freeze artifacts into `releases/<hash>/` (source, outputs, config, analysis script)
 
 ## License
 
-- **Manuscript (text/figures):** CC BY 4.0 (attribution required). See `LICENSE`.
-- **Code/config/scripts:** MIT. See `LICENSE-MIT`.
-
-## Release procedure (hash-versioned)
-
-**Definition:** the _unreleased master_ is `paper.qmd`. A _release_ is a frozen snapshot keyed by a content hash, plus rendered outputs.
-
-1. **Compute the release id**
-
-```bash
-shasum -a 256 "paper.qmd"
-```
-
-Use the first 8 hex chars of the SHA-256 as `<hash>`.
-
-2. **Render from the master**
-
-```bash
-python3 -m pip install -r requirements.txt
-python3 analysis/run_all.py
-quarto render
-```
-
-Do not edit the manuscript between steps (1) and (2).
-
-3. **Freeze the release artifacts**
-
-```bash
-mkdir -p "releases/<hash>"
-cp "paper.qmd" "releases/<hash>/paper.qmd"
-cp "outputs/paper.html" "releases/<hash>/paper.html"
-cp "outputs/paper.pdf" "releases/<hash>/paper.pdf"
-cp "_quarto.yml" "releases/<hash>/_quarto.yml"
-cp "references.bib" "releases/<hash>/references.bib"
-cp "requirements.txt" "releases/<hash>/requirements.txt"
-mkdir -p "releases/<hash>/analysis"
-cp "analysis/run_all.py" "releases/<hash>/analysis/run_all.py"
-```
-
-4. **Tag the release** (optional): add a git tag for the hash.
+- **Manuscript (text/figures):** CC BY 4.0. See [LICENSE](LICENSE).
+- **Code/scripts:** MIT. See [LICENSE-MIT](LICENSE-MIT).
