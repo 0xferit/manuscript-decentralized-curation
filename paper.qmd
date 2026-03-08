@@ -1,11 +1,18 @@
 ---
 title: "Decentralized Curation: Trustless Transformation of Information into Knowledge"
+author: Ferit Tuncer
+date: 2026-03-08
+status: draft
 bibliography: references.bib
 ---
 
 ::: {.callout-note appearance="minimal"}
 {{< include _build-info.md >}}
 {{< include analysis/out/reading_time.md >}}
+:::
+
+::: {.callout-important appearance="simple"}
+**Working draft.** This manuscript is under active development. Mechanism specifications, evaluation results, and section structure may change. Feedback welcome.
 :::
 
 # Abstract
@@ -54,7 +61,7 @@ Institutions once performed much of this transformation. The process was imperfe
 
 ## When common knowledge fails
 
-Coordination often fails because people confuse shared knowledge with common knowledge. In game theory, **common knowledge** means not just that I know $X$, but that you know $X$, and we both know that we both know $X$, and so on. This recursive loop is what makes coordination safe.
+Coordination often fails because people confuse shared knowledge with common knowledge. In game theory, **common knowledge** — formalized by @aumann1976agreeing — means not just that I know $X$, but that you know $X$, and we both know that we both know $X$, and so on, *ad infinitum*. This infinite recursive structure is what makes coordination safe: without it, even mutually known facts can fail to support coordinated action.
 
 Experimental evidence suggests humans routinely act as if common knowledge exists when it does not, producing an **illusion of shared knowledge** that masks incompatible understanding [@bolander2020common].
 
@@ -122,7 +129,9 @@ This work sits at the intersection of incentive design, oracle/dispute mechanism
 
 Curated knowledge, when published on a permissionless protocol, is a public good: non-rivalrous by nature (one reader's consumption does not diminish another's) and non-excludable by architecture (no gatekeeper can restrict access to on-chain claims and verdicts). The classical prediction therefore applies: without intervention, curation will be undersupplied.
 
-This protocol applies the Groves-Ledyard insight to knowledge production. The coherence game penalizes curators whose relevance assessments deviate excessively from the group mean, structurally analogous to the quadratic deviation penalty in the Groves-Ledyard tax rule. The bounty-and-challenge mechanism makes it individually rational to verify rather than free-ride. The key difference: Groves-Ledyard assume a single, well-defined public good with cardinal preferences; curation operates over a high-dimensional claim space with two quality dimensions, adversarial participants, and no central allocator.
+This protocol applies two specific Groves-Ledyard insights. First, the *deviation penalty*: Groves and Ledyard tax each agent proportionally to how much their reported valuation deviates from the mean of others' reports; the coherence game likewise slashes curators whose relevance ratings fall outside $K\sigma$ of the weighted mean. Second, the *truth-telling incentive*: in the Groves-Ledyard mechanism, truthful reporting is a Nash equilibrium because deviating increases one's tax; in the coherence game, honest assessment of policy conformity is the focal equilibrium because deviating increases the probability of falling outside the coherence band and losing stake.
+
+Three structural differences limit the analogy. (1) Groves-Ledyard exclude each agent's own report from the mean used to compute their penalty; the coherence game includes all reports in $\mu$, which creates a whale-manipulation risk absent in the original mechanism (mitigated by weight caps). (2) Groves-Ledyard assume cardinal preferences over a single, well-defined public good; curation operates over a high-dimensional claim space where quality has multiple dimensions and preferences are ordinal at best. (3) Groves-Ledyard prove Pareto optimality under their assumptions (both Welfare Theorems hold); the coherence game makes no such guarantee — it produces a stake-weighted signal, not an optimal allocation.
 
 **Token-curated registries (TCRs).** TCRs propose token-incentivized curation of lists [@goldin2017tcr]. We generalize the unit from “is item in list?” to **claims + evidence + disputes** and explicitly separate accuracy from relevance.
 
@@ -130,9 +139,13 @@ This protocol applies the Groves-Ledyard insight to knowledge production. The co
 
 Academic and socio-legal critique of cryptoeconomic courts emphasizes the same core tension: jurors are rewarded for *coordination* (what others will vote), not epistemic correctness directly [@bergolla2022kleros; @kleros2021cryptoeconomics]. Experimental work on focal points also suggests that coordination becomes harder when interests diverge, even when focal points exist [@rojoarjona2021focalpoints].
 
+**Escalation-based oracle resolution (Reality.eth).** Reality.eth [@realityeth2023] implements a crowd-sourced oracle for smart contracts using bond escalation: anyone can post an answer by locking a bond; anyone can override it by posting a higher bond; if no further override occurs within a timeout, the last answer stands. Disputed answers escalate to an external arbitrator (e.g., Kleros). This is decentralized dispute resolution (DDR) layer prior art — it solves answer-level dispute resolution for oracle queries — but it operates at the single-question granularity and does not address curation-layer concerns: multi-dimensional quality assessment, relevance scoring, pool-scoped evidence policies, or the coherence game. The bond-escalation pattern does, however, directly inform the challenge-and-appeal economics in Flow 3.
+
 **Prediction-market oracle resolution.** Many “market resolution” disputes are semantic and policy disputes (what counts as “yes/no”), not disputes about reality. Optimistic oracle designs (e.g., UMA) formalize propose–dispute flows and escalation [@umaOptimisticOracleDocs; @umaWhitepaperRepo], reinforcing the need to make resolution criteria explicit at claim creation time.
 
 **Peer prediction and information elicitation.** Peer prediction provides mechanisms for eliciting information when ground truth is costly or unavailable [@miller2005peerprediction]. Our approach differs in tying rewards to explicit evidence standards and contestability, rather than relying purely on mutual consistency.
+
+**Bayesian Truth Serum (BTS).** @prelec2004bts proposed an alternative to peer prediction that does not require common priors: respondents report both a personal answer and a prediction of others' answers, and the mechanism rewards "surprisingly common" responses — answers that appear more frequently than collectively predicted. BTS is a potentially relevant alternative for information elicitation in settings where ground truth is unavailable. A systematic comparison between BTS-style elicitation and the coherence game's Schelling-point mechanism — particularly regarding robustness to strategic respondents, collusion thresholds, and applicability to continuous (rather than categorical) quality dimensions — is an open direction for future work.
 
 **Prediction markets and futarchy.** Prediction markets are a parallel approach to incentivized information aggregation: participants trade contracts whose payoffs depend on the outcome of future events, and prices converge toward crowd-estimated probabilities [@hanson2013futarchy]. Futarchy extends this to governance — “vote on values, bet on beliefs” — using decision-conditional markets to select policies that maximize a democratically chosen welfare measure. Our work differs in scope and cost structure: prediction markets require liquid trading around well-defined future events and are expensive to operate per question, whereas curation operates over a high-dimensional claim space (not just future events) and uses staking and dispute resolution rather than continuous trading. The resolution ambiguity problems observed in prediction market platforms (e.g., Augur, Polymarket) — where disputes are semantic rather than factual — directly motivate our emphasis on claim templates and explicit evidence policies.
 
@@ -147,7 +160,7 @@ Academic and socio-legal critique of cryptoeconomic courts emphasizes the same c
 ## Actors
 
 - **Authors** submit claims, attach evidence bundles, select a pool, and put a bounty at risk.
-- **Validators** stake on pools and signal support for claims (contributing to confidence scores). They are not adjudicators; they are attesters.
+- **Validators** stake on pools, making themselves eligible for random drafting. Their stake contributes to pool liquidity and, when drafted, they participate in relevance rounds (as curators in Flow 4) or serve as the eligible population from which jurors are drawn for disputes. They are not adjudicators of accuracy — that role belongs to jurors — but their continued staking signals confidence in the pool's curation quality. Validators and curators are the same actors in different contexts: a validator becomes a curator when drafted for a relevance round.
 - **Challengers** contest claims by posting counter-stake and counter-evidence (or asserting under-specification), triggering dispute resolution.
 - **Jurors** are drawn from the DDR system (e.g., Kleros) to adjudicate disputes. They are distinct from validators: jurors resolve contested claims, validators signal on uncontested ones.
 - **Interface operators** build consumer-facing applications that filter, rank, and display protocol outputs. They control UX and compliance but not the underlying record.
@@ -283,7 +296,7 @@ This design responds in three ways:
 2. **Template validation.** The interface (or an on-chain check) verifies that the claim satisfies the pool’s required fields (scope, resolution policy, canonical sources). Claims that fail template validation are rejected before posting.
 3. **Submission.** The author locks bounty $B$ on-chain. The claim enters the challenge window. The confidence score clock starts.
 4. **Confidence accumulation.** For each discrete interval $\Delta t$ that the claim remains uncontested, the confidence score increases by $B_t \cdot \Delta t$.
-5. **Outcome.** If no challenge is filed within the window, the claim is marked Valid by default (optimistic finality). The author may withdraw the bounty after the window closes, which stops confidence accumulation.
+5. **Outcome (optimistic finality).** If no challenge is filed within the window, the claim is marked Valid by default. This is an explicit design choice — *optimistic finality* — borrowed from optimistic rollup and oracle designs (e.g., UMA [@umaOptimisticOracleDocs]): the system assumes correctness unless someone stakes capital to dispute it. The tradeoff is direct: optimistic finality minimizes latency and cost for honest claims (no jury needed in the common case), but it means false claims survive whenever challengers are absent, distracted, or under-capitalized. The confidence score partially compensates: unchallenged claims with low bounty or short survival time carry low $C$, signaling to readers that absence of challenge is not the same as rigorous validation. The author may withdraw the bounty after the window closes, which stops confidence accumulation.
 
 ### Confidence score
 
@@ -301,7 +314,7 @@ The score is a raw cumulative measure; the protocol does not impose a threshold 
 
 Invariants:
 
-- **Monotone**: higher bounty and more uncontested time both increase $C$.
+- **Monotone (within uncontested periods)**: while a claim is uncontested, $C$ increases monotonically with bounty and time. If a claim is challenged, confidence accumulation pauses; if the claim is reinstated (challenge rejected), accumulation resumes from the prior value. A successful challenge (claim ruled Invalid or Under-specified) terminates the claim and $C$ becomes moot.
 - **Gated**: a claim with zero bounty accumulates no confidence regardless of time elapsed.
 
 ## Flow 2: pooled staking (liability and chilling effects)
@@ -334,7 +347,7 @@ The challenge-dispute flow is the core enforcement mechanism. It proceeds in num
 6. **Payout**: if the challenger wins (claim ruled Invalid or Under-specified), the challenger receives $B + S$ minus fees. If the challenger loses, the claim author receives $S$.
 7. **Appeal**: either party can appeal by posting a higher stake (e.g., $2 \times$ previous round). Appeals draw a larger juror panel and raise the expertise threshold (the “high-court effect”).
 
-The economic model is straightforward: a challenger with detection probability $d$ and jury accuracy $p$ has expected value $\text{EV} = d \cdot [p \cdot B - (1-p) \cdot S]$. This assumes juror votes are independent; in practice, herding, Schelling coordination, and off-chain communication can introduce correlation, which the threat model addresses separately. Experiment E1 sweeps these parameters and shows the regimes where challenging is rational.
+The economics operate at two levels. For an *individual challenger* who has already identified a false claim, the expected value of filing a challenge is $\text{EV}_{\text{challenger}} = p \cdot B - (1-p) \cdot S$, where $p$ is jury accuracy and $B$, $S$ are bounty and challenge stake respectively. For the *system* — considering that false claims must first be detected — the expected value per false claim is $\text{EV}_{\text{system}} = d \cdot [p \cdot B - (1-p) \cdot S]$, where $d$ is the probability that at least one participant detects and challenges the claim. These are distinct: a challenger who has found a provably false claim faces only jury risk ($p$), while the system's overall false-claim suppression depends on both detection coverage ($d$) and jury accuracy ($p$). Both formulas assume juror votes are independent; in practice, herding, Schelling coordination, and off-chain communication can introduce correlation, which the threat model addresses separately. Experiment E1 sweeps these parameters and shows the regimes where challenging is rational.
 
 **Commit-reveal limitations.** Commit-reveal reduces simple herding but is not an anti-bribery primitive. It cannot prevent off-chain coordination or delayed payments conditioned on revealed votes [@consensysPlcrVoting; @consensysDiligenceTcrAudit]. Additional defenses are needed: credible identity/reputation weighting, randomized deadlines, penalties for non-reveal, and stake sizing that makes bribery uneconomical relative to the dispute value.
 
@@ -344,7 +357,7 @@ Relevance is produced by a policy-guided coherence game — a Schelling-point co
 
 ### Protocol
 
-1. **Eligibility.** To participate, a curator stakes token $X$ on a pool. Staking more increases the probability of being drafted (analogous to holding more lottery tickets). Curators opt in to the pool; the protocol assigns specific items.
+1. **Eligibility.** To participate, a curator stakes $s_i$ on a pool. Staking more increases the probability of being drafted (analogous to holding more lottery tickets). Curators opt in to the pool; the protocol assigns specific items.
 2. **Drafting.** When an item requires relevance assessment, the protocol draws $n$ curators from the pool’s eligible set using on-chain randomness (e.g., VRF-based), weighted by stake.
 3. **Commit phase.** Each drafted curator commits a hash $h_i = H(v_i \| \text{salt}_i)$ of their rating $v_i \in [0, 1]$, where $v_i$ represents the degree of conformity to the pool’s curation policy (0 = no conformity, 1 = full conformity). Commits are posted on-chain within a fixed window.
 4. **Reveal phase.** Curators reveal $(v_i, \text{salt}_i)$. The protocol verifies $H(v_i \| \text{salt}_i) = h_i$. Non-reveals forfeit stake (penalizing abstention-as-strategy).
@@ -414,7 +427,7 @@ One funding path is to treat commercial claims as stakable assertions. An advert
 
 **When is staking rational for an advertiser?** An advertiser with a truthful claim faces expected cost $B \cdot (1 - p_{\text{survive}})$, where $B$ is the stake and $p_{\text{survive}}$ is the probability of surviving challenges. For a genuinely true claim with clear evidence, $p_{\text{survive}}$ approaches 1, making the expected cost near zero. The alternative — third-party certification, legal compliance, or FTC substantiation — has fixed costs regardless of truth value. The crossover point: staking is cheaper when the claim is verifiable and the stake is smaller than the cost of equivalent third-party certification. It is more expensive (and intended to be) when the claim is false or ambiguous.
 
-**Why this matters for the protocol.** Digital advertising loses an estimated 20–30% of spend to fraud and invalid traffic, with projected losses exceeding $170 billion annually by 2028. The core problem is structural: the entity reporting ad performance (the platform) profits from inflated metrics. Advertiser staking inverts this: the advertiser commits capital to the truth of a specific, auditable claim, and the protocol’s existing challenge infrastructure provides continuous verification. This creates demand for curation labor even when political or news disputes are quiet.
+**Why this matters for the protocol.** Digital advertising loses an estimated 20–30% of spend to fraud and invalid traffic, with projected losses exceeding $170 billion annually by 2028 [@juniperresearch2023adfraud]. The core problem is structural: the entity reporting ad performance (the platform) profits from inflated metrics. Advertiser staking inverts this: the advertiser commits capital to the truth of a specific, auditable claim, and the protocol’s existing challenge infrastructure provides continuous verification. This creates demand for curation labor even when political or news disputes are quiet.
 
 **Limitations.** This funding model is exploratory. Open questions include: which claim types are stakeable (factual product claims are straightforward; subjective claims like “best in class” are not), whether stake sizes will be large enough to attract competent challengers, how this interacts with existing advertising regulation (staking does not replace legal compliance), and whether peacetime yields are sufficient to retain curators.
 

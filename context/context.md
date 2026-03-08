@@ -88,4 +88,19 @@
   12. **Dead references removed:** `shumailov2023recursion` and `kosmarski2020tcrjournal` removed from `references.bib`.
   13. **E2-Adv clarified:** Explained that colluders are competent-with-bias (not random), detailed population composition at each collusion level, added note that honest curators become the ones ejected when the mechanism breaks.
   14. Paper grew from 620 to 688 lines; `references.bib` trimmed from 19 to 17 entries.
+- **Round 5 revisions (March 2026):** Twelve edits to `paper.qmd` and `references.bib`:
+  1. **Reality.eth added to Related Work** as DDR-layer prior art (bond escalation + arbitrator), distinct from curation.
+  2. **BTS (Prelec 2004) added to Related Work** as alternative information elicitation approach; comparison flagged as future work.
+  3. **Groves-Ledyard analogy tightened:** spelled out what transfers (deviation penalty, truth-telling incentive) and what doesn't (G-L excludes own report from mean, assumes cardinal preferences for single good, proves Pareto optimality — coherence game does none of these).
+  4. **Optimistic finality named** as explicit design choice in Flow 1 step 5, with tradeoff discussion.
+  5. **EV formula split** into challenger-level ($\text{EV}_{\text{challenger}}$) and system-level ($\text{EV}_{\text{system}}$) with distinct semantics.
+  6. **Common knowledge cited:** Aumann (1976) cited on first use of "common knowledge" in Introduction.
+  7. **Validator role clarified:** explained that validators and curators are the same actors in different contexts.
+  8. **DDR acronym defined** on first use (Reality.eth paragraph in Related Work).
+  9. **Token X → $s_i$:** fixed notation conflict in Flow 4 step 1.
+  10. **Confidence score invariant refined:** monotone invariant now specifies behavior during challenge (pauses) and reinstatement (resumes).
+  11. **Ad fraud citation added:** Juniper Research source for $170B projected losses.
+  12. **Draft notice added:** callout at top of paper + author/date/status metadata in YAML front matter.
+  13. New `references.bib` entries: `realityeth2023`, `prelec2004bts`, `aumann1976agreeing`, `juniperresearch2023adfraud` (17 → 21 entries).
+  14. Paper grew from 689 to ~701 lines.
 - **Next:** Build presentation for March 10.
