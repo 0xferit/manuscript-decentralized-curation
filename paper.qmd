@@ -17,11 +17,9 @@ bibliography: references.bib
 
 # Abstract
 
-The internet solved access to information but not access to knowledge. Curation, the transformation of raw information into decision-grade knowledge, is the bottleneck; generative AI makes it structurally worse by decoupling the form of quality (fluent prose, plausible citations) from its substance (correctness, coherence).
+The internet solved access to information but not access to knowledge. Curation, the transformation of raw information into decision-grade knowledge, is the bottleneck; generative AI makes it structurally worse by decoupling the form of quality (fluent prose, plausible citations) from its substance (correctness, coherence). When curation is centralized, two failure modes emerge: incompetence (the curator’s incentives diverge from knowledge quality) and weaponization (the curator exploits control over the information-to-knowledge pipeline). From the consumer’s perspective, these are indistinguishable.
 
-When curation is centralized, two failure modes emerge: incompetence (the curator’s incentives diverge from knowledge quality) and weaponization (the curator exploits control over the information-to-knowledge pipeline). From the consumer’s perspective, these are indistinguishable: you cannot tell whether your feed is poorly curated or deliberately curated against your interests.
-
-We propose a decentralized protocol that separates accuracy from relevance. Accuracy is treated as a binary classification (Valid/Invalid) under an explicit evidence standard, resolved via decentralized dispute resolution. Relevance is treated as a non-binary signal produced by a policy-guided coherence game: a Schelling-point mechanism where curators independently rate conformity to a public curation policy, and outliers are slashed. Claims are structured, evidence-backed, and contestable; ambiguity is rejected, not adjudicated.
+We propose a general framework for trustless decentralized curation consisting of four steps: (1) problem definition: identify the curation bottleneck in a target domain; (2) use case selection: select a domain where decentralized curation is both needed and feasible; (3) quality identification: decompose quality into dimensions amenable to decentralized enforcement; (4) mechanism design: design distinct mechanisms for each identified dimension. The framework is domain-agnostic; we instantiate it for news and information curation, where quality identification yields two dimensions: accuracy (global, binary) and relevance (local, non-binary). This decomposition is not assumed as universal; it is a consequence of applying the quality identification step to news. For accuracy, we design a decentralized dispute resolution mechanism under an explicit evidence standard. For relevance, we design a policy-guided coherence game: a Schelling-point mechanism where curators independently rate conformity to a public curation policy, and outliers are slashed. A 2023 partial deployment (Truth Post) tested the accuracy layer only; its failure to bootstrap participation directly informed the full design.
 
 Adversarial simulations (N=100 seeds per configuration) show that the dispute mechanism is economically punitive against well-funded attackers (cumulative loss of approximately 33x bounty per attack at juror accuracy p=0.80). The coherence game ejects colluding minorities but breaks at 20-30% colluding stake, identifying a concrete robustness threshold. A reputation mechanism enables cash-poor expert entry (~8 rounds at alpha=0.5 vs ~137 without) with a quantified equity-accuracy tradeoff.
 
@@ -44,7 +42,7 @@ So you can think of most hard problems as two-phase:
 1. **Curation:** Transform information into knowledge—converge on what is true and important enough to act on
 2. **Coordination:** Align actions, given that shared knowledge
 
-The thesis of this paper is blunt: **the bottleneck is almost always phase one.** We keep trying to fix coordination with better governance, better voting, better funding mechanisms, while standing on a broken knowledge layer.
+The thesis of this paper is blunt: **the bottleneck is almost always phase one.** We keep trying to fix coordination with better governance, better voting, better funding mechanisms, while standing on a broken knowledge layer. To address this, we propose a general framework for trustless decentralized curation and instantiate it for news and information curation, where the bottleneck is most visible and the cost of failure most broadly distributed.
 
 This paper addresses phase one only. Phase two — coordination given shared knowledge — is a rich field with mature tools (voting, multi-sig governance, futarchy, quadratic funding) that work well *when the input knowledge is reliable*. The hard part is not choosing what to do; it is agreeing on what is true. This manuscript focuses entirely on the information-to-knowledge transformation and proposes no coordination mechanism.
 
@@ -100,17 +98,19 @@ The dependency is unavoidable. Individually verifying every piece of information
 
 This paper contributes:
 
+- **A general framework**: a four-step process for designing trustless decentralized curation systems: problem definition, use case selection, quality identification, and mechanism design. The framework is domain-agnostic; the remaining contributions instantiate it for news and information curation.
 - **A framing**: curation (information → knowledge) as the upstream bottleneck behind coordination failures.
-- **A separation of powers**: **Accuracy (global, binary)** vs **Relevance (local, non-binary)** with distinct mechanisms.
+- **A quality decomposition for news curation**: applying the framework's quality identification step to news yields two dimensions: **Accuracy (global, binary)** and **Relevance (local, non-binary)**. This decomposition is the result of analyzing what quality means in the news domain, not a universal principle; a different domain would identify different dimensions.
 - **A protocol architecture**: claims, evidence, disputes, and pooled staking to reduce capture and liability.
 - **A formalized coherence game**: a fully specified Schelling-point mechanism for relevance assessment, with commit-reveal protocol, equilibrium argument, and explicit collusion threshold (~20–30% of stake).
 - **A public good framing**: curated knowledge as a non-excludable good subject to free-rider dynamics, with structural parallels to the Groves-Ledyard deviation penalty.
 - **A security posture**: treat ambiguity as an attack surface (“Vagueness = Rejection”) and treat interface capture as a first-class risk.
 - **An adversarial evaluation program**: a reproducible simulation suite covering incentive alignment, coherence dynamics, ambiguity failure modes, repeated economic attacks, and coordinated collusion.
+- **A deployment retrospective**: Truth Post (2023), a partial implementation of the accuracy layer, provides empirical evidence on cold-start failure and lessons that directly informed the full design.
 
 # Roadmap
 
-Background and problem statement frames the problem and failure modes of centralized curation. System model and assumptions defines actors, artifacts, and trust assumptions. Mechanisms describes the accuracy and relevance separation, claim templates, staking, disputes, and the coherence game. Related work positions the design within mechanism design, oracle, and information quality literatures. Threat model and security analysis maps attacks to defenses. Evaluation tests key parameters via simulation. Limitations and open problems closes with honest constraints and future work.
+Background and problem statement frames the problem and failure modes of centralized curation. System model and assumptions defines actors, artifacts, and trust assumptions. Mechanisms instantiates the framework for news curation: accuracy and relevance as quality dimensions, claim templates, staking, disputes, and the coherence game. Truth Post describes a 2023 partial deployment of the accuracy layer and the lessons that informed the full design. Related work positions the design within mechanism design, oracle, and information quality literatures. Threat model and security analysis maps attacks to defenses. Evaluation tests key parameters via simulation. Limitations and open problems closes with honest constraints and future work.
 
 # Background and problem statement
 
@@ -133,15 +133,22 @@ Centralized curation intensifies rather than corrects this failure. Opacity (fai
 
 ## What good curation must optimize for
 
-At a minimum, good curation produces claims that are:
+The framework's quality identification step distinguishes between two categories of criteria. The first are universal process properties that any trustless curation system must satisfy, regardless of domain. The second are domain-specific quality criteria that emerge from analyzing the target use case; for news and information curation, these map to the accuracy and relevance dimensions developed in this paper.
+
+**Universal process properties.** Any trustless curation system must produce claims that are:
 
 1. **Well-posed**: falsifiable and unambiguous. A claim that cannot be adjudicated without guessing hidden assumptions has zero epistemic value; it merely creates dispute surface.
-2. **Evidence-backed**: tied to an explicit evidence policy that defines admissible sources and tie-break rules. Without this, "evidence" degenerates into persuasion.
-3. **Coherent**: consistent with other validated claims in the same domain. Incoherence signals either error or scope violation.
-4. **Current**: truth decays; claims become stale. A curation system that cannot expire or re-challenge outdated claims accumulates epistemic debt.
-5. **Auditable**: every assertion, verdict, and stake movement is publicly traceable. Without auditability, all other criteria are unverifiable.
-6. **Contestable**: any participant can challenge a claim by posting stake and counter-evidence, triggering structured dispute resolution. Without contestability, errors persist until the curator independently chooses to act (failure mode #6 above).
-7. **Incentive-aligned**: the mechanism makes it profitable to curate correctly and expensive to curate incorrectly. Misaligned incentives undermine every other criterion because rational actors will optimize for reward, not for truth.
+2. **Auditable**: every assertion, verdict, and stake movement is publicly traceable. Without auditability, all other criteria are unverifiable.
+3. **Contestable**: any participant can challenge a claim by posting stake and counter-evidence, triggering structured dispute resolution. Without contestability, errors persist until the curator independently chooses to act (failure mode #6 above).
+4. **Incentive-aligned**: the mechanism makes it profitable to curate correctly and expensive to curate incorrectly. Misaligned incentives undermine every other criterion because rational actors will optimize for reward, not for truth.
+
+**Domain-specific quality criteria (news and information curation).** Applying quality identification to the news domain yields three additional criteria, the first two of which become the target dimensions for mechanism design:
+
+5. **Evidence-backed**: tied to an explicit evidence policy that defines admissible sources and tie-break rules. Without this, "evidence" degenerates into persuasion. This criterion is operationalized as the *accuracy* dimension.
+6. **Coherent**: consistent with other validated claims in the same domain. Incoherence signals either error or scope violation. This criterion is operationalized as the *relevance* dimension.
+7. **Current**: truth decays; claims become stale. A curation system that cannot expire or re-challenge outdated claims accumulates epistemic debt.
+
+A different instantiation of the framework (e.g., for scientific claims, product reviews, or legal evidence) would retain the universal process properties but identify different domain-specific quality criteria, and the mechanism design would follow from those choices. The remainder of this paper develops mechanisms for the news and information curation instantiation.
 
 For extended data-quality and credibility mappings, see Appendix A.
 
@@ -229,10 +236,12 @@ This design does not eliminate trust; it **constrains** it.
 
 ## Overview: separation of powers
 
-Centralized platforms mash accuracy and relevance into a single engagement metric. We separate them:
+The framework's quality identification step, applied to news and information curation, identifies two quality dimensions that centralized platforms conflate into a single engagement metric:
 
 - **Accuracy**: global, binary classification under an evidence standard, resolved via dispute processes.
 - **Relevance**: local, non-binary importance produced by a policy-guided coherence game.
+
+This separation is not an axiom; it is the result of analyzing what "quality" means in the news domain. Accuracy is global because a factual claim is either valid or invalid regardless of who reads it. Relevance is local because importance depends on the reader's context, the pool's curation policy, and the moment. A different domain would decompose quality differently: a scientific curation system might add reproducibility as a third dimension; a legal evidence system might replace relevance with admissibility. The mechanisms that follow are designed for this specific two-dimensional decomposition.
 
 ## Formal model: Schelling coordination under restricted conditions
 
@@ -491,6 +500,43 @@ One funding path is to treat commercial claims as stakable assertions. An advert
 
 **Limitations.** This funding model is exploratory. Open questions include: which claim types are stakeable (factual product claims are straightforward; subjective claims like “best in class” are not), whether stake sizes will be large enough to attract competent challengers, how this interacts with existing advertising regulation (staking does not replace legal compliance), and whether peacetime yields are sufficient to retain curators.
 
+# Truth Post: a partial instantiation {#sec-truthpost}
+
+Truth Post (truthpost.news) launched in 2023 as a minimal viable implementation of the framework's news curation instantiation. It covered only the accuracy layer and was intended to validate the submission-and-challenge flow before building the full protocol. The deployment failed; the record below is included because the failure directly informed the design presented in this paper.
+
+## What was built
+
+Truth Post implemented two components of the protocol:
+
+- **Author submission with staked bounties.** Users submitted claims and attached a token bounty as a credibility signal (a partial implementation of Flow 1).
+- **Challenger disputes routed to Kleros.** Anyone could challenge a claim by staking tokens, triggering dispute resolution via the Kleros court system (a partial implementation of Flow 3).
+
+This was the bare minimum of the protocol: the accuracy layer without the relevance layer.
+
+## What was not built
+
+The deployment deliberately omitted the remaining protocol components:
+
+- Relevance curation (the coherence game, Flow 4)
+- Author rewards from a protocol treasury to incentivize submission
+- The confidence score system
+- Pooled staking for curators (Flow 2)
+- Multiple frontends or interface redundancy
+
+## What happened
+
+The deployment did not achieve sustained usage. Activity was sparse: a handful of claims, fewer challenges. The web frontend eventually stopped loading due to a subgraph indexing failure, a common failure mode for decentralized applications that depend on The Graph for on-chain data indexing. The project was abandoned due to maintenance overhead and lack of investor interest. It did not validate the full design; it validated only that the accuracy submission-and-challenge flow could be deployed on existing infrastructure.
+
+## Lessons
+
+Three lessons from Truth Post directly inform the full design presented in this paper.
+
+**The cold-start problem is real.** Without a critical mass of curators and challengers, the system lacked the economic activity needed to generate meaningful confidence signals. A claim with zero challenges and zero validators has a confidence score of approximately zero: correct, but useless. This is a classic two-sided marketplace problem, and it motivates two design choices: pooled staking (Flow 2), which reduces cold-start friction by letting validators commit to domains rather than individual claims, and the confidence score design (Flow 1), which provides a meaningful signal even with thin participation because a single unchallenged claim with a large bounty still carries information.
+
+**Relevance curation may be the engagement driver.** Accuracy alone generated insufficient activity. Most claims were not interesting enough to challenge. The relevance layer, which turns the system into something users actively interact with by ranking and surfacing what matters, may be necessary for bootstrapping. This observation motivates the coherence game (Flow 4) not merely as a design refinement but as a product necessity: people do not visit a platform to verify boring truths; they visit to find out what is important.
+
+**Protocol/interface separation is a survival requirement.** Truth Post had a single frontend operated by the development team. When the subgraph broke, the entire user-facing product went down, a single point of failure that contradicted the protocol's own design philosophy. This motivates the protocol-vs-interface separation principle described in the Governance and UX section: the protocol must be designed so that anyone can deploy a frontend, and no single frontend failure kills the system.
+
 # Related work
 
 This work sits at the intersection of incentive design, oracle/dispute mechanisms, and information quality.
@@ -698,9 +744,9 @@ All simulations and figure generation are deterministic (fixed RNG seeds) and ru
 
 # Limitations and open problems
 
-## No deployment evidence
+## Limited deployment evidence
 
-This paper presents mechanism design and simulation results. No live deployment exists. The mechanisms have not been tested with real users, real stakes, or real adversaries. All claims about incentive alignment, competence filtering, and ambiguity defense are conditional on parameters that have only been swept in simulation, not calibrated against field data.
+This paper presents mechanism design and simulation results. A partial deployment (Truth Post, 2023) tested the accuracy layer only; it did not achieve sustained usage and was abandoned (see @sec-truthpost). No live deployment of the full protocol exists. The mechanisms have not been tested with real users, real stakes, or real adversaries at scale. All claims about incentive alignment, competence filtering, and ambiguity defense are conditional on parameters that have only been swept in simulation, not calibrated against field data.
 
 ## The output is a signal, not “knowledge” in the philosophical sense
 
@@ -724,7 +770,7 @@ Low participation, wealth concentration, and social clique dynamics can still em
 
 ## Cold start and deployment bootstrap
 
-The mechanism requires simultaneous bootstrapping of authors (who need readers), validators (who need claims to validate), challengers (who need false claims to challenge), and readers (who need curated content). This chicken-and-egg problem is common in platform design but particularly acute here because the value proposition depends on stake liquidity and dispute activity, both of which are near zero at launch.
+The mechanism requires simultaneous bootstrapping of authors (who need readers), validators (who need claims to validate), challengers (who need false claims to challenge), and readers (who need curated content). This chicken-and-egg problem is common in platform design but particularly acute here because the value proposition depends on stake liquidity and dispute activity, both of which are near zero at launch. The 2023 Truth Post deployment (see @sec-truthpost) provides direct empirical evidence: a partial implementation covering only the accuracy layer, without treasury rewards or relevancy curation, attracted insufficient participation to bootstrap a self-sustaining market.
 
 We propose two concrete bootstrapping strategies and assess their costs honestly.
 
@@ -784,13 +830,13 @@ E1-Adv and E2-Adv now use $N = 100$ independent seeds per configuration, with re
 
 # Conclusion
 
-The core claim of this paper is that the bottleneck behind most coordination failures is not governance, voting, or funding mechanisms; it is the upstream transformation of raw information into decision-grade knowledge. We call this transformation curation, and argue that centralized curation predictably breaks through opacity, capture, gaming, censorship, fragility, and the absence of contestability.
+The core claim of this paper is that the bottleneck behind most coordination failures is not governance, voting, or funding mechanisms; it is the upstream transformation of raw information into decision-grade knowledge. We call this transformation curation, and propose a general four-step framework for designing trustless curation systems: problem definition, use case selection, quality identification, and mechanism design. Instantiating this framework for news and information curation, we argue that centralized curation predictably breaks through opacity, capture, gaming, censorship, fragility, and the absence of contestability.
 
 The proposed direction is mechanism design: separate accuracy (binary, evidence-based, resolved via dispute resolution) from relevance (non-binary, policy-guided, resolved via coherence games), and align incentives so that correctness is profitable, dishonesty is expensive, and ambiguity is slashable. The evaluation experiments show that under reasonable parameterizations, challengers have positive expected value against false claims, the coherence game filters incompetent participants over time, and allowing Under-specified as a verdict substantially reduces wrong resolutions on ambiguous claims. Adversarial simulations ($N = 100$ seeds each) demonstrate that the dispute mechanism is economically punitive against well-funded attackers (cumulative loss of approximately $1{,}638 \pm 68$ per 50 false claims at $p = 0.80$, 95% CI) and that the coherence game ejects colluding minorities, but identify a concrete vulnerability: colluding blocs above approximately 20-30% of stake can capture the relevance signal.
 
 The reputation mechanism introduces a quantifiable equity-accuracy tradeoff: at $\alpha = 0.5$, cash-poor experts reach parity in approximately 8 rounds (vs 137 without reputation), but signal error increases from 0.027 to 0.088. Reputation gaming is bounded by decay ($\delta \geq 0.05$ limits attacker influence to approximately 60 of 300 rounds), but Sybil laundering is amplified ($\alpha > 0$ increases attack-phase error from 0.023 to 0.072). The optimal $\alpha$ is pool-specific and depends on whether equity or signal accuracy is the binding constraint.
 
-The design depends on assumptions that remain untested in deployment: that stake sizes will be large enough to attract competent participation, that dispute resolution produces accurate verdicts at acceptable cost, that claim templates can be made precise enough without becoming expert gatekeepers, that the cold-start problem can be overcome (two bootstrapping strategies are proposed but neither is validated), and that the focal-point uniqueness assumption holds in deployed pools with diverse curator backgrounds. None of these are guaranteed.
+The design depends on assumptions that remain untested in deployment: that stake sizes will be large enough to attract competent participation, that dispute resolution produces accurate verdicts at acceptable cost, that claim templates can be made precise enough without becoming expert gatekeepers, that the cold-start problem can be overcome (two bootstrapping strategies are proposed but neither is validated), that the lessons from Truth Post's partial deployment generalize to different deployment contexts, and that the focal-point uniqueness assumption holds in deployed pools with diverse curator backgrounds. None of these are guaranteed.
 
 The most important open problems are deployment evidence (no live system yet validates these mechanisms at scale), adversarial robustness beyond the simulated parameter sweeps, UX friction (staking, claim authoring, and dispute participation impose cognitive and financial costs that may limit adoption), and the sustainability of curation as a public good. These are not implementation details; they are conditions for the thesis to hold.
 
