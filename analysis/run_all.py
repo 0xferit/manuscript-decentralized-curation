@@ -17,10 +17,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "analysis" / "out"
 FIG_DIR = ROOT / "analysis" / "fig"
+
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
@@ -39,7 +39,11 @@ def majority_correct_probability(n_jurors: int, p_juror_correct: float) -> float
     k_min = (n_jurors // 2) + 1
     prob = 0.0
     for k in range(k_min, n_jurors + 1):
-        prob += math.comb(n_jurors, k) * (p_juror_correct**k) * ((1 - p_juror_correct) ** (n_jurors - k))
+        prob += (
+            math.comb(n_jurors, k)
+            * (p_juror_correct**k)
+            * ((1 - p_juror_correct) ** (n_jurors - k))
+        )
     return prob
 
 
@@ -51,7 +55,9 @@ def ensure_dirs() -> None:
 def save_metadata() -> None:
     payload = {
         "generated_at_utc": utc_now_iso(),
-        "git_sha": os.getenv("GITHUB_SHA") or os.getenv("CF_PAGES_COMMIT_SHA") or "unknown",
+        "git_sha": os.getenv("GITHUB_SHA")
+        or os.getenv("CF_PAGES_COMMIT_SHA")
+        or "unknown",
         "python": {
             "version": platform.python_version(),
         },
@@ -61,19 +67,24 @@ def save_metadata() -> None:
             "matplotlib": plt.matplotlib.__version__,
         },
     }
-    (OUT_DIR / "metadata.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    (OUT_DIR / "metadata.json").write_text(
+        json.dumps(payload, indent=2) + "\n", encoding="utf-8"
+    )
 
 
 # ---------------------------------------------------------------------------
 # E1: Accuracy dispute simulation
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class E1Params:
     n_jurors: int = 5
     bounty: float = 100.0
     stake_ratios: tuple[float, ...] = (0.05, 0.1, 0.25, 0.5)
-    p_detect: float = 0.35  # probability a false claim is noticed & challenged in window
+    p_detect: float = (
+        0.35  # probability a false claim is noticed & challenged in window
+    )
 
 
 def run_e1(params: E1Params) -> None:
@@ -111,11 +122,17 @@ def run_e1(params: E1Params) -> None:
     plt.figure(figsize=(7.0, 4.0))
     for s_over_b in params.stake_ratios:
         sub = df[df["stake_over_bounty"] == s_over_b]
-        plt.plot(sub["p_juror_correct"], sub["ev_false"] / params.bounty, label=f"S/B={s_over_b:g}")
+        plt.plot(
+            sub["p_juror_correct"],
+            sub["ev_false"] / params.bounty,
+            label=f"S/B={s_over_b:g}",
+        )
     plt.axhline(0.0, color="black", linewidth=0.8)
     plt.xlabel("Per-juror correctness p")
     plt.ylabel("Challenger EV on false claim (normalized by bounty)")
-    plt.title(f"E1: Challenger EV vs juror accuracy (N={params.n_jurors}, p_detect={params.p_detect:g})")
+    plt.title(
+        f"E1: Challenger EV vs juror accuracy (N={params.n_jurors}, p_detect={params.p_detect:g})"
+    )
     plt.legend(frameon=False)
     plt.tight_layout()
     plt.savefig(FIG_DIR / "e1_challenger_ev.png", dpi=200)
@@ -139,13 +156,14 @@ def run_e1(params: E1Params) -> None:
 # E1-Adv: Repeated attack by a well-funded adversary
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class E1AdvParams:
     n_jurors: int = 5
     bounty: float = 100.0
     stake_ratio: float = 0.25
     p_detect: float = 0.35
-    n_attacks: int = 50         # adversary submits this many false claims
+    n_attacks: int = 50  # adversary submits this many false claims
     p_juror_range: tuple[float, ...] = (0.60, 0.70, 0.80, 0.90)
 
 
@@ -184,30 +202,46 @@ def run_e1_adversarial(params: E1AdvParams) -> None:
                 # Claim survives unchallenged (but with low confidence score)
                 survived += 1
 
-        rows.append({
-            "p_juror_correct": p,
-            "n_attacks": params.n_attacks,
-            "survived": survived,
-            "survival_rate": survived / params.n_attacks,
-            "challenged": challenged_count,
-            "adversary_balance": adv_balance,
-            "adversary_balance_per_attack": adv_balance / params.n_attacks,
-        })
+        rows.append(
+            {
+                "p_juror_correct": p,
+                "n_attacks": params.n_attacks,
+                "survived": survived,
+                "survival_rate": survived / params.n_attacks,
+                "challenged": challenged_count,
+                "adversary_balance": adv_balance,
+                "adversary_balance_per_attack": adv_balance / params.n_attacks,
+            }
+        )
 
     df = pd.DataFrame(rows)
     df.to_csv(OUT_DIR / "e1_adversarial_results.csv", index=False)
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.0, 4.5))
 
-    ax1.bar([f"p={p:.2f}" for p in params.p_juror_range], df["survival_rate"], color="#4C72B0")
+    ax1.bar(
+        [f"p={p:.2f}" for p in params.p_juror_range],
+        df["survival_rate"],
+        color="#4C72B0",
+    )
     ax1.set_ylabel("False claim survival rate")
     ax1.set_title(f"E1-Adv: Survival rate ({params.n_attacks} attacks)")
     ax1.set_ylim(0.0, 1.0)
-    ax1.axhline(1.0 - params.p_detect, color="gray", linestyle="--", linewidth=0.8, label="Unchallenged rate")
+    ax1.axhline(
+        1.0 - params.p_detect,
+        color="gray",
+        linestyle="--",
+        linewidth=0.8,
+        label="Unchallenged rate",
+    )
     ax1.legend(frameon=False, fontsize=9)
 
     colors = ["#C44E52" if v < 0 else "#55A868" for v in df["adversary_balance"]]
-    ax2.bar([f"p={p:.2f}" for p in params.p_juror_range], df["adversary_balance"], color=colors)
+    ax2.bar(
+        [f"p={p:.2f}" for p in params.p_juror_range],
+        df["adversary_balance"],
+        color=colors,
+    )
     ax2.set_ylabel("Adversary cumulative balance")
     ax2.set_title(f"E1-Adv: Adversary profit/loss ({params.n_attacks} attacks)")
     ax2.axhline(0.0, color="black", linewidth=0.8)
@@ -221,12 +255,13 @@ def run_e1_adversarial(params: E1AdvParams) -> None:
 # E2: Relevance coherence game (scale: [0, 1])
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class E2Params:
     n_curators: int = 200
     rounds: int = 200
     slash_rate: float = 0.03
-    noise_sigma: float = 0.08   # noise on [0,1] scale (was 0.8 on [0,10])
+    noise_sigma: float = 0.08  # noise on [0,1] scale (was 0.8 on [0,10])
     ks: tuple[float, ...] = (0.8, 1.0, 1.25, 1.5)
     competent_fracs: tuple[float, ...] = (0.1, 0.3, 0.5, 0.7, 0.9)
 
@@ -256,7 +291,9 @@ def run_e2(params: E2Params) -> None:
                 r_true = float(rng.uniform(0.0, 1.0))
 
                 v = np.empty(params.n_curators, dtype=float)
-                v[is_comp] = _truncate_0_1(rng.normal(loc=r_true, scale=params.noise_sigma, size=is_comp.sum()))
+                v[is_comp] = _truncate_0_1(
+                    rng.normal(loc=r_true, scale=params.noise_sigma, size=is_comp.sum())
+                )
                 v[~is_comp] = rng.uniform(0.0, 1.0, size=(~is_comp).sum())
 
                 w_sum = float(w.sum())
@@ -277,7 +314,9 @@ def run_e2(params: E2Params) -> None:
                 if total_slashed > 0 and coherent.any():
                     # Redistribute proportionally to coherent stake.
                     coherent_w = w[coherent]
-                    w[coherent] += total_slashed * (coherent_w / float(coherent_w.sum()))
+                    w[coherent] += total_slashed * (
+                        coherent_w / float(coherent_w.sum())
+                    )
 
                 abs_errors.append(abs(mu - r_true))
 
@@ -298,7 +337,9 @@ def run_e2(params: E2Params) -> None:
     plt.figure(figsize=(7.0, 4.0))
     for k in params.ks:
         sub = df[df["K"] == k].sort_values("competent_frac")
-        plt.plot(sub["competent_frac"], sub["mean_abs_error"], marker="o", label=f"K={k:g}")
+        plt.plot(
+            sub["competent_frac"], sub["mean_abs_error"], marker="o", label=f"K={k:g}"
+        )
     plt.xlabel("Fraction competent curators")
     plt.ylabel("Mean |μ − r|")
     plt.title("E2: Relevance signal error vs competence and K")
@@ -324,6 +365,7 @@ def run_e2(params: E2Params) -> None:
 # ---------------------------------------------------------------------------
 # E2-Adv: Coherence game under adversarial collusion
 # ---------------------------------------------------------------------------
+
 
 @dataclass(frozen=True)
 class E2AdvParams:
@@ -384,7 +426,11 @@ def run_e2_adversarial(params: E2AdvParams) -> None:
             if col_mask.any():
                 biased_target = min(1.0, r_true + params.collusion_bias)
                 v[col_mask] = _truncate_0_1(
-                    rng.normal(loc=biased_target, scale=params.noise_sigma * 0.5, size=col_mask.sum())
+                    rng.normal(
+                        loc=biased_target,
+                        scale=params.noise_sigma * 0.5,
+                        size=col_mask.sum(),
+                    )
                 )
 
             w_sum = float(w.sum())
@@ -409,31 +455,58 @@ def run_e2_adversarial(params: E2AdvParams) -> None:
             if col_mask.any():
                 colluder_stakes.append(float(w[col_mask].sum()))
 
-        col_share_final = float(w[types == 2].sum() / float(w.sum())) if n_collude > 0 else 0.0
-        rows.append({
-            "colluding_frac": col_frac,
-            "mean_abs_error": float(np.mean(abs_errors)),
-            "final_colluder_stake_share": col_share_final,
-            "initial_colluder_stake_share": col_frac,
-            "mean_abs_error_last_50": float(np.mean(abs_errors[-50:])),
-        })
+        col_share_final = (
+            float(w[types == 2].sum() / float(w.sum())) if n_collude > 0 else 0.0
+        )
+        rows.append(
+            {
+                "colluding_frac": col_frac,
+                "mean_abs_error": float(np.mean(abs_errors)),
+                "final_colluder_stake_share": col_share_final,
+                "initial_colluder_stake_share": col_frac,
+                "mean_abs_error_last_50": float(np.mean(abs_errors[-50:])),
+            }
+        )
 
     df = pd.DataFrame(rows)
     df.to_csv(OUT_DIR / "e2_adversarial_results.csv", index=False)
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.0, 4.5))
 
-    ax1.plot(df["colluding_frac"], df["mean_abs_error"], marker="o", color="#4C72B0", label="Full run")
-    ax1.plot(df["colluding_frac"], df["mean_abs_error_last_50"], marker="s", color="#55A868", label="Last 50 rounds")
+    ax1.plot(
+        df["colluding_frac"],
+        df["mean_abs_error"],
+        marker="o",
+        color="#4C72B0",
+        label="Full run",
+    )
+    ax1.plot(
+        df["colluding_frac"],
+        df["mean_abs_error_last_50"],
+        marker="s",
+        color="#55A868",
+        label="Last 50 rounds",
+    )
     ax1.set_xlabel("Fraction of colluding curators")
     ax1.set_ylabel("Mean |μ − r|")
     ax1.set_title(f"E2-Adv: Signal error under collusion (K={params.K})")
     ax1.legend(frameon=False, fontsize=9)
 
-    ax2.plot(df["colluding_frac"], df["initial_colluder_stake_share"], marker="o",
-             linestyle="--", color="gray", label="Initial share")
-    ax2.plot(df["colluding_frac"], df["final_colluder_stake_share"], marker="o",
-             color="#C44E52", label="Final share")
+    ax2.plot(
+        df["colluding_frac"],
+        df["initial_colluder_stake_share"],
+        marker="o",
+        linestyle="--",
+        color="gray",
+        label="Initial share",
+    )
+    ax2.plot(
+        df["colluding_frac"],
+        df["final_colluder_stake_share"],
+        marker="o",
+        color="#C44E52",
+        label="Final share",
+    )
     ax2.set_xlabel("Fraction of colluding curators")
     ax2.set_ylabel("Colluder stake share")
     ax2.set_title(f"E2-Adv: Colluder stake decay (K={params.K})")
@@ -449,13 +522,16 @@ def run_e2_adversarial(params: E2AdvParams) -> None:
 # E3: Ambiguity stress test
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class E3Params:
     n_claims: int = 20_000
     n_jurors: int = 5
     p_wellposed_juror_correct: float = 0.85
     p_ambig_juror_correct: float = 0.55
-    under_spec_prob: float = 0.85  # defended system: chance juror chooses Under-specified on ambiguous claim
+    under_spec_prob: float = (
+        0.85  # defended system: chance juror chooses Under-specified on ambiguous claim
+    )
     ambig_fracs: tuple[float, ...] = (0.0, 0.1, 0.25, 0.5)
 
 
@@ -469,10 +545,15 @@ def run_e3(params: E3Params) -> None:
         is_ambig = rng.random(params.n_claims) < frac
 
         # Baseline: no Under-specified verdict; ambiguous claims are adjudicated with lower correctness.
-        p_major_well = majority_vote_prob(params.n_jurors, params.p_wellposed_juror_correct)
+        p_major_well = majority_vote_prob(
+            params.n_jurors, params.p_wellposed_juror_correct
+        )
         p_major_amb = majority_vote_prob(params.n_jurors, params.p_ambig_juror_correct)
 
-        baseline_wrong = float((~is_ambig).mean() * (1 - p_major_well) + is_ambig.mean() * (1 - p_major_amb))
+        baseline_wrong = float(
+            (~is_ambig).mean() * (1 - p_major_well)
+            + is_ambig.mean() * (1 - p_major_amb)
+        )
 
         # Defended: ambiguous claims are mostly classified as Under-specified (correct outcome for ambiguity).
         # Model: each juror chooses Under-specified with prob under_spec_prob; otherwise votes with ambig correctness.
@@ -481,7 +562,10 @@ def run_e3(params: E3Params) -> None:
         defended_wrong_on_well = float(1 - p_major_well)
         # On ambiguous: wrong if not Under-specified majority AND also wrong truth label.
         defended_wrong_on_amb = float((1 - p_major_under) * (1 - p_major_amb))
-        defended_wrong = float((~is_ambig).mean() * defended_wrong_on_well + is_ambig.mean() * defended_wrong_on_amb)
+        defended_wrong = float(
+            (~is_ambig).mean() * defended_wrong_on_well
+            + is_ambig.mean() * defended_wrong_on_amb
+        )
 
         rows.append(
             {
@@ -496,8 +580,18 @@ def run_e3(params: E3Params) -> None:
     df.to_csv(OUT_DIR / "e3_results.csv", index=False)
 
     plt.figure(figsize=(7.0, 4.0))
-    plt.plot(df["ambig_frac"], df["baseline_wrong_rate"], marker="o", label="baseline (no Under-specified)")
-    plt.plot(df["ambig_frac"], df["defended_wrong_rate"], marker="o", label="defended (Under-specified)")
+    plt.plot(
+        df["ambig_frac"],
+        df["baseline_wrong_rate"],
+        marker="o",
+        label="baseline (no Under-specified)",
+    )
+    plt.plot(
+        df["ambig_frac"],
+        df["defended_wrong_rate"],
+        marker="o",
+        label="defended (Under-specified)",
+    )
     plt.xlabel("Fraction of ambiguous claims")
     plt.ylabel("Overall wrong-resolution rate")
     plt.title("E3: Ambiguity increases error without Under-specified")
@@ -511,6 +605,7 @@ def run_e3(params: E3Params) -> None:
 # ---------------------------------------------------------------------------
 # Evaluation summary
 # ---------------------------------------------------------------------------
+
 
 def write_eval_summary() -> None:
     params_e1 = E1Params()
@@ -532,33 +627,77 @@ def write_eval_summary() -> None:
     summary = f"""\
 ### Evaluation snapshot (representative points)
 
-- **E1:** At $p=0.80$ (per-juror), $N={params_e1.n_jurors}$, $S/B=0.25$, challenger EV on false claims is **{e1_point['ev_false'] / params_e1.bounty:.2f}× bounty** and false-claim survival (one window, $p_\\mathrm{{detect}}={params_e1.p_detect:.2f}$) is **{e1_point['false_survival']:.2f}**.
-- **E2:** At initial competence 0.70 and $K=1.25$, mean relevance error is **{e2_point['mean_abs_error']:.3f}** and final competent stake share is **{e2_point['final_competent_stake_share']:.2f}**.
-- **E3:** At ambiguity rate 0.25, baseline wrong-rate is **{e3_point['baseline_wrong_rate']:.2f}** vs defended **{e3_point['defended_wrong_rate']:.2f}** (Under-specified enabled).
-- **E1-Adv:** A well-funded adversary submitting {int(e1_adv_point['n_attacks'])} false claims at $p=0.80$ achieves a survival rate of **{e1_adv_point['survival_rate']:.2f}** with cumulative balance of **{e1_adv_point['adversary_balance']:.0f}** (negative = system wins).
-- **E2-Adv:** A 15% colluding bloc (bias = +0.30) shifts mean error from {e2_adv[(e2_adv['colluding_frac']==0.0)].iloc[0]['mean_abs_error']:.3f} to **{e2_adv_point['mean_abs_error']:.3f}** over 200 rounds, but their stake share decays from {e2_adv_point['initial_colluder_stake_share']:.2f} to **{e2_adv_point['final_colluder_stake_share']:.3f}**.
+- **E1:** At $p=0.80$ (per-juror), $N={params_e1.n_jurors}$, $S/B=0.25$, challenger EV on false claims is **{e1_point["ev_false"] / params_e1.bounty:.2f}× bounty** and false-claim survival (one window, $p_\\mathrm{{detect}}={params_e1.p_detect:.2f}$) is **{e1_point["false_survival"]:.2f}**.
+- **E2:** At initial competence 0.70 and $K=1.25$, mean relevance error is **{e2_point["mean_abs_error"]:.3f}** and final competent stake share is **{e2_point["final_competent_stake_share"]:.2f}**.
+- **E3:** At ambiguity rate 0.25, baseline wrong-rate is **{e3_point["baseline_wrong_rate"]:.2f}** vs defended **{e3_point["defended_wrong_rate"]:.2f}** (Under-specified enabled).
+- **E1-Adv:** A well-funded adversary submitting {int(e1_adv_point["n_attacks"])} false claims at $p=0.80$ achieves a survival rate of **{e1_adv_point["survival_rate"]:.2f}** with cumulative balance of **{e1_adv_point["adversary_balance"]:.0f}** (negative = system wins).
+- **E2-Adv:** A 15% colluding bloc (bias = +0.30) shifts mean error from {e2_adv[(e2_adv["colluding_frac"] == 0.0)].iloc[0]["mean_abs_error"]:.3f} to **{e2_adv_point["mean_abs_error"]:.3f}** over 200 rounds, but their stake share decays from {e2_adv_point["initial_colluder_stake_share"]:.2f} to **{e2_adv_point["final_colluder_stake_share"]:.3f}**.
 """
     (OUT_DIR / "eval_summary.md").write_text(summary, encoding="utf-8")
 
 
 def write_reading_time() -> None:
-    """Count words in paper.qmd and emit an estimated reading time."""
-    paper = ROOT / "paper.qmd"
-    text = paper.read_text(encoding="utf-8")
-    # Strip YAML front matter
-    if text.startswith("---"):
-        end = text.index("---", 3)
-        text = text[end + 3 :]
-    # Strip Quarto shortcodes, LaTeX math blocks, and image refs
+    """Count content elements in paper.qmd and emit per-persona comprehension times."""
     import re
-    text = re.sub(r"\{\{<.*?>\}\}", "", text)
-    text = re.sub(r"\$\$[^$]*?\$\$", "", text, flags=re.DOTALL)
-    text = re.sub(r"!\[.*?\]\(.*?\)", "", text)
-    words = len(text.split())
-    # ~200 wpm for dense technical prose; add 0.5 min per figure
-    n_figures = len(re.findall(r"\{#fig-", paper.read_text(encoding="utf-8")))
-    minutes = round(words / 200 + n_figures * 0.5)
-    snippet = f"**Estimated reading time: ~{minutes} min** ({words:,} words, {n_figures} figures)\n"
+
+    paper = ROOT / "paper.qmd"
+    raw = paper.read_text(encoding="utf-8")
+
+    # Strip YAML front matter
+    body = raw
+    if body.startswith("---"):
+        end = body.index("---", 3)
+        body = body[end + 3 :]
+
+    # Count structural elements before stripping
+    n_figures = len(re.findall(r"\{#fig-", raw))
+    n_tables = len(re.findall(r"\{#tbl-", raw))
+    n_display_math = len(re.findall(r"\$\$", body)) // 2
+    # Inline math: single-$ pairs that are not display math
+    body_no_display = re.sub(r"\$\$[^$]*?\$\$", "", body, flags=re.DOTALL)
+    n_inline_math = len(re.findall(r"(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)", body_no_display))
+
+    # Word count: strip shortcodes, display math, inline math, image refs
+    prose = body
+    prose = re.sub(r"\{\{<.*?>\}\}", "", prose)
+    prose = re.sub(r"\$\$[^$]*?\$\$", "", prose, flags=re.DOTALL)
+    prose = re.sub(r"(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)", "", prose)
+    prose = re.sub(r"!\[.*?\]\(.*?\)", "", prose)
+    words = len(prose.split())
+
+    # Persona rates: (prose_wpm, inline_math_sec, display_math_sec, fig_min, tbl_min)
+    personas = {
+        "Domain expert": (180, 2, 10, 1, 1),
+        "Technical reader": (120, 6, 30, 2, 2),
+        "General reader": (80, 12, 60, 3, 3),
+    }
+
+    estimates: dict[str, int] = {}
+    for name, (wpm, im_s, dm_s, fig_m, tbl_m) in personas.items():
+        minutes = (
+            words / wpm
+            + n_inline_math * im_s / 60
+            + n_display_math * dm_s / 60
+            + n_figures * fig_m
+            + n_tables * tbl_m
+        )
+        estimates[name] = round(minutes)
+
+    header = (
+        f"**Estimated comprehension time** "
+        f"({words:,} words, {n_inline_math} equations, "
+        f"{n_figures} figures, {n_tables} tables)"
+    )
+    row = " | ".join(f"~{estimates[p]} min" for p in personas)
+    col_headers = " | ".join(personas.keys())
+
+    snippet = f"""\
+{header}
+
+| | {col_headers} |
+|---|---|---|---|
+| | {row} |
+"""
     (OUT_DIR / "reading_time.md").write_text(snippet, encoding="utf-8")
 
 
