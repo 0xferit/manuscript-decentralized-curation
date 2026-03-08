@@ -17,7 +17,7 @@ bibliography: references.bib
 
 # Abstract
 
-Information markets exhibit the same adverse selection that @akerlof1970lemons identified in used-car markets. When buyers cannot distinguish quality before purchase, sellers of low-quality goods face lower costs and capture the market; high-quality sellers, unable to recover their costs, exit. The same mechanism operates on information: producing low-quality content is cheap, producing high-quality content is expensive, and consumers cannot reliably tell them apart. The predictable result is a market where quantity crowds out quality — not because consumers prefer noise, but because the cost asymmetry between production and verification selects for it.
+Producing information is cheap. Verifying it is expensive. When consumers cannot reliably distinguish quality, this cost asymmetry selects for volume over rigor — the same adverse selection that degrades any market with unobservable quality.
 
 Information quality is not a single property. @wang1996beyondaccuracy identified four categories and fifteen dimensions — accuracy, objectivity, believability, reputation, relevance, timeliness, completeness, interpretability, and more — each of which can fail independently. A claim can be accurate but outdated. Complete but biased. Timely but unverifiable. Believable but wrong. The transformation from raw information into something reliable enough to act on — knowledge — requires managing all of these dimensions simultaneously. That transformation is curation.
 
@@ -106,6 +106,12 @@ When one entity controls the transformation of information into knowledge, failu
 4. **Censorship**: unilateral suppression (or promotion) is feasible and, under opacity, undetectable.
 5. **Fragility**: the knowledge layer inherits every single point of failure of the curator: policy changes, acquisitions, personnel turnover, algorithm rewrites.
 6. **No contestability**: when curation is wrong, there is no structured way to challenge, appeal, or force correction. Errors persist until the curator independently chooses to act.
+
+## Why quality collapses: adverse selection in information markets
+
+These failure modes are not independent pathologies — they are symptoms of a market structure that selects against quality. The mechanism is the same adverse selection that @akerlof1970lemons identified in used-car markets. When buyers cannot distinguish quality before purchase, sellers of low-quality goods face lower costs and capture the market; high-quality sellers, unable to recover their costs, exit. The same dynamic operates on information: producing low-quality content is cheap, producing high-quality content is expensive, and consumers cannot reliably tell them apart. The predictable result is a market where quantity crowds out quality — not because consumers prefer noise, but because the cost asymmetry between production and verification selects for it.
+
+Centralized curation intensifies rather than corrects this failure. Opacity (failure mode 1) prevents consumers from observing quality. Capture (failure mode 2) means the curator's own incentives favor cheap-to-produce, high-engagement content over expensive-to-produce, high-accuracy content. The curator is not a neutral quality filter; it is a participant in the same adverse selection dynamic, optimizing for its own survival metrics.
 
 ## What good curation must optimize for
 
