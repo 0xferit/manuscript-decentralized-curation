@@ -28,5 +28,4 @@ legacy/quarto-outputs-pre-normalization/
 **/*.quarto_ipynb
 
 # Personal/local files
-review.pdf
 .claude/
