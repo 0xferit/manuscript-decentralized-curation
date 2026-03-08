@@ -27,6 +27,8 @@ This paper addresses only the information-to-knowledge transformation (curation)
 
 # Introduction
 
+You search for a cafe and your maps app returns a list sorted by ratings. You research a medical question and a search engine ranks the answers. You choose a university and a magazine's ranking steers the decision. You did not produce any of this knowledge; you consumed it. And you had no practical alternative: the cost of independently verifying every input to every decision you make exceeds any individual's capacity. Curation is not a convenience; it is a dependency you cannot opt out of. Every curator you rely on injects their own biases, errors, and incentives into your decisions, and you have no structured way to detect it.
+
 Uncoordinated actions cancel out. Coordinated actions compound.
 
 But coordination is not where things usually break.
