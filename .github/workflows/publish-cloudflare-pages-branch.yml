@@ -59,7 +59,7 @@ jobs:
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          accountId: abfb18f38d5263b5da582e40ba6ae552
           projectName: manuscript-decentralized-curation
           directory: outputs
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
