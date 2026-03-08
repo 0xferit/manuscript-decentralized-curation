@@ -794,9 +794,9 @@ The design depends on assumptions that remain untested in deployment: that stake
 
 The most important open problems are deployment evidence (no live system yet validates these mechanisms at scale), adversarial robustness beyond the simulated parameter sweeps, UX friction (staking, claim authoring, and dispute participation impose cognitive and financial costs that may limit adoption), and the sustainability of curation as a public good. These are not implementation details; they are conditions for the thesis to hold.
 
-# Conflicts of Interest
+# Disclosure
 
-The author has multi-year operational experience with Kleros, a deployed decentralized dispute resolution system. This experience informs the design choices and threat model but does not constitute empirical validation. No deployment data from Kleros is used in this paper. The author does not hold PNK tokens and has no ongoing financial relationship with Kleros.
+The author has multi-year engineering experience with Kleros, a deployed decentralized dispute resolution system. This experience informs the design choices and threat model but does not constitute empirical validation. No deployment data from Kleros is used in this paper. The author does not hold PNK tokens and has no ongoing financial relationship with Kleros.
 
 # Appendix A: Data-quality and credibility foundations
 
