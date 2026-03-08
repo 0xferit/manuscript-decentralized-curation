@@ -186,15 +186,13 @@ The griefing factor for a challenger attacking a true claim is $GF = \frac{B \cd
 If per-juror accuracy $p > 0.50$ and votes are independent, the majority-correct probability $P_{\mathrm{maj}}(p, N) = \sum_{k=\lceil N/2 \rceil}^{N} \binom{N}{k} p^k (1-p)^{N-k}$ is monotone increasing in jury size $N$ and converges to 1 as $N \to \infty$. Challenger expected value is positive whenever $P_{\mathrm{maj}}(p, N) > \frac{S/B}{1 + S/B}$.
 :::
 
-For the $S/B$ ratios tested in E1 (0.05 to 0.50), the break-even majority threshold ranges from 0.048 to 0.333, all of which are exceeded when $p > 0.50$ with $N = 5$ jurors. The binding system requirement is therefore $p > 0.50$: each juror must be better than random for the incentive structure to be self-enforcing.
-
 For the $S/B$ ratios tested in E1 (0.05 to 0.50), the break-even majority threshold ranges from 0.048 to 0.333, all exceeded when $p > 0.50$ with $N = 5$. The binding requirement is $p > 0.50$: each juror must be better than random for the incentive structure to be self-enforcing.
 
-The griefing factor for a challenger attacking a true claim is $GF = \frac{B \cdot P_{\mathrm{maj}}}{S \cdot (1 - P_{\mathrm{maj}})}$. At $p = 0.80$ and $S/B = 0.25$, $GF \approx 37$: the attacker pays far more than the victim. For a legitimate challenger, the asymmetry is reversed — the intended incentive. For a legitimate challenger disputing a false claim, the asymmetry is reversed, which is the intended incentive.
+The griefing factor for a challenger attacking a true claim is $GF = \frac{B \cdot P_{\mathrm{maj}}}{S \cdot (1 - P_{\mathrm{maj}})}$. At $p = 0.80$ and $S/B = 0.25$, $GF \approx 37$: the attacker pays far more than the victim. For a legitimate challenger, the asymmetry is reversed — the intended incentive.
 
 ### Instantiation 2: scalar relevance (coherence game)
 
-The coherence game (Flow 4) instantiates $\Gamma$ with $\mathcal{V} = [0, 1]$ (continuous scalar). Reports are aggregated by weighted mean $\mu$ with a $K\sigma$-threshold coherence rule, not ranked over discrete alternatives. George's impossibility applies to rankings; scalar aggregation with a coherence band is a different game structure where the impossibility does not directly bind.
+The coherence game (Flow 4) instantiates $\Gamma$ with $\mathcal{V} = [0, 1]$ (continuous scalar), aggregated by weighted mean $\mu$ with a $K\sigma$-threshold coherence rule. George's impossibility applies to rankings over discrete alternatives; scalar aggregation with a coherence band is a different game structure where the impossibility does not directly bind.
 
 The focal point is the honest assessment of curation policy conformity: given a specific, public curation policy, the degree to which an item conforms is the unique salient coordination target.
 
@@ -206,7 +204,7 @@ Under commit-reveal, if (a) the curation policy is specific enough to induce a u
 Under repeated play, agents whose noise variance exceeds the coherence band's tolerance lose expected stake per round; agents within the band gain. The pool's competence composition improves endogenously. This requires $K$ and the slash rate to be set such that expected loss for incoherent participants exceeds expected gain from random coherence.
 :::
 
-The equilibrium degrades under identifiable conditions: (a) vague curation policy (weak focal point; condition (a) of Proposition 2 fails), (b) small $n$ (high variance in $\mu$), and (c) extreme competence skew (too few competent curators to anchor the mean). These degradation conditions make the system's governance dependencies explicit and measurable.
+The equilibrium degrades under identifiable conditions: (a) vague curation policy (weak focal point; condition (a) of Proposition 2 fails), (b) small $n$ (high variance in $\mu$), and (c) extreme competence skew (too few competent curators to anchor the mean). These degradation conditions make the system's governance dependencies explicit and measurable rather than hidden.
 
 ## Vagueness = Rejection: claim templates as a security primitive
 
@@ -244,7 +242,7 @@ $$
 C = \sum_{t} B_t \cdot \Delta t
 $$
 
-The unit is token·time (e.g., ETH·hours), intentionally non-normalized. Within a pool, higher $C$ means more skin-in-the-game-over-time. Cross-pool comparison requires interface-level normalization (e.g., $C_{\text{norm}} = C / \text{median}(C_{\text{pool}})$). $C$ is intentionally non-normalized — it is not a probability and is not comparable across pools with different token denominations. Cross-pool comparison requires interface-level normalization. Invariants: $C$ is monotone during uncontested periods (pauses during challenges, terminates on Invalid/Under-specified) and gated (zero bounty = zero confidence).
+The unit is token·time (e.g., ETH·hours), intentionally non-normalized: $C$ is not a probability and is not comparable across pools with different token denominations. Within a pool, higher $C$ means more skin-in-the-game-over-time. Cross-pool comparison requires interface-level normalization (e.g., $C_{\text{norm}} = C / \text{median}(C_{\text{pool}})$). Invariants: $C$ is monotone during uncontested periods (pauses during challenges, terminates on Invalid/Under-specified) and gated (zero bounty = zero confidence).
 
 ## Flow 2: pooled staking (liability and chilling effects)
 
@@ -255,7 +253,7 @@ Validators stake on **pools** (topic-scoped domains) rather than individual clai
 3. **Random drafting.** The protocol draws from the pool using on-chain randomness (VRF-based), weighted by stake.
 4. **Payout/slashing.** Coherent/correct validators earn rewards; incoherent/incorrect validators lose stake.
 
-**Liability diffusion.** Because validators do not choose specific claims, targeted legal pressure (e.g., "you validated claim X, so you are liable for defamation") is diffused across the entire pool. The larger the pool, the weaker the per-validator liability signal, raising the cost of targeted chilling effects substantially.
+**Liability diffusion.** Because validators do not choose which specific claims to evaluate, targeted legal pressure (e.g., "you validated claim X, so you are liable for defamation") is diffused across the entire pool. The larger the pool, the weaker the per-validator liability signal, raising the cost of targeted chilling effects substantially.
 
 ## Flow 3: challenge, dispute, appeals
 
@@ -307,11 +305,11 @@ Accuracy (Flow 3) and relevance (Flow 4) are independent scores. Interfaces can 
 
 ## Incentives: stake, reputation, and competence filtering
 
-The mechanism uses two kinds of capital: **financial stake** (transferable) and **reputation** (non-transferable, topic-scoped, accumulated from accuracy). Vote weight: $w_i = s_i + \alpha \cdot \mathrm{rep}_i$ with caps and decay, where $\alpha$ is a pool parameter. When $\alpha = 0$, only stake matters and cash-poor experts have no influence; as $\alpha$ increases, reputation lowers the barrier but increases sensitivity to gaming. Decay bounds maximum influence of historical accuracy. The relevance game also produces a **competence filter**: incoherent participants lose stake and exit.
+The mechanism uses two kinds of capital: **financial stake** (transferable, denominated in the protocol token) and **reputation** (non-transferable, topic-scoped, accumulated from past accuracy in the same pool). Vote weight combines both: $w_i = s_i + \alpha \cdot \mathrm{rep}_i$ with per-participant caps and temporal decay, where $\alpha$ is a pool parameter governing reputation's influence. When $\alpha = 0$, only stake matters and cash-poor experts have no influence; as $\alpha$ increases, reputation lowers the barrier to meaningful participation but increases sensitivity to gaming (E4 quantifies this tradeoff). Decay bounds the maximum influence of historical accuracy; without it, reputation gaming is permanent (E4b). The relevance game also produces a **competence filter**: incoherent participants lose stake per round and exit, improving the pool's competence composition endogenously (Proposition 3).
 
 ## Governance and UX: protocol vs interface
 
-The design minimizes governance surface area to parameter updates and policy templates. **Interface capture** is mitigated by separating the censorship-resistant protocol (on-chain claims, stakes, verdicts) from opinionated interfaces (compliance, taste, safety filters). Alternative interfaces can independently index the same on-chain record.
+The design minimizes governance surface area to parameter updates and policy templates. Token-weighted governance can plutocratize; the minimal surface area bounds the damage. **Interface capture** is mitigated by separating the censorship-resistant protocol layer (on-chain claims, stakes, verdicts — the permanent, auditable record) from opinionated interfaces (compliance filtering, editorial curation, safety filters, UX design). Any number of alternative interfaces can independently index the same on-chain record, providing competitive pressure and censorship resistance.
 
 ## Funding: advertiser staking (bonded product claims)^[We avoid the term "proof of truth" because the protocol does not prove truth; it produces a stake-weighted, contestable signal.]
 
