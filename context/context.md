@@ -129,4 +129,9 @@ _Note:_ `legacy/` contains older pre-Quarto snapshots/exports (including unversi
      - m7: 4th Groves-Ledyard structural difference added (cardinal utility vs binary slash/reward).
      - m8: Temporal decay specified with opt-in TTL and exponential decay formula.
   9. Paper grew from ~780 to ~890 lines; `references.bib` grew from 24 to 25 entries. Reading time: ~13,431 words, 315 equations, 11 figures, 2 tables.
+- **Structure rework (March 2026): first-20-minutes optimization.** Goal: get readers to the mechanism design within 12 minutes instead of 22. Four changes:
+  1. **Abstract compressed:** ~1,000-word essay replaced with ~300-word conventional abstract. All citations removed (conventional style). Problem/approach/results/scope structure.
+  2. **Introduction expanded:** "Information abundance, knowledge scarcity" subsection expanded from ~88 to ~230 words, absorbing the library metaphor and AI form-substance decoupling paragraph from the old abstract. "Why this matters" subsection expanded from ~80 to ~280 words, converting 4 bullet points to prose and absorbing old abstract material (bad curation as selection pressure, curation dependency/vulnerability, centralized failure modes, indistinguishability insight, Reuters 40% stat, Chomsky citation). Transition sentence added before JTB subsection.
+  3. **Related Work moved:** from before System Model to after Mechanisms (before Threat Model). Forward references in Related Work (to coherence game, Flow 3 economics) become backward references. Roadmap updated to reflect new section order.
+  4. **De-duplication verified:** Reuters stat appears only in Introduction, Chomsky only in Introduction, Wang & Strong only in Related Work and Appendix. No verbatim duplication between abstract and body.
 - **Next:** Build presentation for March 10.
