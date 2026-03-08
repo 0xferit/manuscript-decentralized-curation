@@ -17,7 +17,7 @@ bibliography: references.bib
 
 # Abstract
 
-We have more information than any civilization in history, and yet we are worse at making sense of it. This is not a paradox. It is a known failure mode: quantity crowds out quality when the two are hard to distinguish, and producing quality is expensive while producing quantity is cheap.
+Information markets exhibit the same adverse selection that @akerlof1970lemons identified in used-car markets. When buyers cannot distinguish quality before purchase, sellers of low-quality goods face lower costs and capture the market; high-quality sellers, unable to recover their costs, exit. The same mechanism operates on information: producing low-quality content is cheap, producing high-quality content is expensive, and consumers cannot reliably tell them apart. The predictable result is a market where quantity crowds out quality — not because consumers prefer noise, but because the cost asymmetry between production and verification selects for it.
 
 Information quality is not a single property. @wang1996beyondaccuracy identified four categories and fifteen dimensions — accuracy, objectivity, believability, reputation, relevance, timeliness, completeness, interpretability, and more — each of which can fail independently. A claim can be accurate but outdated. Complete but biased. Timely but unverifiable. Believable but wrong. The transformation from raw information into something reliable enough to act on — knowledge — requires managing all of these dimensions simultaneously. That transformation is curation.
 
