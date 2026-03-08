@@ -37,3 +37,19 @@ _Note:_ We no longer produce DOCX outputs. Quarto renders **HTML + PDF** only.
 - Audience: CS academics/engineers; write with precise definitions and causal chains.
 - Tone: direct, non-poetic, high signal.
 - Avoid fragile stats and news overfitting in early “problem” pieces unless explicitly requested.
+
+### Scientific writing toolkit (claude-scientific-writer plugin)
+
+The following skills from the `claude-scientific-writer` plugin are relevant to this project. Use them proactively when the task matches.
+
+| Skill | When to use |
+|---|---|
+| `scientific-writing` | Revising or drafting prose sections of `paper.qmd`. Ensures IMRAD-quality writing, proper paragraph flow, and section structure. |
+| `scientific-critical-thinking` | Evaluating argument strength, checking for overclaims, logical fallacies, or unsupported causal claims in the manuscript. Use before finalizing any rewritten section. |
+| `citation-management` | Validating `references.bib` entries (missing volume/pages/DOI), discovering new relevant papers via Google Scholar or PubMed, generating BibTeX entries. |
+| `research-lookup` / `parallel-web` | Verifying factual claims (e.g., statistics cited in the paper), finding recent related work, checking if cited sources are current. |
+| `peer-review` | Systematic review of the full manuscript or specific sections for methodology gaps, overclaims, and logical issues. |
+| `scientific-schematics` | Generating publication-quality conceptual diagrams (e.g., four-step framework, protocol architecture, flow diagrams). The paper has simulation figures but lacks conceptual visuals. |
+| `scientific-slides` | Building presentations from the paper content (e.g., conference talks, reading group presentations). |
+
+Skills NOT relevant to this project: clinical/healthcare skills, market research, DOCX/PPTX/XLSX processing, LaTeX posters, venue-templates, generate-image, infographics, hypothesis-generation.
