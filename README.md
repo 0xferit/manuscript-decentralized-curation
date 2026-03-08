@@ -16,7 +16,9 @@ quarto render                # outputs: outputs/paper.html, outputs/paper.pdf
 
 ## Publishing
 
-Every push to `main` triggers a [GitHub Actions workflow](.github/workflows/publish-cloudflare-pages-branch.yml) that runs simulations, renders HTML, and pushes `public/index.html` to the `cf-pages` branch. Cloudflare Pages serves that branch.
+Every push to `main` triggers a [GitHub Actions workflow](.github/workflows/publish-cloudflare-pages-branch.yml) that runs simulations, renders HTML, and deploys to [manuscript-decentralized-curation.pages.dev](https://manuscript-decentralized-curation.pages.dev) via Cloudflare Pages Direct Upload. Pull requests get a preview URL automatically.
+
+The workflow requires two GitHub Actions secrets: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
 
 ## Repository layout
 

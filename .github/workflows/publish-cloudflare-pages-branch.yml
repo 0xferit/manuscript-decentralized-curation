@@ -1,15 +1,16 @@
-name: Publish HTML (Cloudflare Pages branch)
+name: Publish HTML (Cloudflare Pages)
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: "publish"
+  group: "publish-${{ github.ref }}"
   cancel-in-progress: true
 
 jobs:
@@ -52,32 +53,12 @@ jobs:
 
           quarto render --to html
 
-      - name: Publish to cf-pages branch
+      - name: Deploy to Cloudflare Pages
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          cp outputs/paper.html /tmp/index.html
-          git restore _build-info.md paper.qmd
-
-          git fetch origin cf-pages:cf-pages || true
-          if git show-ref --verify --quiet refs/heads/cf-pages; then
-            git checkout cf-pages
-          else
-            git checkout --orphan cf-pages
-          fi
-
-          git rm -rf . || true
-          git clean -fdx || true
-
-          mkdir -p public
-          cp /tmp/index.html public/index.html
-          git add public/index.html
-
-          if git diff --cached --quiet; then
-            echo "No changes to publish."
-            exit 0
-          fi
-
-          git commit -m "chore(publish): update site"
-          git push origin cf-pages
+          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+          npx wrangler pages deploy outputs/ \
+            --project-name=manuscript-decentralized-curation \
+            --branch="$BRANCH"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
