@@ -12,7 +12,7 @@ bibliography: references.bib
 :::
 
 ::: {.callout-important appearance="simple"}
-**Working draft.** Under active development. This is too long and I know it. Distillation in progress. [Feedback welcome.](mailto:ferit@cryptolab.net)
+**Working draft.** Under active development. Substantially distilled from earlier versions; further tightening planned. [Feedback welcome.](mailto:ferit@cryptolab.net)
 :::
 
 # Abstract
@@ -142,7 +142,7 @@ To illustrate domain-agnosticism concretely, consider a second instantiation: **
 
 The remainder of this paper develops mechanisms for the news curation instantiation.
 
-For extended data-quality and credibility mappings, see Appendix A.
+For extended data-quality and credibility mappings, see the supplementary companion document.
 
 # System model and assumptions
 
@@ -450,7 +450,7 @@ We state this as an explicit limitation rather than a formal condition because: 
 
 *Design implication.* Policies that satisfy the sufficient condition (single-attribute, enumerable, unambiguous) are the recommended starting point for new pools. Policies that violate it should be decomposed into constituent dimensions, each scored separately. This connects the focal-point limitation to the quality identification step of the four-step framework.
 
-Formally proving that a class of policies guarantees unimodal interpretation would strengthen this result from a design heuristic to a theorem; this remains open and would constitute a significant contribution to the decentralized oracle literature.
+Formally proving that a class of policies guarantees unimodal interpretation would strengthen this result from a design heuristic to a theorem; this remains open and would constitute a significant contribution to the decentralized oracle literature. Until such a proof is available, the empirical high-$\sigma$ diagnostic (elevated $\sigma$ in the coherence game signalling policy ambiguity) is the required monitoring procedure for any deployed pool, not an optional enhancement.
 
 ### Whale manipulation risk
 
@@ -543,13 +543,7 @@ Three lessons from Truth Post directly inform the full design presented in this 
 
 This work sits at the intersection of incentive design, oracle/dispute mechanisms, and information quality.
 
-**Mechanism design for public goods.** The idea that self-interest can be harnessed for socially optimal outcomes in public goods provision was formalized by @groves1977freeriderproblem. Their paper solved the classical free rider problem — the assumption, dominant since @samuelson1954publicgoods, that public goods would always be undersupplied because rational agents conceal their true preferences. Groves and Ledyard constructed a class of allocation-and-tax mechanisms where truthful preference revelation is the Nash equilibrium: each consumer's tax includes a penalty proportional to how much their reported valuation deviates from the mean of the others' reports. Lying costs more than truth-telling. Both Welfare Theorems hold.
-
-Curated knowledge, when published on a permissionless protocol, is a public good: non-rivalrous by nature (one reader's consumption does not diminish another's) and non-excludable by architecture (no gatekeeper can restrict access to on-chain claims and verdicts). The classical prediction therefore applies: without intervention, curation will be undersupplied.
-
-This protocol applies two specific Groves-Ledyard insights. First, the *deviation penalty*: Groves and Ledyard tax each agent proportionally to how much their reported valuation deviates from the mean of others' reports; the coherence game likewise slashes curators whose relevance ratings fall outside $K\sigma$ of the weighted mean. Second, the *truth-telling incentive*: in the Groves-Ledyard mechanism, truthful reporting is a Nash equilibrium because deviating increases one's tax; in the coherence game, honest assessment of policy conformity is the focal equilibrium because deviating increases the probability of falling outside the coherence band and losing stake.
-
-Four structural differences limit the analogy. (1) Groves-Ledyard exclude each agent's own report from the mean used to compute their penalty; the coherence game includes all reports in $\mu$, which creates a whale-manipulation risk absent in the original mechanism (mitigated by weight caps). (2) Groves-Ledyard assume cardinal preferences over a single, well-defined public good; curation operates over a high-dimensional claim space where quality has multiple dimensions and preferences are ordinal at best. (3) Groves-Ledyard prove Pareto optimality under their assumptions (both Welfare Theorems hold); the coherence game makes no such guarantee: it produces a stake-weighted signal, not an optimal allocation. (4) Groves-Ledyard agents report cardinal utility and the mechanism computes an optimal quantity via linear tax-payment functions; the coherence game uses a binary slash/reward outcome (coherent or incoherent) rather than a proportional penalty. This binary payoff structure changes the strategic incentives: agents optimize to fall within the $K\sigma$ band rather than to minimize a continuous deviation cost.
+**Mechanism design for public goods.** @groves1977freeriderproblem solved the classical free-rider problem [@samuelson1954publicgoods] by constructing mechanisms where each agent's tax includes a deviation penalty proportional to how much their reported valuation diverges from the mean of others' reports, making truthful revelation the Nash equilibrium. Curated knowledge on a permissionless protocol is a public good (non-rivalrous, non-excludable by architecture), so the classical undersupply prediction applies. The coherence game applies both Groves-Ledyard insights: the deviation penalty (curators outside $K\sigma$ of the weighted mean are slashed) and the truth-telling incentive (honest assessment is the focal equilibrium because deviating increases slash probability).^[Four structural differences limit the analogy: (1) Groves-Ledyard exclude each agent's own report from the penalty mean; the coherence game includes all reports in $\mu$, creating whale-manipulation risk (mitigated by weight caps). (2) Groves-Ledyard assume cardinal preferences over a single public good; curation operates over a high-dimensional claim space with ordinal preferences. (3) Groves-Ledyard prove Pareto optimality; the coherence game produces a stake-weighted signal, not an optimal allocation. (4) Groves-Ledyard use proportional tax-payment functions; the coherence game uses binary slash/reward, so agents optimize to fall within the $K\sigma$ band rather than minimize a continuous cost.]
 
 **Token-curated registries (TCRs).** TCRs propose token-incentivized curation of lists [@goldin2017tcr]. We generalize the unit from "is item in list?" to **claims + evidence + disputes** and explicitly separate accuracy from relevance.
 
@@ -764,25 +758,17 @@ Coordination on “what others will vote” can diverge from correctness, especi
 
 The challenger EV formula assumes juror votes are independent conditional on the claim’s true status. In practice, juror votes can be correlated through herding (voting with the perceived majority), shared information sources, or off-chain coordination. Correlated votes reduce effective jury size and can shift majority outcomes. The simulations in E1 use independent draws; extending to correlated-vote models is an open problem.
 
-## Commit-reveal does not solve bribery
+## Deployment challenges
 
-Commit-reveal reduces copying but does not prevent off-chain coordination, delayed bribes, or non-reveal failure modes [@consensysPlcrVoting; @consensysDiligenceTcrAudit].
+Commit-reveal reduces vote copying but does not prevent off-chain coordination, delayed bribes, or non-reveal failure modes [@consensysPlcrVoting; @consensysDiligenceTcrAudit]. Low participation, wealth concentration, and social clique dynamics remain risks common to all TCR-style systems [@wang2019enhancing].
 
-## TCR-style participation failures remain a risk
+The most acute deployment challenge is cold start: the mechanism requires simultaneous bootstrapping of authors, validators, challengers, and readers, and the value proposition depends on stake liquidity and dispute activity that are near zero at launch. The 2023 Truth Post deployment (@sec-truthpost) confirmed this: a partial implementation covering only the accuracy layer attracted insufficient participation to bootstrap a self-sustaining market.
 
-Low participation, wealth concentration, and social clique dynamics can still emerge. Prior work proposes mechanisms (e.g., inflationary incentives) to increase engagement [@wang2019enhancing], but real deployments need field evidence and adversarial analysis.
+**Strategy 1: Seeded single-domain launch.** Launch with one narrow domain where the claim space is small enough for a founding cohort of 10-20 participants, ground truth is available from an external dataset, and the evidence policy is unambiguous. Cost: requires a funded founding cohort (grant, DAO treasury, or protocol subsidy). Risk: too niche and no organic growth follows; too broad and quality collapses before stake liquidity is sufficient.
 
-## Cold start and deployment bootstrap
+**Strategy 2: Retroactive validation of existing claims.** Import existing public claims as "unclaimed" entries with zero bounty; anyone can adopt an entry by posting stake, starting the confidence clock. This strategy requires a *claim adoption sub-protocol* covering template conformance, adoption stake sizing, and provenance tracking; its full design is deferred to a follow-on deployment specification. Strategy 2 is deployable only after that protocol design is completed.
 
-The mechanism requires simultaneous bootstrapping of authors (who need readers), validators (who need claims to validate), challengers (who need false claims to challenge), and readers (who need curated content). This chicken-and-egg problem is common in platform design but particularly acute here because the value proposition depends on stake liquidity and dispute activity, both of which are near zero at launch. The 2023 Truth Post deployment (see @sec-truthpost) provides direct empirical evidence: a partial implementation covering only the accuracy layer, without treasury rewards or relevancy curation, attracted insufficient participation to bootstrap a self-sustaining market.
-
-We propose two concrete bootstrapping strategies and assess their costs honestly.
-
-**Strategy 1: Seeded single-domain launch.** Launch with one narrow domain (e.g., a single product category or a specific academic sub-field) where: (a) the claim space is small enough that a founding cohort of 10-20 participants can generate meaningful coverage, (b) a known external dataset provides ground truth for initial claims, allowing the system to demonstrate its filtering function before organic content exists, and (c) the evidence policy is unambiguous, reducing governance overhead during the critical early phase. Cost: requires a funded founding cohort (grant, DAO treasury, or protocol subsidy). Risk: if the founding domain is too niche, no organic growth follows; if too broad, quality collapses before stake liquidity is sufficient.
-
-**Strategy 2: Retroactive validation of existing claims.** Instead of waiting for authors to submit new claims, bootstrap by importing existing public claims (e.g., from product comparison sites, academic pre-print metadata, or public financial disclosures) as "unclaimed" entries with zero bounty. Anyone can adopt an entry by posting stake, which starts the confidence clock. Challengers have immediate targets. This strategy requires a claim adoption protocol that maps external claims to the internal claim template, handles evidence provenance, and assigns gas costs for adoption. Specifying this protocol is a concrete design problem for a follow-on deployment specification; the key open questions are template conformance verification (can imported claims satisfy evidence policy requirements without manual re-curation?), adoption stake sizing (what minimum bounty makes an adopted claim worth challenging?), and provenance tracking (how is the original source attributed when a claim is adopted rather than authored?). We flag this as a required pre-deployment deliverable rather than an in-scope contribution of this paper.
-
-Both strategies require subsidized participation during the bootstrap phase. The protocol does not generate organic revenue until claim volume and dispute activity reach a threshold where the advertiser staking model or public goods funding becomes viable. The bootstrap phase is a capital expenditure, not a self-sustaining equilibrium. The conditions under which either strategy fails are clear: Strategy 1 fails if the founding cohort does not attract organic participants before subsidies run out; Strategy 2 fails if imported claims are low quality and the adoption mechanism is not used.
+Both strategies require subsidized participation during the bootstrap phase: the protocol does not generate organic revenue until claim volume and dispute activity reach a threshold where the advertiser staking model or public goods funding becomes viable.
 
 ## Scalability
 
@@ -859,33 +845,4 @@ The author has multi-year engineering experience with Kleros, a deployed decentr
 
 # Appendix A: Data-quality and credibility foundations
 
-This appendix extends the epistemological grounding from the Introduction (see "Operationalizing knowledge: from JTB to contestable signals") to data-quality and credibility frameworks.
-
-## A.2 Data quality dimensions
-
-Industrial data quality frameworks — notably @wang1996beyondaccuracy — decompose quality into measurable dimensions. The following table maps key dimensions to protocol mechanisms:
-
-| Quality dimension | Definition (Wang & Strong) | Protocol operationalization |
-|---|---|---|
-| **Accuracy** | Extent to which data is correct and reliable | Binary verdict via dispute resolution (Flow 3) |
-| **Objectivity** | Extent to which data is unbiased and impartial | Separation of accuracy (evidence-based) from relevance (policy-guided); commit-reveal prevents herding |
-| **Timeliness** | Extent to which data is current | Confidence score decays implicitly: stale claims become profitable challenge targets (temporal decay) |
-| **Completeness** | Extent to which data is not missing | Claim templates enforce required fields; Under-specified verdict rejects incomplete claims |
-| **Relevance** | Extent to which data is applicable to the task | Coherence game (Flow 4) produces a relevance score under a pool-specific curation policy |
-| **Believability** | Extent to which data is regarded as credible | Confidence score $C = \sum_t B_t \cdot \Delta t$ accumulates as a function of bounty and uncontested time |
-| **Consistency** | Extent to which data is coherent with other data | Coherence rule ($|v_i - \mu| \le K\sigma$) penalizes incoherent assessments |
-| **Interpretability** | Extent to which data is in appropriate language/units | Claim schema requires explicit scope (time, jurisdiction, units/definitions) |
-
-Not all dimensions are equally covered. **Reputation** (of the source) and **accessibility** (ease of retrieval) are partially addressed by the reputation system and interface layer, respectively, but remain weaker than the directly incentivized dimensions.
-
-## A.3 Credibility checklist
-
-Practical credibility frameworks (e.g., the CRAAP test used in information literacy) include accuracy, authority, objectivity, currency, and coverage/scope. In this design, these map to explicit protocol structures rather than implicit social signals:
-
-- **Accuracy** → dispute resolution verdict
-- **Authority** → reputation score ($\mathrm{rep}_i$), topic-scoped and non-transferable
-- **Objectivity** → separation of powers (accuracy vs. relevance), commit-reveal voting
-- **Currency** → temporal decay via challenge economics; confidence score rewards recency
-- **Coverage** → evidence policy defines admissible sources; claim template requires scope
-
-The key shift from traditional credibility assessment to this protocol is that credibility indicators become **verifiable on-chain** (stakes, verdicts, vote histories) rather than depending on the consumer’s judgment of the source’s trustworthiness. This does not eliminate the need for judgment — evidence policy design and pool governance still require it — but it makes the judgment auditable.
+Data-quality dimension mappings [@wang1996beyondaccuracy] and credibility checklist mappings (CRAAP) are provided in the supplementary companion document (`appendix-data-quality.md`).
