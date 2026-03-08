@@ -41,7 +41,7 @@ For most of history, the hard part was getting information at all.
 
 Books were scarce. Universities gatekept knowledge. If you weren't physically near the right libraries, people, or institutions, you were out of luck.
 
-The internet blew that bottleneck apart. Now, anyone with a phone has access to more *information* than the average professor did a generation ago. Information in the technical sense: raw signals, data points, claims. That sounds like victory—until you notice what actually changed:
+The internet blew that bottleneck apart. Now, anyone with a phone has access to more _information_ than the average professor did a generation ago. Information in the technical sense: raw signals, data points, claims. That sounds like victory—until you notice what actually changed:
 
 **Access to information is solved.**
 **Access to knowledge is not.**
@@ -55,7 +55,7 @@ Curation is what transforms information into knowledge.
 
 Before the internet, this transformation happened through institutions: newspapers selected which stories mattered, academic journals peer-reviewed claims, universities taught frameworks for understanding. The process was slow and imperfect, but it produced knowledge: information you could trust and act on.
 
-Now, we have vastly more *information*. But we're drowning in signals without the structural processes to turn them into knowledge.
+Now, we have vastly more _information_. But we're drowning in signals without the structural processes to turn them into knowledge.
 
 A good way to visualize this:
 
@@ -76,13 +76,13 @@ Experimental research shows that people routinely treat shallow shared understan
 
 That is what modern life feels like, scaled up:
 
-- "Everyone" saw the same information… except they didn't. But they *feel* like they did because their curated feeds showed similar things.
+- "Everyone" saw the same information… except they didn't. But they _feel_ like they did because their curated feeds showed similar things.
 - "Everyone" knows the same facts about the election… except their feeds presented completely different information.
 - "We all agree on the science"… except half the population was shown different information that led them to different knowledge.
 
 On the surface, the failures look like stubbornness or polarization or bad faith. Underneath, they are very often **curation failures**: people are trying to coordinate from different knowledge slices—built from different information, curated by different systems, trusting different sources.
 
-They have the *feeling* of shared knowledge. But the actual knowledge is incompatible.
+They have the _feeling_ of shared knowledge. But the actual knowledge is incompatible.
 
 ### 3. Who loses, who wins
 
@@ -112,6 +112,7 @@ To diagnose failures precisely, we need a framework for decomposing any curation
 Every curation system contains:
 
 **Actors:**
+
 - **Creators:** produce information
 - **Curators:** decide what information gets verified and elevated to "knowledge"
 - **Consumers:** consume the curated knowledge
@@ -119,6 +120,7 @@ Every curation system contains:
 - **Attackers:** try to game the system
 
 **Information flow:**
+
 1. Creation (someone produces a claim)
 2. Submission (enters the curation system)
 3. Verification (system decides whether to elevate to "knowledge")
@@ -126,6 +128,7 @@ Every curation system contains:
 5. Feedback (users react; does this loop back to improve curation?)
 
 **Incentives:**
+
 - Economic (money, revenue, ad income)
 - Reputational (credibility, followers, citations)
 - Ideological (mission, values)
@@ -141,23 +144,28 @@ When one entity controls the transformation of information into knowledge, failu
 
 **Failure Mode 1: Opacity**
 Rules for what becomes knowledge are hidden. Users don't know why decisions were made.
-- *Example:* Twitter shadowbanning—users noticed their tweets weren't appearing in search results, but Twitter denied the practice. Later, investigation showed it was partly algorithmic error and partly deliberate filtering—but the original opacity destroyed trust.
+
+- _Example:_ Twitter shadowbanning—users noticed their tweets weren't appearing in search results, but Twitter denied the practice. Later, investigation showed it was partly algorithmic error and partly deliberate filtering—but the original opacity destroyed trust.
 
 **Failure Mode 2: Capture**
 The curation system is nominally independent, but actually serves interests other than knowledge quality.
-- *Example:* Facebook optimized for engagement (likes, comments, shares). This rewarded outrage, misinformation, and divisive content. Internal research (the "Facebook Papers") showed the algorithm amplified polarizing information, but the company continued because engagement drives ad revenue.
+
+- _Example:_ Facebook optimized for engagement (likes, comments, shares). This rewarded outrage, misinformation, and divisive content. Internal research (the "Facebook Papers") showed the algorithm amplified polarizing information, but the company continued because engagement drives ad revenue.
 
 **Failure Mode 3: Gaming**
 Actors figure out the curation rules and exploit them to elevate false information to "knowledge" status.
-- *Example:* Review systems (Amazon, Yelp, Airbnb): Fake reviews are cheap to create and profitable to scale. If the curation system can't distinguish them, fake reviews dominate what becomes "known" about products.
+
+- _Example:_ Review systems (Amazon, Yelp, Airbnb): Fake reviews are cheap to create and profitable to scale. If the curation system can't distinguish them, fake reviews dominate what becomes "known" about products.
 
 **Failure Mode 4: Censorship**
 One entity can unilaterally suppress information from becoming "known."
-- *Example:* Platform moderation asymmetry—information from one person is removed; similar content from another person stays up. Rules exist but are applied inconsistently.
+
+- _Example:_ Platform moderation asymmetry—information from one person is removed; similar content from another person stays up. Rules exist but are applied inconsistently.
 
 **Failure Mode 5: Fragility**
 The system has single points of failure. One algorithm change, policy shift, or acquisition can destroy the entire knowledge-production system.
-- *Example:* When Elon Musk acquired Twitter and changed the algorithm, what counted as "visible knowledge" changed unpredictably. Creators who built livelihoods on the old algorithm faced collapse. No warning, no appeal, no participation.
+
+- _Example:_ When Elon Musk acquired Twitter and changed the algorithm, what counted as "visible knowledge" changed unpredictably. Creators who built livelihoods on the old algorithm faced collapse. No warning, no appeal, no participation.
 
 **The common pattern:** Each failure mode traces back to the same root: **Centralized curation concentrates power over knowledge production in one entity, and power + misaligned incentives = inevitable failure.**
 
@@ -178,11 +186,13 @@ Traditional epistemology holds that **knowledge is justified true belief (JTB)**
 **Why it matters:** False information doesn't just mislead—it cascades. One false belief can corrupt downstream decisions and understandings.
 
 **How it's tested:**
+
 - Can the claim be verified against evidence?
 - Does it match observable reality?
 - Do multiple independent methods confirm it?
 
 **Examples:**
+
 - ✓ "Paris temperatures on December 15, 2025 were 8°C" (can be verified against weather data)
 - ✓ "The FDA approved drug X in 2023" (can be verified against regulatory records)
 - ✗ "This product is amazing" (not a truth claim; subjective preference)
@@ -198,6 +208,7 @@ Traditional epistemology holds that **knowledge is justified true belief (JTB)**
 Epistemology identifies several sources of justification:
 
 #### **A. Foundationalism: Basic Beliefs & Evidence**
+
 Some beliefs are self-justifying or directly grounded in evidence (foundational beliefs). Others derive justification from these foundations through inference.
 
 - **Basic beliefs (foundational):** Direct observations. "I observe rain falling."
@@ -206,14 +217,17 @@ Some beliefs are self-justifying or directly grounded in evidence (foundational 
 For a claim to be justified, there must be a chain of reasoning back to solid evidence.
 
 **Good justification:**
+
 - "This phenomenon was observed in 50 replicated studies" (strong foundational support)
 - "The historical record shows this event occurred" (primary source evidence)
 
 **Weak justification:**
+
 - "Everyone knows this" (vague, no foundational support)
 - "A celebrity said it" (appeals to authority, not evidence)
 
 #### **B. Coherentism: Internal Consistency**
+
 Beliefs are justified when they **cohere** with other accepted beliefs and don't contradict them.
 
 - **Logical consistency:** Does the claim contradict other validated claims?
@@ -221,20 +235,24 @@ Beliefs are justified when they **cohere** with other accepted beliefs and don't
 - **Inductive support:** Do other beliefs support this one?
 
 **Good coherence:**
+
 - A new study fits with prior research in the field
 - Historical evidence doesn't contradict the claim
 
 **Bad coherence:**
+
 - "X happened in 2020" but "X was first discovered in 2025" (direct contradiction)
 - A claim contradicts established scientific consensus without adequate explanation
 
 #### **C. Reliabilism: Source Reliability**
+
 A belief is justified if it's produced by a reliable process—one that tends to produce true beliefs.
 
 - **Reliable sources:** Peer-reviewed journals, regulatory agencies, established researchers
 - **Unreliable sources:** Anonymous forums, heavily partisan media, sources with financial incentives to lie
 
 **Examples of reliability:**
+
 - ✓ Data from peer-reviewed experiment (reliable process = scientific method)
 - ✓ Historical record from archival sources (reliable process = documentary evidence)
 - ✗ Rumor from an acquaintance (unreliable process = unverified transmission)
@@ -248,11 +266,13 @@ A belief is justified if it's produced by a reliable process—one that tends to
 **Why it matters:** A claim you don't actually believe is not knowledge, even if it's true and justified. This prevents "lucky guesses" from counting as knowledge.
 
 **How it's tested:**
+
 - Is the claim explicitly asserted as true?
 - Or is it hedged ("might be," "possibly")?
 - Does the author stand behind it?
 
 **Examples:**
+
 - ✓ "The Earth orbits the Sun" (asserted as fact)
 - ✗ "The Earth might orbit the Sun" (hedged, not a full belief claim)
 
@@ -263,6 +283,7 @@ A belief is justified if it's produced by a reliable process—one that tends to
 A belief should not depend on false premises. Even if your conclusion is true, if you arrived at it through false reasoning, it may not count as knowledge.
 
 **Example (Gettier case):**
+
 - You look at a clock that is stopped at 3:00 PM
 - You believe it's 3:00 PM (your belief is true—it actually is 3:00 PM)
 - Your belief is justified (you have good reason to trust the clock)
@@ -277,10 +298,12 @@ A belief should not depend on false premises. Even if your conclusion is true, i
 A belief should be causally connected to its truth in the right way. Your belief should arise from a process that reliably produces true beliefs about that domain.
 
 **Good causal chain:**
+
 - Scientist performs experiment → observes results → forms belief based on results
 - Historical researcher examines primary documents → reads them → forms belief about what happened
 
 **Bad causal chain:**
+
 - You flip a coin (heads = believe X, tails = don't believe X) → it lands heads → you form belief X
 - Even if X happens to be true, your belief didn't arise from a process that tracks truth
 
@@ -299,10 +322,12 @@ For testimony to generate knowledge (not just belief), three conditions typicall
 - **Proper function:** Is the testimonial context normal (not adversarial, deceptive)?
 
 **Good testimony:**
+
 - "According to the peer-reviewed study [authors, year, journal]..." (speaker is transparent about source)
 - "The historical record shows..." (speaker cites primary evidence)
 
 **Bad testimony:**
+
 - "Scientists say..." (vague; can't evaluate speaker reliability)
 - "Everyone knows..." (no source; anonymous)
 
@@ -317,56 +342,68 @@ Beyond epistemology, the data quality industry has developed **measurable dimens
 The **Six Core Data Quality Dimensions** are:
 
 ### **1. Accuracy**
+
 How well does the data represent reality? Does it match ground truth?
 
 **How measured:** Percentage of records verified against ground truth, discrepancy detection rates
 
 **Examples:**
+
 - ✓ "Customer address verified against postal database (95% match)"
 - ✗ "Product weight listed as 500kg when actual is 5kg"
 
 ### **2. Completeness**
+
 Is all required information present? Are there gaps or missing values?
 
 **How measured:** Percentage of non-NULL values, coverage rate across required fields
 
 **Examples:**
+
 - ✓ "Customer record has name, address, phone, email (100% complete)"
 - ✗ "Dataset missing 40% of temperature readings"
 
 ### **3. Consistency**
+
 Does information match across systems, databases, or time periods? Are there conflicting versions?
 
 **How measured:** Cross-system reconciliation checks, format conformity, structural alignment
 
 **Examples:**
+
 - ✓ "Customer name 'John Smith' in CRM, 'Smith, John' in billing (different format, same person)"
 - ✗ "Sales database $100, Finance database $150 for same transaction"
 
 ### **4. Timeliness**
+
 Is the information current? When was it last updated? Available when needed?
 
 **How measured:** Data age/freshness, latency, meeting user expectations
 
 **Examples:**
+
 - ✓ "Real-time stock feeds update every millisecond"
 - ✗ "Weather forecast from 3 days ago used for today's planning"
 
 ### **5. Validity**
+
 Does the data conform to specified formats and business rules?
 
 **How measured:** Percentage conforming to schema, format compliance, business rule violations
 
 **Examples:**
+
 - ✓ "All phone numbers stored as valid 10-digit format"
 - ✗ "Salary negative, age > 150 years old"
 
 ### **6. Uniqueness**
+
 Are there duplicate or redundant records? Is each piece represented only once?
 
 **How measured:** Duplicate detection rates, primary key collision rates
 
 **Examples:**
+
 - ✓ "Each customer ID is unique across system"
 - ✗ "Customer 'John Smith' appears 47 times with different IDs"
 
@@ -377,29 +414,34 @@ Are there duplicate or redundant records? Is each piece represented only once?
 The **Five-Component Credibility Checklist** (used in digital literacy):
 
 ### **1. Accuracy**
+
 - Is content free from errors?
 - Can information be verified elsewhere?
 - Has it been fact-checked?
 
 ### **2. Authority**
+
 - Who is the author/creator?
 - What are their credentials?
 - Does source provide contact/affiliation?
 - Is it recommended by trusted institutions?
 
 ### **3. Objectivity**
+
 - Is there stated purpose/bias?
 - Is content balanced or one-sided?
 - Are multiple perspectives presented?
 - Are sources cited?
 
 ### **4. Currency**
+
 - When was it last updated?
 - Still relevant/valid?
 - Are links current or broken?
 - Does it account for recent developments?
 
 ### **5. Coverage/Scope**
+
 - What is included and excluded?
 - Are limitations acknowledged?
 - Who is intended audience?
@@ -411,47 +453,54 @@ The **Five-Component Credibility Checklist** (used in digital literacy):
 
 A claim passes the quality test when it satisfies:
 
-| Category | Standard | How to Test | Connection |
-|----------|----------|-------------|-----------|
-| **Epistemological** | Truth | Verifiable against evidence | Correspondence to reality |
-| **Epistemological** | Justified (Foundation) | Traceable to solid evidence | Rational support |
-| **Epistemological** | Justified (Coherent) | No contradictions | Internal consistency |
-| **Epistemological** | Justified (Reliable) | From trustworthy source | Reliable process |
-| **Epistemological** | Testimony | Sources identified, trackable | Social verification |
-| **Data Quality** | Accuracy | % match vs. ground truth | Matches reality |
-| **Data Quality** | Completeness | All required info present | No critical gaps |
-| **Data Quality** | Consistency | Matches across systems | No conflicting versions |
-| **Data Quality** | Timeliness | Current, available when needed | Reflects present state |
-| **Data Quality** | Validity | Conforms to format/rules | Usable and verifiable |
-| **Data Quality** | Uniqueness | No duplicates | Evidence not multiplied |
-| **Credibility** | Authority | Identifiable, credible source | Source evaluable |
-| **Credibility** | Objectivity | Balanced, biases disclosed | Context understood |
-| **Credibility** | Currency | Recent, updated, valid | Not obsolete |
-| **Credibility** | Coverage | Scope clear, limits acknowledged | Appropriate for use |
+| Category            | Standard               | How to Test                      | Connection                |
+| ------------------- | ---------------------- | -------------------------------- | ------------------------- |
+| **Epistemological** | Truth                  | Verifiable against evidence      | Correspondence to reality |
+| **Epistemological** | Justified (Foundation) | Traceable to solid evidence      | Rational support          |
+| **Epistemological** | Justified (Coherent)   | No contradictions                | Internal consistency      |
+| **Epistemological** | Justified (Reliable)   | From trustworthy source          | Reliable process          |
+| **Epistemological** | Testimony              | Sources identified, trackable    | Social verification       |
+| **Data Quality**    | Accuracy               | % match vs. ground truth         | Matches reality           |
+| **Data Quality**    | Completeness           | All required info present        | No critical gaps          |
+| **Data Quality**    | Consistency            | Matches across systems           | No conflicting versions   |
+| **Data Quality**    | Timeliness             | Current, available when needed   | Reflects present state    |
+| **Data Quality**    | Validity               | Conforms to format/rules         | Usable and verifiable     |
+| **Data Quality**    | Uniqueness             | No duplicates                    | Evidence not multiplied   |
+| **Credibility**     | Authority              | Identifiable, credible source    | Source evaluable          |
+| **Credibility**     | Objectivity            | Balanced, biases disclosed       | Context understood        |
+| **Credibility**     | Currency               | Recent, updated, valid           | Not obsolete              |
+| **Credibility**     | Coverage               | Scope clear, limits acknowledged | Appropriate for use       |
 
 ---
 
 ## The Seven Curation Objectives
 
 ### **1. Epistemic Justification & Evidence Standards**
+
 Claims must be true, justified, from reliable sources, and internally coherent. They must also be accurate, complete, consistent, valid, and unique.
 
 ### **2. Credibility & Authority**
+
 Information from identifiable, credible sources whose expertise and bias can be evaluated. Anonymous or untraced claims deprioritized.
 
 ### **3. Timeliness & Currency**
+
 Information current and delivered when needed. System tracks when claims become superseded by newer evidence.
 
 ### **4. Diversity**
+
 Multiple perspectives surface; minority views not suppressed. However, diversity ≠ false balance. All views must meet epistemological standards.
 
 ### **5. Integrity**
+
 System resists manipulation. Validators have skin in the game (staked capital), making dishonest validation expensive.
 
 ### **6. Transparency**
+
 Rules for justified belief are explicit and auditable. Users see why claims were accepted/rejected based on which criteria passed.
 
 ### **7. Accessibility**
+
 System usable by diverse participants. Expertise required should be domain-specific, not technical curation knowledge.
 
 ---
@@ -467,6 +516,7 @@ These objectives conflict fundamentally:
 - **Transparency vs. Security:** Public rules are exploitable. Secret rules can't be audited.
 
 **No centralized system excels across all dimensions.**
+
 - Academic journals: Quality, integrity; fail at speed, accessibility
 - Twitter: Relevance, timeliness; fail at quality, integrity, transparency
 - Social media: Engagement; fail at epistemological standards
@@ -499,6 +549,7 @@ Anyone can participate in validating information and contributing to knowledge p
 
 **Principle 3: Verifiable Claims & Semantic Precision**
 Information is validated through explicit, verifiable criteria.
+
 - **Claims must be falsifiable.** "God exists" cannot be curated. "The Pope visited Brazil" can be.
 - **Vagueness = Rejection.** If a claim lacks context ("Prices rose 5%" without dates/indexes), it is rejected as "Non-Falsifiable." The protocol enforces rigorous definition.
 - **Evidence is public.** Verification logic is transparent. This makes gaming harder—it's expensive to fake evidence.
@@ -517,13 +568,13 @@ Knowledge produced by one curation system can feed into and integrate with other
 
 ### How this solves the five failure modes
 
-| Failure Mode | Problem | Decentralized Solution |
-|---|---|---|
-| **Opacity** | Rules for knowledge are hidden | All validation rules are explicit and auditable |
-| **Capture** | Curator incentives diverge from knowledge quality | Validators are rewarded for accuracy, penalized for false claims |
-| **Gaming** | Single optimizable metric is exploitable | Multiple independent validators use diverse criteria—expensive to fool all of them |
-| **Censorship** | One entity can suppress information | Censorship requires consensus; very hard at scale |
-| **Fragility** | One algorithm change destroys the system | No single point of failure; changes require consensus |
+| Failure Mode   | Problem                                           | Decentralized Solution                                                             |
+| -------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **Opacity**    | Rules for knowledge are hidden                    | All validation rules are explicit and auditable                                    |
+| **Capture**    | Curator incentives diverge from knowledge quality | Validators are rewarded for accuracy, penalized for false claims                   |
+| **Gaming**     | Single optimizable metric is exploitable          | Multiple independent validators use diverse criteria—expensive to fool all of them |
+| **Censorship** | One entity can suppress information               | Censorship requires consensus; very hard at scale                                  |
+| **Fragility**  | One algorithm change destroys the system          | No single point of failure; changes require consensus                              |
 
 ### Building blocks
 
@@ -556,6 +607,7 @@ The system needs three kinds of participants:
 Author submits information, selects a curation pool (topic area), and stakes a bounty.
 
 The system assigns a **Confidence Score**, which guides user attention:
+
 - **Low Stake = Low Signal:** If a stake is low (e.g., $5), the system treats it as noise. Users can filter this out.
 - **High Stake + Time:** If a stake is high and remains unchallenged for extended periods, confidence grows based on f(bounty, time, validator agreement).
 - **Result:** Articles with low stakes remain in "Low Signal" tier regardless of age, preventing boring-but-true claims from masquerading as important knowledge just because they went unchallenged.
@@ -572,12 +624,14 @@ Beyond accuracy, validators vote on relevance. A true statement can have low rel
 ### On-chain vs. off-chain
 
 **On-chain (transparent, tamper-proof, trustless):**
+
 - Registry: All claims and metadata
 - Staking: Manages validator stakes, rewards, penalties
 - Dispute Resolution: Records challenges, jury selection, vote tallying
 - Governance: Tracks rule changes, community voting
 
 **Off-chain (fast, usable, can be run by many providers):**
+
 - Indexing & Discovery: Indexes on-chain data for searching
 - User Interface: Makes the system usable for non-technical users
 - Reputation System: Tracks validator accuracy over time
@@ -614,6 +668,7 @@ Beyond accuracy, validators vote on relevance. A true statement can have low rel
 - Result: Decentralized news that doesn't require trusting any single editor or platform
 
 This architecture generalizes beyond news to:
+
 - **Science:** Decentralized peer review with staked incentives
 - **Product Reviews:** Spam-resistant because dishonest reviewers lose their stake
 - **Code Security:** Continuous security auditing markets
@@ -636,6 +691,7 @@ Here's the game:
 **Two scenarios:**
 
 **Scenario 1: The Statement stands unchallenged**
+
 - Author publishes and stakes $100.
 - Time passes. No one challenges it.
 - The **Confidence Score** rises automatically as f(Bounty, Time, Validator Agreement).
@@ -643,6 +699,7 @@ Here's the game:
 - Result: Knowledge is validated passively by the absence of successful attacks.
 
 **Scenario 2: The Statement is False**
+
 - A Challenger finds evidence that contradicts it
 - Challenger stakes $50 to formally dispute it
 - Kleros jurors are selected
@@ -657,6 +714,7 @@ Here's the game:
 ### Incentives 2.0: Reputation as Capital
 
 Financial staking is just the start. The system also tracks **Reputation**:
+
 - **Authors** who consistently post valid information earn Reputation (R) = f(stake × accuracy over time).
 - **Utility:** Reputation can be used in place of capital to stake on new claims. This lowers the barrier to entry for honest but cash-poor journalists. It turns "Truth" into a form of credit score.
 - **Protection:** Reputation is non-transferable and decays if unused, preventing Sybil attacks (creating 100 accounts and coordinating them).
@@ -666,6 +724,7 @@ Financial staking is just the start. The system also tracks **Reputation**:
 
 **Defense: The Competence Filter**
 The crypto-economic game forces a binary choice: **Be competent or be gone.**
+
 - If you curate a topic you don't understand, your chance of being coherent with expert consensus drops.
 - A lazy curator voting randomly will be incoherent on average, losing stake gradually until exit becomes rational.
 - Result: The system naturally purges incompetent or lazy actors. The dominant strategy for a non-expert is **not to play**. This creates a "Competence Filter" where only those who actually do the work survive.
@@ -684,31 +743,34 @@ Why it fails: This creates an opportunity for a "Shark" (a diligent Challenger) 
 Critics argue that jurors don't vote for "Truth," but for "Predictable Consensus" (Mediocrity). If a truth is complex or counter-intuitive, jurors might vote "False" just to stay safe with the herd.
 
 **Defense: The "Lone Wolf" Payoff**
+
 - Jurors are incentivized to coordinate with the **final** ruling, not the current one.
 - If 1,000 lazy jurors vote "False" on a nuanced truth, a single **Lone Wolf** expert can appeal.
 - **Appeal Mechanics:** Appeals require a higher stake (e.g., 2x the original). If the appeal succeeds, the appellant receives the slashed stakes from all dissenting jurors from prior rounds. This creates exponential payoff for being right when everyone else is wrong.
-- **Preventive Effect:** Each appeal raises the stakes and draws more expertise. This creates incentive for jurors to "do their homework" initially, knowing that a future Lone Wolf expert can punish sloppy consensus. The *threat* of the future creates honesty in the present.
+- **Preventive Effect:** Each appeal raises the stakes and draws more expertise. This creates incentive for jurors to "do their homework" initially, knowing that a future Lone Wolf expert can punish sloppy consensus. The _threat_ of the future creates honesty in the present.
 
 ### Separation of powers: Accuracy vs. Relevance
 
 This is crucial. In centralized platforms, these are mashed into a single "Engagement" metric. We separate them into two distinct dimensions.
 
 **Accuracy (Objective):**
+
 - Question: "Is this claim supported by evidence?"
 - Nature: **Binary Classification.**
 - Mechanism: Bounty + Challenge + Jury.
 - Logic: Accuracy requires human judgment, but it can be treated as binary (Valid vs. Invalid). A jury can look at evidence and make a definitive decision.
 
 **Relevance (Subjective):**
+
 - Question: "Is this important to this community?"
 - Nature: **Non-binary Spectrum.**
 - Mechanism: **Schelling-Point Coherence Game.**
 - Logic:
-    1.  **Policy:** Each pool has a specific "Relevance Policy" (e.g., "What counts as Tech News").
-    2.  **Vote:** Curators stake tokens to rate an item (e.g., 0-10).
-    3.  **Coherence:** The system calculates the weighted average. Curators whose votes fall within a standard deviation of the mean are "Coherent." Outliers are "Incoherent."
-    4.  **Incentive:** Incoherent stakers are slashed; their tokens are distributed to Coherent stakers.
-    5.  **Result:** This forces curators to vote based on the *policy* and what they expect others to see, rather than their idiosyncratic whims. It produces a stable, high-quality signal from subjective inputs.
+  1.  **Policy:** Each pool has a specific "Relevance Policy" (e.g., "What counts as Tech News").
+  2.  **Vote:** Curators stake tokens to rate an item (e.g., 0-10).
+  3.  **Coherence:** The system calculates the weighted average. Curators whose votes fall within a standard deviation of the mean are "Coherent." Outliers are "Incoherent."
+  4.  **Incentive:** Incoherent stakers are slashed; their tokens are distributed to Coherent stakers.
+  5.  **Result:** This forces curators to vote based on the _policy_ and what they expect others to see, rather than their idiosyncratic whims. It produces a stable, high-quality signal from subjective inputs.
 
 This solves the "Boring Truth" problem. An accurate article about paint drying passes accuracy checks (Valid) but scores low on relevance (users vote 1/10). Users see it marked "Accurate but irrelevant."
 
@@ -727,6 +789,7 @@ A curation system isn't just code. It's a **socio-technical system** involving r
 In centralized systems, an engineer fixes the code. In decentralized systems, code is immutable. But the world changes.
 
 **What needs governing:**
+
 - Economic parameters (minimum stakes, bounty amounts)
 - Protocol upgrades (fixing bugs, adding features)
 - Community values (defining what counts as "valid evidence")
@@ -735,21 +798,24 @@ In centralized systems, an engineer fixes the code. In decentralized systems, co
 How do we decide what the "best" curation policy is? We don't. We let the market decide.
 
 Think of it like **Reddit, but with stakes:**
+
 - On Reddit, `r/science` has strict rules. `r/futurology` has different rules.
 - In Trustless Curation, anyone can spin up a **Curation Pool** for a topic.
 - Each pool has its own policy, enforced by crypto-economics.
 
 **Why "Echo Chambers" Aren't the Problem**
 Critics worry this creates echo chambers (e.g., a "Conspiracy Pool"). But this misunderstands the market.
+
 - You can't compare the "Science Pool" to the "Conspiracy Pool" any more than you compare a Michelin guide to a fast-food blog. They are different products.
-- Competition happens *within* a niche. Multiple "Science Pools" compete to be the most reliable source of science news.
+- Competition happens _within_ a niche. Multiple "Science Pools" compete to be the most reliable source of science news.
 - If a pool's policy is bad (e.g., allows spam), users leave. The best policy for a given goal wins by natural selection.
 
 **The mechanism:** Decentralized Autonomous Organization (DAO)
-- Token holders vote on proposals for the *base protocol*.
-- Individual pools govern their own *local policies*.
+
+- Token holders vote on proposals for the _base protocol_.
+- Individual pools govern their own _local policies_.
 - Approved changes have a timelock (e.g., 48 hours) allowing users to exit if they disagree.
-- Governance votes on *rules*, not individual curation decisions (separating legislative from judicial power).
+- Governance votes on _rules_, not individual curation decisions (separating legislative from judicial power).
 
 ### UX: Hiding the machinery
 
@@ -762,11 +828,13 @@ The biggest barrier to decentralized tech is friction. Wallets, gas fees, stakin
 
 **Interface vs. Protocol: Solving the "Toxic Content" Problem**
 Critics argue that a permissionless protocol will inevitably host illegal or toxic content (e.g., hate speech).
+
 - **The Protocol** is neutral and uncensorable (like the Internet). It stores everything, ensuring protection for whistleblowers (Wikileaks on steroids).
 - **The Interface** is opinionated (like a Browser). `TruthPost.com` can choose to filter out toxic pools or illegal content to comply with local laws.
 - **Result:** Users get the best of both worlds: censorship resistance at the infrastructure layer, but safety and compliance at the user experience layer.
 
 **UX patterns:**
+
 - Instead of "Stake 50 DAI," ask "How confident are you?" ("I'm sure" → triggers a stake)
 - Use Account Abstraction (log in with Google, protocol pays gas fees)
 - Users can delegate voting power to trusted curators
@@ -803,6 +871,7 @@ Now: What's next?
 The stake-to-verify model is generic. It applies to any domain where **truth is valuable but verification is costly.**
 
 **Speculative Applications: The Killer App - Advertising as "Proof of Truth"**
+
 - **Current State:** Ads are "Proof of Waste." Companies spend billions to annoy you, hoping to signal quality by burning money.
 - **Future:** An advertiser makes a claim ("Our product lasts 10 years") and **stakes** on it.
 - **Result:** Honest advertisers pay almost nothing (their stake is returned). Dishonest advertisers lose their stake. We move from an economy of "Wasteful Attention" to an economy of "Verified Claims."
@@ -810,18 +879,21 @@ The stake-to-verify model is generic. It applies to any domain where **truth is 
 **Core Applications:**
 
 **Science: Decentralized Peer Review**
+
 - Researchers submit papers with bounties
 - Scientists stake on reproducibility
 - Invalid work is profitably debunked
 - Result: "Living journals" where valid research rises instantly
 
 **Code: Decentralized Security Audits**
+
 - Protocols post security bounties
 - Security researchers stake on specific code being safe
 - If bugs are found later, "Safe" stakers lose their stakes
 - Result: Continuous security as a market
 
 **History: The Immutable Record**
+
 - Historical claims are staked and challenged
 - Contested history isn't erased—marked "Disputed" with evidence forever on IPFS
 - Result: History that resists revisionism
@@ -842,6 +914,7 @@ The solution: A decentralized curation protocol produces a dataset that is **exp
 Could a billionaire buy 51% of Kleros tokens and force false verdicts?
 
 **Why it fails:**
+
 1.  **Economic Suicide:** If the court is captured, the token value collapses. The attacker spends $100M to capture a protocol that becomes worthless the moment they win.
 2.  **Slippage:** Buying 51% on open markets would cost exponentially more than the spot price due to illiquidity.
 3.  **The Ultimate Fail-Safe (Forking):** If an irrational attacker attacks anyway, the community **forks**. The honest majority migrates to a new token. The attacker is left ruling a dead chain. Unlike traditional courts, crypto-courts can be cloned and rebooted.
@@ -850,6 +923,7 @@ Could a billionaire buy 51% of Kleros tokens and force false verdicts?
 Competitors can scrape our verified data for free and monetize it.
 
 **Response: Feature, not Bug.** We are building Public Infrastructure, not a walled garden.
+
 - If a "Vampire" site distributes our verified truth to millions, we are winning the information war.
 - **Funding:** The system is funded by a mix of "Advertiser Staking" (commercial utility) and "Public Funding" (NGOs/States funding the "Truth Automata"). Just as society funds Wikipedia and roads, it will fund the machine that verifies reality.
 - **Why Wikipedia is Different:** Wikipedia works well for encyclopedic knowledge but fails for real-time news and contested claims—where rapid verification and incentive alignment matter most. Our design targets those gaps while Wikipedia's governance is centralized and doesn't reward accuracy directly.

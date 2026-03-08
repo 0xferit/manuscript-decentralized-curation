@@ -41,7 +41,7 @@ For most of history, the hard part was getting information at all.
 
 Books were scarce. Universities gatekept knowledge. If you weren't physically near the right libraries, people, or institutions, you were out of luck.
 
-The internet blew that bottleneck apart. Now, anyone with a phone has access to more *information* than the average professor did a generation ago. Information in the technical sense: raw signals, data points, claims. That sounds like victory—until you notice what actually changed:
+The internet blew that bottleneck apart. Now, anyone with a phone has access to more _information_ than the average professor did a generation ago. Information in the technical sense: raw signals, data points, claims. That sounds like victory—until you notice what actually changed:
 
 **Access to information is solved.**
 **Access to knowledge is not.**
@@ -55,7 +55,7 @@ Curation is what transforms information into knowledge.
 
 Before the internet, this transformation happened through institutions: newspapers selected which stories mattered, academic journals peer-reviewed claims, universities taught frameworks for understanding. The process was slow and imperfect, but it produced knowledge: information you could trust and act on.
 
-Now, we have vastly more *information*. But we're drowning in signals without the structural processes to turn them into knowledge.
+Now, we have vastly more _information_. But we're drowning in signals without the structural processes to turn them into knowledge.
 
 A good way to visualize this:
 
@@ -76,13 +76,13 @@ A recent paper tested this with simple two-player games requiring common knowled
 
 That is what modern life feels like, scaled up:
 
-- "Everyone" saw the same information… except they didn't. But they *feel* like they did because their curated feeds showed similar things.
+- "Everyone" saw the same information… except they didn't. But they _feel_ like they did because their curated feeds showed similar things.
 - "Everyone" knows the same facts about the election… except their feeds presented completely different information.
 - "We all agree on the science"… except half the population was shown different information that led them to different knowledge.
 
 On the surface, the failures look like stubbornness or polarization or bad faith. Underneath, they are very often **curation failures**: people are trying to coordinate from different knowledge slices—built from different information, curated by different systems, trusting different sources.
 
-They have the *feeling* of shared knowledge. But the actual knowledge is incompatible.
+They have the _feeling_ of shared knowledge. But the actual knowledge is incompatible.
 
 ### 3. Who loses, who wins
 
@@ -112,6 +112,7 @@ To diagnose failures precisely, we need a framework for decomposing any curation
 Every curation system contains:
 
 **Actors:**
+
 - **Creators:** produce information
 - **Curators:** decide what information gets verified and elevated to "knowledge"
 - **Consumers:** consume the curated knowledge
@@ -119,6 +120,7 @@ Every curation system contains:
 - **Attackers:** try to game the system
 
 **Information flow:**
+
 1. Creation (someone produces a claim)
 2. Submission (enters the curation system)
 3. Verification (system decides whether to elevate to "knowledge")
@@ -126,6 +128,7 @@ Every curation system contains:
 5. Feedback (users react; does this loop back to improve curation?)
 
 **Incentives:**
+
 - Economic (money, revenue, ad income)
 - Reputational (credibility, followers, citations)
 - Ideological (mission, values)
@@ -141,23 +144,28 @@ When one entity controls the transformation of information into knowledge, failu
 
 **Failure Mode 1: Opacity**
 Rules for what becomes knowledge are hidden. Users don't know why decisions were made.
-- *Example:* Twitter shadowbanning—users noticed their tweets weren't appearing in search results, but Twitter denied the practice. Later, investigation showed it was partly algorithmic error and partly deliberate filtering—but the original opacity destroyed trust.
+
+- _Example:_ Twitter shadowbanning—users noticed their tweets weren't appearing in search results, but Twitter denied the practice. Later, investigation showed it was partly algorithmic error and partly deliberate filtering—but the original opacity destroyed trust.
 
 **Failure Mode 2: Capture**
 The curation system is nominally independent, but actually serves interests other than knowledge quality.
-- *Example:* Facebook optimized for engagement (likes, comments, shares). This rewarded outrage, misinformation, and divisive content. Internal research (the "Facebook Papers") showed the algorithm amplified polarizing information, but the company continued because engagement drives ad revenue.
+
+- _Example:_ Facebook optimized for engagement (likes, comments, shares). This rewarded outrage, misinformation, and divisive content. Internal research (the "Facebook Papers") showed the algorithm amplified polarizing information, but the company continued because engagement drives ad revenue.
 
 **Failure Mode 3: Gaming**
 Actors figure out the curation rules and exploit them to elevate false information to "knowledge" status.
-- *Example:* Review systems (Amazon, Yelp, Airbnb): Fake reviews are cheap to create and profitable to scale. If the curation system can't distinguish them, fake reviews dominate what becomes "known" about products.
+
+- _Example:_ Review systems (Amazon, Yelp, Airbnb): Fake reviews are cheap to create and profitable to scale. If the curation system can't distinguish them, fake reviews dominate what becomes "known" about products.
 
 **Failure Mode 4: Censorship**
 One entity can unilaterally suppress information from becoming "known."
-- *Example:* Platform moderation asymmetry—information from one person is removed; similar content from another person stays up. Rules exist but are applied inconsistently.
+
+- _Example:_ Platform moderation asymmetry—information from one person is removed; similar content from another person stays up. Rules exist but are applied inconsistently.
 
 **Failure Mode 5: Fragility**
 The system has single points of failure. One algorithm change, policy shift, or acquisition can destroy the entire knowledge-production system.
-- *Example:* When Elon Musk acquired Twitter and changed the algorithm, what counted as "visible knowledge" changed unpredictably. Creators who built livelihoods on the old algorithm faced collapse. No warning, no appeal, no participation.
+
+- _Example:_ When Elon Musk acquired Twitter and changed the algorithm, what counted as "visible knowledge" changed unpredictably. Creators who built livelihoods on the old algorithm faced collapse. No warning, no appeal, no participation.
 
 **The common pattern:** Each failure mode traces back to the same root: **Centralized curation concentrates power over knowledge production in one entity, and power + misaligned incentives = inevitable failure.**
 
@@ -212,6 +220,7 @@ Anyone can participate in validating information and contributing to knowledge p
 
 **Principle 3: Verifiable Claims & Semantic Precision**
 Information is validated through explicit, verifiable criteria.
+
 - **Claims must be falsifiable.** "God exists" cannot be curated. "The Pope visited Brazil" can be.
 - **Vagueness = Rejection.** If a claim lacks context ("Prices rose 5%" without dates/indexes), it is rejected as "Non-Falsifiable." The protocol enforces rigorous definition.
 - **Evidence is public.** Verification logic is transparent. This makes gaming harder—it's expensive to fake evidence.
@@ -230,13 +239,13 @@ Knowledge produced by one curation system can feed into and integrate with other
 
 ### How this solves the five failure modes
 
-| Failure Mode | Problem | Decentralized Solution |
-|---|---|---|
-| **Opacity** | Rules for knowledge are hidden | All validation rules are explicit and auditable |
-| **Capture** | Curator incentives diverge from knowledge quality | Validators are rewarded for accuracy, penalized for false claims |
-| **Gaming** | Single optimizable metric is exploitable | Multiple independent validators use diverse criteria—expensive to fool all of them |
-| **Censorship** | One entity can suppress information | Censorship requires consensus; very hard at scale |
-| **Fragility** | One algorithm change destroys the system | No single point of failure; changes require consensus |
+| Failure Mode   | Problem                                           | Decentralized Solution                                                             |
+| -------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **Opacity**    | Rules for knowledge are hidden                    | All validation rules are explicit and auditable                                    |
+| **Capture**    | Curator incentives diverge from knowledge quality | Validators are rewarded for accuracy, penalized for false claims                   |
+| **Gaming**     | Single optimizable metric is exploitable          | Multiple independent validators use diverse criteria—expensive to fool all of them |
+| **Censorship** | One entity can suppress information               | Censorship requires consensus; very hard at scale                                  |
+| **Fragility**  | One algorithm change destroys the system          | No single point of failure; changes require consensus                              |
 
 ### Building blocks
 
@@ -269,10 +278,11 @@ The system needs three kinds of participants:
 Author submits information, selects a curation pool (topic area), and stakes a bounty.
 
 The system assigns a **Confidence Score**, which guides user attention.
+
 - **Low Stake = Low Signal:** If a stake is low (e.g., $5), the system treats it as noise. Users can filter this out.
 - **High Stake + Time:** If a stake is high and remains unchallenged, confidence grows.
 - **Apathy Defense:** If an article is boring and has a low stake, it doesn't get a "High Trust" badge just because it's old. It remains in "Low Signal" purgatory.
-    - **Logic:** Low Stake + No Validator Attention = Low Signal (regardless of age). The consumer decides their own threshold for what is worth reading.
+  - **Logic:** Low Stake + No Validator Attention = Low Signal (regardless of age). The consumer decides their own threshold for what is worth reading.
 
 **Flow 2: Validation (Pooled Staking)**
 Validators don't just stake on single items (which exposes them to liability). They stake on **Curation Pools** (e.g., "Science Validators"). The protocol randomly drafts validators from the pool to judge specific claims. This creates "Herd Immunity"—validators are performing a neutral, randomized duty, protecting them from being targeted as individual publishers.
@@ -286,12 +296,14 @@ Beyond accuracy, validators vote on relevance. A true statement can have low rel
 ### On-chain vs. off-chain
 
 **On-chain (transparent, tamper-proof, trustless):**
+
 - Registry: All claims and metadata
 - Staking: Manages validator stakes, rewards, penalties
 - Dispute Resolution: Records challenges, jury selection, vote tallying
 - Governance: Tracks rule changes, community voting
 
 **Off-chain (fast, usable, can be run by many providers):**
+
 - Indexing & Discovery: Indexes on-chain data for searching
 - User Interface: Makes the system usable for non-technical users
 - Reputation System: Tracks validator accuracy over time
@@ -328,6 +340,7 @@ Beyond accuracy, validators vote on relevance. A true statement can have low rel
 - Result: Decentralized news that doesn't require trusting any single editor or platform
 
 This architecture generalizes beyond news to:
+
 - **Science:** Decentralized peer review with staked incentives
 - **Product Reviews:** Spam-resistant because dishonest reviewers lose their stake
 - **Code Security:** Continuous security auditing markets
@@ -350,6 +363,7 @@ Here's the game:
 **Two scenarios:**
 
 **Scenario 1: The Statement stands unchallenged**
+
 - Author publishes and stakes $100.
 - Time passes. No one challenges it.
 - The **Confidence Score** rises automatically as `f(Bounty, Time)`.
@@ -357,6 +371,7 @@ Here's the game:
 - Result: Knowledge is validated passively by the absence of successful attacks.
 
 **Scenario 2: The Statement is False**
+
 - A Challenger finds evidence that contradicts it
 - Challenger stakes $50 to formally dispute it
 - Kleros jurors are selected
@@ -369,7 +384,9 @@ Here's the game:
 **The result:** Honesty becomes the equilibrium strategy. It's cheaper to be right than to be wrong.
 
 ### Incentives 2.0: Reputation as Capital
+
 Financial staking is just the start. The system also tracks **Reputation**.
+
 - **Mechanism:** Authors who consistently post valid information earn non-transferable Reputation points.
 - **Utility:** Reputation can be used in place of capital to stake on new claims (up to a limit). This lowers the barrier to entry for honest but cash-poor journalists. It turns "Truth" into a form of credit score.
 - **Sybil Defense:** Reputation grows slowly and is slashed heavily for inaccuracy. A Sybil attacker would spend more time/money building reputation than they could gain by burning it on a single lie.
@@ -379,6 +396,7 @@ Financial staking is just the start. The system also tracks **Reputation**.
 
 **Defense: The Competence Filter (Why laziness is punished)**
 The crypto-economic game forces a binary choice: **Be competent or be gone.**
+
 - If you curate a topic you don't understand, your chance of being coherent with expert consensus drops.
 - A lazy curator voting randomly will be incoherent on average, losing stake gradually until exit becomes the only rational choice.
 - Result: The system naturally purges incompetent or lazy actors. The dominant strategy for a non-expert is **not to play**. This creates a "Competence Filter" where only those who actually do the work survive.
@@ -397,6 +415,7 @@ Why it fails: This creates an opportunity for a "Shark" (a diligent Challenger) 
 Critics argue that jurors don't vote for "Truth," but for "Predictable Consensus" (Mediocrity). If a truth is complex or counter-intuitive, jurors might vote "False" just to stay safe with the herd.
 
 **Defense: The "Lone Wolf" Payoff (The Shadow of Appeal)**
+
 - Jurors are incentivized to coordinate with the **final** ruling, not the current one.
 - If 1,000 lazy jurors vote "False" on a nuanced truth, a single **Lone Wolf** expert can appeal.
 - **Mechanism:** Appeals require a higher stake (e.g., 2x the original). If the appeal succeeds, the appellant receives the slashed stakes from all dissenting jurors from prior rounds.
@@ -407,21 +426,23 @@ Critics argue that jurors don't vote for "Truth," but for "Predictable Consensus
 This is crucial. In centralized platforms, these are mashed into a single "Engagement" metric. We separate them into two distinct dimensions.
 
 **Accuracy:**
+
 - Question: "Is this claim supported by evidence?"
 - Nature: **Binary Classification.**
 - Mechanism: Bounty + Challenge + Jury.
 - Logic: Accuracy requires human judgment, but it can be treated as binary (Valid vs. Invalid). A jury can look at evidence and make a definitive decision.
 
 **Relevance:**
+
 - Question: "Is this important to this community?"
 - Nature: **Non-binary Spectrum.**
 - Mechanism: **Schelling-Point Coherence Game.**
 - Logic:
-    1.  **Policy:** Each pool has a specific "Relevance Policy" (e.g., "What counts as Tech News").
-    2.  **Vote:** Curators stake tokens to rate an item (e.g., 0-10).
-    3.  **Coherence:** The system calculates the weighted average. Curators whose votes fall within a standard deviation of the mean are "Coherent." Outliers are "Incoherent."
-    4.  **Incentive:** Incoherent stakers are slashed; their tokens are distributed to Coherent stakers.
-    This forces curators to vote based on the *policy* and what they expect others to see, rather than their idiosyncratic whims. It produces a stable, high-quality signal from subjective inputs.
+  1.  **Policy:** Each pool has a specific "Relevance Policy" (e.g., "What counts as Tech News").
+  2.  **Vote:** Curators stake tokens to rate an item (e.g., 0-10).
+  3.  **Coherence:** The system calculates the weighted average. Curators whose votes fall within a standard deviation of the mean are "Coherent." Outliers are "Incoherent."
+  4.  **Incentive:** Incoherent stakers are slashed; their tokens are distributed to Coherent stakers.
+      This forces curators to vote based on the _policy_ and what they expect others to see, rather than their idiosyncratic whims. It produces a stable, high-quality signal from subjective inputs.
 
 This solves the "Boring Truth" problem. An accurate article about paint drying passes accuracy checks (Valid) but scores low on relevance (users vote 1/10). Users see it marked "Accurate but irrelevant."
 
@@ -440,6 +461,7 @@ A curation system isn't just code. It's a **socio-technical system** involving r
 In centralized systems, an engineer fixes the code. In decentralized systems, code is immutable. But the world changes.
 
 **What needs governing:**
+
 - Economic parameters (minimum stakes, bounty amounts)
 - Protocol upgrades (fixing bugs, adding features)
 - Community values (defining what counts as "valid evidence")
@@ -448,21 +470,24 @@ In centralized systems, an engineer fixes the code. In decentralized systems, co
 How do we decide what the "best" curation policy is? We don't. We let the market decide.
 
 Think of it like **Reddit, but with stakes.**
+
 - On Reddit, `r/science` has strict rules. `r/futurology` has different rules.
 - In Trustless Curation, anyone can spin up a **Curation Pool** for a topic.
 - Each pool has its own policy, enforced by crypto-economics.
 
 **Apples vs. Oranges: Why "Echo Chambers" aren't the problem**
 Critics worry this creates echo chambers (e.g., a "Conspiracy Pool"). But this misunderstands the market.
+
 - You can't compare the "Science Pool" to the "Conspiracy Pool" any more than you compare a Michelin guide to a fast-food blog. They are different products.
-- Competition happens *within* a niche. Multiple "Science Pools" compete to be the most reliable source of science news.
+- Competition happens _within_ a niche. Multiple "Science Pools" compete to be the most reliable source of science news.
 - If a pool's policy is bad (e.g., allows spam), users leave. The best policy for a given goal wins by natural selection.
 
 **The mechanism:** Decentralized Autonomous Organization (DAO)
-- Token holders vote on proposals for the *base protocol*.
-- Individual pools govern their own *local policies*.
+
+- Token holders vote on proposals for the _base protocol_.
+- Individual pools govern their own _local policies_.
 - Approved changes have a timelock (e.g., 48 hours) allowing users to exit if they disagree.
-- Governance votes on *rules*, not individual curation decisions (separating legislative from judicial power).
+- Governance votes on _rules_, not individual curation decisions (separating legislative from judicial power).
 
 ### UX: Hiding the machinery
 
@@ -475,11 +500,13 @@ The biggest barrier to decentralized tech is friction. Wallets, gas fees, stakin
 
 **Interface vs. Protocol: Solving the "Toxic Content" Problem**
 Critics argue that a permissionless protocol will inevitably host illegal or toxic content (e.g., hate speech).
+
 - **The Protocol** is neutral and uncensorable (like the Internet). It stores everything, ensuring protection for whistleblowers (Wikileaks on steroids).
 - **The Interface** is opinionated (like a Browser). `TruthPost.com` can choose to filter out toxic pools or illegal content to comply with local laws.
 - **Result:** Users get the best of both worlds: censorship resistance at the infrastructure layer, but safety and compliance at the user experience layer.
 
 **UX patterns:**
+
 - Instead of "Stake 50 DAI," ask "How confident are you?" ("I'm sure" → triggers a stake)
 - Use Account Abstraction (log in with Google, protocol pays gas fees)
 - Users can delegate voting power to trusted curators
@@ -516,23 +543,27 @@ Now: What's next?
 The stake-to-verify model is generic. It applies to any domain where **truth is valuable but verification is costly.**
 
 **The Killer App: Advertising as "Proof of Truth"**
+
 - **Current State:** Ads are often "Proof of Waste"—companies spending money to signal quality.
 - **Future:** An advertiser makes a claim ("Our product lasts 10 years") and **stakes** on it.
 - **Result:** Honest advertisers pay almost nothing (their stake is returned). Dishonest advertisers lose their stake. This moves us from an economy of "Wasteful Attention" to an economy of "Verified Claims."
 
 **Science: Decentralized Peer Review**
+
 - Researchers submit papers with bounties
 - Scientists stake on reproducibility
 - Invalid work is profitably debunked
 - Result: "Living journals" where valid research rises instantly
 
 **Code: Decentralized Security Audits**
+
 - Protocols post security bounties
 - Security researchers stake on specific code being safe
 - If bugs are found later, "Safe" stakers lose their stakes
 - Result: Continuous security as a market
 
 **History: The Immutable Record**
+
 - Historical claims are staked and challenged
 - Contested history isn't erased—marked "Disputed" with evidence forever on IPFS
 - Result: History that resists revisionism
@@ -551,6 +582,7 @@ The solution: A decentralized curation protocol produces a dataset that is **exp
 
 **Challenge 1: Oracle Capture (The 51% Attack)**
 Critics argue a billionaire could buy 51% of Kleros tokens and force false verdicts. This fails for three reasons:
+
 1.  **Economic Suicide:** If the court is captured, the token value collapses. The attacker spends $100M to capture a protocol that becomes worthless the moment they win.
 2.  **Slippage:** Buying 51% on open markets would cost exponentially more than the spot price due to illiquidity.
 3.  **The Ultimate Fail-Safe (Forking):** If an irrational attacker attacks anyway, the community **forks**. The honest majority migrates to a new token. The attacker is left ruling a dead chain. Unlike traditional courts, crypto-courts can be cloned and rebooted.
@@ -558,6 +590,7 @@ Critics argue a billionaire could buy 51% of Kleros tokens and force false verdi
 **Challenge 2: The Vampire Attack (Free Riding)**
 Competitors can scrape our verified data for free and monetize it.
 **Response:** **Feature, not Bug.** We are building Public Infrastructure, not a walled garden.
+
 - If a "Vampire" site distributes our verified truth to millions, we are winning the information war.
 - **Funding:** The system is funded by a mix of "Advertiser Staking" (commercial utility) and "Public Funding" (NGOs/States funding the "Truth Automata"). Just as society funds Wikipedia and roads, it will fund the machine that verifies reality.
 
@@ -579,4 +612,3 @@ This is the shift from **Institutional Truth** (Trust Us) to **Incentive Truth**
 It's a world where lying is expensive, truth is profitable, and shared knowledge is a public good that no one owns but everyone protects.
 
 This is what we're building.
-

@@ -4,7 +4,7 @@
 
 ## 1. Scope and Assumptions
 
-*[To be inserted after Section 1.3 Threat Model]*
+_[To be inserted after Section 1.3 Threat Model]_
 
 Before diving into mechanism design, it is worth making explicit what this paper takes as given, what it designs, and where the boundaries lie. Every system rests on assumptions. The honest thing to do is name them.
 
@@ -53,7 +53,7 @@ This assumption also means the system does **not** require altruism. Curators do
 
 ## 2. Why This Is Not a TCR
 
-*[To be inserted in Part 3 or Part 4]*
+_[To be inserted in Part 3 or Part 4]_
 
 Token-Curated Registries are the most direct ancestor of this design. [Mike Goldin's 2017 whitepaper](https://medium.com/@ilovebagels/token-curated-registries-1-0-61a232f8dac7) proposed using stake-weighted curation to maintain quality lists without centralized gatekeepers. The idea was elegant: token holders stake to list items, challengers stake to dispute them, and the market for the token reflects the registry's quality.
 
@@ -84,6 +84,7 @@ In this design, curators stake on **pools** (topics, domains, subject areas), an
 TCRs conflate "should this be in the list?" into a **single binary vote**. This forces curators to simultaneously evaluate truthfulness, importance, and appropriateness — all in one up-or-down decision. The result, as [ChainScore Labs argues](https://www.chainscorelabs.com/en/blog/prediction-markets-and-information-theory/decentralized-information-markets/why-token-curated-registries-incentivize-mediocrity-not-excellence), is that safe, mediocre entries pass while genuinely important but controversial entries get challenged for the wrong reasons.
 
 This design **separates** the two questions:
+
 - **"Is it true?"** — Global, binary, resolved by evidence and DDR adjudication. This has a ground truth anchor.
 - **"Is it important?"** — Local, non-binary, resolved by the coherence game within specific curation pools. This is explicitly subjective and pool-specific.
 
@@ -95,13 +96,14 @@ Kosmarski & Gordiychuk (2020) [proposed TCRs for scholarly journals](https://onl
 
 ## 3. The Economics of Forking: Why Capture Destroys the Prize
 
-*[Revised — replaces/expands Challenge 1 in Part 7]*
+_[Revised — replaces/expands Challenge 1 in Part 7]_
 
 Forking is the nuclear option. It is expensive, disruptive, and destroys network effects. **That is the point.** Its existence as a credible threat is what makes the attack economically irrational.
 
 ### 3.1 The Simple Model
 
 Let:
+
 - **V** = total value of the protocol (token market cap + utility value from integrations, users, curated knowledge)
 - **C** = cost of acquiring 51% of governance/arbitration tokens
 - **V_post** = value of the captured chain after the community forks away
@@ -158,7 +160,7 @@ The point is not that forking is painless. The point is that its existence as a 
 
 ## 4. Infinite Appeals and Backward Induction
 
-*[To be added to Part 5 or as a subsection of the Lone Wolf discussion]*
+_[To be added to Part 5 or as a subsection of the Lone Wolf discussion]_
 
 Why can't we just set a maximum number of appeal rounds — say, 5 — and call it done?
 
@@ -183,11 +185,11 @@ Appeals must always be **possible** — there must never be a round that partici
 In practice, exponentially escalating costs make the process self-limiting:
 
 | Round | Stake Required |
-|-------|---------------|
-| 1     | S             |
-| 2     | 2S            |
-| 3     | 4S            |
-| k     | 2^(k−1) × S  |
+| ----- | -------------- |
+| 1     | S              |
+| 2     | 2S             |
+| 3     | 4S             |
+| k     | 2^(k−1) × S    |
 
 At some point, no rational actor is willing to escalate further. A dispute over a $100 claim will not see a round requiring $10,000 in stakes. The process terminates **economically**, not structurally.
 
@@ -201,7 +203,7 @@ The practical implication for protocol design: **never hard-code a maximum appea
 
 ## 5. Related Work
 
-*[To be added as a new section, after Part 2 or as an appendix]*
+_[To be added as a new section, after Part 2 or as an appendix]_
 
 This section positions the design relative to the existing literature. The goal is not comprehensiveness but clarity: where does this work sit, what does it borrow, and where does it diverge?
 
@@ -259,13 +261,14 @@ The **relevance dimension** has no prediction-market analog at all. Prediction m
 
 ## 6. The Truth Post: Lessons from an MVP
 
-*[Revised — replaces the brief mention in Part 4]*
+_[Revised — replaces the brief mention in Part 4]_
 
 The Truth Post launched in 2023 as a minimal viable implementation of the core submission-and-challenge flow. It is worth being honest about what happened.
 
 ### 6.1 What Was Built
 
 The Truth Post implemented:
+
 - **Author submission with staked bounties.** Users could submit claims and attach a token bounty as a credibility signal.
 - **Challenger disputes routed to Kleros.** Anyone could challenge a claim by staking tokens, triggering a dispute in the Kleros court system.
 
@@ -274,6 +277,7 @@ This was the **bare minimum** of the protocol — the accuracy layer without the
 ### 6.2 What Was NOT Built
 
 The MVP did not implement:
+
 - **Relevance curation** (the coherence game described in Part 5)
 - **Author rewards** from a protocol treasury
 - **The Confidence Score** system
@@ -295,6 +299,7 @@ This is not a comfortable admission in a whitepaper. But the alternative — pre
 **3. Infrastructure maintenance matters.** A decentralized protocol is only as good as its off-chain infrastructure — indexers, frontends, APIs. The Truth Post had a single frontend operated by the development team. When the subgraph broke, the entire user-facing product went down. This is a single point of failure that contradicts the protocol's own design philosophy. The lesson: the protocol must be designed so that **anyone** can deploy a frontend, and no single frontend failure kills the system. Protocol-vs-interface separation is not optional — it is a survival requirement.
 
 These lessons directly inform the full design in this manuscript:
+
 - **Pooled staking** reduces cold-start friction by letting curators commit to domains rather than individual claims.
 - **The Confidence Score** makes the system useful even with thin participation — a single unchallenged claim with a large bounty still provides a meaningful (if incomplete) signal.
 - **Protocol-vs-interface separation** ensures that the protocol survives any individual frontend's failure. If one explorer goes down, others continue operating.
@@ -303,7 +308,7 @@ These lessons directly inform the full design in this manuscript:
 
 ## 7. Advertising as Proof of Truth
 
-*[Revised — expanded version for Part 7]*
+_[Revised — expanded version for Part 7]_
 
 Here is an observation: advertisers already make claims about their products. "Longest battery life in its class." "Zero sugar." "Clinically proven." These claims are currently verified (if at all) by regulatory agencies operating at glacial speed, or by journalists who may or may not bother.
 
@@ -311,7 +316,7 @@ What if the verification mechanism was **built into the advertising itself**?
 
 ### 7.1 The Mechanism
 
-1. An advertiser makes a **verifiable claim** about their product: *"Battery lasts 48 hours under standard use conditions (ISO 12345)."*
+1. An advertiser makes a **verifiable claim** about their product: _"Battery lasts 48 hours under standard use conditions (ISO 12345)."_
 2. The advertiser **stakes tokens** on this claim. The stake amount signals conviction — a $50,000 stake on a product claim is a very different signal than a $50 stake.
 3. **Anyone can challenge** the claim. If the challenge succeeds (independent testing shows the battery does not last 48 hours under ISO 12345 conditions), the advertiser **loses their stake** — distributed to the challenger and the protocol.
 4. If the claim stands unchallenged or **survives challenges**, the advertiser recovers their stake minus a small protocol fee.

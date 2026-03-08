@@ -4,7 +4,7 @@
 
 ### Executive Summary
 
-This research explores how [Schelling point](https://en.wikipedia.org/wiki/Focal_point_(game_theory)) based game mechanisms, the foundation of decentralized dispute resolution (DDR), can enhance Octant's public goods funding infrastructure. DDR is not the end goal; instead, it provides a tool for trustless, scalable decentralized curation (DC) directly applicable to Octant's mission of solving the problem of efficient public goods funding, applied at multiple levels (project eligibility verification and anti-[Sybil](https://en.wikipedia.org/wiki/Sybil_attack) measures).
+This research explores how [Schelling point](<https://en.wikipedia.org/wiki/Focal_point_(game_theory)>) based game mechanisms, the foundation of decentralized dispute resolution (DDR), can enhance Octant's public goods funding infrastructure. DDR is not the end goal; instead, it provides a tool for trustless, scalable decentralized curation (DC) directly applicable to Octant's mission of solving the problem of efficient public goods funding, applied at multiple levels (project eligibility verification and anti-[Sybil](https://en.wikipedia.org/wiki/Sybil_attack) measures).
 
 ## Strategic Alignment with Octant
 
@@ -12,9 +12,9 @@ This research explores how [Schelling point](https://en.wikipedia.org/wiki/Foca
 
 Golem Foundation (GF) aims to become the leader in public goods funding through the Octant project. At its core, Octant solves one problem: finding the optimal allocation vector W = [w₁, w₂, ..., wₙ] where Σwᵢ = 1. Each element is a public good. Each weight is its share of the funding pool. This is curation: deciding which projects enter the vector and what weight each receives. Octant already facilitates a decentralized curation process through [quadratic funding](https://wtfisqf.com/). The problem is that it is broken by design. Quadratic funding is highly vulnerable to [Sybil attacks](https://en.wikipedia.org/wiki/Sybil_attack) and devolves into a popularity contest. The question is: how do you build decentralized curation that actually works in a game-theoretic sense, so that it aligns the personal interests of actors with the public interest? This invites us to tap into game theory, specifically Schelling point based mechanisms that produce verifiable consensus through coordination games that align incentives by design. Decentralized dispute resolution is a tool built on these foundations. This research equips Octant with a deep understanding of DDR as a foundational tool required before DC can be understood and built.
 
-| | |
-|---|---|
-| **Goal** | Equip Octant with deep game-theoretic knowledge of DDR |
+|                    |                                                                |
+| ------------------ | -------------------------------------------------------------- |
+| **Goal**           | Equip Octant with deep game-theoretic knowledge of DDR         |
 | **Success Metric** | Deliverable research report and actionable implementation plan |
 
 ## Research Objectives
@@ -32,11 +32,11 @@ Master the theoretical foundations and practical implementations of Schelling po
 
 ### Deliverables
 
-| | |
-|---|---|
-| **D1** | Internal Research Report |
+|        |                            |
+| ------ | -------------------------- |
+| **D1** | Internal Research Report   |
 | **D2** | Public Article / Blog Post |
-| **D3** | Presentation to Team |
+| **D3** | Presentation to Team       |
 
 ---
 

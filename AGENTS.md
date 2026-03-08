@@ -20,7 +20,7 @@ This project is a Markdown workspace for a multi-part article series on the info
   - `outputs/` (rendered artifacts; gitignored)
   - `.github/workflows/publish-cloudflare-pages-branch.yml` (CI publish: run sims → render HTML → push `cf-pages/public/index.html`)
 
-*Note:* We no longer produce DOCX outputs. Quarto renders **HTML + PDF** only.
+_Note:_ We no longer produce DOCX outputs. Quarto renders **HTML + PDF** only.
 
 ### Workflow expectations
 

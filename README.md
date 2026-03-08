@@ -30,6 +30,7 @@ quarto render
 ```
 
 Outputs are written to `outputs/` and currently standardized as:
+
 - `outputs/paper.html`
 - `outputs/paper.pdf`
 
@@ -74,7 +75,7 @@ The publishing workflow file is: `.github/workflows/publish-cloudflare-pages-bra
 
 ## Release procedure (hash-versioned)
 
-**Definition:** the *unreleased master* is `paper.qmd`. A *release* is a frozen snapshot keyed by a content hash, plus rendered outputs.
+**Definition:** the _unreleased master_ is `paper.qmd`. A _release_ is a frozen snapshot keyed by a content hash, plus rendered outputs.
 
 1. **Compute the release id**
 
@@ -111,4 +112,3 @@ cp "analysis/run_all.py" "releases/<hash>/analysis/run_all.py"
 4. **Update pointers**
 
 - Update `context/context.md` so “last released snapshot/export” points to the new `<hash>` artifacts (and optionally add a 1–3 bullet release note).
-
