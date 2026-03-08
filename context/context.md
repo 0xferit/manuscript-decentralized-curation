@@ -164,4 +164,10 @@ _Note:_ `legacy/` contains older pre-Quarto snapshots/exports (including unversi
   2. **Framework Step 2 operationalization:** Added two feasibility conditions to the contributions bullet (evidence must be publicly verifiable; falsification must be cheaper than verification).
   3. **Second framework instantiation:** Added advertising claim verification as a concrete second instantiation of the four-step framework, demonstrating domain-agnosticism. Walks through all four steps, shows the key structural difference (single quality dimension, no coherence game needed), and connects to the existing advertiser staking section.
   4. **Deferred items filed as GitHub issues:** E4b attacker realism (#2), E4d cross-domain scoping (#3), E1/E2 base multi-seed (#4), P5 distillation (#5).
-- **Next:** P5 distillation pass; build presentation for reading group.
+- **P5 distillation (March 2026):** Condensed manuscript from ~15,000 to ~8,000 body words (target: 8,000-10,000 excluding references, appendices, figure captions). Five reviewer-suggested changes:
+  1. **Appendix A → supplementary:** Moved full Wang & Strong and CRAAP mapping tables to `supplementary-material.md`; main text retains one-sentence forward reference.
+  2. **Groves-Ledyard collapsed:** Reduced from ~500 to ~200 words; core analogy and 4 structural differences preserved as compact list + footnote.
+  3. **Limitations merged:** Three subsections (curation policy authoring, focal-point uniqueness, smart contract attack surface) merged into single "Formal model limitations" subsection.
+  4. **Truth Post "What was not built" compressed:** Bullet list → single sentence.
+  5. **Line-editing across all sections:** Introduction (1,705 → ~850 words), Background (1,133 → ~530), System model (535 → ~280), Mechanisms (5,391 → ~2,700), Truth Post (556 → ~210), Related work (1,300 → ~580), Evaluation (1,877 → ~750), Limitations (1,749 → ~640), Conclusion (455 → ~220), Abstract (294 → ~180). All substantive claims, mechanism descriptions, and simulation results preserved; cross-references verified. "Working draft" callout updated to remove "too long" notice.
+- **Next:** Build presentation for reading group.
