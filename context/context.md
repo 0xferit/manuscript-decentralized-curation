@@ -159,4 +159,9 @@ _Note:_ `legacy/` contains older pre-Quarto snapshots/exports (including unversi
   4. **P4 (smart contract invariants):** Added 6-item checklist of accounting invariants (stake conservation, slash boundedness, commit-reveal integrity, payout exclusivity, cooldown monotonicity, confidence monotonicity) before the existing closing sentence.
   5. **Non-blocking improvements:** (A) Added mechanistic explanation of why reputation increases relevance error in E4a results. (B) Added approximate Truth Post participation metrics (fewer than 10 claims, fewer than 5 challenges, ~6-month active period). (C) Added zero-variance parenthetical for deterministic 8-round entry trajectory.
   6. **P5 (distillation to 8,000-10,000 words):** Deferred to separate revision pass.
+- **Additional reviewer items (March 2026):** Three non-punch-list items from the v2 re-review addressed:
+  1. **Kleros court selection:** Specified "General court" in Truth Post section for replicability.
+  2. **Framework Step 2 operationalization:** Added two feasibility conditions to the contributions bullet (evidence must be publicly verifiable; falsification must be cheaper than verification).
+  3. **Second framework instantiation:** Added advertising claim verification as a concrete second instantiation of the four-step framework, demonstrating domain-agnosticism. Walks through all four steps, shows the key structural difference (single quality dimension, no coherence game needed), and connects to the existing advertiser staking section.
+  4. **Deferred items filed as GitHub issues:** E4b attacker realism (#2), E4d cross-domain scoping (#3), E1/E2 base multi-seed (#4), P5 distillation (#5).
 - **Next:** P5 distillation pass; build presentation for reading group.
