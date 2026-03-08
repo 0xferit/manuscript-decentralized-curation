@@ -40,13 +40,15 @@ jobs:
       - name: Run simulations (E1–E3)
         run: python "analysis/run_all.py"
 
-      - name: Stamp build info (commit SHA)
+      - name: Stamp build info and date-modified
         run: |
           SHORT_SHA="${GITHUB_SHA:0:7}"
           COMMIT_URL="https://github.com/proveuswrong/manuscript-decentralized-curation/commit/${GITHUB_SHA}"
           echo "**Version:** ${SHORT_SHA} ([commit](${COMMIT_URL}))" > "_build-info.md"
-          echo "" >> "_build-info.md"
-          echo "**Built at (UTC):** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "_build-info.md"
+
+          # Stamp date-modified in paper.qmd with Lisbon time (WET/WEST)
+          LISBON_TIME=$(TZ='Europe/Lisbon' date '+%B %-d, %Y at %H:%M %Z')
+          sed -i "s|^date-modified:.*|date-modified: \"${LISBON_TIME}\"|" paper.qmd
 
       - name: Render HTML
         run: quarto render --to html
@@ -57,7 +59,7 @@ jobs:
           cp "outputs/paper.html" "/tmp/cf-public/index.html"
 
       - name: Restore working tree for branch switch
-        run: git restore "_build-info.md"
+        run: git restore "_build-info.md" "paper.qmd"
 
       - name: Publish to cf-pages branch
         run: |
