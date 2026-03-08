@@ -144,4 +144,5 @@ _Note:_ `legacy/` contains older pre-Quarto snapshots/exports (including unversi
   7. **Limitations:** "No deployment evidence" renamed to "Limited deployment evidence" with Truth Post cross-reference; cold start subsection now references Truth Post as empirical evidence.
   8. **Conclusion:** framework language added; Truth Post referenced in assumptions paragraph.
   9. **Roadmap:** updated to include Truth Post section and reframe Mechanisms description.
+- **Falsification/verification asymmetry (March 2026):** Added scope paragraph to Instantiation 1 (binary accuracy) stating that the DDR mechanism is justified only when falsification is practically cheap relative to exhaustive verification. If a claim admits a compact proof, the dispute game is unnecessary; if no feasible counter-evidence exists within the stake's economic constraints, the game is inert. News claims identified as natural fit. Connects to Popper's demarcation criterion with a practical/economic dimension. ~110 words, one paragraph after the focal-point sentence.
 - **Next:** Build presentation for March 10.

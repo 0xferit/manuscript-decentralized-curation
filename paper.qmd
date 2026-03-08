@@ -264,6 +264,8 @@ The dispute mechanism (Flow 3) instantiates $\Gamma$ with $\mathcal{V} = \{\text
 
 This restriction is critical: George's impossibility applies to games with three or more **ranked** alternatives. Binary choice avoids the impossibility entirely. The focal point is the verdict consistent with the pool's curation policy and evidence standard.
 
+The DDR mechanism exploits an asymmetry between falsification and verification. It is justified for claims where falsification is practically cheap (a challenger can present a counterexample) but exhaustive verification is expensive (confirming truth requires checking all cases or sources). If a claim admits a compact proof anyone can check, the dispute game is unnecessary; if no feasible counter-evidence exists within the stake's economic constraints, the game is inert. News claims fit naturally: "Product X contains no lead" is cheap to falsify (one positive test) but expensive to verify exhaustively. This echoes Popper's demarcation criterion with a practical addition: the claim must be falsifiable not merely in principle but at a cost that makes the game rational given the bounty.
+
 ::: {.callout-note title="Proposition 1 (Condorcet connection)"}
 If per-juror accuracy $p > 0.50$ and votes are independent, the majority-correct probability $P_{\mathrm{maj}}(p, N) = \sum_{k=\lceil N/2 \rceil}^{N} \binom{N}{k} p^k (1-p)^{N-k}$ is monotone increasing in jury size $N$ and converges to 1 as $N \to \infty$. Challenger expected value is positive whenever $P_{\mathrm{maj}}(p, N) > \frac{S/B}{1 + S/B}$.
 :::
