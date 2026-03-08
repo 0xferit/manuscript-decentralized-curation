@@ -26,3 +26,5 @@ legacy/quarto-outputs-pre-normalization/
 
 /.quarto/
 **/*.quarto_ipynb
+
+.claude/
