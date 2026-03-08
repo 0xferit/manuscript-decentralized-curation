@@ -18,53 +18,49 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Git identity
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
 
-      - name: Setup Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
+      - name: Install Quarto and Python deps
+        run: |
+          pip install -r requirements.txt &
+          PIP_PID=$!
 
-      - name: Install evaluation dependencies
-        run: python -m pip install -r "requirements.txt"
+          QUARTO_VER=$(curl -s https://api.github.com/repos/quarto-dev/quarto-cli/releases/latest \
+            | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+          curl -sLo /tmp/quarto.deb \
+            "https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VER}/quarto-${QUARTO_VER}-linux-amd64.deb"
+          sudo dpkg -i /tmp/quarto.deb
 
-      - name: Run simulations (E1–E3)
-        run: python "analysis/run_all.py"
+          wait $PIP_PID
 
-      - name: Stamp build info and date-modified
+      - name: Run simulations
+        run: python analysis/run_all.py
+
+      - name: Stamp build info and render
         run: |
           SHORT_SHA="${GITHUB_SHA:0:7}"
           COMMIT_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}"
-          echo "**Version:** ${SHORT_SHA} ([commit](${COMMIT_URL}))" > "_build-info.md"
+          echo "**Version:** ${SHORT_SHA} ([commit](${COMMIT_URL}))" > _build-info.md
 
-          # Stamp date-modified in paper.qmd with Lisbon time (ISO 8601)
           LISBON_TIME=$(TZ='Europe/Lisbon' date '+%Y-%m-%dT%H:%M:%S')
           sed -i "s|^date-modified:.*|date-modified: ${LISBON_TIME}|" paper.qmd
 
-      - name: Render HTML
-        run: quarto render --to html
-
-      - name: Stage publish content
-        run: |
-          mkdir -p /tmp/cf-public
-          cp "outputs/paper.html" "/tmp/cf-public/index.html"
-
-      - name: Restore working tree for branch switch
-        run: git restore "_build-info.md" "paper.qmd"
+          quarto render --to html
 
       - name: Publish to cf-pages branch
         run: |
-          git fetch origin cf-pages:cf-pages || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          cp outputs/paper.html /tmp/index.html
+          git restore _build-info.md paper.qmd
+
+          git fetch origin cf-pages:cf-pages || true
           if git show-ref --verify --quiet refs/heads/cf-pages; then
             git checkout cf-pages
           else
@@ -75,8 +71,7 @@ jobs:
           git clean -fdx || true
 
           mkdir -p public
-          cp "/tmp/cf-public/index.html" "public/index.html"
-
+          cp /tmp/index.html public/index.html
           git add public/index.html
 
           if git diff --cached --quiet; then
