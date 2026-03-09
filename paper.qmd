@@ -132,8 +132,8 @@ This design intentionally avoids pretending that the protocol determines truth i
 
 - `Live`: the item is active, bonded, and challengeable. Confidence accrues.
 - `Challenged`: an active dispute is in progress. Confidence is paused.
-- `WithdrawPending`: the author has initiated withdrawal. A cooldown period runs during which challenges are still accepted.
-- `Withdrawn`: the author removed the bond after the cooldown; the item remains visible historically with frozen confidence.
+- `RetractPending`: the author has initiated retraction. A cooldown period runs during which challenges are still accepted.
+- `Retracted`: the author removed the bond after the cooldown; the item remains visible historically with frozen confidence.
 - `Debunked`: a challenge succeeded, whether by counter-evidence or because the challenged proposition was non-falsifiable under the pool's claim template and evidence policy.
 
 The important point is institutional modesty. Truth Post is not an oracle of metaphysical truth. It is a system for transparency, contestability, and incentives.
@@ -166,7 +166,7 @@ This split is part of the design, not an implementation detail. A protocol with 
 
 ## Actors
 
-- **Authors** submit claim blobs, post author bonds, and may later withdraw or amend claims.
+- **Authors** submit claim blobs, post author bonds, and may later retract or amend claims.
 - **Challengers** file counter-stake, counter-evidence, and an explicit challenge reason against a challenged proposition.
 - **Curators** stake into pools and become eligible for drafted relevance rounds.
 - **Jurors** belong to the external decentralized dispute resolution layer and adjudicate only accuracy disputes.
@@ -233,7 +233,7 @@ The semantics are simple:
 - larger bond means more capital at risk
 - longer survival means longer exposure to challenge
 - challenge pauses accumulation
-- withdrawal freezes the score
+- retraction freezes the score
 
 An interface may use confidence for ranking or display, but it must not conflate confidence with a universal truth claim. Confidence measures accumulated capital risk exposure over time, not community validation or endorsement. The scrutiny signal is survival: a `Live` item that has survived an explicit challenge attempt carries stronger evidence of accuracy than one that has simply accumulated bond-time without being tested.
 
@@ -366,7 +366,7 @@ The protocol assumes adversaries can be rational, coordinated, well-funded, and 
 | A dominant frontend recentralizes discovery | Canonical protocol state and replaceable interfaces |
 | Reputation creates unbonded influence | No reputation-weighted curation mechanism exists; author reputation is a separate standing bond only |
 | Low-participation pools fail to bootstrap | Pool creators seed local reward budgets; interfaces can ignore inactive pools |
-| Stale claims linger forever | Confidence only accumulates while bonded; withdrawn claims remain historical rather than active |
+| Stale claims linger forever | Confidence only accumulates while bonded; retracted claims remain historical rather than active |
 
 Several threats remain partially unresolved: off-chain collusion, legal pressure against visible participants, pool-policy degeneracy, and coordinated capture above a sufficiently large colluding bloc.
 
