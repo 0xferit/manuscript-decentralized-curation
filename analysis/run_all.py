@@ -318,8 +318,6 @@ class E2Params:
     committee_size: int = 15
     rounds: int = 200
     slash_rate: float = 0.03
-    draft_alpha: float = 0.25
-    rep_decay: float = 0.01
     noise_sigma: float = 0.08
     coherence_cap_share: float = 0.10
     flat_round_stddev_min: float = 0.02
@@ -334,8 +332,6 @@ def _run_relevance_process(
     committee_size: int,
     rounds: int,
     slash_rate: float,
-    draft_alpha: float,
-    rep_decay: float,
     noise_sigma: float,
     coherence_cap_share: float,
     flat_round_stddev_min: float,
@@ -348,13 +344,12 @@ def _run_relevance_process(
         stakes = np.ones(n_curators, dtype=float)
     else:
         stakes = initial_stakes.astype(float).copy()
-    rep = np.zeros(n_curators, dtype=float)
     abs_errors: list[float] = []
     cancelled_rounds = 0
     selection_counts = np.zeros(n_curators, dtype=int)
 
     for _ in range(rounds):
-        draft_scores = stakes + draft_alpha * rep
+        draft_scores = stakes.copy()
         drafted = _weighted_sample_without_replacement(rng, draft_scores, committee_size)
         selection_counts[drafted] += 1
 
@@ -386,7 +381,6 @@ def _run_relevance_process(
         weight_sum = float(weights.sum())
         if weight_sum <= 0:
             cancelled_rounds += 1
-            rep *= 1.0 - rep_decay
             continue
 
         mu = float((weights * votes).sum() / weight_sum)
@@ -394,7 +388,6 @@ def _run_relevance_process(
 
         if sigma < flat_round_stddev_min:
             cancelled_rounds += 1
-            rep *= 1.0 - rep_decay
             continue
 
         coherent = np.abs(votes - mu) <= (k * sigma)
@@ -412,8 +405,6 @@ def _run_relevance_process(
             if coherent_total > 0:
                 stakes[coherent_idx] += total_slashed * (coherent_stakes / coherent_total)
 
-        rep[coherent_idx] += 1.0
-        rep *= 1.0 - rep_decay
         abs_errors.append(abs(mu - r_true))
 
     return {
@@ -421,7 +412,6 @@ def _run_relevance_process(
         "cancelled_round_share": cancelled_rounds / rounds,
         "selection_counts": selection_counts,
         "stakes": stakes,
-        "rep": rep,
     }
 
 
@@ -436,8 +426,6 @@ def _e2_single_run(params: E2Params, frac: float, k: float, seed_idx: int) -> di
         committee_size=params.committee_size,
         rounds=params.rounds,
         slash_rate=params.slash_rate,
-        draft_alpha=params.draft_alpha,
-        rep_decay=params.rep_decay,
         noise_sigma=params.noise_sigma,
         coherence_cap_share=params.coherence_cap_share,
         flat_round_stddev_min=params.flat_round_stddev_min,
@@ -552,8 +540,6 @@ class E2AdvParams:
     committee_size: int = 15
     rounds: int = 200
     slash_rate: float = 0.03
-    draft_alpha: float = 0.25
-    rep_decay: float = 0.01
     noise_sigma: float = 0.08
     coherence_cap_share: float = 0.10
     flat_round_stddev_min: float = 0.02
@@ -580,8 +566,6 @@ def _e2_adv_single_run(params: E2AdvParams, col_frac: float, seed_idx: int) -> d
         committee_size=params.committee_size,
         rounds=params.rounds,
         slash_rate=params.slash_rate,
-        draft_alpha=params.draft_alpha,
-        rep_decay=params.rep_decay,
         noise_sigma=params.noise_sigma,
         coherence_cap_share=params.coherence_cap_share,
         flat_round_stddev_min=params.flat_round_stddev_min,
@@ -826,352 +810,6 @@ def run_e4a(params: E4aParams) -> None:
     plt.close()
 
 
-@dataclass(frozen=True)
-class E4bParams:
-    n_curators: int = 200
-    committee_size: int = 15
-    rounds: int = 300
-    slash_rate: float = 0.03
-    noise_sigma: float = 0.08
-    K: float = 1.25
-    competent_frac: float = 0.5
-    cash_poor_frac: float = 0.10
-    coherence_cap_share: float = 0.10
-    flat_round_stddev_min: float = 0.02
-    alphas: tuple[float, ...] = (0.0, 0.10, 0.25, 0.50, 1.0)
-    decay_rates: tuple[float, ...] = (0.0, 0.01, 0.05)
-    n_seeds: int = 100
-
-
-def _e4b_single_run(params: E4bParams, alpha: float, decay_rate: float, seed_idx: int) -> dict:
-    rng = np.random.default_rng(int(100_000 * alpha + 10_000 * decay_rate + seed_idx))
-    n_comp = int(round(params.n_curators * params.competent_frac))
-    types = np.array([0] * n_comp + [1] * (params.n_curators - n_comp), dtype=int)
-    rng.shuffle(types)
-
-    competent_indices = np.where(types == 0)[0]
-    n_cash_poor = max(1, int(round(len(competent_indices) * params.cash_poor_frac)))
-    cash_poor_mask = np.zeros(params.n_curators, dtype=bool)
-    cash_poor_mask[competent_indices[:n_cash_poor]] = True
-
-    stakes = np.ones(params.n_curators, dtype=float)
-    stakes[cash_poor_mask] = 0.1
-
-    rep = np.zeros(params.n_curators, dtype=float)
-    abs_errors: list[float] = []
-    time_to_entry = params.rounds
-
-    for round_idx in range(params.rounds):
-        draft_scores = stakes + alpha * rep
-        drafted = _weighted_sample_without_replacement(
-            rng, draft_scores, params.committee_size
-        )
-
-        r_true = float(rng.uniform(0.0, 1.0))
-        votes = np.empty(len(drafted), dtype=float)
-        drafted_types = types[drafted]
-        comp_mask = drafted_types == 0
-        noisy_mask = drafted_types == 1
-
-        if comp_mask.any():
-            votes[comp_mask] = _truncate_0_1(
-                rng.normal(loc=r_true, scale=params.noise_sigma, size=comp_mask.sum())
-            )
-        if noisy_mask.any():
-            votes[noisy_mask] = rng.uniform(0.0, 1.0, size=noisy_mask.sum())
-
-        weights = _committee_weights(stakes[drafted], params.coherence_cap_share)
-        weight_sum = float(weights.sum())
-        if weight_sum > 0:
-            mu = float((weights * votes).sum() / weight_sum)
-            sigma = float(np.sqrt(((weights * (votes - mu) ** 2).sum() / weight_sum)))
-            if sigma >= params.flat_round_stddev_min:
-                coherent = np.abs(votes - mu) <= (params.K * sigma)
-                incoherent = ~coherent
-                incoherent_idx = drafted[incoherent]
-                coherent_idx = drafted[coherent]
-
-                slashed = params.slash_rate * stakes[incoherent_idx]
-                total_slashed = float(slashed.sum())
-                stakes[incoherent_idx] -= slashed
-                if total_slashed > 0 and len(coherent_idx) > 0:
-                    coherent_stakes = stakes[coherent_idx]
-                    coherent_total = float(coherent_stakes.sum())
-                    if coherent_total > 0:
-                        stakes[coherent_idx] += total_slashed * (
-                            coherent_stakes / coherent_total
-                        )
-                rep[coherent_idx] += 1.0
-                abs_errors.append(abs(mu - r_true))
-
-        rep *= 1.0 - decay_rate
-
-        if time_to_entry == params.rounds:
-            current_scores = stakes + alpha * rep
-            if float(current_scores[cash_poor_mask].max()) >= float(np.median(current_scores)):
-                time_to_entry = round_idx + 1
-
-    return {
-        "time_to_entry": time_to_entry,
-        "mean_abs_error": float(np.mean(abs_errors)) if abs_errors else 0.0,
-    }
-
-
-def run_e4b(params: E4bParams) -> None:
-    rows: list[dict] = []
-    for alpha in params.alphas:
-        for decay_rate in params.decay_rates:
-            with ProcessPoolExecutor() as executor:
-                seed_results = list(
-                    executor.map(
-                        functools.partial(_e4b_single_run, params, alpha, decay_rate),
-                        range(params.n_seeds),
-                    )
-                )
-
-            entries = np.array([r["time_to_entry"] for r in seed_results])
-            errors = np.array([r["mean_abs_error"] for r in seed_results])
-            rows.append(
-                {
-                    "alpha": alpha,
-                    "decay_rate": decay_rate,
-                    "time_to_entry_mean": float(entries.mean()),
-                    "time_to_entry_ci95": _ci95(entries),
-                    "mean_abs_error_mean": float(errors.mean()),
-                    "mean_abs_error_ci95": _ci95(errors),
-                }
-            )
-
-    df = pd.DataFrame(rows)
-    df.to_csv(OUT_DIR / "e4b_curator_entry.csv", index=False)
-
-    fig, ax = plt.subplots(figsize=(7.0, 4.5))
-    pivot = df.pivot(index="decay_rate", columns="alpha", values="time_to_entry_mean")
-    im = ax.imshow(pivot.values, aspect="auto", cmap="viridis_r", origin="lower")
-    ax.set_xticks(range(len(params.alphas)))
-    ax.set_xticklabels([f"{a:g}" for a in params.alphas])
-    ax.set_yticks(range(len(params.decay_rates)))
-    ax.set_yticklabels([f"{d:g}" for d in params.decay_rates])
-    ax.set_xlabel("Curator reputation draft boost alpha")
-    ax.set_ylabel("Curator reputation decay")
-    ax.set_title(
-        f"E4b: Rounds until cash-poor expert reaches median draft score (N={params.n_seeds} seeds)"
-    )
-    for i in range(len(params.decay_rates)):
-        for j in range(len(params.alphas)):
-            val = pivot.values[i, j]
-            ax.text(
-                j,
-                i,
-                f"{val:.0f}",
-                ha="center",
-                va="center",
-                fontsize=9,
-                color="white" if val > pivot.values.mean() else "black",
-            )
-    fig.colorbar(im, ax=ax, label="Rounds")
-    plt.tight_layout()
-    plt.savefig(FIG_DIR / "e4b_curator_entry_heatmap.png", dpi=200)
-    plt.close()
-
-    plt.figure(figsize=(7.0, 4.0))
-    for decay_rate in params.decay_rates:
-        sub = df[df["decay_rate"] == decay_rate].sort_values("alpha")
-        plt.errorbar(
-            sub["alpha"],
-            sub["mean_abs_error_mean"],
-            yerr=sub["mean_abs_error_ci95"],
-            marker="o",
-            capsize=3,
-            label=f"delta={decay_rate:g}",
-        )
-    plt.xlabel("Curator reputation draft boost alpha")
-    plt.ylabel("Mean |mu - r|")
-    plt.title(f"E4b: Relevance error under draft-only curator reputation (N={params.n_seeds} seeds)")
-    plt.legend(frameon=False)
-    plt.tight_layout()
-    plt.savefig(FIG_DIR / "e4b_curator_error.png", dpi=200)
-    plt.close()
-
-
-@dataclass(frozen=True)
-class E4cParams:
-    n_curators: int = 200
-    committee_size: int = 15
-    rounds_buildup: int = 100
-    rounds_attack: int = 100
-    slash_rate: float = 0.03
-    noise_sigma: float = 0.08
-    K: float = 1.25
-    competent_frac: float = 0.5
-    n_sybils: int = 20
-    coherence_cap_share: float = 0.10
-    flat_round_stddev_min: float = 0.02
-    alphas: tuple[float, ...] = (0.0, 0.25, 0.5, 1.0)
-    decay_rate: float = 0.01
-    n_seeds: int = 100
-
-
-def _e4c_single_run(params: E4cParams, alpha: float, seed_idx: int) -> dict:
-    rng = np.random.default_rng(int(100_000 * alpha + seed_idx + 90_000))
-    n_comp = int(round(params.n_curators * params.competent_frac))
-    n_sybils = params.n_sybils
-    n_noisy = max(0, params.n_curators - n_comp - n_sybils)
-    n_comp = params.n_curators - n_noisy - n_sybils
-    types = np.array([0] * n_comp + [1] * n_noisy + [2] * n_sybils, dtype=int)
-    rng.shuffle(types)
-
-    stakes = np.ones(params.n_curators, dtype=float)
-    rep = np.zeros(params.n_curators, dtype=float)
-    sybil_mask = types == 2
-    attack_errors: list[float] = []
-    attack_draft_slots = 0
-
-    total_rounds = params.rounds_buildup + params.rounds_attack
-    for round_idx in range(total_rounds):
-        draft_scores = stakes + alpha * rep
-        drafted = _weighted_sample_without_replacement(
-            rng, draft_scores, params.committee_size
-        )
-
-        if round_idx >= params.rounds_buildup:
-            attack_draft_slots += int((types[drafted] == 2).sum())
-
-        r_true = float(rng.uniform(0.0, 1.0))
-        votes = np.empty(len(drafted), dtype=float)
-        drafted_types = types[drafted]
-
-        comp_mask = drafted_types == 0
-        noisy_mask = drafted_types == 1
-        sybil_committee_mask = drafted_types == 2
-
-        if comp_mask.any():
-            votes[comp_mask] = _truncate_0_1(
-                rng.normal(loc=r_true, scale=params.noise_sigma, size=comp_mask.sum())
-            )
-        if noisy_mask.any():
-            votes[noisy_mask] = rng.uniform(0.0, 1.0, size=noisy_mask.sum())
-        if sybil_committee_mask.any():
-            if round_idx < params.rounds_buildup:
-                votes[sybil_committee_mask] = _truncate_0_1(
-                    rng.normal(
-                        loc=r_true,
-                        scale=params.noise_sigma,
-                        size=sybil_committee_mask.sum(),
-                    )
-                )
-            else:
-                biased_target = min(1.0, r_true + 0.30)
-                votes[sybil_committee_mask] = _truncate_0_1(
-                    rng.normal(
-                        loc=biased_target,
-                        scale=params.noise_sigma * 0.5,
-                        size=sybil_committee_mask.sum(),
-                    )
-                )
-
-        weights = _committee_weights(stakes[drafted], params.coherence_cap_share)
-        weight_sum = float(weights.sum())
-        if weight_sum > 0:
-            mu = float((weights * votes).sum() / weight_sum)
-            sigma = float(np.sqrt(((weights * (votes - mu) ** 2).sum() / weight_sum)))
-            if sigma >= params.flat_round_stddev_min:
-                coherent = np.abs(votes - mu) <= (params.K * sigma)
-                incoherent = ~coherent
-                incoherent_idx = drafted[incoherent]
-                coherent_idx = drafted[coherent]
-                slashed = params.slash_rate * stakes[incoherent_idx]
-                total_slashed = float(slashed.sum())
-                stakes[incoherent_idx] -= slashed
-                if total_slashed > 0 and len(coherent_idx) > 0:
-                    coherent_stakes = stakes[coherent_idx]
-                    coherent_total = float(coherent_stakes.sum())
-                    if coherent_total > 0:
-                        stakes[coherent_idx] += total_slashed * (
-                            coherent_stakes / coherent_total
-                        )
-                rep[coherent_idx] += 1.0
-                if round_idx >= params.rounds_buildup:
-                    attack_errors.append(abs(mu - r_true))
-        rep *= 1.0 - params.decay_rate
-
-    total_attack_slots = params.rounds_attack * params.committee_size
-    return {
-        "mean_abs_error_attack": float(np.mean(attack_errors)) if attack_errors else 0.0,
-        "final_sybil_stake_share": float(stakes[sybil_mask].sum() / stakes.sum()),
-        "attack_draft_share": attack_draft_slots / total_attack_slots,
-    }
-
-
-def run_e4c(params: E4cParams) -> None:
-    rows: list[dict] = []
-    for alpha in params.alphas:
-        with ProcessPoolExecutor() as executor:
-            seed_results = list(
-                executor.map(
-                    functools.partial(_e4c_single_run, params, alpha),
-                    range(params.n_seeds),
-                )
-            )
-
-        errors = np.array([r["mean_abs_error_attack"] for r in seed_results])
-        stake_shares = np.array([r["final_sybil_stake_share"] for r in seed_results])
-        draft_shares = np.array([r["attack_draft_share"] for r in seed_results])
-        rows.append(
-            {
-                "alpha": alpha,
-                "decay_rate": params.decay_rate,
-                "n_sybils": params.n_sybils,
-                "mean_abs_error_attack_mean": float(errors.mean()),
-                "mean_abs_error_attack_ci95": _ci95(errors),
-                "final_sybil_stake_share_mean": float(stake_shares.mean()),
-                "final_sybil_stake_share_ci95": _ci95(stake_shares),
-                "attack_draft_share_mean": float(draft_shares.mean()),
-                "attack_draft_share_ci95": _ci95(draft_shares),
-            }
-        )
-
-    df = pd.DataFrame(rows)
-    df.to_csv(OUT_DIR / "e4c_curator_sybil.csv", index=False)
-
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.0, 4.5))
-    labels = [f"alpha={a:g}" for a in params.alphas]
-
-    ax1.bar(
-        labels,
-        df["mean_abs_error_attack_mean"],
-        yerr=df["mean_abs_error_attack_ci95"],
-        color="#4C72B0",
-        capsize=4,
-    )
-    ax1.set_ylabel("Mean |mu - r| during attack phase")
-    ax1.set_title(
-        f"E4c: Sybil attack error under draft-only curator reputation (N={params.n_seeds} seeds)"
-    )
-
-    ax2.bar(
-        labels,
-        df["attack_draft_share_mean"],
-        yerr=df["attack_draft_share_ci95"],
-        color="#C44E52",
-        capsize=4,
-    )
-    ax2.axhline(
-        params.n_sybils / params.n_curators,
-        color="gray",
-        linestyle="--",
-        linewidth=0.8,
-        label="Population share",
-    )
-    ax2.set_ylabel("Sybil share of drafted attack seats")
-    ax2.set_title(
-        f"E4c: Sybil draft amplification after honest buildup (delta={params.decay_rate:g})"
-    )
-    ax2.legend(frameon=False, fontsize=9)
-
-    plt.tight_layout()
-    plt.savefig(FIG_DIR / "e4c_curator_sybil.png", dpi=200)
-    plt.close()
 
 
 # ---------------------------------------------------------------------------
@@ -1187,9 +825,6 @@ def write_eval_summary() -> None:
     e1_adv = pd.read_csv(OUT_DIR / "e1_adversarial_results.csv")
     e2_adv = pd.read_csv(OUT_DIR / "e2_adversarial_results.csv")
     e4a = pd.read_csv(OUT_DIR / "e4a_author_reputation.csv")
-    e4b = pd.read_csv(OUT_DIR / "e4b_curator_entry.csv")
-    e4c = pd.read_csv(OUT_DIR / "e4c_curator_sybil.csv")
-
     e1_sub = e1[e1["stake_over_bounty"] == 0.25].copy()
     e1_sub["p_delta"] = (e1_sub["p_juror_correct"] - 0.8).abs()
     e1_point = e1_sub.sort_values("p_delta").iloc[0]
@@ -1199,9 +834,6 @@ def write_eval_summary() -> None:
     e2_adv_point = e2_adv[e2_adv["colluding_frac"] == 0.15].iloc[0]
     e2_adv_base = e2_adv[e2_adv["colluding_frac"] == 0.0].iloc[0]
     e4a_point = e4a.iloc[-1]
-    e4b_point = e4b[(e4b["alpha"] == 0.5) & (e4b["decay_rate"] == 0.01)].iloc[0]
-    e4c_point = e4c[e4c["alpha"] == 0.5].iloc[0]
-
     summary = f"""\
 ### Evaluation snapshot (representative points)
 
@@ -1211,8 +843,6 @@ def write_eval_summary() -> None:
 - **E1-Adv:** A well-funded adversary submitting {int(e1_adv_point["n_attacks"])} false claims at $p=0.80$ achieves survival rate **{e1_adv_point["survival_rate_mean"]:.2f} $\\pm$ {e1_adv_point["survival_rate_ci95"]:.2f}** (95% CI, $N={int(e1_adv_point["n_seeds"])}$ seeds) with cumulative balance **{e1_adv_point["adversary_balance_mean"]:.0f} $\\pm$ {e1_adv_point["adversary_balance_ci95"]:.0f}**.
 - **E2-Adv:** A 15% colluding bloc shifts mean relevance error from **{e2_adv_base["mean_abs_error_mean"]:.3f}** to **{e2_adv_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2_adv_point["mean_abs_error_ci95"]:.3f}** and ends with **{e2_adv_point["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2_adv_point["final_colluder_stake_share_ci95"]:.3f}** stake share.
 - **E4a:** By round {int(e4a_point["round"])}, median honest-author reputation reaches **{e4a_point["honest_median_rep"]:.2f}** while median dishonest-author reputation remains at **{e4a_point["dishonest_median_rep"]:.2f}**.
-- **E4b:** At $\\alpha=0.5$, $\\delta=0.01$, cash-poor competent curators reach median draft score in **{e4b_point["time_to_entry_mean"]:.0f} $\\pm$ {e4b_point["time_to_entry_ci95"]:.0f}** rounds, with mean relevance error **{e4b_point["mean_abs_error_mean"]:.3f} $\\pm$ {e4b_point["mean_abs_error_ci95"]:.3f}**.
-- **E4c:** With draft-only curator reputation at $\\alpha=0.5$, Sybils occupy **{e4c_point["attack_draft_share_mean"]:.3f} $\\pm$ {e4c_point["attack_draft_share_ci95"]:.3f}** of attack-phase committee seats, versus a population share of **{E4cParams().n_sybils / E4cParams().n_curators:.2f}**.
 """
     (OUT_DIR / "eval_summary.md").write_text(summary, encoding="utf-8")
 
@@ -1286,8 +916,6 @@ def main() -> None:
     run_e2_adversarial(E2AdvParams())
     run_e3(E3Params())
     run_e4a(E4aParams())
-    run_e4b(E4bParams())
-    run_e4c(E4cParams())
     write_eval_summary()
     write_reading_time()
 

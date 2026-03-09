@@ -21,9 +21,9 @@ The internet solved access to information but not access to knowledge. The unres
 
 This paper argues that many hard problems decompose into a curate-then-coordinate structure, that the difficulty is concentrated in the curation phase rather than the coordination phase, and proposes a general framework for trustless decentralized curation. The framework has four steps: identify the hidden curation problem behind an apparent downstream failure; identify the relevant quality dimensions; require falsifiability where the mechanism depends on challenge; and design distinct mechanisms for each quality dimension instead of collapsing all quality into one score. We instantiate the framework for news, where two dimensions dominate: **accuracy**, which is global and binary, and **relevance**, which is local and scalar.
 
-The protocol design reflects that decomposition. Accuracy is handled through bonded publication, open challenges, and external decentralized dispute resolution. Relevance is handled through drafted curator rounds under a public policy, with coherence-based rewards and slashing. Confidence is accumulated bond-time rather than a truth label. Author reputation acts as a slow-moving non-monetary bond; curator reputation affects drafting probability but not final vote weight. Pool creation is permissionless, contracts are treated as immutable, and governance is minimized by design: we prefer no need for governance over good governance.
+The protocol design reflects that decomposition. Accuracy is handled through bonded publication, open challenges, and external decentralized dispute resolution. Relevance is handled through drafted curator rounds under a public policy, with coherence-based rewards and slashing. Confidence is accumulated bond-time rather than a truth label. Author reputation acts as a slow-moving non-monetary bond; curation uses no reputation-weighted mechanism at all. Pool creation is permissionless, contracts are treated as immutable, and governance is minimized by design: we prefer no need for governance over good governance.
 
-Truth Post, launched in 2023, partially implemented the accuracy layer only. The deployment failed to bootstrap sustained participation, but it demonstrated that the submission-and-challenge flow is deployable and directly informed the current complete design. Redesigned simulations in this paper show that debunking false claims is economically attractive under reasonable juror accuracy, that drafted-curator relevance rounds filter competence while remaining vulnerable above a concrete collusion threshold, that dedicated `NonFalsifiable` challenges materially reduce bad-item retention, and that separating author and curator reputation avoids the strongest failure mode of reputation-weighted voting while preserving entry benefits.
+Truth Post, launched in 2023, partially implemented the accuracy layer only. The deployment failed to bootstrap sustained participation, but it demonstrated that the submission-and-challenge flow is deployable and directly informed the current complete design. Redesigned simulations in this paper show that debunking false claims is economically attractive under reasonable juror accuracy, that drafted-curator relevance rounds filter competence while remaining vulnerable above a concrete collusion threshold, that dedicated `NonFalsifiable` challenges materially reduce bad-item retention, and that author reputation as a standing bond creates useful separation between honest and dishonest publishers without reintroducing reputation-weighted voting.
 
 This paper addresses only the information-to-knowledge transformation. Coordination given shared knowledge is out of scope.
 
@@ -192,16 +192,14 @@ The relevance mechanism is a drafted curator coherence game.
 
 1. Curators stake into a pool.
 2. Relevance rounds are scheduled for live items at a pool-defined cadence.
-3. Curators are drafted using a weighted lottery where the score is:
+3. Curators are drafted using a stake-weighted lottery:
 
 $$
-d_i = s_i + \alpha \cdot \mathrm{rep}^{\mathrm{cur}}_i
+d_i = s_i
 $$
-
-where $s_i$ is curator stake and $\mathrm{rep}^{\mathrm{cur}}_i$ is curator reputation.
 
 4. Drafted curators commit and reveal relevance scores in $[0,1]$.
-5. Final round weight is based on **slashable stake only**, not on reputation:
+5. Final round weight is based on **slashable stake only**:
 
 $$
 w_i = \min(s_i, c \cdot \text{total committee stake})
@@ -217,7 +215,7 @@ $$
 
 7. Near-flat rounds are cancelled as degenerate rather than accepted as meaningful curation.
 
-This design preserves the entry benefits of reputation without granting unbonded voting power. That is a major departure from the older paper version.
+This design keeps curation entirely stake-driven: no reputation-weighted mechanism influences either drafting or voting. That is a major departure from the older paper version.
 
 ## Confidence
 
@@ -240,12 +238,11 @@ An interface may use confidence for ranking or display, but it must not conflate
 
 ## Reputation
 
-The current design separates two reputation systems:
+The current design uses a single reputation system:
 
 - **Author reputation** is a pool-scoped, slowly decaying credibility stock. It is not escrowed per claim, but every new claim exposes the author's standing reputation to large downside if the claim is debunked.
-- **Curator reputation** is a drafting boost only. It makes competent low-capital curators more likely to be selected, but it does not increase final vote weight inside a relevance round.
 
-This separation is important. The older design allowed reputation to directly increase curation weight. The current design rejects that because it grants influence not fully backed by slashable capital.
+The design deliberately avoids any reputation-weighted mechanism for curation. The older design allowed reputation to directly increase curation weight; the current design rejects that entirely because it grants influence not fully backed by slashable capital. Curation drafting and voting are both purely stake-driven.
 
 ## Local pool economics
 
@@ -366,7 +363,7 @@ The protocol assumes adversaries can be rational, coordinated, well-funded, and 
 | Non-falsifiable or vague claims exploit semantic ambiguity | Structured claim templates plus `NonFalsifiable` challenge reason |
 | Bad pools set degenerate policies or parameters | Permissionless competition plus interface filtering rather than governance veto |
 | A dominant frontend recentralizes discovery | Canonical protocol state and replaceable interfaces |
-| Reputation creates unbonded influence | Curator reputation affects drafting only; author reputation is a separate standing bond |
+| Reputation creates unbonded influence | No reputation-weighted curation mechanism exists; author reputation is a separate standing bond only |
 | Low-participation pools fail to bootstrap | Pool creators seed local reward budgets; interfaces can ignore inactive pools |
 | Stale claims linger forever | Confidence only accumulates while bonded; withdrawn claims remain historical rather than active |
 
@@ -379,7 +376,7 @@ The evaluation suite is designed to test the current protocol architecture rathe
 - When is it economically rational to challenge false claims?
 - How robust is drafted-curator relevance curation to noise and collusion?
 - Does a dedicated `NonFalsifiable` challenge reason materially improve outcomes?
-- Does separating author reputation from curator reputation preserve the intended benefits without reintroducing the old reputation-weighting failure mode?
+- Does author reputation as a standing bond create useful separation between honest and dishonest publishers?
 
 {{< include analysis/out/eval_summary.md >}}
 
@@ -415,7 +412,7 @@ The result is economically punitive. At $p=0.80$, the adversary's cumulative bal
 
 ## E2: Relevance with drafted curators
 
-E2 evaluates the current relevance design rather than the older weight-allocation model. Curators are drafted into committees from a larger pool. Reputation affects drafting probability, but final round weight comes only from slashable stake. The mechanism computes a weighted mean $\mu$, a weighted standard deviation $\sigma$, and slashes outliers beyond $K\sigma$. Near-flat rounds are cancelled rather than treated as meaningful curation.
+E2 evaluates the current relevance design rather than the older weight-allocation model. Curators are drafted into committees from a larger pool using purely stake-weighted selection. The mechanism computes a weighted mean $\mu$, a weighted standard deviation $\sigma$, and slashes outliers beyond $K\sigma$. Near-flat rounds are cancelled rather than treated as meaningful curation.
 
 ![E2: Mean relevance error versus the initial fraction of competent curators, for four coherence thresholds. Error bands show 95% confidence intervals over 100 seeds.](analysis/fig/e2_relevance_error.png){#fig-e2-error}
 
@@ -429,7 +426,7 @@ E2-Adv introduces a colluding bloc of competent-but-biased curators. They vote c
 
 ![E2-Adv: Mean relevance error and final colluder stake share as collusion grows. Error bands show 95% confidence intervals over 100 seeds.](analysis/fig/e2_adversarial.png){#fig-e2-adv}
 
-The mechanism behaves as expected: small colluding minorities cause limited damage and do not expand much, but sufficiently large coordinated blocs begin to bend the signal and preserve their own stake. The current design does not eliminate this risk. It narrows the attack surface relative to the older reputation-weighted voting model by keeping reputation out of final vote weight.
+The mechanism behaves as expected: small colluding minorities cause limited damage and do not expand much, but sufficiently large coordinated blocs begin to bend the signal and preserve their own stake. The current design does not eliminate this risk. It narrows the attack surface relative to the older reputation-weighted voting model by keeping all curation mechanics purely stake-driven.
 
 ## E3: Dedicated `NonFalsifiable` challenges
 
@@ -444,9 +441,9 @@ E3 therefore compares two regimes:
 
 The difference is material. At 25% non-falsifiable prevalence, bad-item retention falls from 0.12 to 0.03. That is the right way to understand falsifiability in this protocol: as a precondition for mechanism viability, not as a philosophical embellishment. E3 is a parametric sensitivity analysis: the magnitude of improvement is proportional to the assumed accuracy advantage of the `NonFalsifiable` challenge reason over forced binary adjudication.
 
-## E4: Reputation after the redesign
+## E4: Author reputation after the redesign
 
-The reputation redesign is one of the biggest differences between the current protocol and earlier drafts. Reputation is no longer a single generic quantity that directly adds to curation weight. Author reputation and curator reputation now serve different purposes.
+The reputation redesign is one of the biggest differences between the current protocol and earlier drafts. Reputation is no longer a generic quantity that directly adds to curation weight. The current design eliminates curator reputation entirely and retains only author reputation as a standing non-monetary bond.
 
 ### E4a: author reputation as a standing bond
 
@@ -455,24 +452,6 @@ E4a models honest and dishonest authors under the current author-reputation rule
 ![E4a: Median author reputation trajectories for honest and dishonest publishers over repeated publication rounds.](analysis/fig/e4a_author_reputation.png){#fig-e4a}
 
 The separation is strong. By round 120, honest authors accumulate meaningful reputation while dishonest authors remain near zero because repeated debunking keeps destroying their standing stock. That is the intended role of author reputation: a non-transferable, slowly earned credibility layer that is expensive to squander. The dishonest-author model uses fixed probabilities of challenge survival; a strategic adversary might adapt by publishing fewer but harder-to-challenge claims, trading volume for per-claim survival.
-
-### E4b: curator reputation as a drafting boost only
-
-E4b studies whether the new curator-reputation design still helps low-capital competent curators enter the system. The experiment sweeps the curator draft-boost parameter $\alpha$ and the curator reputation decay rate $\delta$.
-
-![E4b: Rounds until a cash-poor competent curator reaches median draft score, across curator reputation parameters.](analysis/fig/e4b_curator_entry_heatmap.png){#fig-e4b-entry}
-
-![E4b: Relevance error under the same parameter sweep. Because curator reputation does not affect final round weight, the distortion cost remains modest.](analysis/fig/e4b_curator_error.png){#fig-e4b-error}
-
-The new design preserves the intended benefit, but more cleanly than dramatically. With no curator reputation boost, cash-poor experts never reach median draft score within the 300-round horizon. At the stronger end of the sweep, that falls to roughly 77 rounds at $\alpha=1.0$, $\delta=0.01$, and to roughly 38 rounds at $\alpha=1.0$, $\delta=0.05$. Because reputation affects only drafting probability and not final round weight, the error cost remains materially lower than in the old model.
-
-### E4c: curator reputation laundering after honest buildup
-
-The obvious attack is to build curator reputation honestly and then use the extra drafting probability to coordinate a later attack. E4c models that scenario.
-
-![E4c: Error and draft amplification under a Sybil buildup-then-attack strategy when curator reputation affects only drafting probability.](analysis/fig/e4c_curator_sybil.png){#fig-e4c}
-
-The attack still exists, but its leverage is limited to committee selection rather than direct voting power. At $\alpha=0.5$, Sybils occupy roughly 10.8% of attack-phase committee seats against a 10% population share. That is a real advantage, but it is much weaker than the old regime in which reputation directly increased round weight inside the committee.
 
 # Limitations And Open Problems
 
@@ -514,9 +493,9 @@ The core claim of this paper is that the bottleneck behind many hard problems is
 
 The paper contributes a general framework for trustless decentralized curation and instantiates it for news. The framework starts with problem definition, identifies the relevant quality dimensions, requires falsifiability where challenge is the mechanism, and designs incentives dimension by dimension rather than collapsing everything into one score. In the news instantiation, that yields an accuracy layer based on bonded publication and open challenge, and a relevance layer based on drafted curator rounds under a public policy.
 
-The current Truth Post design reflects a clear architectural stance: permissionless pools, immutable contracts, minimal governance, explicit protocol-interface separation, local pool economics, confidence as bond-time rather than truth label, author reputation as a standing non-monetary bond, and curator reputation as a drafting boost only.
+The current Truth Post design reflects a clear architectural stance: permissionless pools, immutable contracts, minimal governance, explicit protocol-interface separation, local pool economics, confidence as bond-time rather than truth label, and author reputation as a standing non-monetary bond.
 
-The evaluation results are encouraging but bounded. Debunking false claims can be economically rational. Drafted-curator relevance rounds filter competence while remaining vulnerable above a concrete collusion threshold. Dedicated `NonFalsifiable` challenges materially reduce bad-item retention. Separating author and curator reputation preserves the main entry benefits of reputation while removing the strongest failure mode of reputation-weighted voting.
+The evaluation results are encouraging but bounded. Debunking false claims can be economically rational. Drafted-curator relevance rounds filter competence while remaining vulnerable above a concrete collusion threshold. Dedicated `NonFalsifiable` challenges materially reduce bad-item retention. Author reputation as a standing bond creates useful separation between honest and dishonest publishers without reintroducing reputation-weighted voting.
 
 Truth Post 2023 matters because it demonstrated that this work is already beyond abstract speculation. The complete system is not yet deployed, but it is now specified, stress-tested, and conceptually cleaner than the MVP that preceded it.
 

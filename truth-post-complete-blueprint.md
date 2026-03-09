@@ -94,8 +94,6 @@ Challenge tax is a pool-configurable parameter, not a single global constant. Th
 | Author reputation decay | Variable; suggested default `1%` per 30-day epoch |
 | Author busted-publication slash | Variable; suggested default `50%` of current author reputation |
 | Author successful-defense reward | Variable; suggested default `+1` reputation unit |
-| Curator reputation draft boost `alpha` | 0.25 |
-| Curator reputation decay | 1% per 7-day epoch |
 | Curator exit cooldown | 7 days |
 | Flat-round std-dev epsilon | 0.02 |
 | Per-identity effective weight cap | 10% of drafted round weight |
@@ -115,10 +113,9 @@ These outputs come from different mechanisms:
 
 Truth Post does not declare claims universally true or false. It records challenge outcomes, evidence, confidence accumulation, and dispute history so readers can interpret the record for themselves.
 
-Truth Post also maintains two separate reputation systems:
+Truth Post also maintains a reputation system:
 
 - **Author reputation**: a pool-scoped, slow-decaying credibility stock that acts as a standing non-monetary bond for publishers
-- **Curator reputation**: a pool-scoped drafting signal used only for internal relevance rounds
 
 The system has four architectural layers:
 
@@ -215,8 +212,6 @@ Required fields:
 - `authorReputationDecayEpochSeconds`
 - `authorBustSlashBps`
 - `authorChallengeFailedRepReward`
-- `curatorReputationDraftBoostAlpha`
-- `curatorReputationDecayBpsPerEpoch`
 - `curatorExitCooldownSeconds`
 - `roundRewardFloorWei`
 - `ddrProviderId`
@@ -523,26 +518,6 @@ Storage plane:
 
 - on-chain
 
-### CuratorReputationBalance
-
-Purpose: track topic-scoped, non-transferable curation performance.
-
-Required fields:
-
-- `poolId`
-- `curator`
-- `rep`
-- `lastDecayEpoch`
-- `lastUpdatedAt`
-
-Authority:
-
-- updated only by finalized relevance rounds and periodic decay
-
-Storage plane:
-
-- on-chain
-
 ### ConfidenceScore
 
 Purpose: represent stake-at-risk over time for one claim.
@@ -738,7 +713,7 @@ Transitions are driven by the DDR adapter. Truth Post MUST mirror the authoritat
 
 - If the eligible curator set is smaller than `minRevealQuorum`, the round is cancelled before drafting, nobody is slashed, and the claim keeps its previous relevance score if one exists.
 - If the round is drafted but revealed participation ends below `minRevealQuorum`, drafted curators who failed to commit or reveal are penalized as incoherent participants, the claim keeps its previous relevance score, and a replacement round is scheduled at the next cadence.
-- If the round reaches reveal but `stdDev < pool.flatRoundStdDevMin`, the round is cancelled as degenerate, no relevance score update occurs, no round reward is paid, and no curator reputation reward is granted.
+- If the round reaches reveal but `stdDev < pool.flatRoundStdDevMin`, the round is cancelled as degenerate, no relevance score update occurs, and no round reward is paid.
 
 ## Curator Stake State Model
 
@@ -906,13 +881,11 @@ n = min(target, eligibleCuratorCount)
    - any previous relevance score remains in force
    - claims with no prior finalized relevance round remain out of the default main feed
    - a replacement round is scheduled at the next cadence
-7. Otherwise, the scheduler drafts `n` curators using VRF randomness. Drafting weight is:
+7. Otherwise, the scheduler drafts `n` curators using VRF randomness. Drafting weight is purely stake-based:
 
 ```text
-d_i = s_i + alpha * rep_i
+d_i = s_i
 ```
-
-where `alpha = pool.curatorReputationDraftBoostAlpha`.
 8. Effective round weight is:
 
 ```text
@@ -932,7 +905,6 @@ w_i = min(s_i, 10% of total drafted round weight)
 13. If `sigma < pool.flatRoundStdDevMin`, the round is cancelled as degenerate:
    - no new relevance score is produced
    - no round reward is paid
-   - no curator reputation reward is granted
    - a replacement round is scheduled at the next cadence
 14. Otherwise, a curator is coherent iff:
 
@@ -958,7 +930,7 @@ preRevealLeakSlash = pool.preRevealLeakSlashMultiplier * incoherentSlashAmountFo
 
 22. This penalty is in addition to any incoherent-participation slash that already applies in the same round.
 23. The claim’s `relevanceScore` becomes `mu`.
-24. The round finalizes and updates reputation.
+24. The round finalizes.
 
 Non-participation rules:
 
@@ -1083,26 +1055,6 @@ Rules:
 - author reputation does not replace the monetary author bond; it is an additional downside layer
 - author reputation MAY be shown in interfaces as publisher credibility context, but MUST NOT bypass challengeability or dispute resolution
 
-### Curator Reputation Model
-
-Curator reputation is pool-scoped and non-transferable.
-
-Curator reputation is not itself the bond. Stake is the bond. Curator reputation only biases drafting into rounds; once a curator is drafted, only slashable stake determines vote weight and penalties.
-
-Update rule:
-
-- each finalized coherent round adds `+1` reputation unit to the curator
-- incoherent or absent participation adds nothing
-- every 7-day epoch applies 1% decay to all pool-scoped curator reputation balances
-
-Rules:
-
-- curator reputation is not portable across pools
-- curator reputation is not directly withdrawable
-- curator reputation only affects drafting priority into internal relevance rounds
-- curator reputation MUST NOT directly increase final vote weight inside a round unless a future version also makes the reputation component slashable
-- curator reputation never affects accuracy juror selection in the external DDR
-
 ## Security Requirements And Invariants
 
 The complete implementation MUST satisfy these invariants:
@@ -1116,7 +1068,7 @@ The complete implementation MUST satisfy these invariants:
 - pool reward budgets cannot become negative
 - confidence is monotone while active, paused during dispute/withdraw cooldown, terminated on terminal exit
 - withdrawn claims MUST remain queryable as historical records with their last finalized confidence value
-- author and curator reputation balances are pool-scoped and non-transferable
+- author reputation balances are pool-scoped and non-transferable
 - no curator may exceed the per-identity round weight cap
 - only slashable stake MAY determine final vote weight inside a relevance round
 - a revealed relevance score must match its commitment hash
@@ -1194,7 +1146,7 @@ The first complete implementation SHOULD use the following contract/module split
 - `RelevanceEngine`
   - curator drafting, commit-reveal, degenerate-round detection, scoring, slashing, round rewards
 - `ReputationLedger`
-  - author and curator reputation balances, rewards, slashes, and decay
+  - author reputation balances, rewards, slashes, and decay
 - `PoolBudgetLedger`
   - pool-local reward budgets, challenge tax routing, top-ups, reward-floor debits
 
