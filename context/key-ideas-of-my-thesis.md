@@ -4,7 +4,7 @@ Cleaned transcript from the spoken draft in `transcription-me-explaining-my-core
 
 ## Core Thesis
 
-My thesis is that most hard problems are actually curation problems.
+My thesis is that most hard coordination problems are actually curation problems.
 
 Throughout human history, we built better and faster information systems. For most of history, the bottleneck was access to information. Information was gated in libraries, universities, and similar institutions, and the internet largely solved that problem. Today we have access to far more information than the average researcher had in the past. But that does not automatically make us smarter. Information is not useful by itself. It becomes useful only after it is curated.
 
