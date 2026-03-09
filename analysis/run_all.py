@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import functools
 import json
 import math
 import os
 import platform
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -178,9 +180,10 @@ class E1AdvParams:
 
 
 def _e1_adv_single_run(
-    params: E1AdvParams, p: float, rng: np.random.Generator
+    params: E1AdvParams, p: float, seed_idx: int
 ) -> dict:
     """Single Monte Carlo run of adversarial attacks at a given jury accuracy."""
+    rng = np.random.default_rng(seed_idx)
     p_majority = majority_correct_probability(params.n_jurors, p)
     b = params.bounty
     s = b * params.stake_ratio
@@ -217,11 +220,11 @@ def run_e1_adversarial(params: E1AdvParams) -> None:
     rows: list[dict] = []
 
     for p in params.p_juror_range:
-        seed_results = []
-        for seed_idx in range(params.n_seeds):
-            rng = np.random.default_rng(seed_idx)
-            result = _e1_adv_single_run(params, p, rng)
-            seed_results.append(result)
+        with ProcessPoolExecutor() as executor:
+            seed_results = list(executor.map(
+                functools.partial(_e1_adv_single_run, params, p),
+                range(params.n_seeds),
+            ))
 
         sr = np.array([r["survival_rate"] for r in seed_results])
         bal = np.array([r["adversary_balance"] for r in seed_results])
@@ -418,9 +421,10 @@ class E2AdvParams:
 
 
 def _e2_adv_single_run(
-    params: E2AdvParams, col_frac: float, rng: np.random.Generator
+    params: E2AdvParams, col_frac: float, seed_idx: int
 ) -> dict:
     """Single run of the adversarial coherence game at a given collusion fraction."""
+    rng = np.random.default_rng(int(10_000 * col_frac + seed_idx))
     n_comp = int(round(params.n_curators * params.competent_frac))
     n_collude = int(round(params.n_curators * col_frac))
     n_comp_actual = max(0, n_comp - n_collude)
@@ -496,12 +500,11 @@ def run_e2_adversarial(params: E2AdvParams) -> None:
     rows: list[dict] = []
 
     for col_frac in params.colluding_fracs:
-        seed_results = []
-        for seed_idx in range(params.n_seeds):
-            seed = int(10_000 * col_frac + seed_idx)
-            rng = np.random.default_rng(seed)
-            result = _e2_adv_single_run(params, col_frac, rng)
-            seed_results.append(result)
+        with ProcessPoolExecutor() as executor:
+            seed_results = list(executor.map(
+                functools.partial(_e2_adv_single_run, params, col_frac),
+                range(params.n_seeds),
+            ))
 
         errors = np.array([r["mean_abs_error"] for r in seed_results])
         errors_l50 = np.array([r["mean_abs_error_last_50"] for r in seed_results])
@@ -707,9 +710,10 @@ def _e4a_single_run(
     params: E4aParams,
     alpha: float,
     decay_rate: float,
-    rng: np.random.Generator,
+    seed_idx: int,
 ) -> dict:
     """Single run of the alpha/decay sweep."""
+    rng = np.random.default_rng(int(100_000 * alpha + 10_000 * decay_rate + seed_idx))
     n_comp = int(round(params.n_curators * params.competent_frac))
     is_comp = np.zeros(params.n_curators, dtype=bool)
     is_comp[:n_comp] = True
@@ -796,12 +800,11 @@ def run_e4a(params: E4aParams) -> None:
 
     for alpha in params.alphas:
         for decay_rate in params.decay_rates:
-            seed_results = []
-            for seed_idx in range(params.n_seeds):
-                seed = int(100_000 * alpha + 10_000 * decay_rate + seed_idx)
-                rng = np.random.default_rng(seed)
-                result = _e4a_single_run(params, alpha, decay_rate, rng)
-                seed_results.append(result)
+            with ProcessPoolExecutor() as executor:
+                seed_results = list(executor.map(
+                    functools.partial(_e4a_single_run, params, alpha, decay_rate),
+                    range(params.n_seeds),
+                ))
 
             errors = np.array([r["mean_abs_error"] for r in seed_results])
             entries = np.array([r["time_to_entry"] for r in seed_results])
@@ -886,9 +889,10 @@ def _e4b_single_run(
     params: E4bParams,
     alpha: float,
     decay_rate: float,
-    rng: np.random.Generator,
+    seed_idx: int,
 ) -> dict:
     """Single run: measure how long a reputation-rich attacker retains influence."""
+    rng = np.random.default_rng(int(100_000 * alpha + 10_000 * decay_rate + seed_idx + 50_000))
     n_comp = int(round(params.n_curators * params.competent_frac))
     is_comp = np.zeros(params.n_curators, dtype=bool)
     is_comp[:n_comp] = True
@@ -950,12 +954,11 @@ def run_e4b(params: E4bParams) -> None:
 
     for alpha in params.alphas:
         for decay_rate in params.decay_rates:
-            seed_results = []
-            for seed_idx in range(params.n_seeds):
-                seed = int(100_000 * alpha + 10_000 * decay_rate + seed_idx + 50_000)
-                rng = np.random.default_rng(seed)
-                result = _e4b_single_run(params, alpha, decay_rate, rng)
-                seed_results.append(result)
+            with ProcessPoolExecutor() as executor:
+                seed_results = list(executor.map(
+                    functools.partial(_e4b_single_run, params, alpha, decay_rate),
+                    range(params.n_seeds),
+                ))
 
             above = np.array([r["rounds_above_median"] for r in seed_results])
             rows.append(
@@ -1013,9 +1016,10 @@ class E4cParams:
 def _e4c_single_run(
     params: E4cParams,
     alpha: float,
-    rng: np.random.Generator,
+    seed_idx: int,
 ) -> dict:
     """Single run: Sybils build reputation honestly, then attack."""
+    rng = np.random.default_rng(int(100_000 * alpha + seed_idx + 90_000))
     n_comp = int(round(params.n_curators * params.competent_frac))
     n_sybils = params.n_sybils
 
@@ -1103,12 +1107,11 @@ def run_e4c(params: E4cParams) -> None:
     rows: list[dict] = []
 
     for alpha in params.alphas:
-        seed_results = []
-        for seed_idx in range(params.n_seeds):
-            seed = int(100_000 * alpha + seed_idx + 90_000)
-            rng = np.random.default_rng(seed)
-            result = _e4c_single_run(params, alpha, rng)
-            seed_results.append(result)
+        with ProcessPoolExecutor() as executor:
+            seed_results = list(executor.map(
+                functools.partial(_e4c_single_run, params, alpha),
+                range(params.n_seeds),
+            ))
 
         errors = np.array([r["mean_abs_error_attack"] for r in seed_results])
         shares = np.array([r["final_sybil_weight_share"] for r in seed_results])

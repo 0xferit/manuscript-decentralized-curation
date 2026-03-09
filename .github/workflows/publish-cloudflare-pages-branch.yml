@@ -41,7 +41,17 @@ jobs:
 
           wait $PIP_PID
 
+      - name: Cache simulation outputs
+        uses: actions/cache@v4
+        id: sim-cache
+        with:
+          path: |
+            analysis/out
+            analysis/fig
+          key: sims-${{ hashFiles('analysis/run_all.py') }}
+
       - name: Run simulations
+        if: steps.sim-cache.outputs.cache-hit != 'true'
         run: python analysis/run_all.py
 
       - name: Stamp build info and render
