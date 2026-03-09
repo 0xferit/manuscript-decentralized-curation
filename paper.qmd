@@ -49,7 +49,7 @@ The internet gave everyone access to unprecedented volumes of information. It di
 
 Historically, some of that mechanism was carried by institutions: newspapers, journals, universities, editors, teachers, peer reviewers. Those institutions were imperfect, but they were legible enough that users could at least understand where the curation happened. Today we have more information than ever and weaker, more opaque transformations from information into knowledge.
 
-Generative AI makes the gap wider. Writing a convincing paper, a polished essay, or functional software used to require the competence that made the output credible. AI breaks that coupling. The *form* of quality is now cheap: formatting, fluency, plausible citation patterns, respectable structure. The *substance* of quality remains expensive: correctness, coherence, domain understanding, and judgment. We are entering a regime of **information abundance and knowledge scarcity**.
+Generative AI makes the gap wider. Producing functional software required understanding it; writing a convincing paper required the competence it demonstrated. That requirement functioned as an implicit proof of work: the cost of producing the artifact was inseparable from the knowledge it signaled. AI breaks this coupling by making production possible without understanding. The *form* of quality is now cheap: formatting, fluency, plausible citation patterns, respectable structure. The *substance* of quality remains expensive: correctness, coherence, domain understanding, and judgment. We are entering a regime of **information abundance and knowledge scarcity**.
 
 That is why curation is not a side problem. It is becoming the bottleneck of civilization.
 
