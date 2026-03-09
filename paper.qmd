@@ -130,10 +130,11 @@ The protocol cannot operate on vibes. It needs claims that expose themselves to 
 
 This design intentionally avoids pretending that the protocol determines truth in an absolute sense. The protocol outputs public, contestable signals:
 
-- `Unchallenged`: the item remains live and bonded, but no successful challenge exists.
-- `ChallengeFailed`: a specific challenge was brought and failed.
+- `Live`: the item is active, bonded, and challengeable. Confidence accrues.
+- `Challenged`: an active dispute is in progress. Confidence is paused.
+- `WithdrawPending`: the author has initiated withdrawal. A cooldown period runs during which challenges are still accepted.
+- `Withdrawn`: the author removed the bond after the cooldown; the item remains visible historically with frozen confidence.
 - `Debunked`: a challenge succeeded, whether by counter-evidence or because the challenged proposition was non-falsifiable under the pool's claim template and evidence policy.
-- `Withdrawn`: the author removed the bond; the item remains visible historically with frozen confidence.
 
 The important point is institutional modesty. Truth Post is not an oracle of metaphysical truth. It is a system for transparency, contestability, and incentives.
 
@@ -147,7 +148,7 @@ Three architectural commitments anchor the design:
 
 1. **Permissionless pools.** Any address may create a pool with a domain, a claim template, an evidence policy, and a relevance policy. If the pool is bad, interfaces and users can ignore it.
 2. **Immutable contracts.** Protocol changes require new deployments and cross-version aggregation, not in-place upgrades.
-3. **Minimal governance.** We prefer `NoNeedForGovernance > GoodGovernance > BadGovernance > NoGovernance`. If a design can eliminate a governance surface, it should.
+3. **Minimal governance.** The preference ordering is: eliminating the need for governance is best; good governance is acceptable; bad governance is worse; and no governance at all (ungoverned failure modes) is worst. If a design can eliminate a governance surface, it should.
 
 These commitments are not aesthetic. They reduce capture surface area. The closer a protocol gets to "someone must govern this correctly forever," the closer it gets to rebuilding the same trust problem at a different layer.
 
@@ -178,11 +179,11 @@ This split is part of the design, not an implementation detail. A protocol with 
 The accuracy mechanism is a bonded publication and challenge system.
 
 1. An author posts a claim blob and locks a bond.
-2. The item becomes live immediately and remains challengeable while bonded.
+2. The item enters `Live` status immediately and remains challengeable while bonded.
 3. A challenger may file one active challenge at a time against a specific proposition inside the item, with queued challenges allowed behind it.
 4. The challenger pays a counter-stake, a challenge tax, and the external DDR fee.
 5. The dispute goes to external DDR with a binary question: should the challenge succeed?
-6. If the challenge succeeds, the item is `Debunked` and the bond is transferred according to the payout rules. If the challenge fails, the outcome is `ChallengeFailed` and the item returns to live status.
+6. If the challenge succeeds, the item is `Debunked` and the bond is transferred according to the payout rules. If the challenge fails, the item returns to `Live` status.
 
 Non-falsifiability is not a separate final verdict. It is a **challenge reason**. A successful `NonFalsifiable` challenge still debunks the item, because the mechanism cannot safely process a claim that fails the falsifiability requirement.
 
@@ -191,7 +192,7 @@ Non-falsifiability is not a separate final verdict. It is a **challenge reason**
 The relevance mechanism is a drafted curator coherence game.
 
 1. Curators stake into a pool.
-2. Relevance rounds are scheduled for live items at a pool-defined cadence.
+2. Relevance rounds are scheduled for `Live` items at a pool-defined cadence.
 3. Curators are drafted using a stake-weighted lottery:
 
 $$
@@ -234,7 +235,7 @@ The semantics are simple:
 - challenge pauses accumulation
 - withdrawal freezes the score
 
-An interface may use confidence for ranking or display, but it must not conflate confidence with a universal truth claim. Confidence measures accumulated capital risk exposure over time, not community validation or endorsement. The scrutiny signal is `ChallengeFailed` status: a claim that has survived an explicit challenge attempt carries stronger evidence of accuracy than one that has simply accumulated bond-time without being tested.
+An interface may use confidence for ranking or display, but it must not conflate confidence with a universal truth claim. Confidence measures accumulated capital risk exposure over time, not community validation or endorsement. The scrutiny signal is survival: a `Live` item that has survived an explicit challenge attempt carries stronger evidence of accuracy than one that has simply accumulated bond-time without being tested.
 
 ## Reputation
 
@@ -246,7 +247,7 @@ The design deliberately avoids any reputation-weighted mechanism for curation. T
 
 ## Local pool economics
 
-Each pool has its own reward budget. The pool creator or any sponsor can top it up. Relevance-round reward floors are paid from that local budget, not from a vague global treasury. If the budget runs dry, new relevance rounds pause; the canonical record remains live and challengeable.
+Each pool has its own reward budget. The pool creator or any sponsor can top it up. Relevance-round reward floors are paid from that local budget, not from a vague global treasury. If the budget runs dry, new relevance rounds pause; the canonical record remains challengeable.
 
 Challenge tax is paid by the challenger at filing and routed to the challenged pool's reward budget. This makes pool economics local rather than governance-allocated.
 
