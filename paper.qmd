@@ -33,7 +33,7 @@ When you search for travel destinations, you are consuming someone else's curati
 
 This dependency matters because information is not knowledge. Raw information becomes useful only after it has been selected, interpreted, contextualized, and made actionable. That transformation is curation. The internet radically improved access to information; it did not solve access to knowledge.
 
-My thesis is blunt: **many hard problems decompose into curate-then-coordinate, and the difficulty is concentrated in the curation phase, not the coordination phase.**
+This paper argues that **many hard problems decompose into curate-then-coordinate, and that the difficulty is concentrated in the curation phase, not the coordination phase.**
 
 Take news. A newspaper is a curated set of claims about reality. People consume those claims and then make decisions. In a democracy, those decisions are collective and consequential. If the curation layer is incompetent, voters act on low-quality knowledge. If the curation layer is weaponized, voters act on poisoned knowledge [@chomsky1988manufacturing]. In both cases the downstream damage is the same: people coordinate on corrupted inputs.
 
