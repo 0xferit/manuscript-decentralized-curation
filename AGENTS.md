@@ -1,9 +1,9 @@
-## PUW Articles (Agent Notes)
+## Decentralized Curation Working Draft
 
-This project is a Markdown workspace for a multi-part article series on the information curation bottleneck and trustless/decentralized curation.
+This project is workspace for my thesis on decentralized curation.
 
 ### Source of truth
-
+- Never edit files under context/ 
 - `paper.qmd` is the **editable master paper source** (make substantive changes here).
 - `legacy/manuscript-7-part-series.md` is the **legacy series draft** (pre-paper).
 - `context/attack-and-defense-log.md` tracks red-team attacks/defenses integrated into the manuscript.
@@ -18,8 +18,6 @@ This project is a Markdown workspace for a multi-part article series on the info
   - `outputs/` (rendered artifacts; gitignored)
   - `.github/workflows/publish-cloudflare-pages-branch.yml` (CI publish: run sims → render HTML → push `cf-pages/public/index.html`)
 
-_Note:_ We no longer produce DOCX outputs. Quarto renders **HTML + PDF** only.
-
 ### Workflow expectations
 
 - Keep wording unchanged when asked to do “formatting only” (only add Markdown structure/whitespace).
@@ -27,6 +25,13 @@ _Note:_ We no longer produce DOCX outputs. Quarto renders **HTML + PDF** only.
 - Do not assume “today’s date” inside the manuscript; verify if a claim depends on currentness.
 - Prefer rendering via Quarto (`quarto render`) so outputs stay consistent across formats (and run `python3 analysis/run_all.py` first if figures/summaries are referenced).
 - Publishing: commits to `main` trigger HTML publish to the `cf-pages` branch (see `README.md`).
+
+### Literature reference notes
+
+- `literature/` contains internal working notes on foundational works that inform the paper (Akerlof, Schelling, George, Ostrom, etc.).
+- These are for agent use during paper refinement: consult them to understand how each work connects to our arguments, what limitations apply, and which concepts we draw from.
+- Not referenced from the paper itself; `references.bib` remains the citation source of truth.
+- See `literature/README.md` for the full index.
 
 ### Writing constraints (default)
 
@@ -49,3 +54,7 @@ The following skills from the `claude-scientific-writer` plugin are relevant to 
 | `scientific-slides` | Building presentations from the paper content (e.g., conference talks, reading group presentations). |
 
 Skills NOT relevant to this project: clinical/healthcare skills, market research, DOCX/PPTX/XLSX processing, LaTeX posters, venue-templates, generate-image, infographics, hypothesis-generation.
+
+### Design Principles
+
+- NoNeedForGovernance > Good Governance > Bad Governance > No Governance
