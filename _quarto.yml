@@ -8,7 +8,7 @@ date-format: "MMMM D, YYYY [at] HH:mm"
 
 format:
   html:
-    output-file: paper
+    output-file: index
     embed-resources: true
     theme: default
     # To use the PUW theme: theme: [default, themes/puw.scss]

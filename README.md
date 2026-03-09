@@ -11,7 +11,7 @@ Prerequisites: [Quarto](https://quarto.org/docs/get-started/), Python 3.11+, and
 ```bash
 pip install -r requirements.txt
 python analysis/run_all.py   # deterministic simulations (figures + data)
-quarto render                # outputs: outputs/paper.html, outputs/paper.pdf
+quarto render                # outputs: outputs/index.html, outputs/paper.pdf
 ```
 
 ## Publishing
