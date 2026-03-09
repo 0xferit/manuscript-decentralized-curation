@@ -59,7 +59,7 @@ This paper contributes:
 
 - **A general framework for trustless decentralized curation.** The framework is not a news-only theory. It is a method for identifying when decentralized curation is feasible and how to decompose the mechanism.
 - **A complete end-state protocol architecture for Truth Post.** The design separates accuracy from relevance, distinguishes on-chain canonical state from replaceable interfaces, makes pool creation permissionless, and treats contracts as immutable with cross-version coexistence rather than in-place upgrades.
-- **A revised evaluation program aligned to the current design.** The experiments no longer assume the older reputation-weighted voting model or the older third-verdict ambiguity framing.
+- **A simulation-based evaluation program.** The experiments test the economic viability of challenge-based accuracy verification, the filtering power and collusion resistance of drafted-curator relevance rounds, and the separating effect of author reputation as a standing bond.
 - **A deployment retrospective.** Truth Post (2023) is included as partial deployment evidence because it moved this work from theory into implementation, failure, and redesign.
 
 # A General Framework For Trustless Decentralized Curation
