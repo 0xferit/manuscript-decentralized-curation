@@ -156,13 +156,15 @@ The departure from Ostrom's commons governance framework is deliberate [@ostrom1
 
 ## Canonical system boundary
 
-Truth Post is not a single website. The protocol has three layers:
+Truth Post is not a single website. The protocol has three layers (@fig-architecture):
 
 - **Canonical protocol state:** pools, claim references, stakes, challenge state, adjudication links, confidence accounting, and payout logic.
 - **Content and indexing:** claim blobs, evidence bundles, policy documents, and indexers that reconstruct feeds and histories from canonical state.
 - **Interfaces:** any frontend or application that renders feeds, article pages, pool dashboards, or dispute history.
 
 This split is part of the design, not an implementation detail. A protocol with one fragile frontend is not practically decentralized.
+
+![Protocol architecture. Three layers separate canonical on-chain state from replaceable interfaces. Architectural commitments and pool economics are listed above.](diagrams/fig-architecture.png){#fig-architecture}
 
 ## Actors
 
@@ -174,9 +176,11 @@ This split is part of the design, not an implementation detail. A protocol with 
 - **Interface operators** decide what to surface, feature, warn about, or ignore.
 - **Readers** consume the outputs and may later become authors, challengers, or curators.
 
+![Actor interaction flow. Left: participants who submit actions to the protocol. Center: on-chain protocol components. Right: external adjudication (DDR) and interface operators who read and render canonical state.](diagrams/fig-actor-flow.png){#fig-actor-flow}
+
 ## Accuracy layer
 
-The accuracy mechanism is a bonded publication and challenge system.
+The accuracy mechanism is a bonded publication and challenge system (@fig-claim-states).
 
 1. An author posts a claim blob and locks a bond.
 2. The item enters `Live` status immediately and remains challengeable while bonded.
@@ -187,9 +191,11 @@ The accuracy mechanism is a bonded publication and challenge system.
 
 Non-falsifiability is not a separate final verdict. It is a **challenge reason**. A successful `NonFalsifiable` challenge still debunks the item, because the mechanism cannot safely process a claim that fails the falsifiability requirement.
 
+![Claim state machine. Items enter `Live` on bonded publication. Challenges route through external DDR; successful challenges lead to `Debunked` (bond transferred), failed challenges restore `Live`. Author-initiated retraction enters a cooldown (`RetractPending`) during which challenges are still accepted. Terminal states have double borders.](diagrams/fig-claim-states.png){#fig-claim-states}
+
 ## Relevance layer
 
-The relevance mechanism is a drafted curator coherence game.
+The relevance mechanism is a drafted curator coherence game (@fig-relevance-round).
 
 1. Curators stake into a pool.
 2. Relevance rounds are scheduled for `Live` items at a pool-defined cadence.
@@ -213,6 +219,8 @@ $$
 $$
 
 7. Near-flat rounds are cancelled as degenerate rather than accepted as meaningful curation.
+
+![Relevance round sequence. Curators stake into a pool, are drafted proportional to stake, commit/reveal scores, and face coherence-based slashing. Weight capping limits whale influence; near-flat rounds are discarded.](diagrams/fig-relevance-round.png){#fig-relevance-round}
 
 This design keeps curation entirely stake-driven: no reputation-weighted mechanism influences either drafting or voting. That is a major departure from the older paper version.
 
