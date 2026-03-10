@@ -193,22 +193,20 @@ The relevance mechanism is a drafted curator coherence game.
 
 1. Curators stake into a pool.
 2. Relevance rounds are scheduled for `Live` items at a pool-defined cadence.
-3. Curators are drafted using a stake-weighted lottery:
+3. Curators are drafted using a stake-weighted lottery. Let $s_i$ denote curator $i$'s staked capital and $d_i$ denote that curator's draft weight:
 
 $$
 d_i = s_i
 $$
 
 4. Drafted curators commit and reveal relevance scores in $[0,1]$.
-5. Final round weight is based on **slashable stake only**:
+5. Final round weight is based on **slashable stake only**. Let $w_i$ denote curator $i$'s effective round weight, and let $c$ denote the maximum share of total committee stake any one curator may contribute:
 
 $$
 w_i = \min(s_i, c \cdot \text{total committee stake})
 $$
 
-where $c$ is a cap share.
-
-6. The protocol computes the weighted mean $\mu$ and weighted standard deviation $\sigma$. Curators outside the coherence band are slashed:
+6. The protocol computes the weighted mean $\mu$ of submitted scores and the weighted standard deviation $\sigma$. Let $v_i$ denote curator $i$'s revealed score and let $K$ denote the coherence-threshold multiplier. Curators outside the coherence band are slashed:
 
 $$
 |v_i - \mu| \le K\sigma
@@ -220,13 +218,11 @@ This design keeps curation entirely stake-driven: no reputation-weighted mechani
 
 ## Confidence
 
-Confidence is not a truth label. It is accumulated bond-time:
+Confidence is not a truth label. It is accumulated bond-time. Let $C$ denote the resulting confidence score, let $B_t$ denote the bond active during interval $\Delta t$, and let the summation run over the item's bonded history:
 
 $$
 C = \sum_t B_t \cdot \Delta t
 $$
-
-where $B_t$ is the bond during interval $\Delta t$.
 
 The semantics are simple:
 
@@ -257,13 +253,13 @@ This section formalizes the equilibrium properties of the protocol's core mechan
 
 ## Author's strategy
 
-An author who publishes a false claim derives value $V$ if the claim survives (attention, reputational gain, advertising revenue from a false ad). The author posts bond $B$. If the claim is detected with probability $p_{\text{detect}}$ and successfully challenged with jury accuracy $P_{\text{maj}}(p, N)$, the author loses the bond. The expected value of publishing a false claim is:
+An author who publishes a false claim derives value $V$ if the claim survives (attention, reputational gain, advertising revenue from a false ad). The author posts bond $B$. Let $p_{\text{detect}}$ denote the probability that the false claim is detected, and let $P_{\text{maj}}(p, N)$ denote the probability that a jury of size $N$ reaches the correct binary outcome when each juror is individually correct with probability $p$. The expected value of publishing a false claim is:
 
 $$
 \text{EV}_{\text{false author}} = (1 - p_{\text{detect}} \cdot P_{\text{maj}}) \cdot V - p_{\text{detect}} \cdot P_{\text{maj}} \cdot B
 $$
 
-Setting $\text{EV}_{\text{false author}} < 0$ and solving for $B$ yields a bond threshold above which false publication has negative expected value:
+Setting $\text{EV}_{\text{false author}} < 0$ and solving for $B$ yields a bond threshold $B^*$ above which false publication has negative expected value:
 
 $$
 B^* = V \cdot \frac{1 - p_{\text{detect}} \cdot P_{\text{maj}}}{p_{\text{detect}} \cdot P_{\text{maj}}}
@@ -275,13 +271,13 @@ The design consequence is direct: bond size must be calibrated to the value at s
 
 ## Challenger's entry decision
 
-A challenger does not arrive with a known false claim. They must search. Each claim examined costs effort $e$. The base rate of false claims in the pool is $\beta$. For each claim examined, the probability of finding a profitable challenge is $\beta \cdot p_{\text{detect|examined}}$, where $p_{\text{detect|examined}}$ is the probability that examination reveals the falsity. The expected value of examining one claim is:
+A challenger does not arrive with a known false claim. They must search. Let $e$ denote the effort cost of examining one claim, let $\beta$ denote the base rate of false claims in the pool, let $p_{\text{detect|examined}}$ denote the probability that examination reveals falsity, and let $\text{EV}_{\text{false}}$ denote the challenger's expected value on a known false claim from the accuracy layer. The expected value of examining one claim is:
 
 $$
 \text{EV}_{\text{search}} = \beta \cdot p_{\text{detect|examined}} \cdot \text{EV}_{\text{false}} - e
 $$
 
-where $\text{EV}_{\text{false}}$ is the challenger's expected value on a known false claim from the accuracy layer. Searching is profitable when:
+Searching is profitable when:
 
 $$
 \beta > \beta^* = \frac{e}{p_{\text{detect|examined}} \cdot \text{EV}_{\text{false}}}
@@ -293,7 +289,7 @@ The free-rider dimension compounds this problem [@groves1977freeriderproblem]. A
 
 ## Curator voting strategy
 
-The coherence game requires curators to independently report relevance scores in $[0, 1]$. Under commit-reveal, curators cannot observe others' votes before committing. Each curator $i$ has a private signal $\theta_i$ about the true relevance $r$ and forms a belief about the distribution of others' signals.
+The coherence game requires curators to independently report relevance scores in $[0, 1]$. Under commit-reveal, curators cannot observe others' votes before committing. Each curator $i$ has a private signal $\theta_i$ about the true relevance $r$ and forms a belief about the distribution of others' signals. Here $r$ denotes the latent relevance value implied by the pool policy, $\theta_i$ denotes curator $i$'s noisy private estimate of that value, $K$ is the coherence-threshold multiplier from the slashing rule, and $\phi^*$ denotes the largest colluding stake fraction under which honest reporting remains stable.
 
 **Proposition 3.** *Under the coherence mechanism with commit-reveal, honest reporting is a Bayesian Nash equilibrium when the following conditions hold simultaneously:*
 
@@ -383,13 +379,11 @@ The evaluation suite is designed to test the current protocol architecture rathe
 
 ## E1: Accuracy challenge economics
 
-The accuracy layer is economically useful only if challenging false claims can be rational. We model a challenger who pays a counter-stake $S$, a challenge tax, and a DDR fee to attack an item with author bond $B$. Let $P_{\mathrm{maj}}(p, N)$ be the probability that a jury of size $N$ returns the correct binary outcome when each juror is correct with probability $p$. Challenger expected value on a false claim is:
+The accuracy layer is economically useful only if challenging false claims can be rational. We model a challenger who pays counter-stake $S$, challenge tax $\tau$, and DDR fee $f$ to attack an item with author bond $B$. Let $P_{\mathrm{maj}}(p, N)$ be the probability that a jury of size $N$ returns the correct binary outcome when each juror is correct with probability $p$. Challenger expected value on a false claim is:
 
 $$
 \mathrm{EV}_{\mathrm{false}} = P_{\mathrm{maj}}(p, N)\cdot(B - \tau - f) + (1-P_{\mathrm{maj}}(p, N))\cdot(-S - \tau - f)
 $$
-
-where $\tau$ is challenge tax and $f$ is the DDR fee.
 
 Figure @fig-e1-ev shows that challenger EV becomes strongly positive across the tested stake-to-bounty ratios once juror accuracy moves into plausible territory. Figure @fig-e1-survival shows the corresponding false-claim survival probability after a single detection window.
 
@@ -413,7 +407,7 @@ The result is economically punitive. At $p=0.80$, the adversary's cumulative bal
 
 ## E2: Relevance with drafted curators
 
-E2 evaluates the current relevance design rather than the older weight-allocation model. Curators are drafted into committees from a larger pool using purely stake-weighted selection. The mechanism computes a weighted mean $\mu$, a weighted standard deviation $\sigma$, and slashes outliers beyond $K\sigma$. Near-flat rounds are cancelled rather than treated as meaningful curation.
+E2 evaluates the current relevance design rather than the older weight-allocation model. Curators are drafted into committees from a larger pool using purely stake-weighted selection. Here $\mu$ denotes the weighted mean of committee scores, $\sigma$ denotes the weighted standard deviation, and $K$ denotes the coherence-threshold multiplier used in the slashing rule. Near-flat rounds are cancelled rather than treated as meaningful curation.
 
 ![E2: Mean relevance error versus the initial fraction of competent curators, for four coherence thresholds. Error bands show 95% confidence intervals over 100 seeds.](analysis/fig/e2_relevance_error.png){#fig-e2-error}
 
@@ -454,39 +448,31 @@ E4a models honest and dishonest authors under the current author-reputation rule
 
 The separation is strong. By round 120, honest authors accumulate meaningful reputation while dishonest authors remain near zero because repeated debunking keeps destroying their standing stock. That is the intended role of author reputation: a non-transferable, slowly earned credibility layer that is expensive to squander. The dishonest-author model uses fixed probabilities of challenge survival; a strategic adversary might adapt by publishing fewer but harder-to-challenge claims, trading volume for per-claim survival.
 
-# Limitations And Open Problems
+# Boundary Conditions And Open Problems
 
-## No live deployment validates the complete design
+This paper establishes an end-state protocol architecture, a mechanism decomposition by quality dimension, and a simulation-based evaluation program grounded in a partial historical deployment. What it does not yet establish is live end-state performance at scale. The right reading of the remaining gaps is therefore not that the framework collapses, but that its claims are bounded by explicit empirical and operational conditions.
 
-Truth Post validated only a partial predecessor. No live deployment yet validates the complete end-state system at scale. All claims in this paper about incentive alignment, competence filtering, and falsifiability defense remain conditioned on simulation assumptions and design choices.
+## Empirical boundary
 
-## External DDR remains an inherited assumption
+No live deployment yet validates the complete design. Truth Post validated only a partial predecessor. The claims in this paper about incentive alignment, competence filtering, and falsifiability defense are therefore claims about the specified design under the analyzed assumptions, not about field performance already demonstrated at scale.
 
-The protocol does not solve decentralized dispute resolution from first principles. It inherits the strengths and weaknesses of the external DDR layer. If the court is captured, lazy, or inaccurate, the accuracy layer degrades accordingly.
+## Inherited dependencies
 
-## Collusion is reduced, not eliminated
+The protocol delegates accuracy adjudication to an external DDR layer. That is a deliberate modular choice: the design reuses an existing court rather than solving decentralized dispute resolution from first principles inside the protocol itself. The tradeoff is direct. If the external court is captured, lazy, or inaccurate, the accuracy layer inherits that degradation.
 
-Commit-reveal does not stop off-chain collusion. Drafting uncertainty, stake-only round weight, weight caps, and slashing all help, but sufficiently large coordinated blocs can still distort relevance.
+The relevance layer has a parallel boundary. Drafting uncertainty, stake-only round weight, weight caps, and slashing make collusive distortion harder and costlier, but they do not eliminate it. Sufficiently large coordinated blocs can still bend relevance signals.
 
-## Pool plurality shifts burden to interfaces
+## Pool quality, interface burden, and cold start
 
-Permissionless pool creation is the right architectural stance, but it does not make all pools good. Interfaces still need to decide which pools to feature, warn about, or ignore. This is a product problem, not a reason to reintroduce protocol-wide governance. Cross-pool aggregation is explicitly not a protocol concern. The protocol produces transparent, contestable signals per pool. Aggregation across pools is the domain of competing interfaces, and that competition is intentional: it prevents any single aggregation logic from becoming a protocol-level chokepoint.
+Permissionless pool creation is the right architectural stance because it keeps bad policy local rather than protocol-global. The tradeoff is that quality control shifts outward. Interfaces still need to decide which pools to feature, warn about, or ignore, and cross-pool aggregation remains an interface concern by design rather than a protocol responsibility.
 
-## Policy quality remains a hard problem
+The same locality applies to policy quality and bootstrap. The coherence game works only when a pool's relevance policy is specific enough to discipline scoring, and new pools still need readers, challengers, curators, and budget. The current design makes these requirements explicit instead of hiding them behind protocol-wide governance, but it does not remove them.
 
-The coherence game depends on public relevance policies that are specific enough to induce disciplined scoring. Poorly written policies yield noisy outputs or cancelled rounds. This is not solved by governance. It is an ongoing design and product challenge.
+## Operational deployment constraints
 
-## Cold start remains real
+Immutable contracts avoid one class of governance risk, but they require explicit migration discipline. New versions must coexist with old ones, and interfaces must aggregate across versions when continuity matters.
 
-A new pool needs readers, challengers, curators, and budget. The current design addresses this more honestly than the MVP: pool creators must seed local reward budgets, and inactive pools simply remain weak. But there is no magical bootstrap rule that removes the need for initial capital and community formation.
-
-## Immutability requires explicit migration discipline
-
-The current design rejects in-place upgrades. That avoids one class of governance risk but creates a different operational requirement: new versions must coexist with old ones, and interfaces must aggregate across versions. This paper argues for that tradeoff, but it remains an engineering burden.
-
-## Scalability, UX, and legal pressure remain open
-
-Gas costs, structured claim authoring, challenge participation, legal exposure, and interface discoverability all remain practical barriers. None of these are reasons to abandon the framework, but all of them are conditions for successful deployment.
+Scalability, structured claim authoring, challenge participation, legal exposure, and interface discoverability are all still practical deployment constraints. They do not undercut the conceptual framework, but they do determine whether a specified protocol becomes a robust live system.
 
 # Conclusion
 
@@ -496,16 +482,12 @@ The paper contributes a general framework for trustless decentralized curation a
 
 The current Truth Post design reflects a clear architectural stance: permissionless pools, immutable contracts, minimal governance, explicit protocol-interface separation, local pool economics, confidence as bond-time rather than truth label, and author reputation as a standing non-monetary bond.
 
-The evaluation results are encouraging but bounded. Debunking false claims can be economically rational. Drafted-curator relevance rounds filter competence while remaining vulnerable above a concrete collusion threshold. Dedicated `NonFalsifiable` challenges materially reduce bad-item retention. Author reputation as a standing bond creates useful separation between honest and dishonest publishers without reintroducing reputation-weighted voting.
+The evaluation results are informative and bounded. Debunking false claims can be economically rational. Drafted-curator relevance rounds filter competence while remaining vulnerable above a concrete collusion threshold. Dedicated `NonFalsifiable` challenges materially reduce bad-item retention. Author reputation as a standing bond creates useful separation between honest and dishonest publishers without reintroducing reputation-weighted voting.
 
-Truth Post 2023 matters because it demonstrated that this work is already beyond abstract speculation. The complete system is not yet deployed, but it is now specified, stress-tested, and conceptually cleaner than the MVP that preceded it.
+Truth Post 2023 matters because it moved this work beyond pure speculation. The complete system is not yet deployed, but the end-state design is now specified, stress-tested, and conceptually cleaner than the MVP that preceded it.
 
 What this thesis ultimately claims is not that one protocol solves all epistemic problems. It claims that trustless decentralized curation is a real field, that its main bottleneck has been identified clearly, that the framework for attacking it is now explicit, and that the path from theory to buildable system is much shorter than it appears from the outside.
 
 # Disclosure
 
 The author has multi-year engineering experience with Kleros, a deployed decentralized dispute resolution system. That experience informs the design choices and threat model but does not constitute empirical validation. No deployment data from Kleros is used in this paper. The author does not hold PNK tokens and has no ongoing financial relationship with Kleros.
-
-# Appendix A: Data-quality foundations
-
-Extended data-quality mappings and working notes are maintained separately. `references.bib` remains the citation source of truth for the manuscript.
