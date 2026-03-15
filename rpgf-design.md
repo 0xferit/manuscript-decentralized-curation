@@ -66,6 +66,8 @@ A project submits an **impact report** containing multiple **impact claims**. Th
 
 If one claim is debunked, the others survive. The project's funding allocation is computed over surviving claims only. Whole-report debunking is reserved for `TemplateViolation` (the report itself fails template requirements) or `NonFalsifiable` (the entire report lacks testable assertions).
 
+**Bond apportionment**: the report-level bond covers all claims in the report. When a single claim is debunked, the fraction of the bond at risk is proportional to the debunked claim's relevance score share within the report: `claimBondAtRisk = reportBond * (claimScore / projectScore)`. When the entire report is debunked (via `TemplateViolation` or `NonFalsifiable`), the full report bond is forfeited.
+
 This is a deliberate departure from the news instantiation, where whole-blob debunking is accepted because the proportionality tradeoff is less severe (removing a news article from a feed is less consequential than zeroing out a project's funding).
 
 ## Bond Model: Provisional Allocation With Holdback
@@ -74,12 +76,12 @@ Projects seeking retroactive funding are typically capital-constrained. Requirin
 
 Instead:
 
-1. Projects submit impact reports with an **upfront bond** of `max(pool.baseBondWei, pool.bondProvisionalShareBps * provisionalAllocation / 10,000)`. For first-time applicants with no reputation history, the bond floor SHOULD be higher. The suggested default base bond is 0.01 ETH; the suggested provisional-share rate is 5%.
-2. The curation layer produces scores. Allocation is computed **provisionally** based on the curation output.
+1. Projects submit impact reports with an **initial bond** of `pool.baseBondWei` (suggested default: 0.01 ETH). For first-time applicants with no reputation history, the bond floor SHOULD be higher.
+2. The curation layer produces scores. Allocation is computed **provisionally** based on the curation output. After provisional allocation is known, the required bond is recalculated as `max(pool.baseBondWei, pool.bondProvisionalShareBps * provisionalAllocation / 10,000)` (suggested provisional-share rate: 5%). If the required bond exceeds the initial bond, the project must top up during a **bond adjustment window** before the holdback period begins. Failure to top up reduces the project's provisional allocation to the level supportable by its current bond.
 3. A **holdback period** (suggested default: 30 days) runs before final disbursement.
 4. During holdback, challenges can be filed against any impact claim.
-5. If a claim is debunked during holdback, the corresponding funding share is withheld and **redistributed** to surviving projects.
-6. At holdback end, **uncontested shares** (claims with no active challenge) are disbursed. **Contested shares** (claims with an active, unresolved challenge) remain escrowed until DDR resolution or timeout. On resolution: if `ChallengeFailed`, the share is disbursed to the project; if `Debunked`, the share is redistributed to surviving projects.
+5. If a claim is debunked during holdback, the corresponding funding share is withheld and **redistributed pro rata** to surviving projects (proportional to each surviving project's existing score share). Redistribution is batched at holdback end, not after each individual debunking, to avoid cascading recalculations.
+6. At holdback end, **uncontested shares** (claims with no active challenge) are disbursed. **Contested shares** (claims with an active, unresolved challenge) remain escrowed until DDR resolution or timeout. On resolution: if `ChallengeFailed`, the share is disbursed to the project; if `Debunked`, the share is redistributed pro rata to surviving projects. The successful challenger additionally receives the debunked project's forfeited bond (minus challenge tax and DDR fees), consistent with the framework's challenge payout model.
 7. **Author reputation** is the primary long-term deterrent: debunked claims slash project reputation, reducing allocation in future funding rounds.
 
 ## Relevance Scoring and Attribution
@@ -98,10 +100,20 @@ Broad pools (covering heterogeneous project types) are allowed. The relevance po
 
 Debunking a false impact claim during holdback **redirects funds** to legitimate projects. This creates a competitive challenge incentive that is structurally stronger than news:
 
-- In news, challengers are motivated by the debunking reward (counter-stake payout).
+- In news, challengers are motivated by the debunking reward (they receive the author's forfeited bond on successful challenge).
 - In RPGF, challengers are also motivated by **competitive redirection**: funds that would have gone to a false claim are redistributed to deserving projects, including potentially the challenger's own project.
 
-This is a double-edged sword: competitive dynamics also enable **strategic challenges** (filing challenges to suppress rival projects). To make sabotage expensive, challenge costs SHOULD scale with the challenged claim's allocation weight rather than with a flat symbolic bond. The counter-stake is `max(pool.minChallengeStakeWei, challengedClaimProvisionalShare / 4)`, and the challenge tax is `pool.challengeTaxBps * challengedClaimProvisionalShare / 10,000`. Failed challengers lose most of their counter-stake and pay DDR arbitration fees. Repeated failed challenges from the same identity SHOULD trigger escalating costs or cooldowns at the interface level.
+This is a double-edged sword: competitive dynamics also enable **strategic challenges** (filing challenges to suppress rival projects). To make sabotage expensive, challenge costs SHOULD scale with the challenged claim's allocation weight rather than with a flat symbolic bond.
+
+**Departure from framework:** In the framework's news instantiation, challenge costs scale with the author's *bond* (counter-stake = `max(pool minimum, B/4)`, challenge tax = % of pinned bond). In RPGF, challenge costs scale with the challenged claim's *provisional allocation share* instead. Rationale: in news, the bond is the primary capital at risk and the natural scaling anchor. In RPGF with holdback, the primary capital at risk is the provisional allocation (which may far exceed the bond). Scaling challenge costs to the allocation makes challenges proportionally expensive relative to the funds being contested, preventing cheap strategic challenges against high-value claims.
+
+The challenger pays three costs:
+
+1. **Counter-stake**: `max(pool.minChallengeStakeWei, challengedClaimProvisionalShare / 4)`. Forfeited if the challenge fails.
+2. **Challenge tax**: `pool.challengeTaxBps * challengedClaimProvisionalShare / 10,000`. Credited to the pool's curation budget. Non-refundable.
+3. **DDR fee**: the external dispute resolution provider cost (e.g., Kleros arbitration fee). Non-refundable regardless of outcome.
+
+Failed challengers lose their counter-stake and have already paid the challenge tax and DDR fee. Repeated failed challenges from the same identity SHOULD trigger escalating costs or cooldowns at the interface level.
 
 ## Funding Distribution
 
@@ -115,7 +127,7 @@ projectScore = sum(claimScore for surviving claims by this project)
 projectFunding = (projectScore / sum(projectScore for all eligible projects)) * poolFundingBudget
 ```
 
-Design note: `confidencePercentile` from the news instantiation is **not used** in RPGF scoring. In news, confidence (bond-time) distinguishes long-lived claims from new ones. In batch RPGF, all reports are submitted within the same round window, so bond-time would merely reward earlier submission within the window rather than measuring meaningful exposure to challenge. Relevance score alone drives allocation.
+Design note: confidence (bond-time accumulation) from the news instantiation is **not used** in RPGF scoring. In news, the feed score formula `relevanceScore * confidencePercentile` uses bond-time to distinguish long-lived, well-scrutinized claims from new ones. In batch RPGF, all reports are submitted within the same round window, so bond-time would merely reward earlier submission within the window rather than measuring meaningful exposure to challenge. Relevance score alone drives allocation.
 
 **Claim-splitting defense**: the additive formula creates an incentive to split impact into many small claims to inflate total score. Two mitigations:
 
@@ -133,10 +145,11 @@ This is proportional allocation weighted by curated relevance. The formula is de
 | Domain | Retroactive public good funding for a specific ecosystem |
 | Impact report submission window | 30 days per funding round |
 | Holdback period | 30 days after provisional allocation |
-| Author bond | `max(0.01 ETH, 5% of provisional allocation)` per impact report |
+| Author bond | `max(0.01 ETH, 5% of provisional allocation)` per impact report; top-up required after provisional allocation is computed |
 | Max claims per report | 10 |
 | Challenger counter-stake | `max(0.01 ETH, 25% of challenged claim's provisional share)` |
 | Challenge tax | 0.5% of challenged claim's provisional share |
+| DDR fee | External provider cost (e.g., Kleros arbitration fee); paid by challenger |
 | Curation budget reserve | 5% of pool funding budget |
 | Relevance round cadence | One round per claim during the evaluation period |
 | Relevance coherence threshold K | 1.25 |
@@ -153,6 +166,7 @@ This is proportional allocation weighted by curated relevance. The formula is de
 | Claim unit | Whole article blob | Atomic impact claims within a report |
 | Debunking scope | Whole blob debunked | Per-claim; surviving claims keep their score |
 | Bond model | Author-bonded (no protocol minimum) | Scaled bond + holdback on provisional allocation |
+| Challenge cost base | Scales with author's bond | Scales with challenged claim's provisional share |
 | Primary deterrent | Bond loss | Reputation slash + funding redirection |
 | Challenge incentive | Debunking reward only | Debunking reward + competitive fund redirection |
 | Time horizon | Continuous (claims live indefinitely) | Batch (funding rounds with submission windows) |
@@ -178,3 +192,19 @@ The competitive redirection incentive improves challenger participation but crea
 ### Counterfactual impact
 
 The framework handles direct output claims ("we built X") but not counterfactual impact claims ("X prevented Y from happening"). Counterfactual claims fail the falsifiability requirement and would be legitimately challengeable as `NonFalsifiable`. This limits the framework to observable, measurable impact, which is a real scope constraint.
+
+### Claim lifecycle during holdback
+
+The framework defines explicit claim lifecycle states (`Live`, `PendingEdit`, `WithdrawPending`, `Challenged`, `Closed`, `Withdrawn`). This RPGF design does not specify lifecycle states for impact claims during holdback. Open questions: can a project amend a claim during holdback (e.g., correct a factual error before it is challenged)? Can a project voluntarily withdraw a claim to avoid debunking reputational damage? If amendment is allowed, does it reset the holdback window for that claim? The news instantiation allows amendment (which resets confidence to zero) and withdrawal (with a cooldown period); the RPGF adaptation should specify equivalent rules.
+
+### Post-holdback fraud discovery
+
+Challenges are limited to the holdback period. Once funds are disbursed, there is no protocol-level mechanism to recover funds if fraud is discovered later. The deterrent after disbursement is limited to reputation slashing (reducing future allocations). This is an accepted tradeoff for disbursement finality, but it means the holdback window is the sole challenge opportunity. Pools that require stronger post-disbursement accountability must rely on external mechanisms (e.g., legal recourse, off-chain reputation systems).
+
+### Challenge cost pinning
+
+In the framework, challenge economics are pinned to the bond at filing time (later bond adjustments do not alter the dispute's economic basis). In this RPGF adaptation, challenge costs scale with the challenged claim's provisional allocation share. If multiple claims are debunked during holdback, surviving claims' shares increase via redistribution. This means the effective cost of challenging a claim may change depending on when in the holdback period the challenge is filed. Whether challenge costs should be pinned at filing time (using the provisional share at that moment) or float with redistribution needs specification.
+
+### Curation budget sustainability
+
+The curation budget (suggested 5% of pool funding) is drawn from the pool's total funding, reducing funds available to projects. Whether this budget is sufficient to incentivize curator participation depends on pool size and claim volume. Small pools may need higher curation budget percentages, while large pools may attract curators at lower rates. The current flat percentage suggestion may need per-pool calibration.
