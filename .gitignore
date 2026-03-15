@@ -28,3 +28,14 @@ legacy/quarto-outputs-pre-normalization/
 **/*.quarto_ipynb
 
 .claude/
+
+# Generated image dumps
+allgeneratedimagesbynanobanana/
+output/
+
+# Presentation artifacts (binaries/exports)
+draftSlidesOfMarch10/
+march10-presentation.zip
+talks/*.pdf
+talks/slides/
+talks/march10-presentation/
