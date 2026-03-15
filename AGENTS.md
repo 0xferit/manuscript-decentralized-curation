@@ -35,6 +35,7 @@ This project is workspace for my thesis on decentralized curation.
 
 ### Writing constraints (default)
 
+- Never refer to older versions of this manuscript.
 - Audience: CS academics/engineers; write with precise definitions and causal chains.
 - Tone: direct, non-poetic, high signal.
 - Avoid fragile stats and news overfitting in early “problem” pieces unless explicitly requested.

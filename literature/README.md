@@ -28,3 +28,4 @@ Each file covers one work or tightly related cluster. Structure per file:
 | `groves-ledyard-1977-free-rider.md` | Groves & Ledyard, free rider problem | Deviation penalty parallel |
 | `wang-strong-1996-data-quality.md` | Wang & Strong, "Beyond Accuracy" | Quality decomposition methodology |
 | `popper-1934-logic-scientific-discovery.md` | Popper, "Logic of Scientific Discovery" | Falsifiability as demarcation, verification/falsification asymmetry |
+| `ackoff-1989-dikw.md` | Ackoff 1989, "From Data to Wisdom" | DIKW hierarchy; descriptive framework for information-to-knowledge gap |

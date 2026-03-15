@@ -98,6 +98,7 @@ Challenge tax is a pool-configurable parameter, not a single global constant. Th
 | Flat-round std-dev epsilon | 0.02 |
 | Per-identity effective weight cap | 10% of drafted round weight |
 | Round reward floor | 0.01 ETH equivalent from pool reward budget |
+| Protocol grace period | 7 days (604,800 seconds) |
 
 ## System Overview
 
@@ -149,7 +150,7 @@ This separation is deliberate. Truth Post SHOULD NOT reuse internal curators as 
 
 ### Authors
 
-Authors create claim blobs, upload evidence bundles, post author bonds, and may withdraw or amend claims.
+Authors create claim blobs, upload evidence items, post author bonds, and may withdraw or amend claims.
 
 Authors may also carry pool-scoped author reputation. That reputation is not escrowed per claim, but every new claim exposes the author's standing credibility to a large downside if the claim is later busted.
 
@@ -214,6 +215,8 @@ Required fields:
 - `authorChallengeFailedRepReward`
 - `curatorExitCooldownSeconds`
 - `roundRewardFloorWei`
+- `perIdentityWeightCapBps`
+- `protocolGracePeriodSeconds`
 - `ddrProviderId`
 - `successorPoolId` (nullable)
 - `createdBy`
@@ -318,18 +321,26 @@ Required fields:
 - `evidencePolicyVersion`
 - `articleBodyCid`
 - `claimManifestCid`
-- `evidenceBundleCid`
+- `initialEvidenceCids`
 - `revisionHistoryCid`
 - `currentRevision`
 - `authorBondWei`
+- `pendingBondAdjustmentWei` (nullable)
+- `bondAdjustmentEffectiveAt` (nullable)
 - `operationalState`
+- `preChallengeOperationalState` (nullable)
 - `adjudicationOutcome`
 - `adjudicationSource`
+- `lastResolvedAdjudicationOutcome` (nullable)
+- `lastResolvedChallengeId` (nullable)
+- `lastResolvedRevision` (nullable)
 - `confidenceIntegral`
 - `lastConfidenceAccrualBlock`
 - `confidenceAccrualState`
 - `activeChallengeId`
 - `queuedChallengeCount`
+- `relevanceScore` (nullable)
+- `nextRelevanceRoundAt`
 - `createdAtBlock`
 - `updatedAtBlock`
 
@@ -341,39 +352,41 @@ Authority:
 Storage plane:
 
 - on-chain for ids, accounting, status, current CIDs, timestamps, version pointers
-- content storage for manifest, article body, evidence bundle, revision history
+- content storage for manifest, article body, evidence items, revision history
 
-### EvidenceBundle
+The same claim blob CID MAY be posted to multiple pools as independent claims. Each pool instance has independent adjudication, confidence, relevance, and bond accounting. A `Debunked` outcome in one pool MUST NOT propagate to claims in other pools.
 
-Purpose: package evidence references and integrity commitments.
+`Claim` SHOULD expose `lastResolvedAdjudicationOutcome`, `lastResolvedChallengeId`, and `lastResolvedRevision`. Amendment finalization MUST reset the current revision's `adjudicationOutcome` to `Unchallenged`, but MUST NOT erase the most recent resolved adjudication from claim history.
+
+### EvidenceItem
+
+Purpose: represent one evidence submission by any party.
 
 Required fields:
 
-- `bundleId`
+- `itemId`
 - `claimId`
-- `items`
-- `authorStatement`
+- `challengeId` (nullable; null for author-submitted pre-challenge evidence)
 - `submittedBy`
 - `submittedAt`
-
-Each evidence item MUST contain:
-
 - `label`
 - `sourceClass`
 - `uriOrCid`
 - `contentHash`
 - `publishedAt`
 - `retrievedAt`
+- `authorStatement` (nullable)
 
 Authority:
 
-- authors or challengers submit bundles
-- bundles are append-only
+- any address MAY submit evidence items
+- items are append-only and immutable once submitted
+- submission window closes when the DDR evidence phase closes
 
 Storage plane:
 
 - content storage
-- on-chain by bundle hash and pointer
+- on-chain by item hash and pointer
 
 ### Challenge
 
@@ -385,8 +398,10 @@ Required fields:
 - `claimId`
 - `challenger`
 - `challengedProposition`
-- `reasonType` (`Debunking`, `NonFalsifiable`, `ScopeViolation`)
-- `counterEvidenceCid`
+- `challengedRevision`
+- `challengedManifestCid`
+- `bondAtChallengeOpenWei`
+- `reasonType` (`Debunking`, `NonFalsifiable`, `ScopeViolation`, `TemplateViolation`)
 - `counterStakeWei`
 - `challengeTaxWei`
 - `arbitrationFeeWei`
@@ -397,6 +412,8 @@ Required fields:
 - `cancellationWindowEndsAt`
 - `linkedDisputeId`
 
+A challenge MUST record the `currentRevision`, `claimManifestCid`, and `authorBondWei` of the claim at the time of filing. DDR evaluation MUST use the pinned revision, not the claim's current content. All challenge economics and winner payout MUST use `bondAtChallengeOpenWei`.
+
 Authority:
 
 - created by challenger
@@ -405,7 +422,7 @@ Authority:
 Storage plane:
 
 - on-chain for amounts, status, ids
-- content storage for evidence bundle
+- counter-evidence is linked via `EvidenceItem.challengeId`
 
 ### Dispute
 
@@ -486,6 +503,7 @@ Required fields:
 - `relevanceScore`
 - `slashSummary`
 - `rewardSummary`
+- `reservedRoundRewardWei`
 - `status`
 
 Authority:
@@ -520,24 +538,26 @@ Storage plane:
 
 ### ConfidenceScore
 
-Purpose: represent stake-at-risk over time for one claim.
+Purpose: denormalized view of stake-at-risk over time for one claim.
 
-Required fields:
+This is NOT a separate canonical object. The canonical confidence fields (`confidenceIntegral`, `lastConfidenceAccrualBlock`, `confidenceAccrualState`) live on the `Claim` object. `ConfidenceScore` is an indexer/interface convenience view that adds the computed display percentile.
+
+Derived fields:
 
 - `claimId`
-- `confidenceIntegral`
-- `lastAccrualBlock`
-- `accrualState` (`Active`, `Paused`, `Terminated`)
-- `displayPercentile`
+- `confidenceIntegral` (read from `Claim`)
+- `lastAccrualBlock` (read from `Claim.lastConfidenceAccrualBlock`)
+- `accrualState` (read from `Claim.confidenceAccrualState`)
+- `displayPercentile` (indexer-computed)
 
 Authority:
 
-- raw value is canonical protocol state
+- raw value is canonical on the `Claim` object
 - display percentile is indexer/interface derived
 
 Storage plane:
 
-- raw state on-chain
+- raw state on-chain (via `Claim`)
 - percentile off-chain
 
 ### PoolRewardBudget
@@ -608,7 +628,7 @@ Storage plane:
 
 - claim manifest JSON
 - article body content
-- evidence manifests
+- evidence items
 - pool policy documents
 
 ### Indexers MUST provide
@@ -636,7 +656,7 @@ The complete build uses two separate state dimensions for claims to avoid overlo
 
 - `Draft`: local/off-chain only, not posted
 - `Live`: active, challengeable, confidence accrues
-- `PendingEdit`: author is preparing a new revision, confidence paused, claim out of the main feed
+- `PendingEdit`: author is preparing a new revision, confidence paused, claim out of the main feed, challengeable on last finalized revision
 - `WithdrawPending`: author initiated withdrawal cooldown, confidence paused, challenge still allowed
 - `Challenged`: external dispute active, confidence paused
 - `Closed`: final DDR outcome executed, historical only
@@ -648,7 +668,7 @@ The complete build uses two separate state dimensions for claims to avoid overlo
 - `ChallengeFailed`
 - `Debunked`
 
-`NonFalsifiable` remains a challenge reason, not a final adjudication label. A successful `NonFalsifiable` challenge yields the final outcome `Debunked`.
+`NonFalsifiable`, `ScopeViolation`, and `TemplateViolation` remain challenge reasons, not final adjudication labels. A successful challenge of any type yields the final outcome `Debunked`.
 
 ### Adjudication Source
 
@@ -668,18 +688,26 @@ The complete build uses two separate state dimensions for claims to avoid overlo
 - `PendingEdit -> Live`
   - trigger: author finalizes new revision
   - side effect: current CID pointers update, revision history updates, confidence resets to zero, `adjudicationOutcome = Unchallenged`, and a fresh relevance round is queued subject to pool funding
+  - design note: the claim's previous relevance score remains in effect until a new relevance round produces a replacement; because confidence resets to zero, `feedScore` will be near zero regardless, so the old relevance score preserves main-feed eligibility (not placement) during the transition period
+- `PendingEdit -> Challenged`
+  - trigger: challenge filed targeting the last finalized revision
+  - side effect: edit finalization is blocked, confidence remains paused, `preChallengeOperationalState = PendingEdit`
 - `Live -> WithdrawPending`
   - trigger: author initiates withdrawal with no active or queued challenge
 - `WithdrawPending -> Withdrawn`
   - trigger: cooldown ends with no challenge
 - `WithdrawPending -> Challenged`
   - trigger: challenge filed during cooldown
+  - side effect: pending withdrawal MUST be cancelled; `preChallengeOperationalState = WithdrawPending`; if challenge later resolves as `ChallengeFailed`, claim returns to `Live` (not `WithdrawPending`) and the author MUST initiate a new withdrawal cooldown to exit
 - `Challenged -> Live`
-  - trigger: DDR final ruling is `ChallengeFailed` and no queued challenge remains
-  - side effect: `adjudicationOutcome = ChallengeFailed`, `adjudicationSource = DDR`
+  - trigger: DDR final ruling is `ChallengeFailed`, no queued challenge remains, and `preChallengeOperationalState` was `Live` or `WithdrawPending`
+  - side effect: `adjudicationOutcome = ChallengeFailed`, `adjudicationSource = DDR`, `confidenceIntegral` preserved, `lastConfidenceAccrualBlock = currentBlock`, accrual resumes
+- `Challenged -> PendingEdit`
+  - trigger: DDR final ruling is `ChallengeFailed`, no queued challenge remains, and `preChallengeOperationalState` was `PendingEdit`
+  - side effect: `adjudicationOutcome = ChallengeFailed`, `adjudicationSource = DDR`, author may resume editing
 - `Challenged -> Challenged`
   - trigger: DDR final ruling is `ChallengeFailed` and a queued challenge auto-activates after the cancellation window
-  - side effect: active challenge id advances to the next queued challenge
+  - side effect: active challenge id advances to the next queued challenge; `preChallengeOperationalState` is preserved
 - `Challenged -> Closed`
   - trigger: DDR final ruling is `Debunked`
   - side effect: `adjudicationOutcome = Debunked`, `adjudicationSource = DDR`, confidence terminates, queued challenges are refunded, and claim is removed from active feeds
@@ -712,8 +740,8 @@ Transitions are driven by the DDR adapter. Truth Post MUST mirror the authoritat
 `Cancelled` is allowed whenever a round cannot safely produce a relevance score. In that case:
 
 - If the eligible curator set is smaller than `minRevealQuorum`, the round is cancelled before drafting, nobody is slashed, and the claim keeps its previous relevance score if one exists.
-- If the round is drafted but revealed participation ends below `minRevealQuorum`, drafted curators who failed to commit or reveal are penalized as incoherent participants, the claim keeps its previous relevance score, and a replacement round is scheduled at the next cadence.
-- If the round reaches reveal but `stdDev < pool.flatRoundStdDevMin`, the round is cancelled as degenerate, no relevance score update occurs, and no round reward is paid.
+- If the round is drafted but revealed participation ends below `minRevealQuorum`, drafted curators who failed to commit or reveal MUST be slashed as non-participants, but no curator reward MUST be paid and no new relevance score MUST be produced. Non-participation slashes from such a cancelled round MUST be credited to the pool reward budget. Pre-reveal leak slashes, if any, MUST still be paid to the reporter per the leak-report payout rules and MUST NOT be redirected to the pool budget. A replacement round is scheduled at the next cadence.
+- If the round reaches reveal but `stdDev < pool.flatRoundStdDevMin`, the round is cancelled as degenerate, no relevance score update occurs, and no round reward is paid. Design note: a round with `stdDev` below `flatRoundStdDevMin` MAY reflect genuine consensus rather than collusion or low-information voting. The protocol intentionally treats such rounds as non-informative for scoring and rewards: no relevance score update occurs, no round reward is paid, and a later round with a different draft is expected to test whether that consensus persists.
 
 ## Curator Stake State Model
 
@@ -760,7 +788,7 @@ Design note:
 3. The author uploads:
    - claim manifest JSON
    - article body
-   - evidence bundle
+   - initial evidence items
 4. The author deposits the author bond.
 5. The protocol stores current CIDs, version pointers, timestamps, revision metadata, and bond accounting on-chain.
 6. The claim enters `Live`.
@@ -771,7 +799,22 @@ One claim blob MAY contain multiple subclaims. Truth Post does not require the a
 
 Posting a claim does not require pre-existing author reputation. But once the claim is live, the author's pool-scoped reputation is exposed to downside if the claim is later `Debunked`.
 
-Claims that fail template linting MUST NOT be postable through the canonical frontend. Contracts MAY also enforce minimal field presence.
+Claims that fail template linting MUST NOT be postable through the canonical frontend. Contracts MUST enforce minimal structural field presence: non-empty `articleBodyCid`, `claimManifestCid`, and `initialEvidenceCids`; valid `claimTemplateVersion` and `evidencePolicyVersion` matching the pool's current versions. Semantic template validation (field content quality, source class conformance, falsifiability) remains an interface-layer concern and is enforceable post-publication via `TemplateViolation` challenges.
+
+### Bond Adjustment
+
+Author bonds are adjustable after posting, subject to the pool's configured grace period.
+
+- `authorBondWei` MAY be increased or decreased by the author.
+- Bond adjustments are allowed only when `operationalState = Live`.
+- Bond adjustments MUST NOT be initiated during `PendingEdit`, `Challenged`, `WithdrawPending`, `Closed`, or `Withdrawn`.
+- When the author initiates a bond change:
+  1. The protocol records `pendingBondAdjustmentWei` and `bondAdjustmentEffectiveAt = now + pool.protocolGracePeriodSeconds`.
+  2. Until the effective time, the current `authorBondWei` continues to apply for confidence accrual, challenge pricing, and payout calculations.
+  3. After the effective time AND when no active or queued challenge exists, the new bond takes effect: `authorBondWei = pendingBondAdjustmentWei`, confidence is snapshotted, and accrual continues at the new rate.
+  4. For bond decreases, the released collateral cannot be withdrawn until the bond change takes full effect.
+  5. If the claim leaves `Live` state (e.g., enters `PendingEdit`, `WithdrawPending`, or `Challenged`) before the grace period ends, the pending bond adjustment is cancelled and the author must re-initiate it after returning to `Live`.
+- The suggested default for `pool.protocolGracePeriodSeconds` is 7 days (604,800 seconds).
 
 ### Flow C: Confidence Score Accumulation
 
@@ -788,6 +831,8 @@ Rules:
 - confidence accrues only while `operationalState = Live`
 - confidence pauses in `PendingEdit`, `WithdrawPending`, and `Challenged`
 - confidence terminates permanently on `Debunked` or `Withdrawn`
+- after a successful defense: `confidenceIntegral` is preserved in all cases; for `Challenged -> Live`, `lastConfidenceAccrualBlock = currentBlock` and accrual resumes at the current `authorBondWei` rate; for `Challenged -> PendingEdit`, the integral is preserved but accrual remains paused (since `PendingEdit` is a paused state)
+- only amendments reset confidence to zero
 - confidence does not use protocol-level exponential decay in the initial complete build
 
 Design note:
@@ -803,36 +848,38 @@ Display logic:
 
 ### Flow D: Challenge, Dispute, Appeals, Finality
 
-1. A challenger chooses a live claim.
+1. A challenger chooses a claim in `Live`, `PendingEdit`, or `WithdrawPending` state.
 2. The challenger submits:
    - `reasonType`
    - explicit natural-language `challengedProposition`
-   - counter-evidence bundle
-   - counter-stake `S = max(pool.minChallengeStake, 0.25 * authorBond)`
-   - challenge tax `T = pool.challengeTaxBps * authorBond`
+   - counter-evidence items
+   - counter-stake `S = max(pool.minChallengeStakeWei, bondAtChallengeOpenWei / 4)`
+   - challenge tax `T = pool.challengeTaxBps * bondAtChallengeOpenWei / 10,000`
    - DDR arbitration fee
-3. The challenge tax is paid by the challenger at filing and credited immediately to the challenged pool's reward budget.
+3. The challenge MUST record the claim's `currentRevision`, `claimManifestCid`, and `authorBondWei` at the time of filing as `challengedRevision`, `challengedManifestCid`, and `bondAtChallengeOpenWei`. Counter-stake and tax calculations MUST use `bondAtChallengeOpenWei`.
 4. If no challenge is active, the protocol:
-   - pauses confidence
+   - records `preChallengeOperationalState`
+   - pauses confidence (if not already paused)
    - moves claim to `Challenged`
    - marks this challenge `Active`
+   - credits `challengeTaxWei` to the pool reward budget
    - opens a dispute through the DDR adapter
-5. If another challenge is already active, the new challenge enters the FIFO queue with stake, tax, and DDR fee escrowed up front.
+5. If another challenge is already active, the new challenge enters the FIFO queue. For queued challenges, `counterStakeWei`, `challengeTaxWei`, and `arbitrationFeeWei` MUST remain in challenge-specific escrow until activation. A queued challenge MUST NOT credit `challengeTaxWei` to `PoolRewardBudget.balanceWei` before it becomes `Active`. If a queued challenge is cancelled before activation or is mooted by an earlier `Debunked` ruling, the protocol MUST refund all three amounts in full.
 6. The filed `challengedProposition` MUST be a fair reading of the claim blob. That is part of what DDR evaluates.
 7. The DDR adapter asks one binary question: should this filed challenge succeed under the stated `reasonType`, `challengedProposition`, pool policy, and submitted evidence?
 8. The DDR process runs through evidence, voting, and possible appeals.
-9. A queued challenger MAY cancel during the 24-hour cancellation window and recover their escrowed stake, tax, and DDR fee before activation.
+9. Each queued challenge has exactly one cancellation window. That window MUST begin only when the challenge becomes first in FIFO order after the preceding active challenge resolves as `ChallengeFailed`. At that moment the protocol MUST set `cancellationWindowEndsAt = now + 24 hours` while keeping the claim in `Challenged`. The queued challenger MAY cancel during this window and recover their escrowed stake, tax, and DDR fee. If the queued challenger does not cancel before `cancellationWindowEndsAt`, the protocol MUST activate the challenge, open the DDR dispute, and credit its `challengeTaxWei` to the pool reward budget.
 10. Final ruling outcomes are interpreted as:
-   - `ChallengeFailed`: if no queued challenge remains, the claim returns to `Live` and the author gains `pool.authorChallengeFailedRepReward`
-   - `ChallengeFailed`: if a queued challenge remains, the next queued challenge auto-activates after a fixed 24-hour cancellation window
-   - `Debunked`: claim moves to `Closed`, author bond is slashed, current author reputation in that pool is reduced by `pool.authorBustSlashBps`, and all queued challenges are refunded in full
-11. `Debunked` covers any successful `Debunking`, `NonFalsifiable`, or `ScopeViolation` challenge.
+   - `ChallengeFailed`: if no queued challenge remains, the claim returns to its `preChallengeOperationalState` (`Live`, `PendingEdit`, or `Live` if it was `WithdrawPending`) and the author gains `pool.authorChallengeFailedRepReward`
+   - `ChallengeFailed`: if a queued challenge remains, the next queued challenge enters its cancellation window as described in step 9
+   - `Debunked`: claim moves to `Closed`, author bond is slashed (using `bondAtChallengeOpenWei`), current author reputation in that pool is reduced by `pool.authorBustSlashBps`, and all queued challenges are refunded in full
+11. `Debunked` covers any successful `Debunking`, `NonFalsifiable`, `ScopeViolation`, or `TemplateViolation` challenge.
 12. Appeal funding is handled by DDR crowdfunding. The author, challenger, or any third party MAY fund either side in exchange for the underlying DDR-side reward logic. If the author's side is not funded, the author loses the appeal opportunity.
 
-Default payout rule:
+Default payout rule (all amounts reference `bondAtChallengeOpenWei` for the relevant challenge):
 
 - if challenger wins:
-  - challenger receives author bond
+  - challenger receives `bondAtChallengeOpenWei`
   - challenger receives their own counter-stake back
   - challenge tax remains in the pool reward budget
   - losing-side appeal reward logic is inherited from DDR
@@ -865,8 +912,8 @@ Important clarification:
 ### Flow F: Relevance Curation And Coherence Game
 
 1. Every newly live claim gets an initial relevance round immediately after posting if the pool reward budget can fund it.
-2. Every `Live` claim gets a new relevance round at the pool's configured cadence while the claim remains bonded and not withdrawn. The suggested default for the reference news deployment is one round per week.
-3. If the pool reward budget cannot cover the configured round reward floor, no new round is scheduled and the claim keeps its previous relevance score if one exists.
+2. Every `Live` claim gets a new relevance round at the pool's configured cadence while the claim remains bonded and not withdrawn. The suggested default for the reference news deployment is one round per week. `Claim` MUST include `nextRelevanceRoundAt`. When multiple claims in the same pool are simultaneously due for scheduling, the protocol MUST process them in ascending `(nextRelevanceRoundAt, claimId)` order.
+3. If the pool reward budget cannot cover the configured round reward floor, no new round is scheduled and the claim keeps its previous relevance score if one exists. When a round enters `Scheduled`, the protocol MUST reserve `pool.roundRewardFloorWei` from the pool reward budget immediately. Reserved reward floor MUST be unavailable to later rounds, MUST be released if the round is cancelled, and MUST be paid only when the round finalizes. A round MUST NOT enter `CommitOpen` unless its reward floor is reserved in full.
 4. The scheduler snapshots the eligible curator set for the claim's pool.
 5. Let:
 
@@ -881,7 +928,7 @@ n = min(target, eligibleCuratorCount)
    - any previous relevance score remains in force
    - claims with no prior finalized relevance round remain out of the default main feed
    - a replacement round is scheduled at the next cadence
-7. Otherwise, the scheduler drafts `n` curators using VRF randomness. Drafting weight is purely stake-based:
+7. Otherwise, the scheduler drafts `n` curators using VRF randomness. Drafting MUST use a verifiable randomness source. The seed MUST be derived as `seed = H(poolId, claimId, roundId, snapshotBlock, randomness(snapshotBlock+1))`. If randomness is unavailable by a configurable deadline, the round MUST be cancelled and rescheduled. Drafting weight is purely stake-based:
 
 ```text
 d_i = s_i
@@ -889,8 +936,12 @@ d_i = s_i
 8. Effective round weight is:
 
 ```text
-w_i = min(s_i, 10% of total drafted round weight)
+w_i = min(s_i, pool.perIdentityWeightCapBps / 10,000 * S_drafted)
 ```
+
+where `S_drafted = sum(s_j)` over all drafted curators before any cap is applied. Implementations MUST use uncapped drafted stake for `S_drafted`; they MUST NOT solve the cap recursively against capped weights.
+
+When a curator is drafted, the protocol MUST lock `roundStakeWei_i = w_i` from that curator's currently available active stake. A curator MUST NOT be drafted unless `availableActiveStakeWei_i >= roundStakeWei_i`. Only `roundStakeWei_i` MAY determine vote weight or slash exposure for that round.
 
 9. Each drafted curator commits a relevance score in `[0,1]`.
 10. Each drafted curator reveals the score.
@@ -899,9 +950,14 @@ w_i = min(s_i, 10% of total drafted round weight)
    - any previous relevance score remains in force
    - if the claim has no previous finalized relevance round, it remains unscored for feed purposes
    - a replacement round is scheduled at the next cadence
-12. Otherwise, the protocol computes:
-   - weighted mean `mu`
-   - weighted standard deviation `sigma`
+12. Otherwise, the protocol computes weighted mean and standard deviation. For a round with valid reveal set `V`, let `W = sum(w_i for i in V)`. The protocol MUST compute:
+
+```text
+mu = sum(w_i * v_i for i in V) / W
+sigma = sqrt(sum(w_i * (v_i - mu)^2 for i in V) / W)
+```
+
+`mu` and `sigma` MUST be computed over valid reveals only. All slashing and rewards in the round MUST use `pool.relevanceSlashBps`; the reference-pool 3% value is a default, not a hardcoded constant.
 13. If `sigma < pool.flatRoundStdDevMin`, the round is cancelled as degenerate:
    - no new relevance score is produced
    - no round reward is paid
@@ -909,24 +965,24 @@ w_i = min(s_i, 10% of total drafted round weight)
 14. Otherwise, a curator is coherent iff:
 
 ```text
-abs(v_i - mu) <= K * sigma
+abs(v_i - mu) <= pool.coherenceK * sigma
 ```
 
-with `K = 1.25` by default.
+with `pool.coherenceK = 1.25` by default.
 
-15. Incoherent curators lose 3% of the active stake slice used in that round.
-16. Coherent curators share:
-   - slashed stake from incoherent curators
-   - the pool’s fixed round reward floor
+15. An incoherent curator MUST lose `pool.relevanceSlashBps * roundStakeWei_i / 10,000`.
+16. Each coherent curator MUST receive `(w_i / sum(w_j for j in coherent)) * (sum(slashedWei_j) + reservedRoundRewardWei)`.
 17. Pre-reveal leak reporting remains open until round finalization.
 18. A reporter who receives a leaked intended vote MAY precommit `hash(leakedPayload)` before reveal closes.
 19. After reveal, the reporter MAY open the payload.
 20. A leak report is valid only if the opened payload proves that a drafted curator disclosed their vote before their on-chain reveal and the payload later matches the curator's actual reveal and commitment for that round.
-21. If a valid leak report is confirmed, the guilty curator is slashed by:
+21. If a valid leak report is confirmed, the guilty curator is slashed. For every drafted curator `i`, define `baseRoundSlashWei_i = pool.relevanceSlashBps * roundStakeWei_i / 10,000` regardless of whether curator `i` is later coherent, incoherent, or part of a cancelled round. A confirmed pre-reveal leak by curator `i` MUST trigger:
 
 ```text
-preRevealLeakSlash = pool.preRevealLeakSlashMultiplier * incoherentSlashAmountForThatRound
+preRevealLeakSlashWei_i = pool.preRevealLeakSlashMultiplier * baseRoundSlashWei_i
 ```
+
+The successful reporter MUST receive the full `preRevealLeakSlashWei_i`. If multiple valid reports exist for the same leak, the earliest valid precommit MUST win. `preRevealLeakSlashWei_i` MUST NOT be added to the coherent-curator reward pool.
 
 22. This penalty is in addition to any incoherent-participation slash that already applies in the same round.
 23. The claim’s `relevanceScore` becomes `mu`.
@@ -970,7 +1026,7 @@ Each pool has its own reward budget. This is not a discretionary governance trea
 
 Pool reward budgets receive:
 
-- challenge tax paid by challengers at challenge filing
+- challenge tax paid by challengers at challenge activation (not at filing for queued challenges)
 - 20% of failed challenger counter-stake
 - direct top-ups from the pool creator, sponsors, or any third party
 
@@ -1054,6 +1110,7 @@ Rules:
 - author reputation is not directly withdrawable
 - author reputation does not replace the monetary author bond; it is an additional downside layer
 - author reputation MAY be shown in interfaces as publisher credibility context, but MUST NOT bypass challengeability or dispute resolution
+- a reputation reward or slash caused by one claim MUST NOT change the `confidenceIntegral`, `confidenceAccrualState`, or `relevanceScore` of any other claim by the same author; other claims continue under their own bond-time history unchanged
 
 ## Security Requirements And Invariants
 
@@ -1078,6 +1135,11 @@ The complete implementation MUST satisfy these invariants:
 - claims that are `Debunked` MUST never return to active feeds
 - pool creation MUST be permissionless
 - pool parameters and policy references MUST be immutable after creation
+- every challenge MUST record the claim's `currentRevision`, `claimManifestCid`, and `authorBondWei` at filing time
+- reserved round reward floor MUST be deducted from the pool budget at scheduling time and released only on finalization or cancellation
+- queued challenge tax MUST NOT credit to the pool budget before challenge activation
+- bond adjustments MUST NOT take effect while an active or queued challenge exists
+- a `PendingEdit` claim MUST remain challengeable on its last finalized revision
 
 ## Failure Handling
 
@@ -1085,6 +1147,18 @@ The complete implementation MUST satisfy these invariants:
 
 - items that fail to instantiate a falsifiable proposition MUST be challengeable with `reasonType = NonFalsifiable`
 - a successful `NonFalsifiable` challenge yields the final adjudication outcome `Debunked`
+
+### Scope Violation
+
+- items that do not belong in the pool's declared topic domain MUST be challengeable with `reasonType = ScopeViolation`
+- a successful `ScopeViolation` challenge yields the final adjudication outcome `Debunked`
+- `ScopeViolation` covers topic mismatch only; template non-conformance is handled by `TemplateViolation`
+
+### Template Violation
+
+- items that pass on-chain structural checks but fail the pool's `ClaimTemplate` semantic requirements (missing required fields, wrong source class, etc.) MUST be challengeable with `reasonType = TemplateViolation`
+- a successful `TemplateViolation` challenge yields the final adjudication outcome `Debunked`
+- on-chain structural validation (non-empty CIDs, correct version pointers) is enforced at submission time; `TemplateViolation` addresses semantic template rules that can only be evaluated off-chain
 
 ### Low Participation
 
@@ -1104,6 +1178,7 @@ The complete implementation MUST satisfy these invariants:
 - cap per-identity round weight
 - keep reputation decaying and pool-scoped
 - keep confidence linear in bonded stake-time, but rely on relevance gating so large bonds do not automatically dominate the main feed
+- the per-identity effective weight cap limits influence per protocol identity only; it MUST NOT be represented as a Sybil-resistance guarantee; pools MAY require external identity attestations, proof-of-personhood integrations, allowlisted credentials, or higher `curatorMinStakeWei` to raise the cost of stake-splitting across many identities
 
 ### Cold Start
 
@@ -1154,6 +1229,38 @@ These MAY be merged for gas efficiency or deployment simplicity, but the logical
 
 The initial complete build MUST use immutable contracts. Protocol changes MUST require new contract deployments and explicit migration by users and interfaces rather than in-place upgrades.
 
+## DDR Integration Specification
+
+The initial complete build assumes Kleros v1 as the external DDR provider. The `ChallengeManager` contract MUST implement the `IArbitrable` interface.
+
+### Required Adapter Interface
+
+The `ChallengeManager` MUST:
+
+- call `IArbitrator.createDispute(numberOfRulings, extraData)` when activating a challenge, with `numberOfRulings = 2` (`ChallengeFailed` or `Debunked`)
+- implement `rule(uint _disputeID, uint _ruling)` callback from the arbitrator to receive final rulings
+- emit `Evidence(Arbitrator, disputeId, party, evidenceURI)` for each evidence submission
+- emit `Dispute(Arbitrator, disputeId, metaEvidenceID, evidenceGroupID)` when a dispute is created
+- store `metaEvidenceID` referencing the pool's evidence policy
+
+### Phase Synchronization
+
+The protocol MUST mirror the external dispute phase on-chain. Phase transitions are driven by the arbitrator's callbacks or by reading arbitrator state.
+
+### Timeout And Fallback
+
+If the external DDR does not return a ruling within a configurable deadline (suggested default: 365 days), the protocol MUST allow either party to trigger a timeout resolution:
+
+- if only the author has paid their share, the challenge is treated as `ChallengeFailed`
+- if only the challenger has paid their share, the challenge is treated as `Debunked`
+- if neither or both have paid, the challenge is treated as `ChallengeFailed` and the challenger's counter-stake is refunded
+
+Timeout resolutions MUST NOT apply the normal challenger-loss payout rule (80/20 split). The counter-stake is refunded in full for timeout `ChallengeFailed` outcomes. Author bond remains locked. Challenge tax remains in the pool budget.
+
+### Appeal Handling
+
+Appeal funding follows the DDR provider's native crowdfunding mechanism. Any address MAY fund either side. The protocol MUST NOT add its own appeal layer on top of the DDR's appeal mechanics.
+
 ## Migration And Version Coexistence
 
 Immutability means deployments coexist. It does not mean old state disappears.
@@ -1174,8 +1281,15 @@ Default migration semantics:
 - This blueprint makes main-feed inclusion stricter than the paper’s broad interface discussion: only `Live` claims with non-terminal adjudication status and a finalized relevance round appear in the default main feed.
 - This blueprint makes pool creation permissionless and treats bad pools as a local failure to be filtered by interfaces rather than prevented by protocol governance.
 - This blueprint prefers immutable contracts and explicit redeployment over upgradeable contracts.
+- This blueprint adds author bond adjustment with a pool-scoped grace period.
+- This blueprint makes `PendingEdit` claims challengeable on their last finalized revision.
+- This blueprint replaces evidence bundles with flat per-item evidence aligned with Kleros v1's native evidence model.
+- This blueprint adds `TemplateViolation` as a fourth challenge reason for semantic template non-conformance.
+- This blueprint pins challenges to the exact claim revision and bond at filing time.
+- This blueprint includes a full DDR Integration Specification assuming Kleros v1 as the external provider.
 
 ## Open Questions
 
-- Whether the external DDR should remain Kleros indefinitely or later be replaced by a custom adapter-compatible court.
+- Whether the external DDR should remain Kleros v1 indefinitely or later be replaced by a custom adapter-compatible court or a newer Kleros version.
 - Whether future interfaces should expose additional feed formulas beyond `relevanceScore * confidencePercentile`.
+- Exact percentile algorithm, active-set definition, and tie handling for cross-indexer consistency in `confidencePercentile` computation.
