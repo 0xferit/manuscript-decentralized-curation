@@ -79,11 +79,11 @@ Projects seeking retroactive funding are typically capital-constrained. Requirin
 Instead:
 
 1. Projects submit impact reports with an **initial bond** of `pool.baseBondWei` (suggested default: 0.01 ETH). For first-time applicants with no reputation history, the bond floor SHOULD be higher.
-2. The curation layer produces scores. The protocol computes a **scoring snapshot** (defined in the "Scoring snapshot" subsection below) that freezes all derived quantities simultaneously. The required bond per report is recalculated as `max(pool.baseBondWei, pool.bondProvisionalShareBps * provisionalAllocation / 10,000)` (suggested provisional-share rate: 5%). The protocol **automatically withholds** the required bond from each project's provisional allocation before the holdback period begins. No voluntary top-up step exists. This prevents selective top-up attacks where an author submits many reports at floor bond, observes scores, and tops up only the winners.
+2. The curation layer produces scores. The protocol computes a **scoring snapshot** (defined in the "Scoring snapshot" subsection below) that freezes all derived quantities simultaneously. The required bond per report is recalculated as `min(provisionalAllocation, max(pool.baseBondWei, pool.bondProvisionalShareBps * provisionalAllocation / 10,000))` (suggested provisional-share rate: 5%). The outer `min` caps the bond at the provisional allocation, preventing the bond from exceeding the allocation for projects whose provisional share is smaller than `pool.baseBondWei`. Projects with `provisionalAllocation < pool.baseBondWei` are effectively bonded at their full allocation. The protocol **automatically withholds** the required bond from each project's provisional allocation before the holdback period begins. No voluntary top-up step exists. This prevents selective top-up attacks where an author submits many reports at floor bond, observes scores, and tops up only the winners.
 3. A **holdback period** (suggested default: 30 days) runs before final disbursement.
 4. During holdback, challenges can be filed against any impact claim.
 5. If a claim is debunked during holdback, the corresponding funding share is withheld and **redistributed pro rata** to surviving projects (proportional to each surviving project's score share in the frozen scoring snapshot). Redistribution is batched at holdback end, not after each individual debunking, to avoid cascading recalculations.
-6. At holdback end, **uncontested shares** (claims with no active challenge) are disbursed. **Contested shares** (claims with an active, unresolved challenge) remain escrowed until DDR resolution or timeout. On resolution: if `ChallengeFailed`, the share is disbursed to the project; if `Debunked`, the share is redistributed pro rata to surviving projects. The successful challenger additionally receives the debunked project's forfeited bond (minus challenge tax and DDR fees), consistent with the framework's challenge payout model.
+6. At holdback end, **uncontested shares** (claims with no active challenge) are disbursed. **Contested shares** (claims with an active, unresolved challenge) remain escrowed until DDR resolution or timeout. On resolution: if `ChallengeFailed`, the share is disbursed to the project; if `Debunked`, the share is redistributed pro rata to surviving projects (using the frozen scoring snapshot). The successful challenger additionally receives the debunked project's forfeited bond (minus challenge tax and DDR fees), consistent with the framework's challenge payout model.
 7. **Author reputation** is the primary long-term deterrent: debunked claims slash project reputation, reducing allocation in future funding rounds.
 
 **Scoring snapshot**: at the end of the evaluation period, the protocol computes and freezes a single snapshot containing all derived quantities:
@@ -91,7 +91,7 @@ Instead:
 - `provisionalAllocation` per project
 - `claimRelevanceScore` per claim
 - `challengeCostBase` per claim (= claim's provisional share)
-- `reportBondTarget` per report (= `max(pool.baseBondWei, pool.bondProvisionalShareBps * provisionalAllocation / 10,000)`)
+- `reportBondTarget` per report (= `min(provisionalAllocation, max(pool.baseBondWei, pool.bondProvisionalShareBps * provisionalAllocation / 10,000))`)
 - `claimBondAtRisk` per claim (= `reportBond * claimRelevanceScore / sumOfClaimScoresInReport`)
 
 All challenge filings, bond withholding, and redistribution calculations MUST reference this frozen snapshot. No quantity is recomputed mid-holdback.
@@ -161,7 +161,7 @@ This is proportional allocation weighted by curated relevance. The formula is de
 | Domain | Retroactive public good funding for a specific ecosystem |
 | Impact report submission window | 30 days per funding round |
 | Holdback period | 30 days after provisional allocation |
-| Author bond | `max(0.01 ETH, 5% of provisional allocation)` per impact report; automatically withheld from provisional allocation |
+| Author bond | `min(provisional allocation, max(0.01 ETH, 5% of provisional allocation))` per impact report; automatically withheld from provisional allocation |
 | Max claims per report | 10 |
 | Challenger counter-stake | `max(0.01 ETH, 25% of challenged claim's provisional share)` |
 | Challenge tax | 0.5% of challenged claim's provisional share |
