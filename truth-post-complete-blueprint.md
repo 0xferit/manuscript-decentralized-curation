@@ -146,6 +146,8 @@ This separation is deliberate. Truth Post SHOULD NOT reuse internal curators as 
 - If the challenge succeeds, the entire claim blob is `Debunked`.
 - The canonical interface unit is an **Article Page** or feed item derived from that claim blob and its current revision.
 
+Design note: whole-blob debunking is intentionally disproportionate. One successfully challenged proposition debunks the entire article, even if other subclaims within the blob are accurate. Partial debunking would require the protocol to track per-subclaim accuracy state, which conflicts with the explicit non-goal of atomic on-chain decomposition. The design trades proportionality for simplicity. Authors who want finer-grained challenge exposure should decompose their claims into separate bonded units voluntarily.
+
 ## Actors
 
 ### Authors
@@ -217,6 +219,7 @@ Required fields:
 - `roundRewardFloorWei`
 - `perIdentityWeightCapBps`
 - `protocolGracePeriodSeconds`
+- `ddrTimeoutSeconds`
 - `ddrProviderId`
 - `successorPoolId` (nullable)
 - `createdBy`
@@ -741,7 +744,7 @@ Transitions are driven by the DDR adapter. Truth Post MUST mirror the authoritat
 
 - If the eligible curator set is smaller than `minRevealQuorum`, the round is cancelled before drafting, nobody is slashed, and the claim keeps its previous relevance score if one exists.
 - If the round is drafted but revealed participation ends below `minRevealQuorum`, drafted curators who failed to commit or reveal MUST be slashed as non-participants, but no curator reward MUST be paid and no new relevance score MUST be produced. Non-participation slashes from such a cancelled round MUST be credited to the pool reward budget. Pre-reveal leak slashes, if any, MUST still be paid to the reporter per the leak-report payout rules and MUST NOT be redirected to the pool budget. A replacement round is scheduled at the next cadence.
-- If the round reaches reveal but `stdDev < pool.flatRoundStdDevMin`, the round is cancelled as degenerate, no relevance score update occurs, and no round reward is paid. Design note: a round with `stdDev` below `flatRoundStdDevMin` MAY reflect genuine consensus rather than collusion or low-information voting. The protocol intentionally treats such rounds as non-informative for scoring and rewards: no relevance score update occurs, no round reward is paid, and a later round with a different draft is expected to test whether that consensus persists.
+- If the round reaches reveal but `stdDev < pool.flatRoundStdDevMin`, the round is cancelled as degenerate, no relevance score update occurs, and no round reward is paid. Design note: a round with `stdDev` below `flatRoundStdDevMin` MAY reflect genuine consensus rather than collusion or low-information voting. The protocol intentionally treats such rounds as non-informative for scoring and rewards: no relevance score update occurs, no round reward is paid, and a later round with a different draft is expected to test whether that consensus persists. More broadly, the coherence mechanism assumes that a pool's relevance policy is specific enough to anchor curator signals near a defensible ground truth. If all curators share the same bias, they will converge on a wrong answer and be rewarded. The defense is competitive pool selection: a pool with biased curation will produce bad feeds, users will migrate to better pools, and the biased pool will lose relevance. The protocol does not prevent bad curation within a pool; it prevents bad curation from becoming protocol-global.
 
 ## Curator Stake State Model
 
@@ -838,6 +841,8 @@ Rules:
 Design note:
 
 - linear bonded stake-time is intentional
+- confidence measures accumulated capital-at-risk exposure, not accuracy or credibility; the absence of challenge is not evidence of accuracy and may reflect insufficient scrutiny
+- `feedScore` uses confidence as a weight because higher-bond, longer-lived claims have been more exposed to potential challenge, not because they are more likely to be true
 - a large bond does not by itself buy main-feed dominance because main-feed ranking still multiplies confidence by curator-produced relevance
 
 Display logic:
@@ -856,6 +861,7 @@ Display logic:
    - counter-stake `S = max(pool.minChallengeStakeWei, bondAtChallengeOpenWei / 4)`
    - challenge tax `T = pool.challengeTaxBps * bondAtChallengeOpenWei / 10,000`
    - DDR arbitration fee
+   - design note: challenge cost scales with author bond; large bonds create higher barriers to challenge, which could deter economically rational challengers from attacking wealthy authors' claims; the design accepts this tradeoff because higher bonds also mean more capital at risk if the challenge succeeds, maintaining the economic incentive structure, but the deterrence effect is real
 3. The challenge MUST record the claim's `currentRevision`, `claimManifestCid`, and `authorBondWei` at the time of filing as `challengedRevision`, `challengedManifestCid`, and `bondAtChallengeOpenWei`. Counter-stake and tax calculations MUST use `bondAtChallengeOpenWei`.
 4. If no challenge is active, the protocol:
    - records `preChallengeOperationalState`
@@ -864,6 +870,7 @@ Display logic:
    - marks this challenge `Active`
    - credits `challengeTaxWei` to the pool reward budget
    - opens a dispute through the DDR adapter
+   - design note: the claim leaves the main feed at this point, before merits resolution; this is an intentional conservative design choice but creates a griefing surface (see Failure Handling > Challenge-Based Suppression)
 5. If another challenge is already active, the new challenge enters the FIFO queue. For queued challenges, `counterStakeWei`, `challengeTaxWei`, and `arbitrationFeeWei` MUST remain in challenge-specific escrow until activation. A queued challenge MUST NOT credit `challengeTaxWei` to `PoolRewardBudget.balanceWei` before it becomes `Active`. If a queued challenge is cancelled before activation or is mooted by an earlier `Debunked` ruling, the protocol MUST refund all three amounts in full.
 6. The filed `challengedProposition` MUST be a fair reading of the claim blob. That is part of what DDR evaluates.
 7. The DDR adapter asks one binary question: should this filed challenge succeed under the stated `reasonType`, `challengedProposition`, pool policy, and submitted evidence?
@@ -876,7 +883,7 @@ Display logic:
 11. `Debunked` covers any successful `Debunking`, `NonFalsifiable`, `ScopeViolation`, or `TemplateViolation` challenge.
 12. Appeal funding is handled by DDR crowdfunding. The author, challenger, or any third party MAY fund either side in exchange for the underlying DDR-side reward logic. If the author's side is not funded, the author loses the appeal opportunity.
 
-Default payout rule (all amounts reference `bondAtChallengeOpenWei` for the relevant challenge):
+Default payout rule (suggested; requires empirical calibration; all amounts reference `bondAtChallengeOpenWei` for the relevant challenge):
 
 - if challenger wins:
   - challenger receives `bondAtChallengeOpenWei`
@@ -888,6 +895,8 @@ Default payout rule (all amounts reference `bondAtChallengeOpenWei` for the rele
   - 80% of challenger counter-stake is paid to author
   - 20% of challenger counter-stake is credited to the challenged pool reward budget
   - DDR fee is not refunded by Truth Post
+
+The 80/20 split between author reward and pool budget contribution is a suggested starting point. No sensitivity analysis has been conducted on this ratio.
 
 ### Flow E: Pooled Staking And Curator Eligibility
 
@@ -1040,6 +1049,7 @@ Rules:
 - any address MAY replenish a pool reward budget
 - a peaceful pool SHOULD assume round rewards are primarily sponsor-funded rather than financed by failed challenges
 - if the budget cannot cover the configured round reward floor, new relevance rounds pause until the pool is funded again
+- no protocol mechanism creates a sponsorship incentive; pool economics depend on external actors (pool creators, sponsors, or third parties) voluntarily funding the reward budget; if funding does not materialize, the relevance layer pauses but the accuracy layer remains fully functional; this is a critical bootstrapping dependency
 
 ### Flow H: Withdrawal, Historical Persistence, And No TTL
 
@@ -1103,6 +1113,8 @@ Update rule:
 - every 30-day epoch applies the pool's configured slow decay; suggested default is `1%`
 - a final DDR ruling of `ChallengeFailed` adds `pool.authorChallengeFailedRepReward`; suggested default is `+1`
 - a final DDR ruling of `Debunked` applies `pool.authorBustSlashBps`; suggested default is `50%`
+
+No sensitivity analysis has been conducted on the decay, reward, or slash parameters. These values should be treated as initial calibration targets.
 
 Rules:
 
@@ -1171,7 +1183,7 @@ The complete implementation MUST satisfy these invariants:
 - use commit-reveal
 - use drafted curators, not self-selected per-claim curators
 - cap effective round weight per identity at 10%
-- make collusion unstable by letting any recipient of a leaked intended vote precommit and later report it for a multiplicative slash tied to the round's incoherent-participation penalty
+- destabilize collusion modes that require explicit pre-reveal vote disclosure: any recipient of a leaked intended vote can defect by precommitting the leaked payload and later reporting it for a multiplicative slash; this does not detect tacit coordination (e.g., "we all vote 0.9"), off-chain agreements without vote exchange, or disciplined collusion where no party defects
 
 ### Whale Concentration
 
@@ -1184,6 +1196,14 @@ The complete implementation MUST satisfy these invariants:
 
 - a new pool creator SHOULD fund the initial reward budget before expecting curator participation
 - a new pool MAY remain outside the canonical main surfaces until enough budget and curator activity exists to produce live relevance rounds
+
+### Challenge-Based Suppression
+
+- a claim leaves the main feed when challenged, before merits resolution
+- the challenge tax and counter-stake create an economic cost for frivolous challenges
+- sequential queued challenges can extend suppression; the 24-hour cancellation window limits but does not eliminate this
+- interfaces MAY choose to show challenged claims in a prominent `Under Dispute` view to mitigate suppression impact
+- the design accepts this tradeoff: removing challenged claims from the main feed is the price of making the accuracy signal conservative
 
 ### Indexer Or Gateway Failure
 
@@ -1249,13 +1269,15 @@ The protocol MUST mirror the external dispute phase on-chain. Phase transitions 
 
 ### Timeout And Fallback
 
-If the external DDR does not return a ruling within a configurable deadline (suggested default: 365 days), the protocol MUST allow either party to trigger a timeout resolution:
+If the external DDR does not return a ruling within `pool.ddrTimeoutSeconds` (suggested default: 365 days / 31,536,000 seconds), the protocol MUST allow either party to trigger a timeout resolution:
 
 - if only the author has paid their share, the challenge is treated as `ChallengeFailed`
 - if only the challenger has paid their share, the challenge is treated as `Debunked`
 - if neither or both have paid, the challenge is treated as `ChallengeFailed` and the challenger's counter-stake is refunded
 
 Timeout resolutions MUST NOT apply the normal challenger-loss payout rule (80/20 split). The counter-stake is refunded in full for timeout `ChallengeFailed` outcomes. Author bond remains locked. Challenge tax remains in the pool budget.
+
+Design note: the "only challenger paid" timeout path produces a `Debunked` outcome driven by fee-payment asymmetry, not by merits adjudication. The rationale is that an author who fails to fund their defense within the timeout period has effectively abandoned the claim. The design treats non-participation as forfeiture rather than acquittal.
 
 ### Appeal Handling
 
