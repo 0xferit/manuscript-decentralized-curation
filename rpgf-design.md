@@ -58,9 +58,9 @@ Three domain-specific adaptations are required:
 
 ## Claim Structure: Atomic Impact Claims
 
-A project submits an **impact report** containing multiple **impact claims**. Each claim is:
+A project submits an **impact report** containing multiple **impact claims**. The bond is posted at the **report level**, not per claim. Each claim within the report is:
 
-- A bonded, falsifiable assertion about a specific deliverable or output
+- A falsifiable assertion about a specific deliverable or output
 - Independently challengeable on its own evidence
 - Scored for relevance as part of the project's contribution to the pool
 
@@ -74,23 +74,23 @@ Projects seeking retroactive funding are typically capital-constrained. Requirin
 
 Instead:
 
-1. Projects submit impact reports with a **small symbolic bond** (spam filter; e.g., 0.01 ETH).
+1. Projects submit impact reports with an **upfront bond** of `max(pool.baseBondWei, pool.bondProvisionalShareBps * provisionalAllocation / 10,000)`. For first-time applicants with no reputation history, the bond floor SHOULD be higher. The suggested default base bond is 0.01 ETH; the suggested provisional-share rate is 5%.
 2. The curation layer produces scores. Allocation is computed **provisionally** based on the curation output.
 3. A **holdback period** (suggested default: 30 days) runs before final disbursement.
 4. During holdback, challenges can be filed against any impact claim.
 5. If a claim is debunked during holdback, the corresponding funding share is withheld and **redistributed** to surviving projects.
-6. After holdback, remaining funds are disbursed.
+6. At holdback end, **uncontested shares** (claims with no active challenge) are disbursed. **Contested shares** (claims with an active, unresolved challenge) remain escrowed until DDR resolution or timeout. On resolution: if `ChallengeFailed`, the share is disbursed to the project; if `Debunked`, the share is redistributed to surviving projects.
 7. **Author reputation** is the primary long-term deterrent: debunked claims slash project reputation, reducing allocation in future funding rounds.
 
 ## Relevance Scoring and Attribution
 
-Each impact claim receives an independent relevance score through the standard coherence game (same mechanism as news). Curators score claims one at a time, and the protocol normalizes across all eligible claims in the pool.
+Each impact claim receives an independent relevance score through the standard coherence game (same mechanism as news). Curators score claims one at a time, and the protocol normalizes across all eligible claims in the pool. Relevance round rewards are funded from the pool's curation budget, which SHOULD be reserved as a percentage of the pool's total funding budget before allocation scoring begins (suggested default: 5% of pool funding budget reserved for curation costs).
 
 The pool's **relevance policy** defines the scoring question and rubric. Example:
 
 > "Score each impact claim from 0.0 (no value to this pool) to 1.0 (critical contribution) based on: usage scale, downstream adoption, ecosystem dependency, cost efficiency, and uniqueness of contribution."
 
-**Double-counting and attribution**: when multiple projects claim credit for the same downstream effect, the relevance layer handles it. Curators score contribution shares through relevance scoring. No protocol enforcement of exclusive attribution. This keeps the template simple and avoids forcing projects to negotiate credit splits before submitting claims.
+**Double-counting and attribution**: when multiple projects claim credit for the same downstream effect, the relevance layer handles it through scoring. The relevance policy SHOULD instruct curators to consider uniqueness of contribution and discount claims that overlap with other projects' claims in the same round. No protocol enforcement of exclusive attribution. This keeps the template simple and avoids forcing projects to negotiate credit splits before submitting claims. Limitation: the coherence game rewards consensus on scalar scores, not accurate causal attribution. If curators do not notice overlap, both projects may receive full credit for the same downstream effect. This is an accepted limitation of the per-claim independent scoring model.
 
 Broad pools (covering heterogeneous project types) are allowed. The relevance policy rubric is responsible for making comparisons meaningful. If a pool's rubric is bad, curators produce bad scores, users migrate to better pools, and the bad pool loses relevance. Same "bad pools fail locally" philosophy as news.
 
@@ -101,21 +101,30 @@ Debunking a false impact claim during holdback **redirects funds** to legitimate
 - In news, challengers are motivated by the debunking reward (counter-stake payout).
 - In RPGF, challengers are also motivated by **competitive redirection**: funds that would have gone to a false claim are redistributed to deserving projects, including potentially the challenger's own project.
 
-This is a double-edged sword: competitive dynamics also enable **strategic challenges** (filing challenges to suppress rival projects). The challenge tax and counter-stake create economic barriers, but the adversarial surface is larger than in news. Pool operators and interfaces should monitor challenge patterns for abuse.
+This is a double-edged sword: competitive dynamics also enable **strategic challenges** (filing challenges to suppress rival projects). To make sabotage expensive, challenge costs SHOULD scale with the challenged claim's allocation weight rather than with a flat symbolic bond. The counter-stake is `max(pool.minChallengeStakeWei, challengedClaimProvisionalShare / 4)`, and the challenge tax is `pool.challengeTaxBps * challengedClaimProvisionalShare / 10,000`. Failed challengers lose most of their counter-stake and pay DDR arbitration fees. Repeated failed challenges from the same identity SHOULD trigger escalating costs or cooldowns at the interface level.
 
 ## Funding Distribution
 
 Once the curation layer produces scores for all surviving impact claims:
 
 ```
-claimScore = relevanceScore * confidencePercentile
+claimScore = relevanceScore
 
 projectScore = sum(claimScore for surviving claims by this project)
 
 projectFunding = (projectScore / sum(projectScore for all eligible projects)) * poolFundingBudget
 ```
 
-This is proportional allocation weighted by curated quality. Simple, deterministic, no governance needed.
+Design note: `confidencePercentile` from the news instantiation is **not used** in RPGF scoring. In news, confidence (bond-time) distinguishes long-lived claims from new ones. In batch RPGF, all reports are submitted within the same round window, so bond-time would merely reward earlier submission within the window rather than measuring meaningful exposure to challenge. Relevance score alone drives allocation.
+
+**Claim-splitting defense**: the additive formula creates an incentive to split impact into many small claims to inflate total score. Two mitigations:
+
+1. **Per-report claim cap**: pools SHOULD set a maximum number of impact claims per report (suggested default: 10). Claims beyond the cap are rejected.
+2. **Curator awareness**: the relevance policy SHOULD instruct curators to score the marginal contribution of each claim, not its standalone importance. Redundant or trivially granular claims should receive low relevance scores. The coherence game penalizes curators who inflate scores out of line with the committee.
+
+These mitigations do not eliminate the incentive entirely, but they raise the cost and reduce the payoff of claim-splitting. If claim-splitting becomes a practical problem, a future version can introduce sublinear aggregation (e.g., square root of claim count) or project-level portfolio scoring.
+
+This is proportional allocation weighted by curated relevance. The formula is deterministic conditional on its inputs, but those inputs depend on the pool's relevance policy (a governance surface defined at pool creation) and the coherence game output. No additional governance beyond pool creation is needed for the allocation step itself.
 
 ## Reference RPGF Pool Profile
 
@@ -124,9 +133,11 @@ This is proportional allocation weighted by curated quality. Simple, determinist
 | Domain | Retroactive public good funding for a specific ecosystem |
 | Impact report submission window | 30 days per funding round |
 | Holdback period | 30 days after provisional allocation |
-| Author symbolic bond | 0.01 ETH per impact report |
-| Challenger counter-stake | `max(0.01 ETH, 25% of symbolic bond)` |
-| Challenge tax | 0.5% of symbolic bond |
+| Author bond | `max(0.01 ETH, 5% of provisional allocation)` per impact report |
+| Max claims per report | 10 |
+| Challenger counter-stake | `max(0.01 ETH, 25% of challenged claim's provisional share)` |
+| Challenge tax | 0.5% of challenged claim's provisional share |
+| Curation budget reserve | 5% of pool funding budget |
 | Relevance round cadence | One round per claim during the evaluation period |
 | Relevance coherence threshold K | 1.25 |
 | Relevance slash rate | 3% of curator stake slice |
@@ -141,7 +152,7 @@ This is proportional allocation weighted by curated quality. Simple, determinist
 |---|---|---|
 | Claim unit | Whole article blob | Atomic impact claims within a report |
 | Debunking scope | Whole blob debunked | Per-claim; surviving claims keep their score |
-| Bond model | Author locks substantial bond | Small symbolic bond + holdback on provisional allocation |
+| Bond model | Author-bonded (no protocol minimum) | Scaled bond + holdback on provisional allocation |
 | Primary deterrent | Bond loss | Reputation slash + funding redirection |
 | Challenge incentive | Debunking reward only | Debunking reward + competitive fund redirection |
 | Time horizon | Continuous (claims live indefinitely) | Batch (funding rounds with submission windows) |
