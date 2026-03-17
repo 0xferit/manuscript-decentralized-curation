@@ -5,8 +5,13 @@ This project is workspace for my thesis on decentralized curation.
 ### Source of truth
 - Never edit files under context/ 
 - `paper.qmd` is the **editable master paper source** (make substantive changes here).
+- `projects/truth-post/blueprint.md` is the **canonical Truth Post design doc**.
+- `projects/truth-post/implementation-report.md` is the **Truth Post deployment retrospective**.
+- `projects/rpgf/design.md` is the **canonical RPGF design doc**.
+- `truth-post/` and `rpgf/` at the repo root are **publish-route wrappers only**, not canonical content sources.
 - `legacy/manuscript-7-part-series.md` is the **legacy series draft** (pre-paper).
 - `context/attack-and-defense-log.md` tracks red-team attacks/defenses integrated into the manuscript.
+- `projects/README.md` indexes the spinout project documents.
 - `legacy/` contains archived pre-Quarto artifacts (older snapshots/exports).
 - `releases/` (when present) contains frozen hash-versioned releases (snapshot + rendered outputs).
 - Quarto project files:
@@ -25,6 +30,8 @@ This project is workspace for my thesis on decentralized curation.
 - Do not assume “today’s date” inside the manuscript; verify if a claim depends on currentness.
 - Prefer rendering via Quarto (`quarto render`) so outputs stay consistent across formats (and run `python3 analysis/run_all.py` first if figures/summaries are referenced).
 - Publishing: commits to `main` trigger HTML publish to the `cf-pages` branch (see `README.md`).
+- Treat the repo root as the thesis/shared-assets layer. Standalone project docs belong under `projects/`, not at the root.
+- Route wrapper files at the repo root exist only to publish stable URLs for project papers. Edit project prose under `projects/`, not in those wrappers.
 
 ### Literature reference notes
 
@@ -32,6 +39,13 @@ This project is workspace for my thesis on decentralized curation.
 - These are for agent use during paper refinement: consult them to understand how each work connects to our arguments, what limitations apply, and which concepts we draw from.
 - Not referenced from the paper itself; `references.bib` remains the citation source of truth.
 - See `literature/README.md` for the full index.
+
+### Project notes
+
+- `projects/truth-post/` and `projects/rpgf/` are standalone spinout document areas.
+- They are canonical for their respective project designs.
+- Published project routes are served through root-level Quarto wrappers at `/truth-post/`, `/truth-post/blueprint/`, `/rpgf/`, and `/rpgf/design/`.
+- Shared diagrams, simulations, and bibliography remain at the repo root unless explicitly reorganized later.
 
 ### Writing constraints (default)
 

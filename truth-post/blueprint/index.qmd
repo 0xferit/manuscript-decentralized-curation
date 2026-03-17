@@ -1,0 +1,7 @@
+---
+pagetitle: Truth Post Complete Blueprint
+format:
+  html: default
+---
+
+{{< include ../../projects/truth-post/blueprint.md >}}

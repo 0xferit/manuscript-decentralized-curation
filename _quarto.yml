@@ -3,6 +3,10 @@ project:
   output-dir: outputs
   render:
     - "paper.qmd"
+    - "truth-post/index.qmd"
+    - "truth-post/blueprint/index.qmd"
+    - "rpgf/index.qmd"
+    - "rpgf/design/index.qmd"
 
 date-format: "MMMM D, YYYY [at] HH:mm"
 

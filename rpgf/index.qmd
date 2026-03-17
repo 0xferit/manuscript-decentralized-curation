@@ -1,0 +1,11 @@
+---
+title: RPGF
+format:
+  html:
+    toc: false
+---
+
+RPGF is the retroactive public goods funding instantiation of the decentralized curation framework. It applies the paper's accuracy and relevance split to impact evaluation, challengeable nominations, and allocation-weight formation for funding pools.
+
+- [Read the canonical RPGF design](./design/)
+- [Back to the thesis paper](../)

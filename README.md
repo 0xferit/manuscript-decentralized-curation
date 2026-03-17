@@ -2,7 +2,7 @@
 
 [![Build & Publish](https://github.com/0xferit/manuscript-decentralized-curation/actions/workflows/publish-cloudflare-pages-branch.yml/badge.svg)](https://github.com/0xferit/manuscript-decentralized-curation/actions/workflows/publish-cloudflare-pages-branch.yml)
 
-A Quarto-based academic manuscript proposing a decentralized, incentive-compatible protocol for information curation. The paper defines curation as the upstream bottleneck behind coordination failures and presents a four-step framework for trustless curation, instantiated for news.
+A paper-first workspace for a Quarto-based academic manuscript on decentralized curation, plus spinout project documents for Truth Post and RPGF. The thesis remains the primary build and publish surface; project docs live under `projects/`.
 
 ## Building locally
 
@@ -11,7 +11,7 @@ Prerequisites: [Quarto](https://quarto.org/docs/get-started/), Python 3.11+, and
 ```bash
 pip install -r requirements.txt
 python analysis/run_all.py   # deterministic simulations (figures + data)
-quarto render                # outputs: outputs/index.html, outputs/paper.pdf
+quarto render                # outputs: thesis + project routes under outputs/, plus outputs/paper.pdf
 ```
 
 ## Publishing
@@ -20,18 +20,42 @@ Every push to `main` triggers a [GitHub Actions workflow](.github/workflows/publ
 
 The workflow requires two GitHub Actions secrets: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
 
+Published routes:
+
+- `/`: thesis paper
+- `/truth-post/`: Truth Post project landing page
+- `/truth-post/blueprint/`: canonical Truth Post project paper
+- `/rpgf/`: RPGF project landing page
+- `/rpgf/design/`: canonical RPGF project paper
+
 ## Repository layout
 
-| Path | Description |
-|---|---|
-| `paper.qmd` | Master paper source |
-| `references.bib` | BibTeX citations |
-| `analysis/run_all.py` | Simulation code (E1-E4, adversarial variants) |
-| `analysis/fig/`, `analysis/out/` | Generated figures and data (gitignored) |
-| `_quarto.yml` | Quarto render config (HTML + PDF) |
-| `themes/puw.scss` | Optional PUW HTML theme |
-| `context/` | Supporting docs (attack-defense log) |
-| `legacy/` | Pre-Quarto drafts and exports |
+- `paper.qmd`: editable thesis master source
+- `truth-post/`, `rpgf/`: thin Quarto route wrappers for published project pages
+- `projects/truth-post/`: Truth Post spinout documents
+- `projects/rpgf/`: RPGF spinout documents
+- `references.bib`: BibTeX citations for the thesis
+- `analysis/run_all.py`: simulation code (E1-E4, adversarial variants)
+- `analysis/fig/`, `analysis/out/`: generated figures and data (gitignored)
+- `_quarto.yml`: Quarto render config for the paper
+- `diagrams/`: shared thesis/project diagrams
+- `context/`: thesis-supporting notes and logs
+- `legacy/`: pre-Quarto drafts and exports
+- `talks/`: slides and talk scripts derived from the thesis
+
+## Projects
+
+- `projects/truth-post/blueprint.md`: canonical Truth Post protocol blueprint
+- `projects/truth-post/implementation-report.md`: Truth Post 2023 deployment retrospective
+- `projects/rpgf/design.md`: canonical RPGF instantiation design
+- `projects/README.md`: index of project documents
+
+Publish wrappers:
+
+- `truth-post/index.qmd`: published Truth Post landing page
+- `truth-post/blueprint/index.qmd`: published Truth Post blueprint route
+- `rpgf/index.qmd`: published RPGF landing page
+- `rpgf/design/index.qmd`: published RPGF design route
 
 ## Release procedure
 
