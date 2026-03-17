@@ -847,11 +847,11 @@ def fig9_rpgf_impact_states(out):
     _arr(ax, *s, *t, 'DDR: Debunked',
          lo=(1.3, 0), fs=7)
 
-    # ── PendingResolution → Disbursed ──
-    s = _ep(*P['PendingResolution'], W, H, *P['Disbursed'])
-    t = _ep(*P['Disbursed'], W, H, *P['PendingResolution'])
-    _arr(ax, *s, *t, 'DDR: ChallengeFailed\nor timeout',
-         lo=(-0.5, 0.35), fs=7)
+    # ── PendingResolution → Scored (grace period reopen) ──
+    s = _ep(*P['PendingResolution'], W, H, *P['Scored'])
+    t = _ep(*P['Scored'], W, H, *P['PendingResolution'])
+    _arr(ax, *s, *t, 'DDR: ChallengeFailed\nor timeout\n(holdback reopens 7d)',
+         lo=(-0.5, 0.35), fs=6)
 
     # ── PendingResolution → Debunked ──
     s = _ep(*P['PendingResolution'], W, H, *P['Debunked'])

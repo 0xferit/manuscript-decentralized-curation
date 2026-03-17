@@ -162,7 +162,7 @@ Three adjudication outcomes, orthogonal to operational state:
 | `Challenged` | `Scored` | DDR ruling: `ChallengeFailed`; holdback still active | Counter-stake transferred to author. Nomination returns to holdback; new challenges remain possible. |
 | `Challenged` | `Debunked` | DDR ruling: `Debunked` | Nomination's `provisionalShare` redistributed. Author reputation slashed. Challenger receives counter-stake back and author bond. |
 | `Challenged` | `PendingResolution` | Holdback expires while challenge is still active | No new challenges accepted. Nomination's `provisionalShare` remains in escrow. |
-| `PendingResolution` | `Disbursed` | DDR ruling: `ChallengeFailed` or DDR timeout (90 days) | Funds released. Bond returned. |
+| `PendingResolution` | `Scored` | DDR ruling: `ChallengeFailed` or DDR timeout (90 days) | Counter-stake to author. Holdback reopens for 7 days. New challenges possible. |
 | `PendingResolution` | `Debunked` | DDR ruling: `Debunked` | Same as `Challenged` to `Debunked`. |
 | `Submitted` | `Unscored` | Relevance round fails quorum twice | Bond refunded. Nomination excluded. No reputation change. Bypasses holdback. |
 
@@ -172,7 +172,9 @@ Three adjudication outcomes, orthogonal to operational state:
 
 **Amendment and retraction are only possible during the submission window.** Once the window closes and evaluation begins, nominations are frozen. This is the batch model's advantage: clean phase boundaries.
 
-**No queued challenges, but a post-resolution grace period.** In batch RPGF, the holdback window is finite. If a challenge is already active, a second challenger waits for resolution. After any challenge resolves (whether `ChallengeFailed` or `Debunked`), the holdback for that nomination extends by at least 7 days from the resolution date, guaranteeing a window for follow-up challenges. This prevents a blocker attack where a weak or collusive first challenge occupies the slot until holdback expires, shielding a false nomination from stronger challengers.
+**No queued challenges, but a post-resolution grace period.** In batch RPGF, the holdback window is finite. If a challenge is already active, a second challenger waits for resolution. After any challenge resolves as `ChallengeFailed`, the remaining holdback for that nomination is set to `max(currentRemaining, 7 days)`. If holdback had already expired (nomination was in `PendingResolution`), it reopens for 7 days by transitioning back to `Scored`. This guarantees a minimum window for follow-up challenges and prevents a blocker attack where a weak or collusive first challenge occupies the slot until holdback expires.
+
+**Anti-relitigation rule.** After a challenge resolves as `ChallengeFailed`, a follow-on challenge against the same nomination in the same round MUST present materially new evidence or a distinct unadjudicated violation. Refiling substantially the same losing case is invalid; DDR jurors dismiss it as relitigation. This bounds serial challenge griefing without capping the number of challenges, imposing deadlines, or escalating costs. The attacker's viable challenges are limited by the nomination's actual vulnerability surface: a clean nomination has few plausible challenge grounds, and the attacker exhausts them quickly while burning a counter-stake on each attempt. Serial challenges are further self-limiting under partial disbursement: only the challenged nomination is escrowed, and each failed challenge transfers the counter-stake to the author, compensating delay on-chain. The residual risk is externally motivated delay attacks where off-chain benefit exceeds on-chain cost; this is acknowledged but not solvable by any economic mechanism.
 
 **Partial disbursement.** At holdback end, unchallenged nominations disburse their shares immediately. Challenged nominations' shares remain in escrow until DDR resolves. On resolution: if `Debunked`, the freed share is redistributed as a supplementary payment to already-disbursed surviving projects, pro-rata by relevance score. If `ChallengeFailed` or DDR timeout, the share is released to the author. This scopes the delay to only the challenged nomination rather than the entire round, preventing a griefing vector where a cheap challenge against a small-share nomination delays disbursement for everyone.
 
@@ -246,7 +248,7 @@ Once the curation layer produces scores for all surviving impact nominations:
 projectFunding = (nominationRelevanceScore / sum(nominationRelevanceScore for all surviving nominations)) * poolFundingBudget
 ```
 
-Each project submits one nomination per round, so there is a one-to-one mapping between nominations and project allocations. The formula is straightforward proportional allocation weighted by curated relevance.
+Each project submits one nomination per round, so there is a one-to-one mapping between nominations and project allocations. The formula is straightforward proportional allocation weighted by curated relevance. If no surviving nominations exist (all debunked or Unscored), the denominator is zero and no allocation is made; the pool budget rolls over to the next funding round.
 
 Design note: bond-time is not used for scoring. All nominations are submitted within the same round window, so time-in-system does not differentiate meaningful exposure to challenge. Relevance score alone drives allocation.
 
