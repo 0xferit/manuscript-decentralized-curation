@@ -1,6 +1,6 @@
 # Retroactive Public Good Funding: A Curation Framework Instantiation
 
-Status: working design document. Applies the decentralized curation framework from the thesis to retroactive public good funding (RPGF).
+Status: complete design document. Ready for blueprint phase. Applies the decentralized curation framework from the thesis to retroactive public good funding (RPGF).
 
 ## Problem
 
@@ -203,7 +203,7 @@ Instead:
 
 ## Relevance Scoring and Attribution
 
-Each impact nomination receives a relevance score through the coherence game. Curators stake into a pool, are drafted via a stake-weighted lottery, and commit-reveal relevance scores in [0,1]. The protocol computes the weighted mean and standard deviation; curators outside the coherence band (|v_i - mu| > K * sigma) are slashed. Near-flat rounds (sigma < flat-round threshold) are cancelled as degenerate. Curators score nominations one at a time, and the protocol normalizes across all eligible nominations in the pool. Relevance round rewards are funded from the pool's curation budget, which SHOULD be reserved as a percentage of the pool's total funding budget before allocation scoring begins (suggested default: 5% of pool funding budget reserved for curation costs). The budget is split equally across all relevance rounds in the evaluation period.
+Each impact nomination receives a relevance score through the coherence game. Curators stake into a pool, are drafted via a stake-weighted lottery, and commit-reveal relevance scores in [0,1]. The protocol computes the weighted mean and standard deviation; curators outside the coherence band (|v_i - mu| > K * sigma) are slashed. Near-flat rounds (sigma < flat-round threshold) are cancelled as degenerate. Curators score nominations one at a time, and the protocol normalizes across all eligible nominations in the pool. Relevance round rewards are funded from the pool's curation budget, which SHOULD be reserved as a percentage of the pool's total funding budget before allocation scoring begins (suggested default: 5% of pool funding budget reserved for curation costs). The budget is split equally across all relevance rounds in the evaluation period. Round rewards are distributed among coherent curators (those within the coherence band) proportional to their effective round weight. A curator's stake slice for a given round is the portion of their total staked capital at risk in that round, equal to their effective round weight.
 
 The pool's **relevance policy** defines the scoring question and rubric. Example:
 
@@ -273,7 +273,7 @@ Reputation does not directly weight curation scores or allocation. The framework
 Pool creation is permissionless: any address can create a funding pool. The pool creator defines:
 
 - **Pool parameters**: submission window duration, holdback period, bond amount, challenge costs, curation budget, coherence game parameters, reputation thresholds.
-- **Claim template**: structural and semantic requirements for nominations, including eligibility criteria and required evidence types.
+- **Nomination template**: structural and semantic requirements for nominations, including eligibility criteria and required evidence types.
 - **Evidence policy**: admissible evidence classes, freshness rules, sufficiency standards, and tie-break logic for DDR disputes.
 - **Relevance policy**: the scoring question, rubric, and any domain-specific instructions for curators.
 
@@ -322,7 +322,7 @@ These policy objects are versioned by content hash. Nominations submitted under 
 | Relevance question | "How important is this for the feed?" | "How valuable is this impact for the pool's mission?" |
 | Attribution | Not applicable (each claim is independent) | Relevance layer handles overlapping credit |
 | Comparability | Ranking only (feed position) | Budget-share allocation (proportional funding) |
-| Nomination lifecycle | 6 states; continuous with edit/withdraw | 7 states; batch-phased, edits only during submission window |
+| Nomination lifecycle | 6 states; continuous with edit/withdraw | 8 states; batch-phased, edits only during submission window |
 | Challenge payouts | Complex payout matrix | Single tax at filing; loser's stake to winner in full |
 
 ## Open Problems
