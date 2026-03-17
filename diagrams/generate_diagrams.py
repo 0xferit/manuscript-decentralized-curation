@@ -760,6 +760,111 @@ def fig8_pool_economics(out):
 
 
 # ══════════════════════════════════════════════════════════
+# 9. RPGF Impact Nomination Lifecycle
+# ══════════════════════════════════════════════════════════
+def fig9_rpgf_impact_states(out):
+    fig, ax = plt.subplots(figsize=(14, 9), dpi=300)
+    ax.set_xlim(-1.5, 13.5)
+    ax.set_ylim(0, 9.5)
+    ax.set_aspect('equal')
+    ax.axis('off')
+
+    W, H = 2.8, 0.75
+    P = {
+        'Submitted':         (3.0,  7.5),
+        'Retracted':         (0.0,  5.5),
+        'Unscored':          (0.0,  3.0),
+        'Scored':            (6.0,  5.5),
+        'Challenged':        (10.5, 5.5),
+        'PendingResolution': (8.0,  3.0),
+        'Disbursed':         (3.0,  1.2),
+        'Debunked':          (10.5, 1.2),
+    }
+
+    terms = ('Retracted', 'Unscored', 'Disbursed', 'Debunked')
+    for n, (cx, cy) in P.items():
+        fs = 9 if n == 'PendingResolution' else 10
+        _box(ax, cx, cy, W, H, n, term=n in terms, fs=fs)
+
+    # ── Initial dot → Submitted ──
+    ax.plot(3.0, 8.9, 'o', color=C['text'], ms=9, zorder=5)
+    _arr(ax, 3.0, 8.78, 3.0, P['Submitted'][1] + H / 2 + 0.02,
+         'submit nomination + post bond', lo=(1.8, 0), fs=7)
+
+    # ── Submitted self-loop (author amends) ──
+    ax.annotate('', xy=(P['Submitted'][0] - W / 2 - 0.05, P['Submitted'][1] + 0.1),
+                xytext=(P['Submitted'][0] - W / 2 - 0.05, P['Submitted'][1] - 0.1),
+                arrowprops=dict(arrowstyle='->', color=C['arrow'],
+                               connectionstyle='arc3,rad=1.8',
+                               lw=1.2, mutation_scale=14), zorder=1)
+    ax.text(P['Submitted'][0] - W / 2 - 0.9, P['Submitted'][1],
+            'author\namends', fontsize=6, color=C['arrow'],
+            ha='right', va='center')
+
+    # ── Submitted → Retracted ──
+    s = _ep(*P['Submitted'], W, H, *P['Retracted'])
+    t = _ep(*P['Retracted'], W, H, *P['Submitted'])
+    _arr(ax, *s, *t, 'author retracts\n(window open)',
+         lo=(-0.9, 0.3), fs=7)
+
+    # ── Submitted → Unscored ──
+    s = _ep(*P['Submitted'], W, H, *P['Unscored'])
+    t = _ep(*P['Unscored'], W, H, *P['Submitted'])
+    _arr(ax, *s, *t, 'quorum failure\n(twice)',
+         lo=(-1.3, -0.7), fs=7)
+
+    # ── Submitted → Scored ──
+    s = _ep(*P['Submitted'], W, H, *P['Scored'])
+    t = _ep(*P['Scored'], W, H, *P['Submitted'])
+    _arr(ax, *s, *t, 'window closes;\nevaluation complete',
+         lo=(0.3, 0.35), fs=7)
+
+    # ── Scored → Challenged ──
+    s = _ep(*P['Scored'], W, H, *P['Challenged'])
+    t = _ep(*P['Challenged'], W, H, *P['Scored'])
+    _arr(ax, *s, *t, 'challenge filed',
+         rad=0.15, lo=(0.3, 0.35), fs=7)
+
+    # ── Challenged → Scored ──
+    _arr(ax, *t, *s, 'DDR: ChallengeFailed\n(holdback open)',
+         rad=0.15, lo=(-0.3, -0.35), fs=7)
+
+    # ── Scored → Disbursed ──
+    s = _ep(*P['Scored'], W, H, *P['Disbursed'])
+    t = _ep(*P['Disbursed'], W, H, *P['Scored'])
+    _arr(ax, *s, *t, 'holdback expires;\nno challenge',
+         lo=(-0.9, 0), fs=7)
+
+    # ── Challenged → PendingResolution ──
+    s = _ep(*P['Challenged'], W, H, *P['PendingResolution'])
+    t = _ep(*P['PendingResolution'], W, H, *P['Challenged'])
+    _arr(ax, *s, *t, 'holdback expires;\nchallenge pending',
+         lo=(0.3, 0.4), fs=7)
+
+    # ── Challenged → Debunked ──
+    s = _ep(*P['Challenged'], W, H, *P['Debunked'])
+    t = _ep(*P['Debunked'], W, H, *P['Challenged'])
+    _arr(ax, *s, *t, 'DDR: Debunked',
+         lo=(1.3, 0), fs=7)
+
+    # ── PendingResolution → Disbursed ──
+    s = _ep(*P['PendingResolution'], W, H, *P['Disbursed'])
+    t = _ep(*P['Disbursed'], W, H, *P['PendingResolution'])
+    _arr(ax, *s, *t, 'DDR: ChallengeFailed\nor timeout',
+         lo=(-0.5, 0.35), fs=7)
+
+    # ── PendingResolution → Debunked ──
+    s = _ep(*P['PendingResolution'], W, H, *P['Debunked'])
+    t = _ep(*P['Debunked'], W, H, *P['PendingResolution'])
+    _arr(ax, *s, *t, 'DDR: Debunked',
+         lo=(0.5, 0.35), fs=7)
+
+    fig.savefig(out, dpi=300, bbox_inches='tight',
+                facecolor=C['bg'], pad_inches=0.3)
+    plt.close(fig)
+
+
+# ══════════════════════════════════════════════════════════
 if __name__ == '__main__':
     outdir = os.path.join(os.path.dirname(__file__))
     os.makedirs(outdir, exist_ok=True)
@@ -773,6 +878,7 @@ if __name__ == '__main__':
         (fig6_falsifiability,      'fig-falsifiability.png'),
         (fig7_confidence_reputation, 'fig-confidence-reputation.png'),
         (fig8_pool_economics,      'fig-pool-economics.png'),
+        (fig9_rpgf_impact_states,  'fig-rpgf-impact-states.png'),
     ]
     print('Generating diagrams...')
     for fn, name in figs:
