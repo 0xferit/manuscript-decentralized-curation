@@ -771,20 +771,18 @@ def fig9_rpgf_impact_states(out):
 
     W, H = 2.8, 0.75
     P = {
-        'Submitted':         (3.0,  7.5),
-        'Retracted':         (0.0,  5.5),
-        'Unscored':          (0.0,  3.0),
-        'Scored':            (6.0,  5.5),
-        'Challenged':        (10.5, 5.5),
-        'PendingResolution': (8.0,  3.0),
-        'Disbursed':         (3.0,  1.2),
-        'Debunked':          (10.5, 1.2),
+        'Submitted':  (3.0,  7.5),
+        'Retracted':  (0.0,  5.5),
+        'Unscored':   (0.0,  3.0),
+        'Scored':     (6.0,  5.5),
+        'Disputed':   (10.5, 5.5),
+        'Disbursed':  (3.0,  1.2),
+        'Debunked':   (10.5, 1.2),
     }
 
     terms = ('Retracted', 'Unscored', 'Disbursed', 'Debunked')
     for n, (cx, cy) in P.items():
-        fs = 9 if n == 'PendingResolution' else 10
-        _box(ax, cx, cy, W, H, n, term=n in terms, fs=fs)
+        _box(ax, cx, cy, W, H, n, term=n in terms)
 
     # ── Initial dot → Submitted ──
     ax.plot(3.0, 8.9, 'o', color=C['text'], ms=9, zorder=5)
@@ -819,14 +817,14 @@ def fig9_rpgf_impact_states(out):
     _arr(ax, *s, *t, 'window closes;\nevaluation complete',
          lo=(0.3, 0.35), fs=7)
 
-    # ── Scored → Challenged ──
-    s = _ep(*P['Scored'], W, H, *P['Challenged'])
-    t = _ep(*P['Challenged'], W, H, *P['Scored'])
+    # ── Scored → Disputed ──
+    s = _ep(*P['Scored'], W, H, *P['Disputed'])
+    t = _ep(*P['Disputed'], W, H, *P['Scored'])
     _arr(ax, *s, *t, 'challenge filed',
          rad=0.15, lo=(0.3, 0.35), fs=7)
 
-    # ── Challenged → Scored ──
-    _arr(ax, *t, *s, 'DDR: ChallengeFailed\n(holdback open)',
+    # ── Disputed → Scored ──
+    _arr(ax, *t, *s, 'DDR: ChallengeFailed\nor timeout',
          rad=0.15, lo=(-0.3, -0.35), fs=7)
 
     # ── Scored → Disbursed ──
@@ -835,29 +833,11 @@ def fig9_rpgf_impact_states(out):
     _arr(ax, *s, *t, 'holdback expires;\nno challenge',
          lo=(-0.9, 0), fs=7)
 
-    # ── Challenged → PendingResolution ──
-    s = _ep(*P['Challenged'], W, H, *P['PendingResolution'])
-    t = _ep(*P['PendingResolution'], W, H, *P['Challenged'])
-    _arr(ax, *s, *t, 'holdback expires;\nchallenge pending',
-         lo=(0.3, 0.4), fs=7)
-
-    # ── Challenged → Debunked ──
-    s = _ep(*P['Challenged'], W, H, *P['Debunked'])
-    t = _ep(*P['Debunked'], W, H, *P['Challenged'])
+    # ── Disputed → Debunked ──
+    s = _ep(*P['Disputed'], W, H, *P['Debunked'])
+    t = _ep(*P['Debunked'], W, H, *P['Disputed'])
     _arr(ax, *s, *t, 'DDR: Debunked',
          lo=(1.3, 0), fs=7)
-
-    # ── PendingResolution → Scored (grace period reopen) ──
-    s = _ep(*P['PendingResolution'], W, H, *P['Scored'])
-    t = _ep(*P['Scored'], W, H, *P['PendingResolution'])
-    _arr(ax, *s, *t, 'DDR: ChallengeFailed\nor timeout\n(holdback reopens 7d)',
-         lo=(-0.5, 0.35), fs=6)
-
-    # ── PendingResolution → Debunked ──
-    s = _ep(*P['PendingResolution'], W, H, *P['Debunked'])
-    t = _ep(*P['Debunked'], W, H, *P['PendingResolution'])
-    _arr(ax, *s, *t, 'DDR: Debunked',
-         lo=(0.5, 0.35), fs=7)
 
     fig.savefig(out, dpi=300, bbox_inches='tight',
                 facecolor=C['bg'], pad_inches=0.3)

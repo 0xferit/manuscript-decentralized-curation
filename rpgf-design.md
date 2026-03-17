@@ -1,6 +1,6 @@
 # Retroactive Public Good Funding: A Curation Framework Instantiation
 
-Status: complete design document. Ready for blueprint phase. Applies the decentralized curation framework from the thesis to retroactive public good funding (RPGF).
+This document applies the decentralized curation framework to retroactive public good funding (RPGF). It specifies the complete mechanism design: nomination lifecycle, challenge system, relevance scoring, funding distribution, and reputation model.
 
 ## Problem
 
@@ -28,7 +28,7 @@ Two dimensions dominate:
 - **Impact accuracy**: did the project deliver what it claims? Binary, global, challengeable. The claim is either substantiated or it is not.
 - **Allocation relevance**: how important is this delivered impact for the funding pool's mission? Scalar, local, pool-dependent. A developer tool matters more to an "Ethereum infrastructure" pool than to a "climate action" pool.
 
-Design principle: do not decompose quality further than your mechanisms can distinguish. Two mechanisms (challenge-based accuracy, coherence-based relevance) means two dimensions. Additional quality considerations (efficiency, novelty, team quality) belong inside the relevance policy as scoring criteria, not as separate protocol mechanisms.
+Design principle: do not decompose quality further than your mechanisms can distinguish. Two mechanisms (challenge-based accuracy, coherence-based relevance) mean two dimensions. Additional quality considerations (efficiency, novelty, team quality) belong inside the relevance policy as scoring criteria, not as separate protocol mechanisms.
 
 ### Step 3: Require falsifiability
 
@@ -41,14 +41,14 @@ The relevant region on the falsifiability spectrum:
 - **Not falsifiable**: "We improved the developer experience" (no measurable assertion)
 - **Not falsifiable**: "This infrastructure prevented $2M in losses" (counterfactual; no observable test)
 
-The template must reject the second category and force projects to express impact in the first category. Non-falsifiable claims are challengeable as `NonFalsifiable`.
+The template must reject non-falsifiable assertions and force projects to express impact as falsifiable, measurable claims. Non-falsifiable claims are challengeable as `NonFalsifiable`.
 
 ### Step 4: Design mechanisms dimension by dimension
 
 Two mechanisms handle the two dimensions:
 
-- **Accuracy**: bonded publication, open challenges, external DDR (Kleros v1). Verifies whether impact claims are true.
-- **Relevance**: drafted curator coherence game under a public policy. Scores how important the verified impact is for the pool's mission.
+- **Accuracy**: bonded publication, open challenges, external DDR (decentralized dispute resolution; Kleros v1). Verifies whether impact claims are true.
+- **Relevance**: drafted curator coherence game (a Schelling-point mechanism where curators independently score items and are rewarded for convergence) under a public policy. Scores how important the verified impact is for the pool's mission.
 
 Three domain-specific adaptations are required:
 
@@ -112,21 +112,21 @@ One tax event at challenge filing, paid to the pool budget. After that, the lose
 | ChallengeFailed | Returned to author | To author | Pool budget (paid at filing) |
 | DDR timeout | Returned to author | To author | Pool budget (paid at filing) |
 
-## Round Phases
+## Round Timeline
 
-Each funding round proceeds through five sequential phases:
+Each funding round has three shared phases, one batch computation, and one nomination-specific resolution path:
 
 1. **Submission window** (suggested default: 30 days): projects submit impact nominations and post bonds. Nominations are editable and retractable during this phase.
-2. **Evaluation period**: submission window closes. Curators score each nomination via the coherence game (one relevance round per nomination). Duration depends on the number of nominations and round scheduling.
-3. **Provisional allocation**: evaluation completes. The protocol computes each nomination's funding share from relevance scores.
-4. **Holdback** (suggested default: 30 days): challenge window is open. At holdback end, unchallenged nominations disburse immediately; challenged nominations' shares remain in escrow.
-5. **Settlement**: challenged nominations resolve via DDR. Debunked shares are redistributed as supplementary payments to surviving projects. Cleared shares are released to authors.
+2. **Evaluation period**: the submission window closes. Curators score each nomination via the coherence game (one relevance round per nomination). Duration depends on the number of nominations and round scheduling.
+3. **Provisional allocation** (batch computation): once evaluation completes, the protocol computes each nomination's provisional funding share from relevance scores.
+4. **Holdback** (suggested default: 30 days): nominations with provisional shares are challengeable. At holdback end, unchallenged nominations disburse immediately. Disputed nominations' shares remain in escrow.
+5. **Settlement** (nomination-specific): disputed nominations resolve via DDR. If debunked, the provisional share is redistributed as a supplementary payment to surviving projects. If the challenge fails or DDR times out, the nomination returns to holdback for a 7-day grace period; if no new challenge is filed, the share is released to the author.
 
 ## Impact Nomination Lifecycle
 
-Each impact nomination follows a state machine from submission through disbursement or debunking, operating within the round phases above.
+Each impact nomination follows a state machine from submission through disbursement or debunking, operating within the round timeline above.
 
-![RPGF impact nomination state machine. Nominations enter `Submitted` on bonded publication. Evaluation and provisional allocation produce `Scored` nominations that enter holdback. Challenges route through external DDR; successful challenges lead to `Debunked` (funds redirected), failed challenges restore the pre-challenge state. Terminal states have double borders.](diagrams/fig-rpgf-impact-states.png){#fig-rpgf-impact-states}
+![RPGF impact nomination state machine. Nominations enter `Submitted` on bonded publication. Evaluation produces `Scored` nominations that enter holdback. Challenges create `Disputed` state, resolved by external DDR: successful challenges lead to `Debunked` (funds redirected), failed challenges return to `Scored` with a grace period. Quorum failure after retry leads to `Unscored` (excluded, bond refunded). Terminal states have double borders.](diagrams/fig-rpgf-impact-states.png){#fig-rpgf-impact-states}
 
 ### Operational states
 
@@ -135,8 +135,7 @@ Each impact nomination follows a state machine from submission through disbursem
 | `Submitted` | Nomination filed during the open submission window. Bond posted. Nomination is editable and retractable while the window is open. |
 | `Retracted` | Author retracted the nomination during the submission window. Bond refunded. **Terminal.** |
 | `Scored` | Submission window closed, relevance evaluation complete, provisional allocation computed. The holdback period is running. The nomination is challengeable. |
-| `Challenged` | An active DDR dispute has been filed against this nomination during holdback. |
-| `PendingResolution` | The holdback period expired while a challenge is still active. No new challenges are accepted. The nomination's provisional funding share remains in escrow until DDR resolves. |
+| `Disputed` | An active DDR dispute is in progress. The nomination's provisional funding share remains in escrow until DDR resolves. |
 | `Disbursed` | Funds released to the project. **Terminal.** |
 | `Debunked` | Challenge succeeded. The nomination's funding share is redistributed to surviving projects. Author reputation slashed. **Terminal.** |
 | `Unscored` | Relevance round failed quorum twice. Nomination excluded from allocation. Bond refunded. No reputation change. **Terminal.** |
@@ -158,29 +157,26 @@ Three adjudication outcomes, orthogonal to operational state:
 | `Submitted` | `Retracted` | Author retracts nomination (window open) | Bond refunded. Nomination removed from round. |
 | `Submitted` | `Scored` | Submission window closes; evaluation completes; provisional allocation computed | `provisionalShare` assigned. Holdback timer starts. Nomination locked (no further edits). |
 | `Scored` | `Disbursed` | Holdback expires with no active challenge | Funds released. Bond returned. |
-| `Scored` | `Challenged` | Challenge filed during holdback | Counter-stake escrowed. Challenge tax paid to pool budget. DDR initiated. |
-| `Challenged` | `Scored` | DDR ruling: `ChallengeFailed`; holdback still active | Counter-stake transferred to author. Nomination returns to holdback; new challenges remain possible. |
-| `Challenged` | `Debunked` | DDR ruling: `Debunked` | Nomination's `provisionalShare` redistributed. Author reputation slashed. Challenger receives counter-stake back and author bond. |
-| `Challenged` | `PendingResolution` | Holdback expires while challenge is still active | No new challenges accepted. Nomination's `provisionalShare` remains in escrow. |
-| `PendingResolution` | `Scored` | DDR ruling: `ChallengeFailed` or DDR timeout (90 days) | Counter-stake to author. Holdback reopens for 7 days. New challenges possible. |
-| `PendingResolution` | `Debunked` | DDR ruling: `Debunked` | Same as `Challenged` to `Debunked`. |
+| `Scored` | `Disputed` | Challenge filed during holdback | Counter-stake escrowed. Challenge tax paid to pool budget. DDR initiated. |
+| `Disputed` | `Scored` | DDR ruling: `ChallengeFailed` or DDR timeout (90 days) | Counter-stake transferred to author. Holdback set to `max(remaining, 7 days)`. New challenges possible. |
+| `Disputed` | `Debunked` | DDR ruling: `Debunked` | Nomination's `provisionalShare` redistributed. Author reputation slashed. Challenger receives counter-stake back and author bond. |
 | `Submitted` | `Unscored` | Relevance round fails quorum twice | Bond refunded. Nomination excluded. No reputation change. Bypasses holdback. |
 
 ### Design notes
 
-**Round phases are the backdrop, not nomination states.** The submission window, evaluation period, holdback period, and disbursement phase are round-level phases. Nominations transition within them. There is no `InEvaluation` state; all submitted nominations are scored as a batch when the round enters the evaluation phase.
+**Round timeline stages are the backdrop, not nomination states.** The shared round phases are the submission window, evaluation period, and holdback. Provisional allocation is a batch computation between evaluation and holdback. After holdback, unchallenged nominations disburse, while disputed nominations enter settlement via DDR. There is no `InEvaluation` state; all submitted nominations are scored as a batch during the evaluation period.
 
 **Amendment and retraction are only possible during the submission window.** Once the window closes and evaluation begins, nominations are frozen. This is the batch model's advantage: clean phase boundaries.
 
-**No queued challenges, but a post-resolution grace period.** In batch RPGF, the holdback window is finite. If a challenge is already active, a second challenger waits for resolution. After any challenge resolves as `ChallengeFailed`, the remaining holdback for that nomination is set to `max(currentRemaining, 7 days)`. If holdback had already expired (nomination was in `PendingResolution`), it reopens for 7 days by transitioning back to `Scored`. This guarantees a minimum window for follow-up challenges and prevents a blocker attack where a weak or collusive first challenge occupies the slot until holdback expires.
+**No queued challenges, but a post-resolution grace period.** In batch RPGF, the holdback window is finite. If a challenge is already active, a second challenger waits for resolution. After any challenge resolves as `ChallengeFailed`, the remaining holdback for that nomination is set to `max(currentRemaining, 7 days)`. This guarantees a minimum window for follow-up challenges regardless of how much holdback time remained (or whether it had already expired). It prevents a blocker attack where a weak or collusive first challenge occupies the slot until holdback expires.
 
 **Anti-relitigation rule.** After a challenge resolves as `ChallengeFailed`, a follow-on challenge against the same nomination in the same round MUST present materially new evidence or a distinct unadjudicated violation. Refiling substantially the same losing case is invalid; DDR jurors dismiss it as relitigation. This bounds serial challenge griefing without capping the number of challenges, imposing deadlines, or escalating costs. The attacker's viable challenges are limited by the nomination's actual vulnerability surface: a clean nomination has few plausible challenge grounds, and the attacker exhausts them quickly while burning a counter-stake on each attempt. Serial challenges are further self-limiting under partial disbursement: only the challenged nomination is escrowed, and each failed challenge transfers the counter-stake to the author, compensating delay on-chain. The residual risk is externally motivated delay attacks where off-chain benefit exceeds on-chain cost; this is acknowledged but not solvable by any economic mechanism.
 
-**Partial disbursement.** At holdback end, unchallenged nominations disburse their shares immediately. Challenged nominations' shares remain in escrow until DDR resolves. On resolution: if `Debunked`, the freed share is redistributed as a supplementary payment to already-disbursed surviving projects, pro-rata by relevance score. If `ChallengeFailed` or DDR timeout, the share is released to the author. This scopes the delay to only the challenged nomination rather than the entire round, preventing a griefing vector where a cheap challenge against a small-share nomination delays disbursement for everyone.
+**Partial disbursement.** At holdback end, unchallenged nominations disburse their shares immediately. Disputed nominations' shares remain in escrow until DDR resolves. On resolution: if `Debunked`, the freed share is redistributed as a supplementary payment to already-disbursed surviving projects, pro-rata by relevance score. If `ChallengeFailed` or DDR timeout, the nomination re-enters `Scored` with a grace period. This scopes the delay to only the disputed nomination rather than the entire round, preventing a griefing vector where a cheap challenge against a small-share nomination delays disbursement for everyone.
 
 **Scoring failure paths.** Degenerate rounds and quorum failure are treated differently:
 
-- *Degenerate round* (sigma < cancellation threshold): the round's mean is accepted as a valid relevance score. Coherence slashing is skipped for that round because the band has collapsed. A degenerate round with full quorum is genuine consensus, not a failure.
+- *Degenerate round* (sigma < degenerate threshold): the round's mean is accepted as a valid relevance score. Coherence slashing is skipped because the band has collapsed, and round rewards are withheld. Curators receive no reward and face no penalty. This preserves genuine consensus signals (if curators honestly agree, the score stands) while removing the low-effort equilibrium where curators earn rewards for undifferentiated scoring. In a batch model, cancelling degenerate rounds is counterproductive: if a nomination genuinely deserves a consensus score, every retry will also be degenerate, eventually excluding a nomination that curators unanimously evaluated.
 - *Quorum failure* (reveals < minimum quorum): the round is retried once with a fresh draft. If the retry also fails quorum, the nomination transitions to `Unscored`: excluded from allocation, bond refunded, no reputation change, bypasses holdback. The author is not penalized for curator infrastructure failure. `Unscored` is distinct from a score of 0 (which means "judged irrelevant" under the rubric).
 
 **DDR timeout defaults to author victory.** If DDR does not resolve within the timeout period (90 days), the nomination is treated as if the challenge failed. The author is not guilty unless proven; it is the challenger's burden to win the dispute.
@@ -195,10 +191,10 @@ Instead:
 
    The number of nominations per round is capped at `pool.maxNominationsPerRound`, derived from the pool's curation budget: `maxNominationsPerRound = curationBudget / roundRewardFloor`. This ensures every nomination receives a funded relevance round with positive curator incentives. If more nominations are submitted than the pool can evaluate, excess nominations are rejected on a first-come-first-served basis with bond refunded.
 2. The curation layer produces scores. Allocation is computed **provisionally** based on the curation output.
-3. A **holdback period** (suggested default: 30 days) runs before final disbursement.
+3. A **holdback** (suggested default: 30 days) runs before final disbursement.
 4. During holdback, challenges can be filed against any impact nomination.
-5. At holdback end, **unchallenged nominations** disburse their shares immediately. **Challenged nominations'** shares remain in escrow until DDR resolves.
-6. On challenge resolution: if `Debunked`, the freed share is redistributed as a **supplementary payment** to already-disbursed surviving projects, pro-rata by relevance score. If `ChallengeFailed` or DDR timeout, the share is released to the author.
+5. At holdback end, **unchallenged nominations** disburse their shares immediately. **Disputed nominations'** shares remain in escrow until DDR resolves.
+6. On challenge resolution: if `Debunked`, the freed share is redistributed as a **supplementary payment** to already-disbursed surviving projects, pro-rata by relevance score. If `ChallengeFailed` or DDR timeout, the nomination re-enters holdback for a 7-day grace period; if no new challenge is filed during the grace period, the share is released to the author.
 7. **Author reputation** is the primary long-term deterrent: debunked nominations slash project reputation, affecting eligibility in future funding rounds.
 
 ## Relevance Scoring and Attribution
@@ -235,10 +231,10 @@ At reference parameters (`c = 0.25`, `t = 0.005`):
 | Scenario | Challenger share (a) | Target share (b) | Break-even p* |
 |---|---|---|---|
 | Equal competitors | 0.30 | 0.30 | 37.6% |
-| Small challenges large | 0.05 | 0.30 | 79.3% |
-| Large challenges small | 0.30 | 0.05 | 44.7% |
+| Small challenger vs. large target | 0.05 | 0.30 | 79.3% |
+| Large challenger vs. small target | 0.30 | 0.05 | 44.7% |
 
-Assuming DDR is unbiased but noisy (per Kahneman and Sunstein's noise framework): for a meritless challenge, DDR noise would need to exceed sigma > 1.58 on a [0,1] merit scale for the break-even to be reached, which is unrealistic for juror panels with majority aggregation. Borderline cases (true merit near the decision threshold) become positive-EV at moderate noise, but this is inherent to any adjudication system: genuinely ambiguous cases attract challenges. The counter-stake ratio is the primary safety lever; the break-even threshold rises with `c` and falls with challenger concentration `a`. Without concentration limits, an actor controlling multiple nominations could lower the effective break-even significantly. The one-nomination-per-identity rule provides the first defense; Sybil resistance remains the deeper constraint.
+The following analysis models DDR as an unbiased but noisy adjudicator, where the probability of a successful challenge depends on the true merit of the case and the noise level of the juror panel. Assuming DDR is unbiased but noisy (per Kahneman and Sunstein's noise framework): for a meritless challenge, DDR noise would need to exceed sigma > 1.58 on a [0,1] merit scale for the break-even to be reached, which is unrealistic for juror panels with majority aggregation. Borderline cases (true merit near the decision threshold) become positive-EV at moderate noise, but this is inherent to any adjudication system: genuinely ambiguous cases attract challenges. The counter-stake ratio is the primary safety lever; the break-even threshold rises with `c` and falls with challenger concentration `a`. Without concentration limits, an actor controlling multiple nominations could lower the effective break-even significantly. The one-nomination-per-identity rule provides the first defense; Sybil resistance remains the deeper constraint.
 
 ## Funding Distribution
 
@@ -294,7 +290,7 @@ These policy objects are versioned by content hash. Nominations submitted under 
 | Relevance round cadence | One round per nomination during the evaluation period |
 | Relevance draft committee size | 15 curators |
 | Minimum reveal quorum | 5 curators |
-| Flat-round cancellation threshold | sigma < 0.02 (degenerate; round cancelled) |
+| Degenerate round threshold | sigma < 0.02 (mean accepted; no rewards, no slashing) |
 | Per-identity effective weight cap | 10% of drafted round weight |
 | Round reward floor | 0.01 ETH equivalent from pool curation budget |
 | Commit window | 48 hours |
@@ -310,6 +306,8 @@ These policy objects are versioned by content hash. Nominations submitted under 
 
 ## Differences From News Instantiation
 
+The following table compares the RPGF instantiation with the thesis's other instantiation (a continuous news-curation protocol) to highlight domain-specific adaptations.
+
 | Aspect | News | RPGF |
 |---|---|---|
 | Challenge unit | Whole article blob | Whole impact nomination |
@@ -322,7 +320,7 @@ These policy objects are versioned by content hash. Nominations submitted under 
 | Relevance question | "How important is this for the feed?" | "How valuable is this impact for the pool's mission?" |
 | Attribution | Not applicable (each claim is independent) | Relevance layer handles overlapping credit |
 | Comparability | Ranking only (feed position) | Budget-share allocation (proportional funding) |
-| Nomination lifecycle | 6 states; continuous with edit/withdraw | 8 states; batch-phased, edits only during submission window |
+| Nomination lifecycle | 6 states; continuous with edit/withdraw | 7 states; batch-phased, edits only during submission window |
 | Challenge payouts | Complex payout matrix | Single tax at filing; loser's stake to winner in full |
 
 ## Open Problems
