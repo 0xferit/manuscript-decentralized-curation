@@ -59,3 +59,4 @@ Skills NOT relevant to this project: clinical/healthcare skills, market research
 ### Design Principles
 
 - NoNeedForGovernance > Good Governance > Bad Governance > No Governance
+- Do not decompose quality further than your mechanisms can distinguish. Two mechanisms (challenge-based accuracy, coherence-based relevance) means two dimensions. Adding a third dimension without a third mechanism just creates noise. (Corollary of Wang and Strong's "decompose quality before you mechanize it.")
