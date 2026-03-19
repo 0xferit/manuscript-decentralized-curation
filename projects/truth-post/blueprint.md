@@ -1,5 +1,3 @@
-# Truth Post Complete Blueprint
-
 Status: end-state design blueprint. This document describes the **complete Truth Post system that should exist**, not the 2023 MVP that was partially deployed.
 
 Normative language: **MUST**, **SHOULD**, and **MAY** are used in their usual engineering sense.

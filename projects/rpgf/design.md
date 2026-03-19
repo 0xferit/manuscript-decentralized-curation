@@ -1,5 +1,3 @@
-# Retroactive Public Good Funding: A Curation Framework Instantiation
-
 This document applies the decentralized curation framework to retroactive public good funding (RPGF). It specifies the complete mechanism design: nomination lifecycle, challenge system, relevance scoring, funding distribution, and reputation model.
 
 ## Problem

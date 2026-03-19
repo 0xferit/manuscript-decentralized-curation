@@ -1,7 +1,16 @@
 ---
-pagetitle: Truth Post Complete Blueprint
-format:
-  html: default
+title: "Truth Post Complete Blueprint"
+author: Ferit Tunçer
+date-modified: 2026-03-09T22:00:00
 ---
+
+::: {.callout-note appearance="minimal"}
+{{< include ../../_build-info.md >}}
+{{< include ../../analysis/out/reading_time_blueprint.md >}}
+:::
+
+::: {.callout-important appearance="simple"}
+**Working draft.** Under active development. [Feedback welcome.](mailto:ferit@cryptolab.net)
+:::
 
 {{< include ../../projects/truth-post/blueprint.md >}}

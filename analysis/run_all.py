@@ -5,6 +5,7 @@ import json
 import math
 import os
 import platform
+import re
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -847,14 +848,11 @@ def write_eval_summary() -> None:
     (OUT_DIR / "eval_summary.md").write_text(summary, encoding="utf-8")
 
 
-def write_reading_time() -> None:
-    import re
-
-    paper = ROOT / "paper.qmd"
-    raw = paper.read_text(encoding="utf-8")
+def _compute_reading_time(source_path: Path, has_yaml_front_matter: bool) -> str:
+    raw = source_path.read_text(encoding="utf-8")
 
     body = raw
-    if body.startswith("---"):
+    if has_yaml_front_matter and body.startswith("---"):
         end = body.index("---", 3)
         body = body[end + 3 :]
 
@@ -897,14 +895,24 @@ def write_reading_time() -> None:
     row = " | ".join(f"~{estimates[p]} min" for p in personas)
     col_headers = " | ".join(personas.keys())
 
-    snippet = f"""\
+    return f"""\
 {header}
 
 | | {col_headers} |
 |---|---|---|---|
 | | {row} |
 """
-    (OUT_DIR / "reading_time.md").write_text(snippet, encoding="utf-8")
+
+
+def write_reading_time() -> None:
+    documents = [
+        (ROOT / "paper.qmd", OUT_DIR / "reading_time.md", True),
+        (ROOT / "projects" / "rpgf" / "design.md", OUT_DIR / "reading_time_rpgf.md", False),
+        (ROOT / "projects" / "truth-post" / "blueprint.md", OUT_DIR / "reading_time_blueprint.md", False),
+    ]
+    for source, output, has_yaml in documents:
+        snippet = _compute_reading_time(source, has_yaml)
+        output.write_text(snippet, encoding="utf-8")
 
 
 def main() -> None:

@@ -62,6 +62,8 @@ jobs:
 
           LISBON_TIME=$(TZ='Europe/Lisbon' date '+%Y-%m-%dT%H:%M:%S')
           sed -i "s|^date-modified:.*|date-modified: ${LISBON_TIME}|" paper.qmd
+          sed -i "s|^date-modified:.*|date-modified: ${LISBON_TIME}|" rpgf/design/index.qmd
+          sed -i "s|^date-modified:.*|date-modified: ${LISBON_TIME}|" truth-post/blueprint/index.qmd
 
           quarto render --to html
 
