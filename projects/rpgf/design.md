@@ -380,3 +380,45 @@ Positive reputation decays toward zero over time, which means sustained good beh
 ### Pool migration friction
 
 Pool-scoped reputation creates switching costs: established projects with high reputation in one pool face reputation reset if they migrate to a new pool. This friction may slow the "bad pools fail locally" dynamic, since the projects whose participation would make a new pool viable are exactly the ones with the highest switching cost.
+
+## FAQ
+
+### Why not use Gitcoin or Optimism RPGF directly?
+
+Both systems aggregate individual preferences. This conflates what participants *want* with what is *good for the public*. When private incentives and public benefit diverge, preference aggregation systematically misallocates. This design replaces preference aggregation with merit-based curation where the individually rational strategy is to make accurate, well-grounded judgments.
+
+### Isn't asking voters to judge public benefit paternalistic?
+
+No. Voters are not forbidden from having preferences. The mechanism simply does not reward them for expressing preferences. It rewards them for making judgments that are coherent with others applying the same public rubric. The claim is not that voters are ignorant; it is that standard voting structures incentivize strategic or self-serving behavior even when voters know better.
+
+### What is a coherence game and why does it help?
+
+A coherence game rewards participants for independently converging on the same answer, without trusted communication. By the Schelling principle, when coordination is only possible through shared logic and shared rules, the focal point tends to be the answer best supported by the publicly stated criteria. This makes merit-based judgment the dominant strategy, not collusion or popularity chasing.
+
+### Why won't this collapse into a Keynesian beauty contest?
+
+A beauty contest arises when participants try to guess what others will guess, rather than what is true. This design prevents that by anchoring convergence on a specific, public, versioned scoring policy applied to structured, falsifiable nominations. Participants are not guessing taste; they are independently applying the same rubric to the same evidence.
+
+### Who controls the scoring rubric?
+
+No one exclusively. Any address can create a pool with its own public relevance policy. Pool parameters are immutable after creation. Bad rubric design fails locally through non-use rather than corrupting the whole protocol. Legitimacy is not granted by governance; it emerges from adoption.
+
+### Why is permissionless pool creation better than governance?
+
+Governance centralizes value disputes. Every disagreement about what counts as a public good becomes a political fight over control of a shared mechanism. Permissionless pools modularize legitimacy: rubrics are explicit, auditable, and contestable, and users exit bad ones rather than lobbying to fix them. Bad governance corrupts the whole system; a bad pool only fails locally.
+
+### What prevents the most marketed pool from winning over the best one?
+
+The same risk exists in governance, except there it captures the whole protocol. Here, alternatives remain permanently possible. Pool policies are public and versioned by content hash, so comparison is tractable. This is a better failure mode, not a perfect one.
+
+### How are nominations kept honest?
+
+Nominations must include falsifiable impact claims with supporting evidence. Any participant can file typed challenges: `Debunking`, `NonFalsifiable`, or `TemplateViolation`. Disputed nominations are escalated to external decentralized dispute resolution (Kleros). This forces nominators into a legible, contestable form before the coherence game begins.
+
+### Is this trustless?
+
+The coherence game and nomination layer are designed to be trust-minimized on-chain. The dispute resolution layer relies on an external arbitration system (Kleros v1). The design is explicit about where trust assumptions remain rather than hiding them.
+
+### What is the relationship to the broader curation manuscript?
+
+This RPGF design is a concrete application of the general framework developed in the main manuscript. The manuscript argues that public goods funding is a curation problem, and that curation is better solved by incentive design than by preference aggregation. The RPGF proposal operationalizes that argument.
