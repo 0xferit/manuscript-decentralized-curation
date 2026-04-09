@@ -33,7 +33,7 @@ When you search for travel destinations, you are consuming someone else's curati
 
 This dependency matters because information is not knowledge. Raw information becomes useful only after it has been selected, verified, and contextualized. That transformation is curation. The internet radically improved access to information; it did not solve access to knowledge.
 
-This paper proposes a working hypothesis: **many information-heavy coordination problems decompose into curate-then-coordinate, and the difficulty is concentrated in the curation phase, not the coordination phase.** The hypothesis is tested on one domain (news) with full mechanism design, simulation, and partial deployment; other domains are discussed as plausible extensions, not proven applications.
+This paper proposes a working hypothesis: **many information-heavy coordination problems decompose into curate-then-coordinate, and the difficulty is concentrated in the curation phase, not the coordination phase.** The hypothesis is examined on one domain (news) with full mechanism design, simulation, and partial deployment; other domains are discussed as plausible extensions, not proven applications.
 
 Take news. A newspaper is a curated set of claims about reality. People consume those claims and then make decisions. In a democracy, those decisions are collective and consequential. If the curation layer is incompetent, voters act on low-quality knowledge. If the curation layer is weaponized, voters act on poisoned knowledge [@chomsky1988manufacturing]. In both cases the downstream damage is the same: people coordinate on corrupted inputs.
 
@@ -62,7 +62,7 @@ This paper contributes:
 - **A general framework for trustless decentralized curation.** The framework is a method for identifying when decentralized curation is feasible and how to decompose the mechanism. This paper fully instantiates it for news (with mechanism design, simulation, and partial deployment) and sketches a second application to advertising; broader generality is a design goal, not a demonstrated property.
 - **A complete end-state protocol architecture for Truth Post.** The design separates accuracy from relevance, distinguishes on-chain canonical state from replaceable interfaces, makes pool creation permissionless, and treats contracts as immutable with cross-version coexistence rather than in-place upgrades.
 - **A simulation-based evaluation program.** The experiments test the economic viability of challenge-based accuracy verification, the filtering power and collusion resistance of drafted-curator relevance rounds, and the separating effect of author reputation as a standing bond.
-- **A deployment retrospective.** Truth Post (2023) proved the on-chain submission-and-challenge flow and revealed the bootstrapping conditions the current design must satisfy.
+- **A deployment retrospective.** Truth Post (2023) demonstrated the on-chain submission-and-challenge flow and revealed the bootstrapping conditions the current design must satisfy.
 
 # A General Framework For Trustless Decentralized Curation
 
