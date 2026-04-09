@@ -181,7 +181,7 @@ The test suite passed with 28 passing tests. That indicates the basic accuracy/d
 
 ## Final Assessment
 
-Truth Post is best understood as a **partial deployment of the accuracy layer**, with a **real but off-chain Trust Score system** used for ranking and reader-facing confidence. The on-chain record shows the following were implemented:
+Truth Post is best understood as a **partial deployment of the accuracy layer**, with a **real but off-chain Trust Score system** used for ranking and reader-facing confidence. The deployment demonstrated that the following were implemented:
 
 - claims can be bonded
 - false claims can be challenged
