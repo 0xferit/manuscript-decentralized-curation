@@ -279,9 +279,11 @@ The formula is deterministic conditional on its inputs, but those inputs depend 
 Registry-entry reputation is a pool-scoped integer that starts at zero and tracks a registry entry's history of honest participation. It attaches to the external registry entry rather than to the transient submitting account.
 
 - **Earning**: +1 per funding round in which the entry's nomination survives without debunking.
-- **Penalty**: -5 per debunked nomination. One debunking costs five clean rounds to recover from.
+- **Penalty**: -5 per debunked nomination.
 - **Decay**: absolute value reduced by 1 per epoch (suggested default: 30 days), drifting toward zero over time. Old history fades.
 - **Negative reputation**: reputation can go below zero. A registry entry with negative reputation has a worse track record than a newcomer.
+
+Effective recovery time from a -5 penalty depends on whether the entry participates during recovery. Passive recovery (no participation, decay only) takes 5 epochs (150 days) to reach zero. Active recovery is faster: with ~60-day round cycles, each round contributes +1 from survival and ~2 from decay epochs elapsed during the round, so an actively participating entry recovers in approximately 2 rounds (~120 days). The penalty is a temporary cooldown, not a lasting consequence. For pools where the potential gain from a fraudulent nomination exceeds the cost of a ~120-day exclusion, the 5:1 ratio alone is insufficient deterrence; the holdback period and challenge economics (bond slash, counter-stake loss) are the primary deterrents, with reputation serving as a supplementary gate. See Open Problems for discussion of asymmetric decay as a potential strengthening measure.
 
 Reputation does not directly weight curation scores or allocation. The framework rejects reputation-weighted curation because it grants influence not fully backed by slashable capital. Instead, reputation serves two purposes:
 
