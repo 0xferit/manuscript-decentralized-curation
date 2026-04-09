@@ -140,7 +140,7 @@ The `rule()` function appears to contain a real bug in the default-win logic:
 
 See [`TruthPost.sol`](/tmp/contracts-tp.mgfmL9/contracts/TruthPost.sol#L267).
 
-This matters when one appeal side is fully funded and the other is not. The intended "single funded side wins by default" logic is described in the FAQ, but the implementation does not match that intent cleanly.
+This is a material bug in the appeal-default path. When one appeal side is fully funded and the other is not, the intended "single funded side wins by default" logic is described in the FAQ, but the implementation cannot realize the `Debunked` outcome on that path. I did not verify whether any on-chain appeal actually hit this branch.
 
 ### ETH transfer reliability
 
@@ -183,10 +183,14 @@ The test suite passed with 28 passing tests. That indicates the basic accuracy/d
 
 Truth Post is best understood as a **partial deployment of the accuracy layer**, with a **real but off-chain Trust Score system** used for ranking and reader-facing confidence. The deployment demonstrated that the following were implemented:
 
+Public usage data is sparse but retrievable. On April 9, 2026, the public Ethereum mainnet page for the deployed contract (`0x87AAdE1067Ed0276ec9BEf6db8E17Abe27A6B454`) listed 16 external (non-internal) transactions: five `Initialize Article`, three `Increase Bounty`, three `Initiate Withdraw`, three `Withdraw`, one `Transfer Ownership`, and one `Change Admin`. The public transaction list showed no visible challenge transaction. That is enough to say the deployment did not bootstrap sustained on-chain usage. It is not enough to identify a unique cause. Sparse activity is consistent with multiple explanations, including distribution failure, UX friction, gas and arbitration costs, or the absence of the later relevance layer.
+
 - claims can be bonded
 - false claims can be challenged
 - disputes can be outsourced to decentralized arbitration
 - a confidence metric can be computed from bonded exposure duration
+
+That said, the appeal-default path for `Debunked` appears broken, so this report does not establish that the intended one-sided-funding appeal flow finalized correctly.
 
 However, claims that survived without challenge cannot be treated as "validated by absence of challenge." The on-chain record shows which claims survived, not why. Absence of challenge is consistent with multiple explanations: the claim is accurate, no one saw it, no one had resources to challenge, or potential challengers were deterred. Assessing whether the challenge mechanism actually functioned as intended would require off-chain investigation (challenger awareness, resource availability, deterrence effects) that this retrospective does not provide.
 
