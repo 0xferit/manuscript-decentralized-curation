@@ -88,6 +88,10 @@ The app then uses this score to:
 
 The article UI explicitly labels the unit as `Etherblocks`, which is accurate to the implementation.
 
+**Validation caveat.** Trust Score was implemented and displayed, but never empirically validated. No correlation analysis was performed between Trust Score rankings and actual article accuracy, and no comparison was made against a baseline (e.g., unweighted chronological ordering). The formula also differs from the blueprint's `confidenceIntegral` design, which specifies pause/resume semantics during challenges and withdrawals; the MVP formula lacks these pause/freeze semantics.
+
+Validating Trust Score as a meaningful confidence metric would require at minimum: correlation with future accuracy outcomes, comparison to simpler ranking baselines, and sensitivity analysis across realistic bounty and duration ranges.
+
 ## What Is Missing Relative To The Thesis
 
 Relative to the fuller design described in the thesis, these major components are absent:
@@ -162,7 +166,7 @@ Observed behavior from browser automation:
 - article fetches to `https://ipfs.kleros.io/ipfs/...` failed with `ERR_NAME_NOT_RESOLVED`
 - the app crashed with `Unexpected Application Error! Failed to fetch`
 
-So the live failure currently appears to be an **off-chain dependency failure**, not proof that the bonded-dispute contract never worked.
+This failure is consistent with a known structural vulnerability. The report's own architectural analysis (see "Off-chain dependence for readability" above) documents that article content depends on IPFS resolution through a single gateway (`ipfs.kleros.io`), and the "Missing Relative to the Thesis" section lists interface redundancy as absent. The contract logic may be sound in isolation, but the system as deployed had no redundancy for this off-chain dependency. The observed failure matches what the thesis later identified as a design gap, though confirming a single root cause would require more diagnostic data than the browser-automation tests provide.
 
 ## Verification Notes
 
@@ -177,12 +181,14 @@ The test suite passed with 28 passing tests. That indicates the basic accuracy/d
 
 ## Final Assessment
 
-Truth Post is best understood as a **partial deployment of the accuracy layer**, with a **real but off-chain Trust Score system** used for ranking and reader-facing confidence. It successfully demonstrates the following core idea:
+Truth Post is best understood as a **partial deployment of the accuracy layer**, with a **real but off-chain Trust Score system** used for ranking and reader-facing confidence. The deployment demonstrated that the following were implemented:
 
 - claims can be bonded
 - false claims can be challenged
 - disputes can be outsourced to decentralized arbitration
-- a confidence metric can be accumulated from bonded survival over time
+- a confidence metric can be computed from bonded exposure duration
+
+However, claims that survived without challenge cannot be treated as "validated by absence of challenge." The on-chain record shows which claims survived, not why. Absence of challenge is consistent with multiple explanations: the claim is accurate, no one saw it, no one had resources to challenge, or potential challengers were deterred. Assessing whether the challenge mechanism actually functioned as intended would require off-chain investigation (challenger awareness, resource availability, deterrence effects) that this retrospective does not provide.
 
 What it does **not** demonstrate is the full decentralized curation architecture of the thesis. The missing pieces are precisely the parts that turn an accuracy-only dispute primitive into a broader curation protocol:
 
