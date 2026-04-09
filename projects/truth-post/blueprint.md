@@ -446,6 +446,7 @@ Authority:
 
 - created by protocol via DDR adapter
 - updated by DDR callbacks or relayed proofs
+- in a timeout resolution, `finalRuling` and `finalizedAt` may remain unset; the protocol-level timeout determines the claim's adjudication outcome independently (see Timeout And Fallback)
 
 Storage plane:
 
@@ -675,6 +676,7 @@ The complete build uses two separate state dimensions for claims to avoid overlo
 
 - `None`
 - `DDR`
+- `Timeout`
 
 ### Allowed Claim Transitions
 
@@ -701,19 +703,19 @@ The complete build uses two separate state dimensions for claims to avoid overlo
   - trigger: challenge filed during cooldown
   - side effect: pending withdrawal MUST be cancelled; `preChallengeOperationalState = WithdrawPending`; if challenge later resolves as `ChallengeFailed`, claim returns to `Live` (not `WithdrawPending`) and the author MUST initiate a new withdrawal cooldown to exit
 - `Challenged -> Live`
-  - trigger: DDR final ruling is `ChallengeFailed`, no queued challenge remains, and `preChallengeOperationalState` was `Live` or `WithdrawPending`
-  - side effect: `adjudicationOutcome = ChallengeFailed`, `adjudicationSource = DDR`, `confidenceIntegral` preserved, `lastConfidenceAccrualBlock = currentBlock`, accrual resumes
+  - trigger: DDR final ruling or timeout resolution is `ChallengeFailed`, no queued challenge remains, and `preChallengeOperationalState` was `Live` or `WithdrawPending`
+  - side effect: `adjudicationOutcome = ChallengeFailed`, `adjudicationSource = DDR` or `Timeout`, `confidenceIntegral` preserved, `lastConfidenceAccrualBlock = currentBlock`, accrual resumes
 - `Challenged -> PendingEdit`
-  - trigger: DDR final ruling is `ChallengeFailed`, no queued challenge remains, and `preChallengeOperationalState` was `PendingEdit`
-  - side effect: `adjudicationOutcome = ChallengeFailed`, `adjudicationSource = DDR`, author may resume editing
+  - trigger: DDR final ruling or timeout resolution is `ChallengeFailed`, no queued challenge remains, and `preChallengeOperationalState` was `PendingEdit`
+  - side effect: `adjudicationOutcome = ChallengeFailed`, `adjudicationSource = DDR` or `Timeout`, author may resume editing
 - `Challenged -> Challenged`
-  - trigger: DDR final ruling is `ChallengeFailed` and a queued challenge auto-activates after the cancellation window
+  - trigger: DDR final ruling or timeout resolution is `ChallengeFailed` and a queued challenge auto-activates after the cancellation window
   - side effect: active challenge id advances to the next queued challenge; `preChallengeOperationalState` is preserved
 - `Challenged -> Closed`
-  - trigger: DDR final ruling is `Debunked`
-  - side effect: `adjudicationOutcome = Debunked`, `adjudicationSource = DDR`, confidence terminates, queued challenges are refunded, and claim is removed from active feeds
+  - trigger: DDR final ruling is `Debunked`, OR timeout resolution yields `Debunked` (forfeiture)
+  - side effect: `adjudicationOutcome = Debunked`, `adjudicationSource = DDR` (merits) or `Timeout` (forfeiture), confidence terminates, queued challenges are refunded, and claim is removed from active feeds
 
-A claim with `operationalState = Closed` and `adjudicationOutcome = Debunked` is terminal for feed purposes and remains queryable historically.
+A claim with `operationalState = Closed` and `adjudicationOutcome = Debunked` is terminal for feed purposes and remains queryable historically. Interfaces SHOULD distinguish `adjudicationSource = Timeout` (debunked by forfeiture) from `adjudicationSource = DDR` (debunked on merits).
 
 There is no special post-publication grace state in the complete design. A new claim is simply `Live` with very low accumulated confidence until time and bond size differentiate it from older claims.
 
@@ -878,7 +880,7 @@ Display logic:
    - `ChallengeFailed`: if no queued challenge remains, the claim returns to its `preChallengeOperationalState` (`Live`, `PendingEdit`, or `Live` if it was `WithdrawPending`) and the author gains `pool.authorChallengeFailedRepReward`
    - `ChallengeFailed`: if a queued challenge remains, the next queued challenge enters its cancellation window as described in step 9
    - `Debunked`: claim moves to `Closed`, author bond is slashed (using `bondAtChallengeOpenWei`), current author reputation in that pool is reduced by `pool.authorBustSlashBps`, and all queued challenges are refunded in full
-11. `Debunked` covers any successful `Debunking`, `NonFalsifiable`, `ScopeViolation`, or `TemplateViolation` challenge.
+11. `Debunked` covers any successful `Debunking`, `NonFalsifiable`, `ScopeViolation`, or `TemplateViolation` challenge, as well as timeout forfeiture (see Timeout And Fallback). Timeout forfeiture produces the same economic outcome but uses `adjudicationSource = Timeout` instead of `DDR`.
 12. Appeal funding is handled by DDR crowdfunding. The author, challenger, or any third party MAY fund either side in exchange for the underlying DDR-side reward logic. If the author's side is not funded, the author loses the appeal opportunity.
 
 Default payout rule (suggested; requires empirical calibration; all amounts reference `bondAtChallengeOpenWei` for the relevant challenge):
@@ -1087,6 +1089,7 @@ Default inclusion rules:
 - `Archive`
   - include claims with `operationalState in {Withdrawn, Closed}`
   - interfaces SHOULD surface `Debunked` claims with the winning challenge reason, including `NonFalsifiable` where applicable
+  - interfaces SHOULD distinguish `adjudicationSource = Timeout` (debunked by forfeiture) from `adjudicationSource = DDR` (debunked on merits) so readers can assess outcome provenance
 
 Claims with no finalized relevance round MAY still be reachable through direct links or pool-level pending views, but they MUST NOT be given synthetic relevance scores.
 
@@ -1270,12 +1273,24 @@ The protocol MUST mirror the external dispute phase on-chain. Phase transitions 
 If the external DDR does not return a ruling within `pool.ddrTimeoutSeconds` (suggested default: 365 days / 31,536,000 seconds), the protocol MUST allow either party to trigger a timeout resolution:
 
 - if only the author has paid their share, the challenge is treated as `ChallengeFailed`
-- if only the challenger has paid their share, the challenge is treated as `Debunked`
+- if only the challenger has paid their share, the challenge is treated as `Debunked` with `adjudicationSource = Timeout`
 - if neither or both have paid, the challenge is treated as `ChallengeFailed` and the challenger's counter-stake is refunded
 
-Timeout resolutions MUST NOT apply the normal challenger-loss payout rule (80/20 split). The counter-stake is refunded in full for timeout `ChallengeFailed` outcomes. Author bond remains locked. Challenge tax remains in the pool budget.
+All timeout resolutions MUST set `adjudicationSource = Timeout`, not `DDR`. Timeout resolutions MUST NOT apply the normal challenger-loss payout rule (80/20 split). The counter-stake is refunded in full for timeout `ChallengeFailed` outcomes. Author bond remains locked. Challenge tax remains in the pool budget.
 
-Design note: the "only challenger paid" timeout path produces a `Debunked` outcome driven by fee-payment asymmetry, not by merits adjudication. The rationale is that an author who fails to fund their defense within the timeout period has effectively abandoned the claim. The design treats non-participation as forfeiture rather than acquittal.
+Design note (debunked by forfeiture): the "only challenger paid" timeout path produces a `Debunked` outcome driven by fee-payment asymmetry, not by merits adjudication. The protocol labels this outcome `adjudicationSource = Timeout` so that interfaces, historical records, and downstream consumers can distinguish forfeiture from a merits-adjudicated debunking. The economic consequences (bond slash, reputation slash, feed removal) are identical to merits-Debunked: the claim is terminal.
+
+The rationale is that an author who fails to fund their defense within the timeout period has effectively abandoned the claim. The design treats non-participation as forfeiture rather than acquittal.
+
+This is a deliberate tradeoff with known risks:
+
+- **False-positive debunking**: an author may fail to pay for reasons unrelated to claim accuracy (key loss, jurisdictional internet restrictions, personal emergency, or simply missing the deadline during a 365-day window). The protocol cannot distinguish genuine abandonment from involuntary absence.
+- **Adversarial exploitation**: an attacker can challenge a claim by a temporarily unavailable author and obtain a Debunked ruling without any evidence evaluation.
+- **365-day assumption**: the suggested default assumes one year is sufficient for any motivated author to respond. This is long relative to most dispute processes but may be inadequate for authors in prolonged adverse conditions.
+
+The alternative (letting abandoned challenged claims remain in limbo indefinitely) is worse: it locks the challenger's counter-stake permanently, removes any deadline pressure on the author, and leaves the claim in a contested-but-unresolved state that interfaces cannot meaningfully present. Forfeiture is the least-bad resolution for claims whose authors have genuinely disappeared.
+
+Interfaces SHOULD label forfeiture outcomes distinctly (e.g., "debunked by forfeiture" or "author did not respond") so readers can assess the provenance of the outcome.
 
 ### Appeal Handling
 
