@@ -405,7 +405,7 @@ These frictions do not invalidate the exit argument (exit is still structurally 
 
 ### DDR dependency
 
-The accuracy layer delegates adjudication to an external DDR provider (Kleros v1). If the external court is captured, lazy, or inaccurate, the accuracy layer inherits that degradation. In the RPGF context, this risk is amplified relative to the news instantiation because challenge outcomes directly redirect funding: a single corrupted DDR ruling can redirect a nomination's entire provisional share. The main paper's analysis of inherited DDR dependency applies here with higher stakes per ruling. This design does not independently model DDR capture cost or mitigation beyond the 90-day timeout fallback.
+The accuracy layer delegates adjudication to an external DDR provider (Kleros v1). If the external court is captured, lazy, or inaccurate, the accuracy layer inherits that degradation. In the RPGF context, this risk is amplified relative to the news instantiation because challenge outcomes directly redirect funding: a single corrupted DDR ruling can redirect a nomination's entire provisional share. The main paper's analysis of inherited DDR dependency applies here with higher stakes per ruling. The 90-day timeout fallback addresses only DDR liveness (non-resolution); it does not mitigate capture or inaccuracy and actually defaults unresolved disputes to author victory, converting stalled challenges into false negatives. This design does not independently model DDR capture cost or correctness-layer mitigation.
 
 ### Pool bootstrapping
 
