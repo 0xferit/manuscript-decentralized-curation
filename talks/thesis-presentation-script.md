@@ -104,7 +104,7 @@ An author posts a claim together with a bond. A challenger can attack that claim
 
 The point is not that the protocol becomes an oracle of metaphysical truth. The point is that it creates transparent, contestable challenge outcomes and economic consequences for being wrong.
 
-An important caveat: the mechanism makes falsehood expensive to sustain if challenged, but our simulations show the dominant bottleneck is detection coverage. At representative parameters, a false claim has about a 0.67 probability of surviving its first detection-and-challenge window. The system does not guarantee that false claims will be found; it creates economic incentives for finding them at representative parameters.
+An important caveat: the mechanism makes falsehood expensive to sustain if challenged, but our simulations show the dominant bottleneck is detection coverage. At representative parameters, a false claim has about a 0.67 probability of surviving its first detection-and-challenge window. The system does not guarantee that false claims will be found; it creates economic incentives for challenging them once detected, at representative parameters.
 
 Relevance is different. Relevance is not well served by a binary yes-or-no process. Relevance is a ranking problem. It is about what matters more, not just whether something passes a threshold.
 

@@ -126,7 +126,7 @@ This is also where the broader curation argument becomes clearer: the question i
 
 This is the slide I most want to make precise, because a lot of the mechanism depends on it.
 
-The system I am describing can make falsehood expensive to sustain if challenged, but it cannot certify truth in any absolute sense. An important nuance: our simulations show the dominant bottleneck is detection coverage, not the dispute mechanism itself. The system does not guarantee that false claims will be found; it creates economic incentives for finding them at representative parameters.
+The system I am describing can make falsehood expensive to sustain if challenged, but it cannot certify truth in any absolute sense. An important nuance: our simulations show the dominant bottleneck is detection coverage, not the dispute mechanism itself. The system does not guarantee that false claims will be found; it creates economic incentives for challenging them once detected, at representative parameters.
 
 That is the Popperian asymmetry.
 
