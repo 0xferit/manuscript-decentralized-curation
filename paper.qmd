@@ -37,7 +37,7 @@ This paper proposes a working hypothesis: **many information-heavy coordination 
 
 Take news. A newspaper is a curated set of claims about reality. People consume those claims and then make decisions. In a democracy, those decisions are collective and consequential. If the curation layer is incompetent, voters act on low-quality knowledge. If the curation layer is weaponized, voters act on poisoned knowledge [@chomsky1988manufacturing]. In both cases the downstream damage is the same: people coordinate on corrupted inputs.
 
-This is why I propose that many coordination failures are misdiagnosed. We keep trying to fix governance, voting, or collective decision-making directly while standing on a broken knowledge layer. People cannot coordinate well without a trusted shared reality. If two people trust that two plus two equals four, there is no coordination problem there; the shared fact scales. But when two groups inhabit different constructed realities about politics, institutions, or public events, governance becomes hard not because humans are incapable of coordination, but because the knowledge layer underneath coordination is broken.
+This is why I propose that many coordination failures are misdiagnosed. We keep trying to fix governance, voting, or collective decision-making directly while standing on a broken knowledge layer. People cannot coordinate well without a trusted shared reality. If two people trust that two plus two equals four, there is no coordination problem there; the shared fact scales. But when two groups inhabit different constructed realities about politics, institutions, or public events, governance becomes hard, on this account, not because humans are incapable of coordination, but because the knowledge layer underneath coordination is degraded.
 
 So governance is often a hidden curation problem.
 
@@ -514,7 +514,7 @@ Scalability, structured claim authoring, challenge participation, legal exposure
 
 # Conclusion
 
-The working hypothesis of this paper is that the bottleneck behind many information-heavy coordination problems is not governance, voting, or coordination in the narrow sense, but the upstream transformation of raw information into decision-grade knowledge. I call that transformation **curation**. The paper tests this hypothesis on one domain (news) and sketches its application to a second (advertising); whether the decomposition holds more broadly remains an open question.
+The working hypothesis of this paper is that the bottleneck behind many information-heavy coordination problems is not governance, voting, or coordination in the narrow sense, but the upstream transformation of raw information into decision-grade knowledge. I call that transformation **curation**. The paper examines this hypothesis on one domain (news) and sketches its application to a second (advertising); whether the decomposition holds more broadly remains an open question.
 
 The paper contributes a general framework for trustless decentralized curation and instantiates it for news. The framework starts with problem definition, identifies the relevant quality dimensions, requires falsifiability where challenge is the mechanism, and designs incentives dimension by dimension rather than collapsing everything into one score. In the news instantiation, that yields an accuracy layer based on bonded publication and open challenge, and a relevance layer based on drafted curator rounds under a public policy.
 
