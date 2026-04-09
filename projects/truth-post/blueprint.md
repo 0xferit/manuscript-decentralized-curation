@@ -144,7 +144,17 @@ This separation is deliberate. Truth Post SHOULD NOT reuse internal curators as 
 - If the challenge succeeds, the entire claim blob is `Debunked`.
 - The canonical interface unit is an **Article Page** or feed item derived from that claim blob and its current revision.
 
-Design note: whole-blob debunking is intentionally disproportionate. One successfully challenged proposition debunks the entire article, even if other subclaims within the blob are accurate. Partial debunking would require the protocol to track per-subclaim accuracy state, which conflicts with the explicit non-goal of atomic on-chain decomposition. The design trades proportionality for simplicity. Authors who want finer-grained challenge exposure should decompose their claims into separate bonded units voluntarily.
+Design note: whole-blob debunking is intentionally disproportionate. One successfully challenged proposition debunks the entire article, even if other subclaims within the blob are accurate. Partial debunking would require the protocol to track per-subclaim accuracy state, which conflicts with the explicit non-goal of atomic on-chain decomposition. The design trades proportionality for simplicity.
+
+This tradeoff has predictable behavioral consequences:
+
+- **Author risk scales with subclaim count.** A blob with N falsifiable subclaims exposes the author to N independent challenge surfaces, while a challenger needs to find only one error. Rational authors will respond by posting fewer subclaims per blob, making claims less precise (harder to falsify), or decomposing into separate bonded units. The first two responses reduce the protocol's usefulness for complex reporting; the third multiplies capital requirements (one bond per blob).
+- **Challengers select the weakest subclaim.** An article that is broadly accurate but contains a minor factual error (wrong date, imprecise attribution) is just as debunkable as one that is fundamentally false. The protocol cannot distinguish the severity of the error.
+- **Voluntary decomposition is capital-intensive.** Telling authors to split claims into separate bonded units shifts the complexity cost from the protocol to the author. An investigative article with ten falsifiable assertions would require ten bonds and ten separate confidence tracks, which is economically prohibitive for most authors and defeats the purpose of blob-level simplicity.
+
+The protocol retains whole-blob debunking because the alternatives are worse in a different dimension. Per-subclaim state tracking would require on-chain decomposition (adding storage, gas, and indexing complexity), create new attack surfaces (e.g., strategically debunking minor subclaims to damage confidence while leaving the core claim intact), and force the protocol to define subclaim boundaries (a semantic judgment the protocol cannot make). The resulting complexity would undermine the minimal on-chain footprint that makes the protocol deployable.
+
+The honest scope limitation is that this design is better suited to discrete, well-scoped claims than to long-form investigative articles with many independent assertions. Pools that want to curate complex journalism should set higher bonds (compensating authors for the increased exposure) and adopt templates that encourage focused, single-assertion submissions. The protocol does not attempt to serve all publication formats equally.
 
 ## Actors
 
