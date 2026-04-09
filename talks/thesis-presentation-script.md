@@ -6,7 +6,7 @@ Approximate length: 20 minutes
 
 My thesis is simple to state and difficult to ignore:
 
-most hard problems are actually curation problems.
+many information-heavy coordination problems are, at root, curation problems.
 
 For a long time, the bottleneck of civilization was access to information. Information was trapped in libraries, universities, archives, and institutions. The internet changed that. Today we have access to far more information than almost any generation before us. But that did not automatically make us wiser. It did not automatically make us more coordinated. It did not automatically make our institutions healthier.
 
@@ -62,7 +62,7 @@ Fourth, design mechanisms dimension by dimension. Different information qualitie
 
 That framework is the backbone of the thesis.
 
-It is domain-agnostic. In the thesis I instantiate it mainly for news, because news is where the problem is socially visible and the cost of failure is broadly distributed. But it is not a news-only framework.
+It is designed to be domain-agnostic, though that generality has not been demonstrated. In the thesis I instantiate it mainly for news, because news is where the problem is socially visible and the cost of failure is broadly distributed. But it is not a news-only framework.
 
 ## Why News Is The First Serious Use Case
 
@@ -104,9 +104,13 @@ An author posts a claim together with a bond. A challenger can attack that claim
 
 The point is not that the protocol becomes an oracle of metaphysical truth. The point is that it creates transparent, contestable challenge outcomes and economic consequences for being wrong.
 
+An important caveat: the mechanism makes falsehood expensive to sustain if challenged, but our simulations show the dominant bottleneck is detection coverage. At representative parameters, a false claim has about a 0.67 probability of surviving its first detection-and-challenge window. The system does not guarantee that false claims will be found; it creates economic incentives for challenging them once detected, at representative parameters.
+
 Relevance is different. Relevance is not well served by a binary yes-or-no process. Relevance is a ranking problem. It is about what matters more, not just whether something passes a threshold.
 
 So for relevance I use a policy-guided coherence game. Curators stake into a pool, are drafted into rounds, and independently rate how strongly a claim conforms to the pool’s curation policy. Outliers are slashed. Coherent participants are rewarded.
+
+This mechanism resists small colluding minorities, but at our reference parameters (K=1.25, 15-member committees) it degrades when a coordinated bloc exceeds a colluding fraction of roughly 15 to 20 percent. The threshold depends on the coherence parameter, committee size, and policy specificity; it is not a universal constant. Below that threshold, colluder impact remains limited in our simulations; above it, a coordinating bloc can bend the signal. This is a known constraint, not a solved problem.
 
 This is where Schelling-style reasoning becomes important. The mechanism does not ask curators to assert global truth. It asks them to converge on policy-grounded relevance under conditions where their incentives favor disciplined judgment.
 
@@ -146,19 +150,19 @@ In 2023, I launched Truth Post as a partial instantiation of this framework for 
 
 That was not the full system. It was deliberately incomplete. There was no full relevance layer, no standing curator layer, no robust multi-interface architecture, and no complete economic bootstrap.
 
-And it failed.
+And it did not sustain participation.
 
-That failure is important.
+That outcome is important, but its interpretation is ambiguous.
 
-It showed that the core submission-and-challenge flow can be deployed on real infrastructure. But it also showed that accuracy alone is not enough to bootstrap sustained participation. Most claims are not interesting enough to challenge. People do not come to a system just to verify boring truths. They come to find what matters.
+The deployment showed that the core submission-and-challenge flow can run on real infrastructure. But it did not establish why participation collapsed. My working interpretation is that accuracy alone is not enough to bootstrap sustained use: most claims are not interesting enough to challenge, and people do not come to a system just to verify boring truths. But competing explanations exist: the failure may also reflect gas costs, a narrow initial market, UX friction, or insufficient challenger incentives in a low-traffic environment. I cannot cleanly distinguish between these causes from the data available.
 
-Truth Post also exposed the cold-start problem very clearly. Without enough participants, you do not get meaningful signals. And it showed why protocol/interface separation is not optional: a decentralized protocol with a single fragile frontend is not actually robust.
+Truth Post also illustrated the cold-start challenge, though I cannot confirm cold-start was the primary cause of low participation rather than one of the competing explanations above. Without enough participants, you do not get meaningful signals. And it showed why protocol/interface separation is not optional: a decentralized protocol with a single fragile frontend is not actually robust.
 
 So Truth Post matters in this presentation for one reason:
 
-it proves that I am not standing here with only an abstract idea.
+it shows that I am not standing here with only an abstract idea.
 
-I already pushed the framework into partial deployment, learned where it failed, and used that failure to specify the full system much more rigorously.
+I pushed the framework into partial deployment, observed where it stalled, and used those observations to specify the full system more rigorously. Whether the stall reflects a flaw in the core model or only in the incomplete instantiation remains an open question.
 
 That is what the current Truth Post blueprint represents.
 
@@ -175,6 +179,8 @@ In the complete design, the system is no longer just “post a claim and hope so
 
 In other words, it becomes a real protocol design rather than a minimal experiment.
 
+A necessary caveat: the design is backed by simulations at representative parameters but has not been deployed at scale. Several parameters, such as committee sizes, bond ratios, and slashing thresholds, lack formal optimality justification and are candidates for empirical calibration. The blueprint is detailed enough to constrain an implementation, but additional specification work remains before it is production-ready.
+
 ## Why I Think This Work Is Advanced
 
 What makes this advanced is not that every piece is already deployed. It is that the field has been pushed several steps forward at once.
@@ -185,9 +191,9 @@ Second, I am not treating “truth” as one monolithic signal. I separate quali
 
 Third, I already have a real deployment retrospective. That is rare in work of this kind. Truth Post did not merely inspire the thesis; it constrained it.
 
-Fourth, the complete protocol blueprint is no longer vague. It has concrete actors, objects, state machines, challenge flows, relevance flows, economic rules, and failure models. It is detailed enough that another serious team could build from it.
+Fourth, the complete protocol blueprint is no longer vague. It has concrete actors, objects, state machines, challenge flows, relevance flows, economic rules, and failure models. The design decisions are concrete enough to constrain an implementation, even though additional specification work remains.
 
-And fifth, the framework generalizes.
+And fifth, the framework is designed to generalize, though this remains a hypothesis rather than a demonstrated property.
 
 ## Advertising As A Second Instantiation
 
@@ -207,7 +213,7 @@ If the claim is false, they lose the capital.
 
 That inverts the current cost structure. Honest actors become cheap to accommodate. Dishonest actors become expensive to sustain.
 
-And this is exactly why I include advertising in the thesis. It proves that the framework is not tied to one political or journalistic niche. It applies wherever there is an information-to-knowledge bottleneck, public evidence, and feasible falsification.
+And this is exactly why I include advertising in the thesis. It suggests that the framework is not tied to one political or journalistic niche. It could apply wherever there is an information-to-knowledge bottleneck, public evidence, and feasible falsification, though the advertising sketch is not a full instantiation and does not prove generality.
 
 ## What This Thesis Is Actually Claiming
 
@@ -247,7 +253,7 @@ And if I reduce the contribution to one sentence, it is this:
 
 I am not just naming that bottleneck; I am proposing a general framework and a concrete protocol architecture for removing trust from it.
 
-News is the main instantiation because it makes the problem visible. Truth Post is the implementation example because it proves this work has already passed the stage of vague speculation. Advertising is the second instantiation because it shows the framework is general.
+News is the main instantiation because it makes the problem visible. Truth Post is the implementation example because it shows this work has already passed the stage of vague speculation. Advertising is a preliminary sketch suggesting the framework could generalize beyond news, though that remains to be demonstrated.
 
 What I want the audience to take away is not merely that I have a protocol idea.
 

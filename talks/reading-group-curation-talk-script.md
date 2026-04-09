@@ -80,7 +80,7 @@ So one of the main claims of the thesis is diagnostic:
 
 many things that look like governance problems are more usefully understood as curation problems upstream.
 
-I am not saying all governance problems reduce to curation. I am saying a surprisingly large number of them begin there.
+I am not saying all governance problems reduce to curation. I am saying that more of them begin there than is commonly recognized.
 
 ## Slide 5: The Framework
 
@@ -126,7 +126,7 @@ This is also where the broader curation argument becomes clearer: the question i
 
 This is the slide I most want to make precise, because a lot of the mechanism depends on it.
 
-The system I am describing can make falsehood attackable, but it cannot certify truth in any absolute sense.
+The system I am describing can make falsehood expensive to sustain if challenged, but it cannot certify truth in any absolute sense. An important nuance: our simulations show the dominant bottleneck is detection coverage, not the dispute mechanism itself. The system does not guarantee that false claims will be found; it creates economic incentives for challenging them once detected, at representative parameters.
 
 That is the Popperian asymmetry.
 
@@ -181,6 +181,8 @@ Relevance stays inside the pool and is judged by drafted curators under the pool
 
 This is also where I rely on Schelling-style reasoning, but with caution. The system does not assume that people coordinate directly on truth. It assumes they coordinate on expected defensible judgment under explicit rules. That is a weaker claim, but I think it is the more realistic one.
 
+A known limitation: the mechanism resists small colluding minorities, but at our reference parameters (K=1.25, 15-member committees) it degrades when a coordinated bloc exceeds a colluding fraction of roughly 15 to 20 percent. The threshold depends on the coherence parameter, committee size, and policy specificity. Below that threshold, colluder impact remains limited in our simulations; above it, a coordinating bloc can bend the relevance signal. This constraint is quantified in the paper but not yet solved.
+
 The deeper point is that mechanism design begins only after the conceptual decomposition is done. If we start with mechanism design too early, we usually end up solving the wrong problem.
 
 ## Slide 9: How Truth Post Works
@@ -231,6 +233,8 @@ So even if we set AI aside entirely, I think the thesis still stands.
 
 I also want to connect this directly to public good funding, because I think that is one of the most important extensions.
 
+An important caveat upfront: the thesis itself does not cover public good funding. What I am describing here is developed in a separate design document and is not covered by the simulations or formal analysis in the paper. I include it because it illustrates the framework's generality, but it should be understood as ongoing work, not a validated result.
+
 The reason is that funding public goods is also a curation problem.
 
 Before we allocate money, we need to answer upstream questions such as: which projects matter, for whom, under what objective, and by how much relative to the alternatives?
@@ -253,7 +257,7 @@ That is exactly the kind of problem a local, scalar, policy-dependent curation m
 
 So my claim to this audience is not that I built a complete public-goods funding protocol inside this thesis.
 
-My claim is that the decentralized curation framework, which I instantiate in detail for news, also provides a mechanism-design route into public good funding by treating allocation as a curation problem over weights.
+My claim is that the decentralized curation framework, which I instantiate in detail for news, plausibly extends to public good funding by treating allocation as a curation problem over weights. That extension is sketched in a separate design document; the thesis provides the conceptual route but not the formal validation.
 
 ## Slide 12: What I Am And Am Not Claiming
 
