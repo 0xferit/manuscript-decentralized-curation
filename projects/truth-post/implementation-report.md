@@ -88,7 +88,7 @@ The app then uses this score to:
 
 The article UI explicitly labels the unit as `Etherblocks`, which is accurate to the implementation.
 
-**Validation caveat.** Trust Score was implemented and displayed, but never empirically validated. No correlation analysis was performed between Trust Score rankings and actual article accuracy, and no comparison was made against a baseline (e.g., unweighted chronological ordering). The formula also differs from the blueprint's `confidenceIntegral` design, which specifies pause/resume semantics during challenges and withdrawals; the MVP formula has no such pausing and would continue accruing on stale data if `lastBalanceUpdate` is not refreshed on withdrawal.
+**Validation caveat.** Trust Score was implemented and displayed, but never empirically validated. No correlation analysis was performed between Trust Score rankings and actual article accuracy, and no comparison was made against a baseline (e.g., unweighted chronological ordering). The formula also differs from the blueprint's `confidenceIntegral` design, which specifies pause/resume semantics during challenges and withdrawals; the MVP formula lacks these pause/freeze semantics.
 
 Validating Trust Score as a meaningful confidence metric would require at minimum: correlation with future accuracy outcomes, comparison to simpler ranking baselines, and sensitivity analysis across realistic bounty and duration ranges.
 
@@ -166,7 +166,7 @@ Observed behavior from browser automation:
 - article fetches to `https://ipfs.kleros.io/ipfs/...` failed with `ERR_NAME_NOT_RESOLVED`
 - the app crashed with `Unexpected Application Error! Failed to fetch`
 
-This failure is not incidental. The report's own architectural analysis (see "Off-chain dependence for readability" above) documents that article content depends entirely on IPFS resolution through a single gateway (`ipfs.kleros.io`), and the "Missing Relative to the Thesis" section lists interface redundancy as absent. The protocol's reliance on off-chain availability for content rendering is a structural design choice, not an operational accident. The contract logic may be sound in isolation, but the system as deployed was architecturally incapable of surviving the failure of a single off-chain dependency. This is itself a design lesson: the deployment broke in exactly the way the thesis later identified as a problem.
+This failure is consistent with a structural vulnerability rather than an isolated operational accident. The report's own architectural analysis (see "Off-chain dependence for readability" above) documents that article content depends on IPFS resolution through a single gateway (`ipfs.kleros.io`), and the "Missing Relative to the Thesis" section lists interface redundancy as absent. The contract logic may be sound in isolation, but the system as deployed had no redundancy for this off-chain dependency. The observed failure matches what the thesis later identified as a design gap, though confirming a single root cause would require more diagnostic data than the browser-automation tests provide.
 
 ## Verification Notes
 
