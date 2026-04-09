@@ -6,7 +6,7 @@ Approximate length: 20 minutes
 
 My thesis is simple to state and difficult to ignore:
 
-most hard problems are actually curation problems.
+many information-heavy coordination problems are, at root, curation problems.
 
 For a long time, the bottleneck of civilization was access to information. Information was trapped in libraries, universities, archives, and institutions. The internet changed that. Today we have access to far more information than almost any generation before us. But that did not automatically make us wiser. It did not automatically make us more coordinated. It did not automatically make our institutions healthier.
 
@@ -156,7 +156,7 @@ That outcome is important, but its interpretation is ambiguous.
 
 The deployment showed that the core submission-and-challenge flow can run on real infrastructure. But it did not establish why participation collapsed. My working interpretation is that accuracy alone is not enough to bootstrap sustained use: most claims are not interesting enough to challenge, and people do not come to a system just to verify boring truths. But competing explanations exist: the failure may also reflect gas costs, a narrow initial market, UX friction, or insufficient challenger incentives in a low-traffic environment. I cannot cleanly distinguish between these causes from the data available.
 
-Truth Post also exposed the cold-start problem clearly. Without enough participants, you do not get meaningful signals. And it showed why protocol/interface separation is not optional: a decentralized protocol with a single fragile frontend is not actually robust.
+Truth Post also illustrated the cold-start challenge, though I cannot confirm cold-start was the primary cause of low participation rather than one of the competing explanations above. Without enough participants, you do not get meaningful signals. And it showed why protocol/interface separation is not optional: a decentralized protocol with a single fragile frontend is not actually robust.
 
 So Truth Post matters in this presentation for one reason:
 
