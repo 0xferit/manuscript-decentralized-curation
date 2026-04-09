@@ -104,13 +104,13 @@ An author posts a claim together with a bond. A challenger can attack that claim
 
 The point is not that the protocol becomes an oracle of metaphysical truth. The point is that it creates transparent, contestable challenge outcomes and economic consequences for being wrong.
 
-An important caveat: the mechanism makes falsehood expensive to sustain if challenged, but our simulations show the dominant bottleneck is detection coverage. At representative parameters, a false claim has about a 0.67 probability of surviving its first detection-and-challenge window. The system does not guarantee that false claims will be found; it guarantees that finding them is rewarded.
+An important caveat: the mechanism makes falsehood expensive to sustain if challenged, but our simulations show the dominant bottleneck is detection coverage. At representative parameters, a false claim has about a 0.67 probability of surviving its first detection-and-challenge window. The system does not guarantee that false claims will be found; it creates economic incentives for finding them at representative parameters.
 
 Relevance is different. Relevance is not well served by a binary yes-or-no process. Relevance is a ranking problem. It is about what matters more, not just whether something passes a threshold.
 
 So for relevance I use a policy-guided coherence game. Curators stake into a pool, are drafted into rounds, and independently rate how strongly a claim conforms to the pool’s curation policy. Outliers are slashed. Coherent participants are rewarded.
 
-This mechanism resists small colluding minorities, but at our reference parameters (K=1.25, 15-member committees) it degrades when a coordinated bloc exceeds roughly 15 to 20 percent of drafted stake. The threshold depends on the coherence parameter and committee size; it is not a universal constant. Below that threshold, honest reporting is the stable strategy; above it, a coordinating bloc can bend the signal. This is a known constraint, not a solved problem.
+This mechanism resists small colluding minorities, but at our reference parameters (K=1.25, 15-member committees) it degrades when a coordinated bloc exceeds roughly 15 to 20 percent of drafted stake. The threshold depends on the coherence parameter, committee size, and policy specificity; it is not a universal constant. Below that threshold, honest reporting is the stable strategy; above it, a coordinating bloc can bend the signal. This is a known constraint, not a solved problem.
 
 This is where Schelling-style reasoning becomes important. The mechanism does not ask curators to assert global truth. It asks them to converge on policy-grounded relevance under conditions where their incentives favor disciplined judgment.
 

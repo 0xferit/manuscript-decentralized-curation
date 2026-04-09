@@ -126,7 +126,7 @@ This is also where the broader curation argument becomes clearer: the question i
 
 This is the slide I most want to make precise, because a lot of the mechanism depends on it.
 
-The system I am describing can make falsehood expensive to sustain if challenged, but it cannot certify truth in any absolute sense. An important nuance: our simulations show the dominant bottleneck is detection coverage, not the dispute mechanism itself. The system does not guarantee that false claims will be found; it guarantees that finding them is rewarded.
+The system I am describing can make falsehood expensive to sustain if challenged, but it cannot certify truth in any absolute sense. An important nuance: our simulations show the dominant bottleneck is detection coverage, not the dispute mechanism itself. The system does not guarantee that false claims will be found; it creates economic incentives for finding them at representative parameters.
 
 That is the Popperian asymmetry.
 
@@ -181,7 +181,7 @@ Relevance stays inside the pool and is judged by drafted curators under the pool
 
 This is also where I rely on Schelling-style reasoning, but with caution. The system does not assume that people coordinate directly on truth. It assumes they coordinate on expected defensible judgment under explicit rules. That is a weaker claim, but I think it is the more realistic one.
 
-A known limitation: the mechanism resists small colluding minorities, but at our reference parameters (K=1.25, 15-member committees) it degrades when a coordinated bloc exceeds roughly 15 to 20 percent of drafted stake. The threshold depends on the coherence parameter and committee size. Below that threshold, honest reporting is stable; above it, a coordinating bloc can bend the relevance signal. This constraint is quantified in the paper but not yet solved.
+A known limitation: the mechanism resists small colluding minorities, but at our reference parameters (K=1.25, 15-member committees) it degrades when a coordinated bloc exceeds roughly 15 to 20 percent of drafted stake. The threshold depends on the coherence parameter, committee size, and policy specificity. Below that threshold, honest reporting is stable; above it, a coordinating bloc can bend the relevance signal. This constraint is quantified in the paper but not yet solved.
 
 The deeper point is that mechanism design begins only after the conceptual decomposition is done. If we start with mechanism design too early, we usually end up solving the wrong problem.
 
