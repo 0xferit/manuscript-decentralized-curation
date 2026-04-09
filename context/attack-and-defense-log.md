@@ -4,96 +4,122 @@ This document tracks the "Red Teaming" exercises conducted against the Decentral
 
 ---
 
-## ✅ Section 1: Successfully Defended Attacks
+## Section 1: Successfully Defended Attacks
 
 _These attacks have been neutralized, and their defenses are integrated into the main manuscript._
 
 ### 1. The "Lazy Majority" Equilibrium
 
 **Attack:** Curators will just copy the majority vote (or whale vote) without checking facts to win rewards.
-**Defense:** **Commit-and-Reveal Voting** prevents copying. **The Shark (Diligent Challenger)** punishes rubber-stamping by finding the one false article they approved and seizing their stake.
+**Defense:** Commit-reveal voting prevents vote copying during the commitment phase. Coherence-based slashing punishes curators whose scores fall outside the |v_i - mu| <= K*sigma band, making rubber-stamping risky when it diverges from the informed distribution. Per-identity weight caps (10% of round weight) prevent any single curator from dominating committee outcomes. Degenerate-round detection cancels near-flat rounds rather than accepting them as meaningful curation.
 
 ### 2. The "Subreddit War" (Echo Chambers)
 
 **Attack:** A "Conspiracy Pool" will successfully curate lies because their policy allows it.
-**Defense:** **Global Accuracy vs. Local Relevance.** A pool can have a biased _Relevance_ policy, but _Accuracy_ is a global standard enforced by the cross-pool Kleros court. You can curate "Relevant Conspiracy Theories," but you cannot tag them as "Accurate" without being slashed.
+**Defense:** A pool can have a biased relevance policy, but accuracy is a global standard enforced by the cross-pool external DDR court. You can curate "Relevant Conspiracy Theories," but you cannot tag them as "Accurate" without the claim being challengeable and debunkable through external DDR.
 
 ### 3. The "Post-Truth" Apathy
 
 **Attack:** Users don't care about truth; they want dopamine.
-**Defense:** **Feature, not Bug.** The protocol is middleware. It provides the "Truth Supply Chain." If a consumer app wants to sell truth (like The Economist), we enable it. We don't force users to eat their vegetables, but we label the junk food.
+**Defense:** The protocol is middleware. It provides the truth supply chain. If a consumer app wants to sell truth, the protocol enables it. The protocol does not force users to consume verified content, but it labels the unverified content for interfaces that choose to use it.
 
 ### 4. The "Boring Dystopia" (Liquidity Crisis)
 
 **Attack:** Low-stakes lies will survive because no one bothers to challenge them.
-**Defense:** **Low Stake = Low Signal.** The Trust Score is `f(Stake, Time)`. An article with a $5 stake is treated as "Noise" by the interface, regardless of age. Apathy results in invisibility, not validation.
-
-### 5. The "Oracle Capture" (51% Attack)
-
-**Attack:** A billionaire buys 51% of Kleros tokens to force false verdicts.
-**Defense:** **Economic Suicide & Forking.** Buying 51% is prohibitively expensive (slippage). If successful, the token value collapses (attacker burns their own money). If they persist, the community forks to a new token, leaving the attacker ruling a dead chain.
+**Defense:** Low stake equals low signal. Confidence is continuous bond-time; there is no protocol-level dollar cutoff at which a claim becomes "noise." A low-bond claim carries weak evidence because little capital is at risk and, by Claim 1, the bond is too small to deter high-value deception. The blueprint confirms: "There is no protocol-level hard cutoff." Any fixed visibility threshold (such as the "$5 stake" interface illustration) is a downstream interface choice with no protocol guidance on where to draw that line, not a validated protocol constant.
 
 ### 6. The "Rich Get Richer"
 
 **Attack:** Competent curators accumulate all the capital, forming an oligarchy.
-**Defense:** **Utilitarian Efficiency.** We optimize for Truth Quality, not Curator Equality. If BlackRock is the best truth-checker, society benefits. Also, **Reputation as Capital** lowers the barrier for cash-poor experts.
+**Defense:** The design optimizes for truth quality, not curator equality. Curation uses pure stake-weighted drafting (d_i = s_i) with per-identity weight caps (10% of round weight). Permissionless pool creation allows alternative communities to form. The weight cap bounds per-identity influence within a single committee but does not prevent stake concentration across multiple protocol identities. Curator reputation has been eliminated entirely; no reputation-weighted mechanism influences drafting or scoring.
 
 ### 7. The "Chilling Effect" (Liability)
 
 **Attack:** Staking on truth exposes curators to libel lawsuits.
-**Defense:** **Pooled Staking.** Curators stake on a _Topic Pool_, not specific items. The protocol randomly drafts them (Jury Duty). This randomness creates "Herd Immunity" against targeted liability.
+**Defense:** Curators stake into topic pools and are randomly drafted into committees. This randomness creates herd immunity against targeted liability. The paper acknowledges this is a partial mitigation: pooled staking and random drafting do not establish immunity from targeted legal action.
 
 ### 8. The "Meta-Curation" Trap
 
 **Attack:** The Protocol is neutral, but the Interface (Wallet/App) re-centralizes control.
-**Defense:** **Middleware Resilience.** The Protocol provides the "Sanity Check." Users can always bypass a biased interface to check the raw chain. We provide the "Base Reality," even if apps tint it.
+**Defense:** The protocol provides canonical on-chain state. Users can always bypass a biased interface to check the raw protocol data. Multiple interfaces can coexist; interface centralization is addressed by the explicit protocol-interface separation in the architecture.
 
 ### 9. The "Deflationary Spiral" (No Yield in Peacetime)
 
 **Attack:** If there are no lies, there are no disputes, so curators leave.
-**Defense:** **Advertising as Proof of Truth.** Honest advertisers stake on their claims. This provides a constant stream of "Peacetime Yield" for curators (verifying commercial claims) even when political misinformation is low.
+**Defense:** Pool reward budgets are funded by pool creators and challenge taxes, providing a local reward floor for relevance rounds independent of dispute activity. Advertising staking (where honest advertisers bond claims) is presented in the paper as a plausible additional revenue source, but it is a speculative second instantiation: the paper explicitly states "this sketch does not constitute a full instantiation" (no quality decomposition, simulation, or deployment has been performed for advertising). If peacetime yield depends critically on advertising revenue, that dependency is an unvalidated assumption.
 
 ### 10. The "Toxic Content" Trap
 
 **Attack:** Permissionless publishing means hosting hate speech/illegal content.
-**Defense:** **Protocol vs. Interface.** The Protocol is the Internet (neutral pipe); the Interface is the Browser (filter). Interfaces can block toxic pools to comply with local laws without compromising global censorship resistance.
-
-### 11. The "Self-Fulfilling Prophecy" (Mediocrity)
-
-**Attack:** Jurors vote for "Consensus" (Conventional Wisdom), crushing nuanced/surprising truth.
-**Defense:** **The Lone Wolf Payoff.** A single expert can appeal against the herd. Each appeal raises stakes. If the expert wins the final ruling, they take the entire herd's stake. The threat of this "Jackpot" forces jurors to look beyond lazy consensus.
+**Defense:** The protocol is the neutral pipe; the interface is the filter. Interfaces can block toxic pools to comply with local laws without compromising the protocol's censorship resistance. The protocol-interface separation makes this architecturally explicit.
 
 ### 12. The "Context Collapse" (Epistemic Vacuum)
 
-**Attack:** Malicious authors submit technically true but misleadingly vague statements ("Prices rose 5%").
-**Defense:** **Vagueness = Rejection.** If a claim lacks necessary context (timeframe, definition) to be falsifiable, the protocol rejects it. The system enforces **Semantic Precision**. Authors must be hyper-specific ("US CPI rose 5% in Jan 2024") to get verified. Ambiguity is punished as severely as falsehood.
+**Attack:** Malicious authors submit technically true but misleadingly vague statements.
+**Defense:** Claims must be falsifiable and well-posed (timeframe, definitions, sources). Under-specified claims are rejectable via the `NonFalsifiable` challenge reason; ambiguity is punished as severely as falsehood. Structured claim templates and evidence policies enforce semantic precision at the pool level.
 
 ### 13. The "Frozen Truth" (Temporal Decay)
 
 **Attack:** Truth changes (e.g., science evolves), but the blockchain is immutable. The ledger becomes a graveyard of outdated facts.
-**Defense:** **Truth Decay = Profit Opportunity.** Validation is not a lifetime warranty. If a fact changes, the old claim becomes false. This creates a bounty opportunity for a Challenger to debunk it. Authors are incentivized to **withdraw** (un-stake) claims that are becoming obsolete to save their capital. The repository self-cleans: dead truths are eaten or withdrawn; only living truths remain staked.
+**Defense:** Validation is not a lifetime warranty. If a fact changes, the old claim becomes challengeable. This creates a bounty opportunity for a challenger to debunk it. Authors are incentivized to withdraw (un-stake) claims that are becoming obsolete to save their capital. Confidence only accumulates while bonded; withdrawn claims remain historical rather than active.
+
+### 15. "Consensus != Correctness" (Ambiguous Questions / Legal Semantics)
+
+**Attack:** In Schelling-style juries, voters maximize coherence with other voters, not truth. When questions are ambiguous or require domain expertise, the equilibrium can converge on a lazy or naive interpretation rather than the correct outcome.
+**Defense:** The system treats question design as first-class:
+
+1. **Semantic Precision / Claim Templates:** Claims must be falsifiable and well-posed (timeframe, definitions, sources). Under-specified claims are rejected/slashable via `NonFalsifiable` challenge reason instead of forcing jurors to guess.
+2. **Topic Pools + Stake-Weighted Drafting:** Curators are drafted from staked pools via stake-weighted lottery with per-identity weight caps. No reputation influences drafting or scoring; curation is entirely stake-driven.
+3. **External DDR Appeals:** If a lazy majority converges on the wrong outcome, appeals are handled entirely by the external DDR. The protocol does not implement its own escalating-stakes appeal ladder or any protocol-native "lone expert versus herd" jackpot.
+4. **Policy-defined Domains:** When a dispute is inherently normative (e.g., "what counts as X under policy"), jurors adjudicate policy compliance, not metaphysical truth.
+
+---
+
+## Section 2: Open Attack Vectors
+
+_These attacks are partially mitigated but not fully resolved. Each entry notes what the paper currently provides and what remains open._
+
+### 5. The "Oracle Capture" (DDR Capture)
+
+**Attack:** An adversary captures the external DDR provider (e.g., by acquiring a majority of DDR governance tokens) to force false verdicts on challenges.
+**Status:** Partially mitigated; explicitly acknowledged as outside validated claims. The paper's partial mitigations are economic arguments: acquiring a majority DDR stake is prohibitively expensive due to slippage, and success would collapse the token's value (economic suicide). If the community detects capture, it can fork to a new DDR provider. However, the paper explicitly states: "If the external court is captured, lazy, or inaccurate, the accuracy layer inherits that degradation." No quantitative market-cap threshold or slippage curve is provided. Fork defense requires community coordination under adversarial conditions, which is not analyzed. The paper does not model DDR capture cost. This threat is outside the paper's validated claims.
+
+### 11. The "Self-Fulfilling Prophecy" (Mediocrity)
+
+**Attack:** Curators vote for consensus (conventional wisdom), crushing nuanced or surprising truth.
+**Status:** Partially mitigated by structural mechanisms. Coherence-based slashing punishes lazy consensus when it diverges from well-informed signals: curators outside the |v_i - mu| <= K*sigma band lose stake, so an informed minority whose scores cluster near the true value can survive while a lazy majority drifts outside the band. However, the mechanism rewards convergence, not correctness; a coordinated but wrong consensus can still survive. Appeals against incorrect outcomes are delegated to external DDR. The protocol does not implement its own escalating-stakes appeal ladder or any protocol-native "lone expert versus herd" jackpot. The defense against mediocrity is structural (coherence game + DDR appeals), not a protocol-native escalation mechanism.
 
 ### 14. The "Attention Arbitrage" (Vampire Attack)
 
 **Attack:** Vampires scrape the verified data for free and monetize it with ads, paying nothing to the protocol. Stakers go bankrupt.
-**Defense:** **Curation as Public Infrastructure.** We accept this is a public good.
+**Status:** No protocol-level defense exists against free-riding scrapers. The protocol produces a public good; verified data is freely readable from on-chain state. Sustainability depends on external funding sources: pool creator budgets, challenge tax revenue, potential public goods funding, and advertising revenue. The viability of these funding sources is assumed but not demonstrated. The paper concedes the attack ("curation as public infrastructure") and reframes it: if a scraper distributes verified content widely, it serves the protocol's information quality mission even if it contributes nothing economically. This is an honest concession, not a defense.
 
-1.  **The Truth Automata:** We built a machine that efficiently converts Funding → Truth. Philanthropists, NGOs, and States will fund this just as they fund Wikipedia or clean water.
-2.  **Vampires are Distributors:** If a Vampire site distributes our truth to 100M people, they are helping us win the information war.
-3.  **Sustainability:** The system is funded by a mix of "Advertiser Staking" (commercial utility) and "Public Funding" (social utility). We don't need to capture all the value; we just need to fund the machine.
+### OV-1. Off-Chain Collusion Above the Colluding-Bloc Threshold
 
-### 15. "Consensus ≠ Correctness" (Ambiguous Questions / Legal Semantics)
+**Attack:** Curators coordinate off-chain to align their scores, shifting the weighted mean toward a biased target. Honest reporters then fall outside the coherence band and are slashed while dishonest reporters survive.
+**Status:** Partially mitigated. Commit-reveal prevents direct vote copying. Per-identity weight caps limit individual influence. E2-Adv characterizes the collusion threshold empirically: at K=1.25 with 15-member committees, the mechanism degrades visibly when the colluding fraction exceeds approximately 0.15 to 0.20. Below this threshold, small colluding minorities cause limited damage. Above it, coordinated blocs can bend the signal and preserve their own stake. The design narrows the attack surface but does not eliminate it. Off-chain coordination that does not require explicit vote exchange (e.g., tacit agreements to "all vote 0.9") is not detectable by commit-reveal.
 
-**Attack:** In Schelling-style juries (and many prediction market resolution systems), voters maximize _coherence_ with other voters, not truth. When questions are ambiguous or require domain expertise (legal definitions, subtle semantics), the equilibrium can converge on a lazy or naive interpretation rather than the correct outcome.
-**Defense:** The system must treat _question design_ as first-class:
+### OV-2. Legal Pressure Against Visible Participants
 
-1.  **Semantic Precision / Claim Templates:** Claims must be falsifiable and well-posed (timeframe, definitions, sources). Under-specified claims are rejected/slashable instead of forcing jurors to guess.
-2.  **Topic Pools + Reputation:** Jurors are drawn from staked pools and reputation-weighted over time, creating decentralized pre-selection without a central gatekeeper.
-3.  **Appeals + Lone Wolf Payoff:** If a lazy majority converges on the wrong interpretation, expert minorities can profitably appeal; higher stakes attract more expertise (high-court effect).
-4.  **Policy-defined Domains:** When a dispute is inherently normative (e.g., “what counts as X under policy”), jurors adjudicate _policy compliance_, not metaphysical truth.
+**Attack:** Governments or litigants target visible stakers, pool creators, or interface operators with legal action (libel suits, regulatory enforcement) to suppress participation.
+**Status:** Partially mitigated. Pooled staking and random drafting reduce individual targeting surface for curators. Interface redundancy means shutting down one frontend does not destroy the protocol. However, the paper explicitly acknowledges: "Pooled staking and random drafting do not establish immunity from targeted legal action." Authors who bond claims are publicly visible and directly targetable. Pool creators and interface operators face jurisdiction-specific legal exposure that the protocol cannot eliminate. This is an operational deployment constraint, not a protocol-solvable problem.
 
----
+### OV-3. Pool-Policy Degeneracy
 
-## ⚠️ Section 2: Open Attack Vectors
+**Attack:** Permissionless pool creation means anyone can create pools with degenerate policies (trivially satisfiable relevance criteria, adversarial templates, or policies designed to extract stake from honest curators).
+**Status:** Partially mitigated by competitive selection. The paper's defense is structural: bad pools lose users to better-curated alternatives, just as bad newspapers lose readers. Interfaces filter which pools to feature, warn about, or ignore. However, competitive selection requires sufficient pool alternatives and low switching costs. The blueprint identifies residual switching frictions (reputation lock-in, funder coordination, round-cycle capital commitment) that may slow this dynamic. No governance mechanism prevents degenerate pool creation; the defense is purely market-based.
 
-_No open vectors currently tracked. Add new attacks here as they come up._
+### OV-4. Coordinated Capture Above the Colluding-Bloc Threshold
+
+**Attack:** A well-funded adversary acquires enough stake across multiple identities to exceed the colluding-bloc threshold in targeted pools, systematically distorting relevance scores.
+**Status:** Partially mitigated. Per-identity weight caps (10% of round weight) force the adversary to acquire multiple identities. The same collusion threshold described in OV-1 applies, but this vector differs in attack surface: a funded adversary can manufacture the required identities rather than relying on organic coordination. The paper does not model the cost of acquiring the required stake fraction in specific pools or the cost of maintaining Sybil identities. The per-identity weight cap limits influence per protocol identity only; it is not a Sybil-resistance guarantee.
+
+### OV-5. DDR Capture / Degradation
+
+**Attack:** The external DDR provider degrades in quality (lazy jurors, inaccurate rulings, slow resolution) without being fully captured, causing the accuracy layer to inherit that degradation.
+**Status:** Acknowledged as an inherited dependency. Attack #5 covers the full-capture scenario; this entry addresses gradual degradation. The protocol delegates accuracy adjudication to external DDR as a deliberate modular choice. The tradeoff is direct: the accuracy layer's quality ceiling is bounded by DDR quality. Gradual degradation (as opposed to outright capture) may be harder to detect and harder to justify a fork over, since the community must distinguish DDR laziness from genuinely difficult cases. The paper does not model detection thresholds for DDR quality decline or the coordination cost of migrating to an alternative DDR provider.
+
+### OV-6. Cold Start / Bootstrap
+
+**Attack:** New pools need readers, challengers, curators, and budget simultaneously. Without a critical mass of participants, the mechanisms cannot function: no challengers means false claims survive, no curators means no relevance scoring, no budget means no relevance round rewards.
+**Status:** Partially mitigated by local pool economics. Pool creators seed local reward budgets. Interfaces can ignore inactive pools. The paper makes bootstrap requirements explicit rather than hiding them behind protocol-wide governance. However, the cold-start problem is real: a pool must attract sufficient participation before the economic incentives become self-sustaining. The paper does not provide a bootstrap protocol or quantify the minimum viable participation threshold. The complete end-state design has not been deployed; Truth Post 2023 validated only a partial predecessor and did not bootstrap sustained usage.
