@@ -23,7 +23,7 @@ This paper proposes, as a working hypothesis, that many information-heavy coordi
 
 The protocol design reflects that decomposition. Accuracy is handled through bonded publication, open challenges, and external decentralized dispute resolution. Relevance is handled through drafted curator rounds under a public policy, with coherence-based rewards and slashing. Confidence is accumulated bond-time rather than a truth label. Author reputation acts as a slow-moving non-monetary bond. Pool creation is permissionless, contracts are treated as immutable, and governance is minimized by design: we prefer no need for governance over good governance.
 
-Truth Post, launched in 2023, implemented the accuracy layer only. The deployment failed to bootstrap sustained participation, but it proved the submission-and-challenge flow functions on-chain, and the bootstrapping failure drove the complete redesign presented here. Redesigned simulations in this paper show that debunking false claims is economically attractive under reasonable juror accuracy, that drafted-curator relevance rounds filter competence while remaining vulnerable above a concrete collusion threshold, and that author reputation as a standing bond creates useful separation between honest and dishonest publishers without reintroducing reputation-weighted voting.
+Truth Post, launched in 2023, implemented the accuracy layer only. Public on-chain activity remained sparse, which is enough to classify the deployment as an unsuccessful bootstrap but not enough to identify a single cause. The deployment still showed that a live bonded-publication system could be launched on-chain, and the experience motivated the redesign presented here. Redesigned simulations in this paper show that debunking false claims is economically attractive under reasonable juror accuracy, that drafted-curator relevance rounds filter competence while remaining vulnerable above a concrete collusion threshold, and that author reputation as a standing bond creates useful separation between honest and dishonest publishers without reintroducing reputation-weighted voting.
 
 This paper addresses only the information-to-knowledge transformation. Coordination given trusted shared knowledge is out of scope.
 
@@ -62,7 +62,7 @@ This paper contributes:
 - **A general framework for trustless decentralized curation.** The framework is a method for identifying when decentralized curation is feasible and how to decompose the mechanism. This paper fully instantiates it for news (with mechanism design, simulation, and partial deployment) and sketches a second application to advertising; broader generality is a design goal, not a demonstrated property.
 - **A complete end-state protocol architecture for Truth Post.** The design separates accuracy from relevance, distinguishes on-chain canonical state from replaceable interfaces, makes pool creation permissionless, and treats contracts as immutable with cross-version coexistence rather than in-place upgrades.
 - **A simulation-based evaluation program.** The experiments test the economic viability of challenge-based accuracy verification, the filtering power and collusion resistance of drafted-curator relevance rounds, and the separating effect of author reputation as a standing bond.
-- **A deployment retrospective.** Truth Post (2023) demonstrated the on-chain submission-and-challenge flow and revealed the bootstrapping conditions the current design must satisfy.
+- **A deployment retrospective.** Truth Post (2023) produced a live partial deployment of the accuracy layer and revealed the bootstrapping conditions the current design must satisfy.
 
 # A General Framework For Trustless Decentralized Curation
 
@@ -200,7 +200,7 @@ The accuracy mechanism is a bonded publication and challenge system (@fig-claim-
 2. The item enters `Live` status immediately and remains challengeable while bonded. Authors may adjust their bond while live, subject to a pool-scoped grace period; the old bond rate continues for confidence accrual and challenge pricing until the adjustment takes effect.
 3. A challenger may file one active challenge at a time against a specific proposition inside the item, with queued challenges allowed behind it. Challenges may also be filed against claims in `PendingEdit` or `WithdrawPending` states, targeting the last finalized revision.
 4. The challenger pays a counter-stake (`max(pool minimum, bond/4)`), a challenge tax (a pool-configurable percentage of the pinned bond), and the external DDR fee. Each challenge is pinned to the challenged revision, manifest CID, and bond at filing time, so later edits or bond changes do not alter the dispute target or payout basis. For queued challenges, the counter-stake, tax, and DDR fee remain in escrow until activation; tax is credited to the pool budget only on activation.
-5. The dispute goes to external DDR with a binary question: should the challenge succeed?
+5. The dispute goes to external DDR with a binary question: should the challenge succeed? Appeals, if any, are handled entirely by the external DDR. The protocol does not implement its own escalating-stakes appeal ladder or any protocol-native "lone expert versus herd" jackpot.
 6. If the challenge succeeds, the item moves to `Closed` with adjudication outcome `Debunked`, and the bond is transferred according to the payout rules. If the challenge fails, the item returns to its pre-challenge operational state.
 
 The protocol supports four typed challenge reasons, none of which is a separate final verdict. All yield `Debunked` on success:
@@ -261,6 +261,8 @@ The semantics are simple:
 
 An interface may use confidence for ranking or display, but it must not conflate confidence with a universal truth claim. Confidence measures accumulated capital risk exposure over time, not community validation or endorsement. The scrutiny signal is survival: a `Live` item that has survived an explicit challenge attempt carries stronger evidence of accuracy than one that has simply accumulated bond-time without being tested. @fig-confidence-reputation illustrates these dynamics.
 
+There is therefore no protocol-level dollar cutoff at which a claim becomes "noise." Confidence is continuous. A low-bond claim simply carries weak evidence because little capital is at risk and, by Claim 1, the bond is too small to deter high-value deception unless it exceeds the value at stake. Interfaces may impose additional visibility thresholds, but those thresholds are downstream product policy rather than validated protocol constants.
+
 ## Reputation
 
 The current design uses a single reputation system:
@@ -281,7 +283,7 @@ Challenge tax is paid by the challenger and routed to the challenged pool's rewa
 
 # Equilibrium Analysis
 
-This section formalizes the equilibrium properties of the protocol's core mechanisms. The analysis identifies conditions under which honest strategies are rational for each actor type, and characterizes the boundaries where honest behavior ceases to be a best response.
+This section develops stylized equilibrium claims for the protocol's core mechanisms. The algebra below derives threshold conditions in simplified expected-value models, but the labeled claims are not presented as formal theorems with full proofs. They should be read as model-based conditions under which honest strategies are rational, and as markers for where those conditions can fail.
 
 ## Author's strategy
 
@@ -297,9 +299,11 @@ $$
 B^* = V \cdot \frac{1 - p_{\text{detect}} \cdot P_{\text{maj}}}{p_{\text{detect}} \cdot P_{\text{maj}}}
 $$
 
-**Proposition 1.** *For any value $V$ that a surviving false claim generates, honest authoring is strictly preferred when the bond exceeds $B^*$. At the representative parameters ($p_{\text{detect}} = 0.35$, $P_{\text{maj}}(0.80, 5) \approx 0.94$), $B^* \approx 2.0V$: the bond must exceed roughly twice the value derived from a surviving false claim.*
+**Claim 1.** *For any value $V$ that a surviving false claim generates, honest authoring is strictly preferred when the bond exceeds $B^*$. At the illustrative representative parameters ($p_{\text{detect}} = 0.35$, $P_{\text{maj}}(0.80, 5) \approx 0.94$), $B^* \approx 2.0V$: the bond must exceed roughly twice the value derived from a surviving false claim.*
 
 The design consequence is direct: bond size must be calibrated to the value at stake. Low-bond items carry low confidence for exactly this reason; the bond is insufficient to deter high-value deception.
+
+The key qualifier is that this paper does not estimate $p_{\text{detect}}$ empirically. The value $p_{\text{detect}} = 0.35$ is a working detection-coverage assumption used to anchor the examples, not a calibrated fact about challenger behavior. Holding jury quality fixed at $p=0.80$ and $N=5$, the deterrence threshold is highly sensitive to this term: $B^*/V \approx 9.6$ at $p_{\text{detect}}=0.10$, $2.0$ at $0.35$, and $1.1$ at $0.50$. Detection coverage is therefore a first-order viability condition for the accuracy layer, not a secondary nuisance parameter.
 
 ## Challenger's entry decision
 
@@ -315,7 +319,7 @@ $$
 \beta > \beta^* = \frac{e}{p_{\text{detect|examined}} \cdot \text{EV}_{\text{false}}}
 $$
 
-**Proposition 2.** *Challenger entry is rational only when the false-claim base rate $\beta$ exceeds $\beta^*$. Below this threshold, no rational agent searches, and the system enters a no-challenge equilibrium. This is not a protocol failure when $\beta$ is genuinely low: a pool with few false claims does not need active challengers. The risk is that $\beta$ rises undetected because no one is looking.*
+**Claim 2.** *Challenger entry is rational only when the false-claim base rate $\beta$ exceeds $\beta^*$. Below this threshold, no rational agent searches, and the system enters a no-challenge equilibrium. This is not a protocol failure when $\beta$ is genuinely low: a pool with few false claims does not need active challengers. The risk is that $\beta$ rises undetected because no one is looking.*
 
 The free-rider dimension compounds this problem [@groves1977freeriderproblem]. A challenger who debunks a false claim produces a public good (a cleaner pool), but bears the full search cost privately. Challenge rewards partially internalize this externality, but the first-mover disadvantage in search remains: rational challengers wait for others to search first.
 
@@ -323,7 +327,7 @@ The free-rider dimension compounds this problem [@groves1977freeriderproblem]. A
 
 The coherence game requires curators to independently report relevance scores in $[0, 1]$. Under commit-reveal, curators cannot observe others' votes before committing. Each curator $i$ has a private signal $\theta_i$ about the true relevance $r$ and forms a belief about the distribution of others' signals. Here $r$ denotes the latent relevance value implied by the pool policy, $\theta_i$ denotes curator $i$'s noisy private estimate of that value, $K$ is the coherence-threshold multiplier from the slashing rule, and $\phi^*$ denotes the largest colluding stake fraction under which honest reporting remains stable.
 
-**Proposition 3.** *Under the coherence mechanism with commit-reveal, honest reporting is a Bayesian Nash equilibrium when the following conditions hold simultaneously:*
+**Claim 3.** *Under the coherence mechanism with commit-reveal, honest reporting is a Bayesian Nash equilibrium when the following conditions hold simultaneously:*
 
 *(i) The curation policy is specific enough that all competent curators' private signals $\theta_i$ are distributed around the true relevance $r$ with bounded variance.*
 
@@ -343,7 +347,7 @@ The theoretical structure of the escape deserves scrutiny. For single-peaked pre
 
 The system requires authors, challengers, and curators. Each faces a participation decision against an outside option of doing nothing.
 
-**Proposition 4.** *A participation equilibrium exists when:*
+**Claim 4.** *A participation equilibrium exists when:*
 
 *(i) Author entry: honest authors' expected returns (confidence accumulation, reputation) exceed the opportunity cost of bonded capital.*
 
@@ -359,9 +363,9 @@ This cyclical risk is bounded in practice. Some challengers are motivated beyond
 
 Truth Post launched in 2023 as a partial instantiation of the framework. It implemented the accuracy layer only: authors could submit bonded items, challengers could dispute them, and disputes were routed through Kleros. It did **not** implement the current end-state relevance layer, curator pool, local reward-budget design, multi-interface architecture, or full confidence and reputation system.
 
-The deployment failed to bootstrap sustained usage. That failure matters because it established three things.
+Public on-chain activity remained sparse. As of April 9, 2026, the deployed contract's public Etherscan page listed 16 total transactions, including five article initializations, three bounty increases, three withdrawal initiations, three withdrawals, one ownership transfer, and one admin change, with no visible challenge transaction. That pattern is enough to say the deployment did not bootstrap sustained usage. It is not enough to identify a single cause.
 
-First, the bonded-publication and open-challenge flow is deployable on existing infrastructure. Second, accuracy alone is not enough to make the system interesting. People do not come to a curation system to verify boring truths; they come to find what matters. Third, a decentralized protocol with a single fragile frontend is not actually robust.
+The limited evidence still established three narrower things. First, the bonded-publication architecture and Kleros-routed dispute path were deployable on existing infrastructure. Second, the MVP omitted major parts of the end-state design, especially relevance curation and interface redundancy, so it could not test the full thesis. Third, a decentralized protocol with a single fragile frontend is not actually robust.
 
 Truth Post therefore does not validate the whole system. It validates that this work has already crossed the boundary from abstract idea to deployment, failure, and redesign.
 
@@ -408,8 +412,8 @@ The evaluation suite is designed to test the current protocol architecture rathe
 
 - When is it economically rational to challenge false claims?
 - How robust is drafted-curator relevance curation to noise and collusion?
-- Does a dedicated `NonFalsifiable` challenge reason materially improve outcomes?
-- Does author reputation as a standing bond create useful separation between honest and dishonest publishers?
+- What follows if a dedicated `NonFalsifiable` challenge reason materially improves adjudication accuracy on otherwise non-falsifiable claims?
+- Does author reputation as a standing bond create useful separation between honest and dishonest publishers, and does pool scoping prevent credibility earned in one pool from carrying into another?
 
 {{< include analysis/out/eval_summary.md >}}
 
@@ -421,21 +425,25 @@ $$
 \mathrm{EV}_{\mathrm{false}} = P_{\mathrm{maj}}(p, N)\cdot(B - \tau - f) + (1-P_{\mathrm{maj}}(p, N))\cdot(-S - \tau - f)
 $$
 
-Figure @fig-e1-ev shows that challenger EV becomes strongly positive across the tested stake-to-bounty ratios once juror accuracy moves into plausible territory. Figure @fig-e1-survival shows the corresponding false-claim survival probability after a single detection window.
+This quantity is conditional on a challenger having already found a false claim worth disputing. In the present reduced-form model, $p_{\text{detect}}$ does not enter $\mathrm{EV}_{\mathrm{false}}$ directly because detection determines whether a challenge opportunity materializes at all, not the payoff of a known debunking case once filed.
 
-![E1: Challenger expected value on a debunking challenge as juror accuracy varies, for four stake-to-bounty ratios. Challenge tax and DDR fees are included as sunk challenger costs.](analysis/fig/e1_challenger_ev.png){#fig-e1-ev}
+Figure @fig-e1-ev shows that conditional challenger EV becomes strongly positive across the tested stake-to-bounty ratios once juror accuracy moves into plausible territory. Figure @fig-e1-survival shows the corresponding false-claim survival probability after a single detection window under the illustrative $p_{\text{detect}}=0.35$ assumption. Each plotted point is estimated from 100 seeded batches of repeated challenge windows; the resulting bands quantify stochastic execution noise in the simulated challenge process, not uncertainty about the closed-form incentive equations themselves. Figure @fig-e1-detect-sensitivity then sweeps detection coverage directly at the representative jury point.
 
-![E1: False-claim survival probability after one detection-and-challenge window.](analysis/fig/e1_false_survival.png){#fig-e1-survival}
+![E1: Challenger expected value on a debunking challenge as juror accuracy varies, for four stake-to-bounty ratios. Challenge tax and DDR fees are included as sunk challenger costs. Bands show 95% confidence intervals over 100 seeds.](analysis/fig/e1_challenger_ev.png){#fig-e1-ev}
 
-At the representative point used in the summary, a false-claim challenge at $p=0.80$, $N=5$, and $S/B=0.25$ yields roughly $0.87\times$ bounty expected value for the challenger while false-claim survival remains approximately 0.67 after one window. The survival number is not an indictment of the mechanism; it shows that the dominant bottleneck is detection coverage, not jury math alone.
+![E1: False-claim survival probability after one detection-and-challenge window. Bands show 95% confidence intervals over 100 seeds.](analysis/fig/e1_false_survival.png){#fig-e1-survival}
+
+![E1: Sensitivity of single-window false-claim survival and required deterrence bond $B^*/V$ to the reduced-form detection parameter $p_{\text{detect}}$, holding $p=0.80$ and $N=5$ fixed. The dashed line marks the illustrative representative value $p_{\text{detect}}=0.35$.](analysis/fig/e1_detection_sensitivity.png){#fig-e1-detect-sensitivity}
+
+At the illustrative representative point used in the summary, a false-claim challenge at $p=0.80$, $N=5$, and $S/B=0.25$ yields roughly $0.87\times$ bounty expected value for the challenger while false-claim survival remains approximately 0.67 after one window. That 0.67 survival rate is conditional on the assumed $p_{\text{detect}}=0.35$; it is not a calibrated forecast. Figure @fig-e1-detect-sensitivity shows the dependence directly: at the same jury point, lowering $p_{\text{detect}}$ to 0.10 raises survival to about 0.91 and the deterrence threshold to about $9.6V$, while raising $p_{\text{detect}}$ to 0.50 lowers survival to about 0.53 and the threshold to about $1.1V$. Detection coverage, not jury math alone, is therefore the first-order viability condition.
 
 In practice, $p$ varies by claim difficulty: straightforward factual claims are easier to adjudicate than nuanced or context-dependent ones. The commit-reveal protocol enforces vote secrecy during the commitment phase, preventing direct vote-copying, but does not guarantee epistemic independence: jurors who share information sources, follow the same public commentary, or coordinate off-chain will have positively correlated signals. The $P_{\text{maj}}$ formula assumes independent juror accuracy, so it may overestimate panel correctness when signal correlation is high. The sweep across $p$ values partially compensates by letting the reader assess performance at lower effective accuracy levels, which can be interpreted as a proxy for correlated-signal regimes.
 
-Bond size is itself the incentive for scrutiny. High-bond items attract challengers because the potential reward justifies the investigation cost; low-bond items attract less scrutiny but also carry proportionally less confidence. In this sense, $p_{\text{detect}}$ is not fully exogenous: it scales with bond size, since larger rewards draw more attention. Items that receive insufficient scrutiny also accumulate insufficient confidence, making the two signals coherent.
+Bond size is itself the incentive for scrutiny. High-bond items attract challengers because the potential reward justifies the investigation cost; low-bond items attract less scrutiny but also carry proportionally less confidence. In this sense, $p_{\text{detect}}$ is not fully exogenous: it scales with bond size, since larger rewards draw more attention. The current paper does not endogenize that mapping; it treats $p_{\text{detect}}$ as a reduced-form coverage parameter and tests sensitivity rather than claiming empirical calibration. Items that receive insufficient scrutiny also accumulate insufficient confidence, making the two signals coherent.
 
 ### E1-Adv: repeated false-claim attacks
 
-Single-claim economics are insufficient. A real adversary can submit many false claims. E1-Adv therefore simulates a well-funded attacker submitting 50 false items under varying juror accuracy.
+Single-claim economics are insufficient. A real adversary can submit many false claims. E1-Adv therefore simulates a well-funded attacker submitting 50 false items under varying juror accuracy, holding the same illustrative $p_{\text{detect}}=0.35$ assumption fixed.
 
 ![E1-Adv: Survival rate and adversary cumulative balance across 50 repeated false-claim attacks. Error bars show 95% confidence intervals over 100 seeds.](analysis/fig/e1_adversarial.png){#fig-e1-adv}
 
@@ -463,14 +471,31 @@ The mechanism behaves as expected: small colluding minorities cause limited dama
 
 An earlier version of this manuscript evaluated a third verdict label for ambiguous claims. The current design is different. A non-falsifiable or badly specified proposition should not receive its own truth-status output; it should be challengeable, and a successful challenge should debunk the item.
 
-E3 therefore compares two regimes:
+E3 is not a stochastic simulation like E1, E2, or E4. It is a closed-form scenario analysis that isolates one design question: what happens if non-falsifiable bad items are forced through ordinary binary adjudication rather than given a dedicated `NonFalsifiable` challenge reason?
 
-- a baseline that forces binary adjudication even when the challenged proposition is non-falsifiable
-- a defended system with a dedicated `NonFalsifiable` challenge reason
+Let $f$ denote the share of bad items that are non-falsifiable, let $P_{\mathrm{maj}}(p, N)$ denote majority correctness for a jury of size $N$ with per-juror correctness $p$, let $p_{\mathrm{false}}$ denote juror accuracy on ordinary false claims, let $p_{\mathrm{binary}}$ denote juror accuracy when a non-falsifiable proposition is nevertheless forced into binary adjudication, and let $p_{\mathrm{NF}}$ denote juror accuracy when the same proposition can be challenged under a dedicated `NonFalsifiable` reason. Then bad-item retention is:
 
-![E3: Bad-item retention as the share of non-falsifiable bad items rises. The defended system uses a dedicated `NonFalsifiable` challenge reason instead of forcing binary adjudication.](analysis/fig/e3_nonfalsifiable.png){#fig-e3}
+$$
+R_{\mathrm{binary}}(f) = (1-f)\left[1 - P_{\mathrm{maj}}(p_{\mathrm{false}}, N)\right] + f\left[1 - P_{\mathrm{maj}}(p_{\mathrm{binary}}, N)\right]
+$$
 
-The difference is material. At 25% non-falsifiable prevalence, bad-item retention falls from 0.12 to 0.03. That is the right way to understand falsifiability in this protocol: as a precondition for mechanism viability, not as a philosophical embellishment. E3 is a parametric sensitivity analysis: the magnitude of improvement is proportional to the assumed accuracy advantage of the `NonFalsifiable` challenge reason over forced binary adjudication.
+$$
+R_{\mathrm{NF}}(f) = (1-f)\left[1 - P_{\mathrm{maj}}(p_{\mathrm{false}}, N)\right] + f\left[1 - P_{\mathrm{maj}}(p_{\mathrm{NF}}, N)\right]
+$$
+
+The retention reduction is therefore:
+
+$$
+R_{\mathrm{binary}}(f) - R_{\mathrm{NF}}(f) = f \left[P_{\mathrm{maj}}(p_{\mathrm{NF}}, N) - P_{\mathrm{maj}}(p_{\mathrm{binary}}, N)\right]
+$$
+
+The point of E3 is exactly this dependency structure. The benefit scales linearly with two assumptions: how often bad items are non-falsifiable, and how much a dedicated challenge reason improves adjudication accuracy on that subset.
+
+![E3: Closed-form scenario analysis. The black line holds dedicated-reason adjudication at $p=0.85$ and varies the forced-binary accuracy assumption for non-falsifiable claims.](analysis/fig/e3_nonfalsifiable.png){#fig-e3}
+
+Figure @fig-e3 makes the what-if nature explicit. The defended line fixes $p_{\mathrm{false}} = p_{\mathrm{NF}} = 0.85$ and then varies the forced-binary assumption for the non-falsifiable subset. At 25% non-falsifiable prevalence, bad-item retention is 0.12 under the pessimistic illustrative case $p_{\mathrm{binary}} = 0.55$, 0.08 at $p_{\mathrm{binary}} = 0.65$, and 0.05 at $p_{\mathrm{binary}} = 0.75$, versus 0.03 with the dedicated reason. If forced binary adjudication were already as accurate as the dedicated reason, the benefit would collapse to zero.
+
+That is the correct interpretation of falsifiability in this protocol. E3 does not establish that the true accuracy gap is 0.30, or even that a gap of this magnitude exists in practice. It shows the consequence of such a gap if it exists. The empirical size of the gap remains uncertain and should be estimated from live DDR case data or from a dedicated adjudication experiment. The design claim defended here is therefore narrower: forcing non-falsifiable propositions into a binary court can be costly, and the cost grows directly with both prevalence and adjudication difficulty.
 
 ## E4: Author reputation after the redesign
 
@@ -478,11 +503,31 @@ The reputation redesign is one of the biggest differences between the current pr
 
 ### E4a: author reputation as a standing bond
 
-E4a models honest and dishonest authors under the current author-reputation rules: slow decay, small gains for publication that survives challenge, and large slashes for debunked publication.
+E4a models honest and dishonest authors under the current author-reputation rules: slow decay, small gains for publication that survives challenge, and large slashes for debunked publication. Unlike the earlier single-trajectory version, the current evaluation averages 100 seeds and varies the dishonest author's challenge-survival probability as a limited sensitivity check.
 
-![E4a: Median author reputation trajectories for honest and dishonest publishers over repeated publication rounds.](analysis/fig/e4a_author_reputation.png){#fig-e4a}
+![E4a: Left, median author reputation trajectories for honest and dishonest publishers, averaged over 100 seeds with 95% confidence bands. Right, final-round median reputation as dishonest challenge survival rises from 0.20 to 0.60, holding the rest of the author-reputation parameters fixed.](analysis/fig/e4a_author_reputation.png){#fig-e4a}
 
-The separation is strong. By round 120, honest authors accumulate meaningful reputation while dishonest authors remain near zero because repeated debunking keeps destroying their standing stock. That is the intended role of author reputation: a non-transferable, slowly earned credibility layer that is expensive to squander. The dishonest-author model uses fixed probabilities of challenge survival; a strategic adversary might adapt by publishing fewer but harder-to-challenge claims, trading volume for per-claim survival.
+Under the baseline assumptions, the separation is clear but now quantified with uncertainty. By round 120, honest authors accumulate substantial standing reputation while dishonest authors remain near zero because repeated debunking keeps destroying their standing stock. That is the intended role of author reputation in this design: a non-transferable, slowly earned credibility layer that is expensive to squander.
+
+The sensitivity sweep matters because the dishonest author's challenge-survival probability is the main load-bearing behavioral assumption in this toy model. As that probability rises from 0.20 to 0.60, dishonest reputation rises materially, but the gap from honest authors remains substantial over the tested range. This strengthens the claim that author reputation can separate persistently accurate from persistently inaccurate publishers under a wider range of assumptions than the original single run suggested. It does not eliminate the main limitation: the sweep varies one adversarial parameter while holding publication timing, claim selection, reward size, slash rate, and honest-author success fixed, so it is still not a full model of strategic adaptation.
+
+### E4b: counterfactual single-attacker reputation gaming
+
+The current protocol has no curator-reputation path to attack: drafting and voting are purely stake-driven. But the discarded reputation-weighted design is still worth stress-testing, because it clarifies why that design was removed. E4b therefore evaluates a counterfactual legacy committee in which one attacker begins with high inherited reputation (`rep_0 = 200`) against honest curators sitting near their steady-state reputation. The attacker then votes for 300 rounds under three behaviors: uniform random voting, a small coherent upward bias (`+0.15`), and a larger coherent upward bias (`+0.30`). Reputation decays at rate $\delta$ each round, and only votes that remain inside the same $K\sigma$ coherence band used elsewhere in the paper replenish reputation.
+
+The two tracked outcomes are the ones that matter for a reputation-gaming attack. First, how long does the attacker keep above-median committee weight despite no longer reporting honestly? Second, how much directional signal shift does the attacker induce relative to the honest-only committee mean? This is deliberately narrower than E2-Adv: E2-Adv studies coalition manipulation in the current stake-only design, whereas E4b asks whether a single reputation-rich curator would remain dangerous if reputation-weighted curation were reintroduced.
+
+![E4b: Counterfactual legacy reputation-weighted committee with one high-reputation attacker. Left: rounds in which the attacker keeps above-median committee weight across three reputation-decay rates. Right: mean directional shift induced relative to the honest-only committee mean. Error bars show 95% confidence intervals over 100 seeds.](analysis/fig/e4b_reputation_attack.png){#fig-e4b}
+
+The qualitative result is the one that matters for design. Faster decay reduces attacker persistence across all three variants, so $\delta$ still dominates the long-run cleanup rate. But a small coherent bias is harder to eject than a random attacker because it sometimes remains inside the coherence band and keeps replenishing reputation, while still inducing a persistent directional distortion. A larger bias shifts the signal more aggressively but also becomes easier to detect, so it does not survive as long as the subtler attacker. The right conclusion is not that the current protocol has a hidden E4b vulnerability. It is that the older reputation-weighted path would have created one, and the decision to remove curator reputation from drafting and voting was therefore structurally correct.
+
+### E4d: cross-domain reputation scoping
+
+The current design has no reputation-weighted curation, so the relevant cross-domain attack is narrower than in earlier drafts. The question is not whether imported reputation changes voting weight; it is whether reputation earned in an easy or low-stakes pool can be carried into a different pool and appear there as misleading publisher credibility context. E4d therefore models two pools. In Pool L, the attacker behaves honestly for 80 rounds and accumulates author reputation. In Pool H, the attacker then publishes dishonest claims for 40 rounds while locally honest Pool H authors continue publishing. The scoped condition resets the attacker's Pool H reputation to zero at entry. The unscoped condition imports the Pool L stock unchanged.
+
+![E4d: Cross-domain author reputation scoping. Left: attacker reputation in Pool H during the attack phase. Right: attacker share of Pool H author reputation, which matters only as interface-level credibility context because curation weight remains purely stake-driven. Error bands show 95% confidence intervals over 200 seeds.](analysis/fig/e4d_cross_domain_scoping.png){#fig-e4d}
+
+The result is clean. When reputation is pool-scoped, the attacker enters Pool H with no imported credibility and can acquire visibility there only from Pool H outcomes. When transfer is allowed, the attacker arrives with a large stock of borrowed reputation from Pool L, and that stock briefly gives the attacker a meaningful share of the author-reputation context visible in Pool H even while the attacker is behaving dishonestly there. In the representative summary, the first 10 attack rounds show a substantial gap between the unscoped and scoped conditions, but the imported advantage burns off after repeated debunking in roughly ten rounds. That means decay and slashing eventually erase the carryover, but only after a window in which interfaces could display credibility that was earned in the wrong domain. On the current design, pool scoping eliminates that cross-domain carryover entirely. The residual risk is local rather than cross-domain: a dishonest author can still accumulate some Pool H reputation if some Pool H claims survive challenge, but that happens in both conditions and is not reputation laundering from another pool.
 
 # Boundary Conditions And Open Problems
 
@@ -495,6 +540,8 @@ No live deployment yet validates the complete design. Truth Post validated only 
 ## Inherited dependencies
 
 The protocol delegates accuracy adjudication to an external DDR layer. That is a deliberate modular choice: the design reuses an existing court rather than solving decentralized dispute resolution from first principles inside the protocol itself. The tradeoff is direct. If the external court is captured, lazy, or inaccurate, the accuracy layer inherits that degradation.
+
+This paper does not model the token-market cost of capturing the external court or the economics of forking away from a captured court. Any claim that external DDR capture is uneconomic depends on provider-specific market capitalization, circulating float, liquidity, and attacker budget, and is therefore outside the paper's validated claims.
 
 The relevance layer has a parallel boundary. Drafting uncertainty, stake-only round weight, weight caps, and slashing make collusive distortion harder and costlier, but they do not eliminate it. Sufficiently large coordinated blocs can still bend relevance signals.
 
@@ -510,7 +557,7 @@ The same locality applies to policy quality and bootstrap. The coherence game wo
 
 Immutable contracts avoid one class of governance risk, but they require explicit migration discipline. New versions must coexist with old ones, and interfaces must aggregate across versions when continuity matters.
 
-Scalability, structured claim authoring, challenge participation, legal exposure, and interface discoverability are all still practical deployment constraints. They do not undercut the conceptual framework, but they do determine whether a specified protocol becomes a robust live system.
+Scalability, structured claim authoring, challenge participation, legal exposure, and interface discoverability are all still practical deployment constraints. Pooled staking and random drafting do not establish immunity from targeted legal action. They do not undercut the conceptual framework, but they do determine whether a specified protocol becomes a robust live system.
 
 # Conclusion
 
@@ -520,7 +567,7 @@ The paper contributes a general framework for trustless decentralized curation a
 
 The current Truth Post design reflects a clear architectural stance: permissionless pools, immutable contracts, minimal governance, explicit protocol-interface separation, local pool economics, confidence as bond-time rather than truth label, author reputation as a standing non-monetary bond, typed challenge reasons (`NonFalsifiable`, `ScopeViolation`, `TemplateViolation`), bond adjustment with grace period, flat evidence items aligned with the external DDR, and challenge pinning to the exact revision and bond at filing time.
 
-The evaluation results are informative and bounded. Debunking false claims can be economically rational. Drafted-curator relevance rounds filter competence while remaining vulnerable above a concrete collusion threshold. Dedicated `NonFalsifiable` challenges materially reduce bad-item retention. Author reputation as a standing bond creates useful separation between honest and dishonest publishers without reintroducing reputation-weighted voting.
+The evaluation results are informative and bounded. Debunking false claims can be economically rational. Drafted-curator relevance rounds filter competence while remaining vulnerable above a concrete collusion threshold. The E3 scenario analysis shows that dedicated `NonFalsifiable` challenges can materially reduce bad-item retention if they produce a real adjudication-accuracy advantage over forced binary treatment. Author reputation as a standing bond creates useful separation under the tested range without reintroducing reputation-weighted voting, and pool scoping prevents cross-pool carryover by construction.
 
 Truth Post 2023 matters because it moved this work beyond pure speculation. The complete system is not yet deployed, but the end-state design is now specified, stress-tested, and conceptually cleaner than the MVP that preceded it.
 

@@ -98,6 +98,18 @@ Challenge tax is a pool-configurable parameter, not a single global constant. Th
 | Round reward floor | 0.01 ETH equivalent from pool reward budget |
 | Protocol grace period | 7 days (604,800 seconds) |
 
+### Parameter Status And Calibration Limits
+
+These defaults are reference-deployment starting points, not empirically validated optima. The table above exists so an initial Truth Post news pool can be implemented and analyzed end to end. It should not be read as claiming that the listed values have already passed formal calibration or joint sensitivity analysis.
+
+The parameter families also have different justification levels. Challenge-friction parameters such as the counter-stake, challenge tax, and failed-challenge payout split are partially grounded by the later deterrence arithmetic in this blueprint: under the stated assumptions, raising challenger cost improves frivolous-challenge deterrence but also makes legitimate correction harder, while lowering challenger cost does the reverse. That supports only directional claims under those assumptions. It does not identify a robust optimum across heterogeneous claim values, bond sizes, or DDR fee regimes.
+
+Relevance-game parameters such as coherence threshold `K`, curator slash rates, the leak multiplier, `flatRoundStdDevMin`, the round reward floor, and the per-identity weight cap are currently calibration placeholders. Their intended role is clear: values that are too low weaken discipline against incoherent, concentrated, or low-effort curation, while values that are too high risk curator non-participation, excessive round cancellation, or overly conservative scoring. The blueprint does not yet provide a formal equilibrium analysis or simulation sweep for this parameter family.
+
+Reputation parameters such as decay, successful-defense reward, and bust slash are likewise placeholders for how much long-run publisher history should matter relative to single-claim outcomes. If set too low, reputation becomes mostly cosmetic; if set too high, a small number of outcomes can dominate future participation. Their interaction with posting frequency, pool migration, and heterogeneous author quality remains unvalidated.
+
+Accordingly, the strongest justified claim at present is narrow: these are coherent starting defaults for a reference Truth Post news pool, sufficient to specify an implementable mechanism and to support the later illustrative calculations, but not sufficient to claim robustness or optimality. Before treating them as validated economics, the design still needs at least three kinds of sensitivity work: one-at-a-time sweeps for the challenge, relevance, and reputation parameter families; joint sweeps for coupled parameters such as counter-stake/tax/payout split, `K`/slash rate/`flatRoundStdDevMin`, and reputation decay/reward/slash size; and adversarial tests covering suppression, low-participation rounds, and stake concentration.
+
 ## System Overview
 
 Truth Post has two independent but connected outputs:
@@ -754,7 +766,7 @@ Transitions are driven by the DDR adapter. Truth Post MUST mirror the authoritat
 
 - If the eligible curator set is smaller than `minRevealQuorum`, the round is cancelled before drafting, nobody is slashed, and the claim keeps its previous relevance score if one exists.
 - If the round is drafted but revealed participation ends below `minRevealQuorum`, drafted curators who failed to commit or reveal MUST be slashed as non-participants, but no curator reward MUST be paid and no new relevance score MUST be produced. Non-participation slashes from such a cancelled round MUST be credited to the pool reward budget. Pre-reveal leak slashes, if any, MUST still be paid to the reporter per the leak-report payout rules and MUST NOT be redirected to the pool budget. A replacement round is scheduled at the next cadence.
-- If the round reaches reveal but `stdDev < pool.flatRoundStdDevMin`, the round is cancelled as degenerate, no relevance score update occurs, and no round reward is paid. Design note: a round with `stdDev` below `flatRoundStdDevMin` MAY reflect genuine consensus rather than collusion or low-information voting. The protocol intentionally treats such rounds as non-informative for scoring and rewards: no relevance score update occurs, no round reward is paid, and a later round with a different draft is expected to test whether that consensus persists. More broadly, the coherence mechanism assumes that a pool's relevance policy is specific enough to anchor curator signals near a defensible ground truth. If all curators share the same bias, they will converge on a wrong answer and be rewarded. The hypothesized defense is competitive pool selection: if biased curation produces bad feeds, users migrate to better pools, and the biased pool loses relevance. The protocol does not prevent bad curation within a pool; the design intention is that bad curation remains pool-local rather than protocol-global. Note: the master paper source (paper.qmd) currently describes pool switching as "costless"; this blueprint's analysis identifies switching costs (reputation lock-in, funder coordination, round-cycle lock-in) that qualify that assumption. The two documents should be reconciled when the paper is next revised.
+- If the round reaches reveal but `stdDev < pool.flatRoundStdDevMin`, the round is cancelled as degenerate, no relevance score update occurs, and no round reward is paid. Design note: this check detects only low dispersion in revealed scores. A round with `stdDev` below `flatRoundStdDevMin` MAY reflect genuine consensus, tacit collusion, explicit coordination on a common score, or low-information herding; the threshold does not identify which of those mechanisms produced the flat round. Conversely, coordinated voting that keeps `stdDev` just above the threshold is not caught by this check and proceeds to ordinary coherence scoring. The protocol intentionally treats low-dispersion rounds as non-informative for scoring and rewards: no relevance score update occurs and no round reward is paid. This creates a known residual failure mode: if a claim repeatedly elicits honest near-unanimity, later rounds may also be cancelled, leaving the claim on its previous relevance score indefinitely, or unscored indefinitely if no prior finalized round exists. A later round with a different draft can test whether that consensus persists across drafted cohorts, but repeated agreement still does not establish correctness. The current blueprint does not specify an escape hatch for repeated degenerate rounds. The reference value `flatRoundStdDevMin = 0.02` is therefore a provisional heuristic, not an empirically justified separator; validating or replacing it requires measuring honest-vote variance across round sizes, pool policies, and claim types. More broadly, the coherence mechanism assumes that a pool's relevance policy is specific enough to anchor curator signals near a defensible ground truth. If all curators share the same bias, they will converge on a wrong answer and be rewarded. The hypothesized defense is competitive pool selection: if biased curation produces bad feeds, users migrate to better pools, and the biased pool loses relevance. The protocol does not prevent bad curation within a pool; the design intention is that bad curation remains pool-local rather than protocol-global. Note: the master paper source (paper.qmd) currently describes pool switching as "costless"; this blueprint's analysis identifies switching costs (reputation lock-in, funder coordination, round-cycle lock-in) that qualify that assumption. The two documents should be reconciled when the paper is next revised.
 
 This hypothesis has not been empirically validated. Several well-documented dynamics in platform economics could prevent pool competition from functioning as described:
 
@@ -762,6 +774,8 @@ This hypothesis has not been empirically validated. Several well-documented dyna
 - **Network effects**: the first pool with sufficient curators and content may dominate regardless of quality, because authors go where curators are and curators go where claims are. This winner-take-most dynamic is common in two-sided platforms and does not require the winning pool to be the highest-quality one.
 - **Switching costs**: curators who have staked capital face a lockup period before they can exit; authors who have accumulated confidence on claims in one pool lose that history if they repost in another. These frictions slow migration even when quality differences are recognized.
 - **Coordination failure**: migration requires multiple actors (curators, authors, sponsors) to move roughly simultaneously for a new pool to be viable. Individual exit does not automatically solve this collective action problem (see the analogous analysis of pool migration friction in the RPGF design document).
+
+Competitive pool selection should therefore be read as a conditional hypothesis, not as an intrinsic correction mechanism. It can discipline within-pool bias only if users can observe persistent quality differences, at least one funded alternative pool for the same domain exists, and authors, curators, and sponsors can coordinate migration before incumbency and network effects entrench the biased pool. If those conditions do not hold, the coherence game remains a consensus mechanism without an internal path from consensus to correctness.
 
 Empirical signals that would indicate whether pool competition is functioning: measurable user migration from pools with demonstrably biased feeds, successful bootstrapping of competing pools in the same topic domain, and declining curator participation in pools whose feeds diverge from verifiable ground truth. Until these signals are observed, the protocol should be understood as relying on an untested market mechanism for its primary defense against within-pool bias.
 
@@ -862,13 +876,17 @@ Design note:
 - linear bonded stake-time is intentional
 - confidence measures accumulated capital-at-risk exposure, not accuracy or credibility; the absence of challenge is not evidence of accuracy and may reflect insufficient scrutiny
 - `feedScore` uses confidence as a weight because higher-bond, longer-lived claims have been more exposed to potential challenge, not because they are more likely to be true
-- a large bond does not by itself buy main-feed dominance because main-feed ranking still multiplies confidence by curator-produced relevance
+- a large bond is not by itself sufficient for main-feed dominance at a single moment because main-feed ranking still multiplies confidence by curator-produced relevance
+- however, linear non-decaying confidence does create incumbency pressure: older high-bond claims can accumulate durable percentile advantages over newer claims
+- this blueprint does not yet justify stronger claims about steady-state newcomer catch-up, percentile compression, or long-run feed churn under realistic claim arrival and withdrawal rates
 
 Display logic:
 
 - indexers compute `confidencePercentile` within each active pool
 - interfaces display both `C_raw` and percentile
 - the default Truth Post frontend uses percentile in ranking and raw score in detail pages
+
+There is no protocol-level hard cutoff such as "$5 = noise." Low-bond claims simply sit lower in the pool's confidence distribution and therefore contribute weakly to feed ranking unless they also earn high relevance. Any fixed visibility cutoff is an interface choice, not a protocol constant.
 
 ### Flow D: Challenge, Dispute, Appeals, Finality
 
@@ -915,7 +933,7 @@ Default payout rule (suggested; requires empirical calibration; all amounts refe
   - 20% of challenger counter-stake is credited to the challenged pool reward budget
   - DDR fee is not refunded by Truth Post
 
-The 80/20 split between author reward and pool budget contribution is a suggested starting point. No sensitivity analysis has been conducted on this ratio.
+The 80/20 split between author reward and pool budget contribution is a suggested starting point. No sensitivity analysis has been conducted on this ratio; see Parameter Status And Calibration Limits above for the current epistemic status of this default.
 
 ### Flow E: Pooled Staking And Curator Eligibility
 
@@ -990,6 +1008,9 @@ sigma = sqrt(sum(w_i * (v_i - mu)^2 for i in V) / W)
    - no new relevance score is produced
    - no round reward is paid
    - a replacement round is scheduled at the next cadence
+
+This condition records low dispersion only. It does not distinguish honest consensus from collusion or low-information voting, and it does not detect coordinated voting that keeps `sigma` above the threshold. The current design also accepts that repeated degenerate cancellations can indefinitely delay score formation for claims that reliably produce honest low-variance votes. Whether a fixed `flatRoundStdDevMin = 0.02` is useful across different reveal counts, pool policies, and claim types remains an empirical calibration question.
+
 14. Otherwise, a curator is coherent iff:
 
 ```text
@@ -1140,7 +1161,7 @@ Update rule:
 - a final DDR ruling of `ChallengeFailed` adds `pool.authorChallengeFailedRepReward`; suggested default is `+1`
 - a final DDR ruling of `Debunked` applies `pool.authorBustSlashBps`; suggested default is `50%`
 
-No sensitivity analysis has been conducted on the decay, reward, or slash parameters. These values should be treated as initial calibration targets.
+No sensitivity analysis has been conducted on the decay, reward, or slash parameters. These values should be treated as initial calibration targets; see Parameter Status And Calibration Limits above.
 
 Rules:
 
@@ -1302,6 +1323,8 @@ The initial complete build MUST use immutable contracts. Protocol changes MUST r
 
 The initial complete build assumes Kleros v1 as the external DDR provider. The `ChallengeManager` contract MUST implement the `IArbitrable` interface.
 
+This blueprint does not model the market cost of capturing the external DDR token or the economics of community forking after capture. Claims about capture resistance therefore remain conditional on provider-specific liquidity, circulating float, and attacker budget, and MUST NOT be treated as protocol-level guarantees.
+
 ### Required Adapter Interface
 
 The `ChallengeManager` MUST:
@@ -1344,6 +1367,8 @@ Interfaces SHOULD label forfeiture outcomes distinctly (e.g., "debunked by forfe
 
 Appeal funding follows the DDR provider's native crowdfunding mechanism. Any address MAY fund either side. The protocol MUST NOT add its own appeal layer on top of the DDR's appeal mechanics.
 
+Accordingly, the protocol does not implement an internal escalating-stakes appeal ladder. Any "lone expert versus herd" payoff exists only if it is supplied by the external DDR's native appeal rules; it is not a Truth Post mechanism and is not analyzed here as one.
+
 ## Migration And Version Coexistence
 
 Immutability means deployments coexist. It does not mean old state disappears.
@@ -1376,3 +1401,4 @@ Default migration semantics:
 - Whether the external DDR should remain Kleros v1 indefinitely or later be replaced by a custom adapter-compatible court or a newer Kleros version.
 - Whether future interfaces should expose additional feed formulas beyond `relevanceScore * confidencePercentile`.
 - Exact percentile algorithm, active-set definition, and tie handling for cross-indexer consistency in `confidencePercentile` computation.
+- Whether linear, non-decaying confidence accumulation creates an unacceptable long-run entrenchment effect for older claims, and if so what bounded or alternative weighting scheme would preserve exposure-to-challenge semantics without freezing newcomer competition.

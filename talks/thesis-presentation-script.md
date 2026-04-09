@@ -8,7 +8,7 @@ My thesis is simple to state and difficult to ignore:
 
 many information-heavy coordination problems are, at root, curation problems.
 
-For a long time, the bottleneck of civilization was access to information. Information was trapped in libraries, universities, archives, and institutions. The internet changed that. Today we have access to far more information than almost any generation before us. But that did not automatically make us wiser. It did not automatically make us more coordinated. It did not automatically make our institutions healthier.
+For a long time, a major bottleneck in collective decision-making was access to information. Information was trapped in libraries, universities, archives, and institutions. The internet changed that. Today we have access to far more information than almost any generation before us. But that did not automatically make us wiser. It did not automatically make us more coordinated. It did not automatically make our institutions healthier.
 
 Why not?
 
@@ -136,7 +136,7 @@ That means the volume of credible-looking information is increasing faster than 
 
 So we are entering a world of information abundance and knowledge scarcity.
 
-And that is why I say curation is not a side problem. It is becoming the bottleneck of civilization.
+And that is why I say curation is not a side problem. It is becoming the central bottleneck in collective decision-making.
 
 If we do not solve the transformation from information into knowledge, then improvements in generation, storage, and access only deepen the overload.
 
@@ -199,7 +199,7 @@ And fifth, the framework is designed to generalize, though this remains a hypoth
 
 To show that this is a general framework rather than a news-only theory, consider advertising.
 
-Advertising is one of the strongest second use cases because it is structurally wasteful. It is a negative-sum competition for attention. Participants keep spending resources until the contest reaches its feasibility limit.
+Advertising is one of the strongest second use cases because it is structurally wasteful. In that sense, it can resemble a negative-sum competition for attention. Participants keep spending resources until the contest reaches its feasibility limit.
 
 That is why, in my own notes, I compare it to Bitcoin mining, water overconsumption, and arms races. These are different domains, but the same structure appears: participants consume slack resources until the game becomes infeasible.
 
@@ -241,13 +241,13 @@ I am claiming that the right way to structure it is:
 
 problem definition, use case selection, quality identification, falsifiability, and mechanism design dimension by dimension.
 
-And I am claiming that Truth Post is the most advanced implementation example of this framework so far, not because it is finished, but because it already moved from theory into deployment, failure, and redesign.
+And I am claiming that Truth Post is a concrete implementation example of this framework, not because it is finished, but because it already moved from theory into deployment, failure, and redesign.
 
 ## Closing
 
 So if I reduce the thesis to one sentence, it is this:
 
-the bottleneck is not information access anymore; the bottleneck is curation.
+the bottleneck is not information access anymore; the bottleneck is curation in collective decision-making.
 
 And if I reduce the contribution to one sentence, it is this:
 

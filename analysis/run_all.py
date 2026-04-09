@@ -68,6 +68,17 @@ def majority_correct_probability(n_jurors: int, p_juror_correct: float) -> float
     return prob
 
 
+def false_claim_survival_probability(p_detect: float, p_majority: float) -> float:
+    return (1 - p_detect) + p_detect * (1 - p_majority)
+
+
+def bond_threshold_multiplier(p_detect: float, p_majority: float) -> float:
+    detection_success = p_detect * p_majority
+    if detection_success <= 0:
+        raise ValueError("p_detect * p_majority must be positive")
+    return (1 - detection_success) / detection_success
+
+
 def _truncate_0_1(x: np.ndarray) -> np.ndarray:
     return np.clip(x, 0.0, 1.0)
 
@@ -124,6 +135,42 @@ class E1Params:
     p_detect: float = 0.35
     challenge_tax_bps: float = 50.0
     ddr_fee: float = 5.0
+    n_seeds: int = 100
+    trials_per_seed: int = 2_000
+
+
+def _e1_single_run(params: E1Params, p: float, s_over_b: float, seed_idx: int) -> dict:
+    rng = np.random.default_rng(
+        seed_idx * 10_000 + int(round(1_000 * p)) + int(round(100 * s_over_b))
+    )
+    p_majority = majority_correct_probability(params.n_jurors, p)
+    b = params.bounty
+    s = b * s_over_b
+    sunk = b * params.challenge_tax_bps / 10_000.0 + params.ddr_fee
+
+    jury_correct = rng.random(params.trials_per_seed) < p_majority
+    detected = rng.random(params.trials_per_seed) < params.p_detect
+    challenged_correctly = rng.random(params.trials_per_seed) < p_majority
+
+    ev_false = np.where(jury_correct, b - sunk, -s - sunk)
+    ev_true = np.where(jury_correct, -s - sunk, b - sunk)
+    false_survival = np.where(detected, (~challenged_correctly).astype(float), 1.0)
+
+    return {
+        "ev_false": float(ev_false.mean()),
+        "ev_true": float(ev_true.mean()),
+        "false_survival": float(false_survival.mean()),
+    }
+
+
+@dataclass(frozen=True)
+class E1SensitivityParams:
+    n_jurors: int = 5
+    p_juror_correct: float = 0.80
+    representative_p_detect: float = 0.35
+    p_detect_min: float = 0.05
+    p_detect_max: float = 0.80
+    n_points: int = 76
 
 
 def run_e1(params: E1Params) -> None:
@@ -134,20 +181,29 @@ def run_e1(params: E1Params) -> None:
     for p in ps:
         p_majority = majority_correct_probability(params.n_jurors, float(p))
         for s_over_b in params.stake_ratios:
-            b = params.bounty
-            s = b * s_over_b
-            sunk = tax + params.ddr_fee
-            ev_false = p_majority * (b - sunk) + (1 - p_majority) * (-s - sunk)
-            ev_true = p_majority * (-s - sunk) + (1 - p_majority) * (b - sunk)
-            false_survival = (1 - params.p_detect) + params.p_detect * (1 - p_majority)
+            seed_results = [
+                _e1_single_run(params, float(p), float(s_over_b), seed_idx)
+                for seed_idx in range(params.n_seeds)
+            ]
+            ev_false = np.array([r["ev_false"] for r in seed_results])
+            ev_true = np.array([r["ev_true"] for r in seed_results])
+            false_survival = np.array([r["false_survival"] for r in seed_results])
             rows.append(
                 {
                     "p_juror_correct": float(p),
                     "p_majority_correct": float(p_majority),
                     "stake_over_bounty": float(s_over_b),
-                    "ev_false": float(ev_false),
-                    "ev_true": float(ev_true),
-                    "false_survival": float(false_survival),
+                    "n_seeds": params.n_seeds,
+                    "trials_per_seed": params.trials_per_seed,
+                    "ev_false_mean": float(ev_false.mean()),
+                    "ev_false_std": float(ev_false.std()),
+                    "ev_false_ci95": _ci95(ev_false),
+                    "ev_true_mean": float(ev_true.mean()),
+                    "ev_true_std": float(ev_true.std()),
+                    "ev_true_ci95": _ci95(ev_true),
+                    "false_survival_mean": float(false_survival.mean()),
+                    "false_survival_std": float(false_survival.std()),
+                    "false_survival_ci95": _ci95(false_survival),
                     "challenge_tax": float(tax),
                     "ddr_fee": float(params.ddr_fee),
                 }
@@ -161,14 +217,20 @@ def run_e1(params: E1Params) -> None:
         sub = df[df["stake_over_bounty"] == s_over_b]
         plt.plot(
             sub["p_juror_correct"],
-            sub["ev_false"] / params.bounty,
+            sub["ev_false_mean"] / params.bounty,
             label=f"S/B={s_over_b:g}",
+        )
+        plt.fill_between(
+            sub["p_juror_correct"],
+            (sub["ev_false_mean"] - sub["ev_false_ci95"]) / params.bounty,
+            (sub["ev_false_mean"] + sub["ev_false_ci95"]) / params.bounty,
+            alpha=0.15,
         )
     plt.axhline(0.0, color="black", linewidth=0.8)
     plt.xlabel("Per-juror correctness p")
     plt.ylabel("Challenger EV on debunking challenge (normalized by bounty)")
     plt.title(
-        f"E1: Debunking-challenge EV vs juror accuracy (N={params.n_jurors}, p_detect={params.p_detect:g})"
+        f"E1: Debunking-challenge EV vs juror accuracy ({params.n_seeds} seeds, 95% CI)"
     )
     plt.legend(frameon=False)
     plt.tight_layout()
@@ -178,14 +240,78 @@ def run_e1(params: E1Params) -> None:
     plt.figure(figsize=(7.0, 4.0))
     s_over_b = 0.25
     sub = df[df["stake_over_bounty"] == s_over_b]
-    plt.plot(sub["p_juror_correct"], sub["false_survival"])
+    plt.plot(sub["p_juror_correct"], sub["false_survival_mean"])
+    plt.fill_between(
+        sub["p_juror_correct"],
+        sub["false_survival_mean"] - sub["false_survival_ci95"],
+        sub["false_survival_mean"] + sub["false_survival_ci95"],
+        alpha=0.2,
+    )
     plt.xlabel("Per-juror correctness p")
     plt.ylabel("False-claim survival probability")
-    plt.title(f"E1: False-claim survival (S/B={s_over_b:g}, N={params.n_jurors})")
+    plt.title(
+        f"E1: False-claim survival (S/B={s_over_b:g}, {params.n_seeds} seeds, 95% CI)"
+    )
     plt.ylim(0.0, 1.0)
     plt.tight_layout()
     plt.savefig(FIG_DIR / "e1_false_survival.png", dpi=200)
     plt.close()
+
+
+def run_e1_detection_sensitivity(params: E1SensitivityParams) -> None:
+    p_majority = majority_correct_probability(params.n_jurors, params.p_juror_correct)
+    p_detect_values = np.linspace(params.p_detect_min, params.p_detect_max, params.n_points)
+    rows = []
+    for p_detect in p_detect_values:
+        rows.append(
+            {
+                "p_detect": float(p_detect),
+                "p_juror_correct": float(params.p_juror_correct),
+                "p_majority_correct": float(p_majority),
+                "false_survival": float(
+                    false_claim_survival_probability(float(p_detect), p_majority)
+                ),
+                "bond_threshold_multiplier": float(
+                    bond_threshold_multiplier(float(p_detect), p_majority)
+                ),
+            }
+        )
+
+    df = pd.DataFrame(rows)
+    df.to_csv(OUT_DIR / "e1_detection_sensitivity.csv", index=False)
+
+    fig, axes = plt.subplots(1, 2, figsize=(9.0, 4.0), sharex=True)
+
+    axes[0].plot(df["p_detect"], df["false_survival"], color="#1f77b4")
+    axes[0].axvline(
+        params.representative_p_detect,
+        color="black",
+        linestyle="--",
+        linewidth=0.8,
+    )
+    axes[0].set_xlabel("Detection probability p_detect")
+    axes[0].set_ylabel("False-claim survival probability")
+    axes[0].set_ylim(0.0, 1.0)
+    axes[0].set_title("Single-window survival")
+
+    axes[1].plot(df["p_detect"], df["bond_threshold_multiplier"], color="#d62728")
+    axes[1].axvline(
+        params.representative_p_detect,
+        color="black",
+        linestyle="--",
+        linewidth=0.8,
+    )
+    axes[1].set_xlabel("Detection probability p_detect")
+    axes[1].set_ylabel("Required bond multiple B*/V")
+    axes[1].set_ylim(0.0, df["bond_threshold_multiplier"].max() * 1.05)
+    axes[1].set_title("Deterrence threshold")
+
+    fig.suptitle(
+        f"E1: Sensitivity to detection coverage at p={params.p_juror_correct:.2f}, N={params.n_jurors}"
+    )
+    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.95))
+    fig.savefig(FIG_DIR / "e1_detection_sensitivity.png", dpi=200)
+    plt.close(fig)
 
 
 @dataclass(frozen=True)
@@ -473,12 +599,16 @@ def run_e2(params: E2Params) -> None:
                     "K": float(k),
                     "n_seeds": params.n_seeds,
                     "mean_abs_error_mean": float(errors.mean()),
+                    "mean_abs_error_std": float(errors.std()),
                     "mean_abs_error_ci95": _ci95(errors),
                     "cancelled_round_share_mean": float(cancelled.mean()),
+                    "cancelled_round_share_std": float(cancelled.std()),
                     "cancelled_round_share_ci95": _ci95(cancelled),
                     "final_competent_stake_share_mean": float(stakes.mean()),
+                    "final_competent_stake_share_std": float(stakes.std()),
                     "final_competent_stake_share_ci95": _ci95(stakes),
                     "competent_draft_share_mean": float(draft.mean()),
+                    "competent_draft_share_std": float(draft.std()),
                     "competent_draft_share_ci95": _ci95(draft),
                 }
             )
@@ -688,60 +818,101 @@ def run_e2_adversarial(params: E2AdvParams) -> None:
 class E3Params:
     n_jurors: int = 5
     p_false_claim_juror_correct: float = 0.85
-    p_nonfalsifiable_binary_juror_correct: float = 0.55
     p_nonfalsifiable_reason_juror_correct: float = 0.85
-    nonfalsifiable_fracs: tuple[float, ...] = (0.0, 0.10, 0.25, 0.50)
+    forced_binary_juror_correct_scenarios: tuple[float, ...] = (0.55, 0.65, 0.75, 0.85)
+    nonfalsifiable_fracs: tuple[float, ...] = (
+        0.0,
+        0.05,
+        0.10,
+        0.15,
+        0.20,
+        0.25,
+        0.30,
+        0.35,
+        0.40,
+        0.45,
+        0.50,
+    )
+
+
+def _e3_bad_item_retention(
+    nonfalsifiable_frac: float,
+    p_major_false: float,
+    p_major_nonfalsifiable: float,
+) -> float:
+    return (1 - nonfalsifiable_frac) * (1 - p_major_false) + nonfalsifiable_frac * (
+        1 - p_major_nonfalsifiable
+    )
 
 
 def run_e3(params: E3Params) -> None:
     p_major_false = majority_correct_probability(
         params.n_jurors, params.p_false_claim_juror_correct
     )
-    p_major_nf_baseline = majority_correct_probability(
-        params.n_jurors, params.p_nonfalsifiable_binary_juror_correct
-    )
     p_major_nf_defended = majority_correct_probability(
         params.n_jurors, params.p_nonfalsifiable_reason_juror_correct
     )
 
     rows: list[dict] = []
-    for frac in params.nonfalsifiable_fracs:
-        baseline_retention = (1 - frac) * (1 - p_major_false) + frac * (
-            1 - p_major_nf_baseline
+    for forced_binary_p in params.forced_binary_juror_correct_scenarios:
+        p_major_nf_baseline = majority_correct_probability(
+            params.n_jurors, forced_binary_p
         )
-        defended_retention = (1 - frac) * (1 - p_major_false) + frac * (
-            1 - p_major_nf_defended
-        )
-        rows.append(
-            {
-                "nonfalsifiable_frac": float(frac),
-                "baseline_bad_item_retention": float(baseline_retention),
-                "defended_bad_item_retention": float(defended_retention),
-                "p_major_nf_baseline": float(p_major_nf_baseline),
-                "p_major_nf_defended": float(p_major_nf_defended),
-            }
-        )
+        for frac in params.nonfalsifiable_fracs:
+            baseline_retention = _e3_bad_item_retention(
+                frac, p_major_false, p_major_nf_baseline
+            )
+            defended_retention = _e3_bad_item_retention(
+                frac, p_major_false, p_major_nf_defended
+            )
+            rows.append(
+                {
+                    "nonfalsifiable_frac": float(frac),
+                    "forced_binary_juror_correct": float(forced_binary_p),
+                    "baseline_bad_item_retention": float(baseline_retention),
+                    "defended_bad_item_retention": float(defended_retention),
+                    "retention_reduction": float(
+                        baseline_retention - defended_retention
+                    ),
+                    "p_major_false": float(p_major_false),
+                    "p_major_nf_baseline": float(p_major_nf_baseline),
+                    "p_major_nf_defended": float(p_major_nf_defended),
+                }
+            )
 
     df = pd.DataFrame(rows)
     df.to_csv(OUT_DIR / "e3_results.csv", index=False)
 
     plt.figure(figsize=(7.0, 4.0))
-    plt.plot(
-        df["nonfalsifiable_frac"],
-        df["baseline_bad_item_retention"],
-        marker="o",
-        label="baseline (forced binary adjudication)",
+    defended = (
+        df[df["forced_binary_juror_correct"] == params.forced_binary_juror_correct_scenarios[0]]
+        .sort_values("nonfalsifiable_frac")
+        .copy()
     )
+    for forced_binary_p in params.forced_binary_juror_correct_scenarios:
+        sub = (
+            df[df["forced_binary_juror_correct"] == forced_binary_p]
+            .sort_values("nonfalsifiable_frac")
+            .copy()
+        )
+        plt.plot(
+            sub["nonfalsifiable_frac"],
+            sub["baseline_bad_item_retention"],
+            marker="o",
+            label=f"forced binary baseline (p={forced_binary_p:.2f})",
+        )
     plt.plot(
-        df["nonfalsifiable_frac"],
-        df["defended_bad_item_retention"],
+        defended["nonfalsifiable_frac"],
+        defended["defended_bad_item_retention"],
         marker="o",
-        label="defended (NonFalsifiable challenge reason)",
+        linewidth=2.2,
+        color="black",
+        label=f"dedicated reason (p={params.p_nonfalsifiable_reason_juror_correct:.2f})",
     )
     plt.xlabel("Fraction of non-falsifiable bad items")
     plt.ylabel("Bad-item retention after challenge")
-    plt.title("E3: Non-falsifiable challenges reduce bad-item retention")
-    plt.legend(frameon=False)
+    plt.title("E3: Closed-form scenario analysis for non-falsifiable challenges")
+    plt.legend(frameon=False, fontsize=8)
     plt.ylim(0.0, 1.0)
     plt.tight_layout()
     plt.savefig(FIG_DIR / "e3_nonfalsifiable.png", dpi=200)
@@ -757,57 +928,584 @@ def run_e3(params: E3Params) -> None:
 class E4aParams:
     n_authors: int = 200
     rounds: int = 120
+    n_seeds: int = 100
     honest_frac: float = 0.6
     honest_challenge_failed_prob: float = 0.85
     dishonest_challenge_failed_prob: float = 0.20
+    dishonest_challenge_failed_grid: tuple[float, ...] = (0.20, 0.30, 0.40, 0.50, 0.60)
     rep_reward: float = 1.0
     bust_slash_rate: float = 0.50
     rep_decay: float = 0.01
 
 
-def run_e4a(params: E4aParams) -> None:
+def _e4a_single_run(
+    params: E4aParams, dishonest_challenge_failed_prob: float, seed_idx: int
+) -> dict[str, np.ndarray]:
     n_honest = int(round(params.n_authors * params.honest_frac))
     author_type = np.array([0] * n_honest + [1] * (params.n_authors - n_honest), dtype=int)
     honest_mask = author_type == 0
     dishonest_mask = author_type == 1
+    probs = np.where(
+        honest_mask,
+        params.honest_challenge_failed_prob,
+        dishonest_challenge_failed_prob,
+    ).astype(float)
 
+    rng = np.random.default_rng(seed_idx)
     rep = np.zeros(params.n_authors, dtype=float)
-    rows: list[dict] = []
+    honest_median = np.zeros(params.rounds, dtype=float)
+    dishonest_median = np.zeros(params.rounds, dtype=float)
+    honest_mean = np.zeros(params.rounds, dtype=float)
+    dishonest_mean = np.zeros(params.rounds, dtype=float)
 
-    for round_idx in range(1, params.rounds + 1):
-        honest_success = np.full(honest_mask.sum(), params.honest_challenge_failed_prob)
-        dishonest_success = np.full(
-            dishonest_mask.sum(), params.dishonest_challenge_failed_prob
-        )
-        probs = np.concatenate([honest_success, dishonest_success])
-        outcomes = np.random.default_rng(round_idx).random(params.n_authors) < probs
-
+    for round_idx in range(params.rounds):
+        outcomes = rng.random(params.n_authors) < probs
         rep[outcomes] += params.rep_reward
         rep[~outcomes] *= 1.0 - params.bust_slash_rate
         rep *= 1.0 - params.rep_decay
 
-        rows.append(
+        honest_median[round_idx] = float(np.median(rep[honest_mask]))
+        dishonest_median[round_idx] = float(np.median(rep[dishonest_mask]))
+        honest_mean[round_idx] = float(rep[honest_mask].mean())
+        dishonest_mean[round_idx] = float(rep[dishonest_mask].mean())
+
+    return {
+        "honest_median_rep": honest_median,
+        "dishonest_median_rep": dishonest_median,
+        "honest_mean_rep": honest_mean,
+        "dishonest_mean_rep": dishonest_mean,
+    }
+
+
+def run_e4a(params: E4aParams) -> None:
+    baseline_runs = [
+        _e4a_single_run(params, params.dishonest_challenge_failed_prob, seed_idx)
+        for seed_idx in range(params.n_seeds)
+    ]
+    honest_median = np.vstack([run["honest_median_rep"] for run in baseline_runs])
+    dishonest_median = np.vstack([run["dishonest_median_rep"] for run in baseline_runs])
+    honest_mean = np.vstack([run["honest_mean_rep"] for run in baseline_runs])
+    dishonest_mean = np.vstack([run["dishonest_mean_rep"] for run in baseline_runs])
+
+    df = pd.DataFrame(
+        {
+            "round": np.arange(1, params.rounds + 1),
+            "n_seeds": params.n_seeds,
+            "dishonest_challenge_failed_prob": params.dishonest_challenge_failed_prob,
+            "honest_median_rep_mean": honest_median.mean(axis=0),
+            "honest_median_rep_ci95": [_ci95(honest_median[:, i]) for i in range(params.rounds)],
+            "dishonest_median_rep_mean": dishonest_median.mean(axis=0),
+            "dishonest_median_rep_ci95": [
+                _ci95(dishonest_median[:, i]) for i in range(params.rounds)
+            ],
+            "honest_mean_rep_mean": honest_mean.mean(axis=0),
+            "honest_mean_rep_ci95": [_ci95(honest_mean[:, i]) for i in range(params.rounds)],
+            "dishonest_mean_rep_mean": dishonest_mean.mean(axis=0),
+            "dishonest_mean_rep_ci95": [
+                _ci95(dishonest_mean[:, i]) for i in range(params.rounds)
+            ],
+        }
+    )
+    df.to_csv(OUT_DIR / "e4a_author_reputation.csv", index=False)
+
+    sensitivity_rows: list[dict] = []
+    for dishonest_prob in params.dishonest_challenge_failed_grid:
+        runs = [
+            _e4a_single_run(params, dishonest_prob, seed_idx)
+            for seed_idx in range(params.n_seeds)
+        ]
+        honest_final = np.array([run["honest_median_rep"][-1] for run in runs], dtype=float)
+        dishonest_final = np.array(
+            [run["dishonest_median_rep"][-1] for run in runs], dtype=float
+        )
+        gap = honest_final - dishonest_final
+        sensitivity_rows.append(
             {
-                "round": round_idx,
-                "honest_median_rep": float(np.median(rep[honest_mask])),
-                "dishonest_median_rep": float(np.median(rep[dishonest_mask])),
-                "honest_mean_rep": float(rep[honest_mask].mean()),
-                "dishonest_mean_rep": float(rep[dishonest_mask].mean()),
+                "dishonest_challenge_failed_prob": dishonest_prob,
+                "n_seeds": params.n_seeds,
+                "honest_final_median_rep_mean": float(honest_final.mean()),
+                "honest_final_median_rep_ci95": _ci95(honest_final),
+                "dishonest_final_median_rep_mean": float(dishonest_final.mean()),
+                "dishonest_final_median_rep_ci95": _ci95(dishonest_final),
+                "median_gap_mean": float(gap.mean()),
+                "median_gap_ci95": _ci95(gap),
             }
         )
 
-    df = pd.DataFrame(rows)
-    df.to_csv(OUT_DIR / "e4a_author_reputation.csv", index=False)
+    sensitivity = pd.DataFrame(sensitivity_rows)
+    sensitivity.to_csv(OUT_DIR / "e4a_author_reputation_sensitivity.csv", index=False)
 
-    plt.figure(figsize=(7.0, 4.0))
-    plt.plot(df["round"], df["honest_median_rep"], label="honest authors")
-    plt.plot(df["round"], df["dishonest_median_rep"], label="dishonest authors")
-    plt.xlabel("Publication rounds")
-    plt.ylabel("Median author reputation")
-    plt.title("E4a: Author reputation separates honest and dishonest publishers")
-    plt.legend(frameon=False)
+    plt.figure(figsize=(11.0, 4.0))
+    ax1 = plt.subplot(1, 2, 1)
+    ax1.plot(df["round"], df["honest_median_rep_mean"], label="honest authors")
+    ax1.fill_between(
+        df["round"],
+        df["honest_median_rep_mean"] - df["honest_median_rep_ci95"],
+        df["honest_median_rep_mean"] + df["honest_median_rep_ci95"],
+        alpha=0.2,
+    )
+    ax1.plot(df["round"], df["dishonest_median_rep_mean"], label="dishonest authors")
+    ax1.fill_between(
+        df["round"],
+        df["dishonest_median_rep_mean"] - df["dishonest_median_rep_ci95"],
+        df["dishonest_median_rep_mean"] + df["dishonest_median_rep_ci95"],
+        alpha=0.2,
+    )
+    ax1.set_xlabel("Publication rounds")
+    ax1.set_ylabel("Median author reputation")
+    ax1.set_title("Baseline trajectories")
+    ax1.legend(frameon=False)
+
+    ax2 = plt.subplot(1, 2, 2)
+    ax2.plot(
+        sensitivity["dishonest_challenge_failed_prob"],
+        sensitivity["honest_final_median_rep_mean"],
+        label="honest authors",
+    )
+    ax2.fill_between(
+        sensitivity["dishonest_challenge_failed_prob"],
+        sensitivity["honest_final_median_rep_mean"]
+        - sensitivity["honest_final_median_rep_ci95"],
+        sensitivity["honest_final_median_rep_mean"]
+        + sensitivity["honest_final_median_rep_ci95"],
+        alpha=0.2,
+    )
+    ax2.plot(
+        sensitivity["dishonest_challenge_failed_prob"],
+        sensitivity["dishonest_final_median_rep_mean"],
+        label="dishonest authors",
+    )
+    ax2.fill_between(
+        sensitivity["dishonest_challenge_failed_prob"],
+        sensitivity["dishonest_final_median_rep_mean"]
+        - sensitivity["dishonest_final_median_rep_ci95"],
+        sensitivity["dishonest_final_median_rep_mean"]
+        + sensitivity["dishonest_final_median_rep_ci95"],
+        alpha=0.2,
+    )
+    ax2.axvline(
+        params.dishonest_challenge_failed_prob,
+        color="0.4",
+        linestyle="--",
+        linewidth=1.0,
+    )
+    ax2.set_xlabel("Dishonest challenge-survival probability")
+    ax2.set_ylabel("Final-round median reputation")
+    ax2.set_title("Sensitivity to harder-to-challenge false claims")
+
+    plt.suptitle("E4a: Author reputation as a standing bond", y=1.02)
     plt.tight_layout()
     plt.savefig(FIG_DIR / "e4a_author_reputation.png", dpi=200)
+    plt.close()
+
+
+@dataclass(frozen=True)
+class E4dParams:
+    build_rounds: int = 80
+    attack_rounds: int = 40
+    n_local_honest_authors: int = 50
+    low_stakes_honest_success_prob: float = 0.95
+    high_stakes_honest_success_prob: float = 0.85
+    high_stakes_attacker_success_prob: float = 0.20
+    rep_reward: float = 1.0
+    bust_slash_rate: float = 0.50
+    rep_decay: float = 0.01
+    n_seeds: int = 200
+    exhaustion_epsilon: float = 0.10
+
+
+def _update_scalar_reputation(
+    rep: float, success: bool, reward: float, slash_rate: float, decay: float
+) -> float:
+    if success:
+        rep += reward
+    else:
+        rep *= 1.0 - slash_rate
+    rep *= 1.0 - decay
+    return float(rep)
+
+
+def _update_vector_reputation(
+    rep: np.ndarray, success: np.ndarray, reward: float, slash_rate: float, decay: float
+) -> np.ndarray:
+    rep = rep.copy()
+    rep[success] += reward
+    rep[~success] *= 1.0 - slash_rate
+    rep *= 1.0 - decay
+    return rep
+
+
+def run_e4d(params: E4dParams) -> None:
+    round_rows: list[dict] = []
+    imported_reps: list[float] = []
+    exhaustion_rounds: list[float] = []
+
+    for seed in range(params.n_seeds):
+        rng = np.random.default_rng(seed)
+
+        pool_l_rep = 0.0
+        for _ in range(params.build_rounds):
+            pool_l_rep = _update_scalar_reputation(
+                pool_l_rep,
+                bool(rng.random() < params.low_stakes_honest_success_prob),
+                params.rep_reward,
+                params.bust_slash_rate,
+                params.rep_decay,
+            )
+
+        local_honest_rep = np.zeros(params.n_local_honest_authors, dtype=float)
+        for _ in range(params.build_rounds):
+            local_honest_rep = _update_vector_reputation(
+                local_honest_rep,
+                rng.random(params.n_local_honest_authors)
+                < params.high_stakes_honest_success_prob,
+                params.rep_reward,
+                params.bust_slash_rate,
+                params.rep_decay,
+            )
+
+        imported_reps.append(pool_l_rep)
+        attacker_rep_scoped = 0.0
+        attacker_rep_unscoped = pool_l_rep
+        exhaustion_round = float(params.attack_rounds)
+
+        for attack_round in range(1, params.attack_rounds + 1):
+            local_honest_rep = _update_vector_reputation(
+                local_honest_rep,
+                rng.random(params.n_local_honest_authors)
+                < params.high_stakes_honest_success_prob,
+                params.rep_reward,
+                params.bust_slash_rate,
+                params.rep_decay,
+            )
+            attacker_success = bool(
+                rng.random() < params.high_stakes_attacker_success_prob
+            )
+            attacker_rep_scoped = _update_scalar_reputation(
+                attacker_rep_scoped,
+                attacker_success,
+                params.rep_reward,
+                params.bust_slash_rate,
+                params.rep_decay,
+            )
+            attacker_rep_unscoped = _update_scalar_reputation(
+                attacker_rep_unscoped,
+                attacker_success,
+                params.rep_reward,
+                params.bust_slash_rate,
+                params.rep_decay,
+            )
+
+            total_rep_scoped = float(local_honest_rep.sum() + attacker_rep_scoped)
+            total_rep_unscoped = float(local_honest_rep.sum() + attacker_rep_unscoped)
+
+            round_rows.append(
+                {
+                    "seed": seed,
+                    "attack_round": attack_round,
+                    "condition": "scoped",
+                    "attacker_rep": attacker_rep_scoped,
+                    "attacker_rep_share": (
+                        attacker_rep_scoped / total_rep_scoped if total_rep_scoped > 0 else 0.0
+                    ),
+                }
+            )
+            round_rows.append(
+                {
+                    "seed": seed,
+                    "attack_round": attack_round,
+                    "condition": "unscoped",
+                    "attacker_rep": attacker_rep_unscoped,
+                    "attacker_rep_share": (
+                        attacker_rep_unscoped / total_rep_unscoped
+                        if total_rep_unscoped > 0
+                        else 0.0
+                    ),
+                }
+            )
+
+            if (
+                exhaustion_round == float(params.attack_rounds)
+                and attacker_rep_unscoped <= attacker_rep_scoped + params.exhaustion_epsilon
+            ):
+                exhaustion_round = float(attack_round)
+
+        exhaustion_rounds.append(exhaustion_round)
+
+    round_df = pd.DataFrame(round_rows)
+    agg = (
+        round_df.groupby(["condition", "attack_round"], as_index=False)
+        .agg(
+            attacker_rep_mean=("attacker_rep", "mean"),
+            attacker_rep_ci95=("attacker_rep", lambda x: _ci95(x.to_numpy())),
+            attacker_rep_share_mean=("attacker_rep_share", "mean"),
+            attacker_rep_share_ci95=("attacker_rep_share", lambda x: _ci95(x.to_numpy())),
+        )
+        .sort_values(["condition", "attack_round"])
+    )
+    agg.to_csv(OUT_DIR / "e4d_cross_domain_scoping.csv", index=False)
+
+    early_window = round_df[round_df["attack_round"] <= 10]
+    early_share = (
+        early_window.groupby(["seed", "condition"], as_index=False)["attacker_rep_share"].mean()
+    )
+    early_share_wide = early_share.pivot(
+        index="seed", columns="condition", values="attacker_rep_share"
+    )
+
+    summary = pd.DataFrame(
+        [
+            {
+                "n_seeds": params.n_seeds,
+                "imported_rep_at_entry_mean": float(np.mean(imported_reps)),
+                "imported_rep_at_entry_ci95": _ci95(np.asarray(imported_reps)),
+                "mean_attacker_rep_share_scoped_first10": float(
+                    early_share_wide["scoped"].mean()
+                ),
+                "mean_attacker_rep_share_scoped_first10_ci95": _ci95(
+                    early_share_wide["scoped"].to_numpy()
+                ),
+                "mean_attacker_rep_share_unscoped_first10": float(
+                    early_share_wide["unscoped"].mean()
+                ),
+                "mean_attacker_rep_share_unscoped_first10_ci95": _ci95(
+                    early_share_wide["unscoped"].to_numpy()
+                ),
+                "advantage_exhaustion_round_mean": float(np.mean(exhaustion_rounds)),
+                "advantage_exhaustion_round_ci95": _ci95(np.asarray(exhaustion_rounds)),
+            }
+        ]
+    )
+    summary.to_csv(OUT_DIR / "e4d_cross_domain_scoping_summary.csv", index=False)
+
+    fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.0))
+    labels = {"scoped": "scoped (Pool H starts at 0)", "unscoped": "unscoped (imports Pool L rep)"}
+    colors = {"scoped": "#1f77b4", "unscoped": "#d62728"}
+
+    for condition in ("scoped", "unscoped"):
+        sub = agg[agg["condition"] == condition]
+        axes[0].plot(
+            sub["attack_round"],
+            sub["attacker_rep_mean"],
+            label=labels[condition],
+            color=colors[condition],
+        )
+        axes[0].fill_between(
+            sub["attack_round"],
+            sub["attacker_rep_mean"] - sub["attacker_rep_ci95"],
+            sub["attacker_rep_mean"] + sub["attacker_rep_ci95"],
+            color=colors[condition],
+            alpha=0.15,
+        )
+        axes[1].plot(
+            sub["attack_round"],
+            sub["attacker_rep_share_mean"],
+            label=labels[condition],
+            color=colors[condition],
+        )
+        axes[1].fill_between(
+            sub["attack_round"],
+            sub["attacker_rep_share_mean"] - sub["attacker_rep_share_ci95"],
+            sub["attacker_rep_share_mean"] + sub["attacker_rep_share_ci95"],
+            color=colors[condition],
+            alpha=0.15,
+        )
+
+    axes[0].set_xlabel("Attack rounds in Pool H")
+    axes[0].set_ylabel("Mean attacker reputation in Pool H")
+    axes[0].set_title("Imported reputation persists without scoping")
+    axes[0].legend(frameon=False, fontsize=8)
+
+    axes[1].set_xlabel("Attack rounds in Pool H")
+    axes[1].set_ylabel("Mean attacker share of Pool H author reputation")
+    axes[1].set_ylim(0.0, 0.35)
+    axes[1].set_title("Carryover appears as interface-level credibility context")
+
+    fig.suptitle("E4d: Cross-domain author reputation scoping", y=1.02)
+    fig.tight_layout()
+    fig.savefig(FIG_DIR / "e4d_cross_domain_scoping.png", dpi=200, bbox_inches="tight")
+    plt.close(fig)
+@dataclass(frozen=True)
+class E4bParams:
+    n_honest_curators: int = 14
+    rounds: int = 300
+    honest_rep_0: float = 100.0
+    attacker_rep_0: float = 200.0
+    honest_noise_sigma: float = 0.08
+    attacker_noise_sigma: float = 0.04
+    K: float = 1.25
+    rep_decays: tuple[float, ...] = (0.005, 0.01, 0.02)
+    attacker_biases: tuple[float, ...] = (0.15, 0.30)
+    n_seeds: int = 100
+
+
+def _e4b_attacker_vote(
+    rng: np.random.Generator,
+    r_true: float,
+    attacker_model: str,
+    attacker_noise_sigma: float,
+) -> float:
+    if attacker_model == "random":
+        return float(rng.uniform(0.0, 1.0))
+    if attacker_model.startswith("bias_"):
+        bias = float(attacker_model.split("_", maxsplit=1)[1])
+        return float(
+            _truncate_0_1(rng.normal(r_true + bias, attacker_noise_sigma, size=1))[0]
+        )
+    raise ValueError(f"unknown attacker model: {attacker_model}")
+
+
+def _e4b_single_run(params: E4bParams, rep_decay: float, attacker_model: str, seed_idx: int) -> dict:
+    seed = int(100_000 * rep_decay) + 1_000 * seed_idx + sum(
+        ord(ch) for ch in attacker_model
+    )
+    rng = np.random.default_rng(seed)
+
+    rep = np.full(params.n_honest_curators + 1, params.honest_rep_0, dtype=float)
+    rep[-1] = params.attacker_rep_0
+
+    above_median_rounds = 0
+    mean_abs_errors: list[float] = []
+    mean_excess_abs_errors: list[float] = []
+    mean_signal_shifts: list[float] = []
+
+    for _ in range(params.rounds):
+        r_true = float(rng.uniform(0.0, 1.0))
+        honest_votes = _truncate_0_1(
+            rng.normal(
+                loc=r_true,
+                scale=params.honest_noise_sigma,
+                size=params.n_honest_curators,
+            )
+        )
+        attacker_vote = _e4b_attacker_vote(
+            rng, r_true, attacker_model, params.attacker_noise_sigma
+        )
+        votes = np.concatenate([honest_votes, [attacker_vote]])
+
+        total_rep = float(rep.sum())
+        if total_rep <= 0:
+            weights = np.full_like(rep, 1.0 / len(rep))
+        else:
+            weights = rep / total_rep
+
+        mu = float((weights * votes).sum())
+        sigma = float(np.sqrt((weights * (votes - mu) ** 2).sum()))
+        honest_mu = float(honest_votes.mean())
+
+        mean_abs_errors.append(abs(mu - r_true))
+        mean_excess_abs_errors.append(abs(mu - r_true) - abs(honest_mu - r_true))
+        mean_signal_shifts.append(mu - honest_mu)
+
+        coherent = np.abs(votes - mu) <= (params.K * sigma)
+        rep = rep * (1.0 - rep_decay) + coherent.astype(float)
+        if rep[-1] > float(np.median(rep[:-1])):
+            above_median_rounds += 1
+
+    return {
+        "above_median_rounds": float(above_median_rounds),
+        "above_median_round_share": above_median_rounds / params.rounds,
+        "mean_abs_error": float(np.mean(mean_abs_errors)),
+        "mean_excess_abs_error": float(np.mean(mean_excess_abs_errors)),
+        "mean_signal_shift": float(np.mean(mean_signal_shifts)),
+    }
+
+
+def run_e4b(params: E4bParams) -> None:
+    rows: list[dict] = []
+    attacker_models = ["random", *[f"bias_{bias:.2f}" for bias in params.attacker_biases]]
+
+    for rep_decay in params.rep_decays:
+        for attacker_model in attacker_models:
+            with ProcessPoolExecutor() as executor:
+                seed_results = list(
+                    executor.map(
+                        functools.partial(_e4b_single_run, params, rep_decay, attacker_model),
+                        range(params.n_seeds),
+                    )
+                )
+
+            above = np.array([r["above_median_rounds"] for r in seed_results])
+            above_share = np.array([r["above_median_round_share"] for r in seed_results])
+            abs_error = np.array([r["mean_abs_error"] for r in seed_results])
+            excess_error = np.array([r["mean_excess_abs_error"] for r in seed_results])
+            shift = np.array([r["mean_signal_shift"] for r in seed_results])
+
+            rows.append(
+                {
+                    "rep_decay": float(rep_decay),
+                    "attacker_model": attacker_model,
+                    "n_seeds": params.n_seeds,
+                    "rounds": params.rounds,
+                    "above_median_rounds_mean": float(above.mean()),
+                    "above_median_rounds_ci95": _ci95(above),
+                    "above_median_round_share_mean": float(above_share.mean()),
+                    "above_median_round_share_ci95": _ci95(above_share),
+                    "mean_abs_error_mean": float(abs_error.mean()),
+                    "mean_abs_error_ci95": _ci95(abs_error),
+                    "mean_excess_abs_error_mean": float(excess_error.mean()),
+                    "mean_excess_abs_error_ci95": _ci95(excess_error),
+                    "mean_signal_shift_mean": float(shift.mean()),
+                    "mean_signal_shift_ci95": _ci95(shift),
+                }
+            )
+
+    df = pd.DataFrame(rows)
+    df.to_csv(OUT_DIR / "e4b_reputation_attack.csv", index=False)
+
+    labels = ["random", *[f"+{bias:.2f} bias" for bias in params.attacker_biases]]
+    attacker_models = ["random", *[f"bias_{bias:.2f}" for bias in params.attacker_biases]]
+    colors = ["#4C72B0", "#DD8452", "#C44E52"]
+    x = np.arange(len(params.rep_decays))
+    width = 0.24
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.0, 4.5))
+    if not (len(attacker_models) == len(labels) == len(colors)):
+        raise ValueError("E4b plotting metadata must have matching lengths")
+    for idx, (attacker_model, label, color) in enumerate(
+        zip(attacker_models, labels, colors)
+    ):
+        sub = df[df["attacker_model"] == attacker_model].sort_values("rep_decay")
+        offset = (idx - 1) * width
+
+        ax1.bar(
+            x + offset,
+            sub["above_median_rounds_mean"],
+            width=width,
+            yerr=sub["above_median_rounds_ci95"],
+            color=color,
+            capsize=3,
+            label=label,
+        )
+        ax2.bar(
+            x + offset,
+            sub["mean_signal_shift_mean"],
+            width=width,
+            yerr=sub["mean_signal_shift_ci95"],
+            color=color,
+            capsize=3,
+            label=label,
+        )
+
+    tick_labels = [f"{rep_decay:.3f}" for rep_decay in params.rep_decays]
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(tick_labels)
+    ax1.set_xlabel("Reputation decay rate δ")
+    ax1.set_ylabel("Rounds above median committee weight")
+    ax1.set_title(
+        f"E4b: Single high-reputation attacker retention ({params.rounds} rounds, N={params.n_seeds} seeds)"
+    )
+    ax1.legend(frameon=False, fontsize=9)
+
+    ax2.axhline(0.0, color="black", linewidth=0.8)
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(tick_labels)
+    ax2.set_xlabel("Reputation decay rate δ")
+    ax2.set_ylabel("Mean signal shift vs honest-only committee")
+    ax2.set_title("E4b: Directional distortion under biased strategic voting")
+
+    plt.tight_layout()
+    plt.savefig(FIG_DIR / "e4b_reputation_attack.png", dpi=200)
     plt.close()
 
 
@@ -820,30 +1518,49 @@ def run_e4a(params: E4aParams) -> None:
 
 def write_eval_summary() -> None:
     params_e1 = E1Params()
+    params_e1_sensitivity = E1SensitivityParams()
     e1 = pd.read_csv(OUT_DIR / "e1_results.csv")
+    e1_sensitivity = pd.read_csv(OUT_DIR / "e1_detection_sensitivity.csv")
     e2 = pd.read_csv(OUT_DIR / "e2_results.csv")
     e3 = pd.read_csv(OUT_DIR / "e3_results.csv")
     e1_adv = pd.read_csv(OUT_DIR / "e1_adversarial_results.csv")
     e2_adv = pd.read_csv(OUT_DIR / "e2_adversarial_results.csv")
     e4a = pd.read_csv(OUT_DIR / "e4a_author_reputation.csv")
+    e4b = pd.read_csv(OUT_DIR / "e4b_reputation_attack.csv")
+    e4d = pd.read_csv(OUT_DIR / "e4d_cross_domain_scoping_summary.csv")
     e1_sub = e1[e1["stake_over_bounty"] == 0.25].copy()
     e1_sub["p_delta"] = (e1_sub["p_juror_correct"] - 0.8).abs()
     e1_point = e1_sub.sort_values("p_delta").iloc[0]
+    e1_sensitivity_010 = e1_sensitivity.iloc[
+        (e1_sensitivity["p_detect"] - 0.10).abs().argmin()
+    ]
+    e1_sensitivity_050 = e1_sensitivity.iloc[
+        (e1_sensitivity["p_detect"] - 0.50).abs().argmin()
+    ]
     e2_point = e2[(e2["K"] == 1.25) & (e2["competent_frac"] == 0.70)].iloc[0]
-    e3_point = e3[e3["nonfalsifiable_frac"] == 0.25].iloc[0]
+    e3_point = e3[
+        (e3["nonfalsifiable_frac"] == 0.25)
+        & (e3["forced_binary_juror_correct"] == 0.55)
+    ].iloc[0]
     e1_adv_point = e1_adv[e1_adv["p_juror_correct"] == 0.80].iloc[0]
     e2_adv_point = e2_adv[e2_adv["colluding_frac"] == 0.15].iloc[0]
     e2_adv_base = e2_adv[e2_adv["colluding_frac"] == 0.0].iloc[0]
     e4a_point = e4a.iloc[-1]
+    e4b_random = e4b[(e4b["rep_decay"] == 0.01) & (e4b["attacker_model"] == "random")].iloc[0]
+    e4b_biased = e4b[(e4b["rep_decay"] == 0.01) & (e4b["attacker_model"] == "bias_0.15")].iloc[0]
+    e4d_point = e4d.iloc[0]
     summary = f"""\
 ### Evaluation snapshot (representative points)
 
-- **E1:** At $p=0.80$ (per-juror), $N={params_e1.n_jurors}$, $S/B=0.25$, challenger EV on a debunking challenge is **{e1_point["ev_false"] / params_e1.bounty:.2f}\\times bounty** after tax and DDR fees, and false-claim survival (one window, $p_\\mathrm{{detect}}={params_e1.p_detect:.2f}$) is **{e1_point["false_survival"]:.2f}**.
-- **E2:** At initial competence 0.70 and $K=1.25$, mean relevance error is **{e2_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2_point["mean_abs_error_ci95"]:.3f}** (95% CI, $N={int(e2_point["n_seeds"])}$ seeds), cancelled-round share is **{e2_point["cancelled_round_share_mean"]:.3f}**, and final competent stake share is **{e2_point["final_competent_stake_share_mean"]:.2f} $\\pm$ {e2_point["final_competent_stake_share_ci95"]:.2f}**.
-- **E3:** At non-falsifiable share 0.25, bad-item retention is **{e3_point["baseline_bad_item_retention"]:.2f}** under forced binary adjudication versus **{e3_point["defended_bad_item_retention"]:.2f}** with a dedicated `NonFalsifiable` challenge reason.
-- **E1-Adv:** A well-funded adversary submitting {int(e1_adv_point["n_attacks"])} false claims at $p=0.80$ achieves survival rate **{e1_adv_point["survival_rate_mean"]:.2f} $\\pm$ {e1_adv_point["survival_rate_ci95"]:.2f}** (95% CI, $N={int(e1_adv_point["n_seeds"])}$ seeds) with cumulative balance **{e1_adv_point["adversary_balance_mean"]:.0f} $\\pm$ {e1_adv_point["adversary_balance_ci95"]:.0f}**.
+- **E1:** At $p=0.80$ (per-juror), $N={params_e1.n_jurors}$, $S/B=0.25$, challenger EV on a debunking challenge is **{e1_point["ev_false_mean"] / params_e1.bounty:.3f} $\\pm$ {e1_point["ev_false_ci95"] / params_e1.bounty:.3f}\\times bounty** (95% CI, $N={int(e1_point["n_seeds"])}$ seeds) after tax and DDR fees, and false-claim survival (one window, $p_\\mathrm{{detect}}={params_e1.p_detect:.2f}$) is **{e1_point["false_survival_mean"]:.3f} $\\pm$ {e1_point["false_survival_ci95"]:.3f}**.
+- **E1 sensitivity:** Holding $p=0.80$ and $N={params_e1_sensitivity.n_jurors}$ fixed, increasing $p_\\mathrm{{detect}}$ from **{e1_sensitivity_010["p_detect"]:.2f}** to **{e1_sensitivity_050["p_detect"]:.2f}** lowers single-window false-claim survival from **{e1_sensitivity_010["false_survival"]:.2f}** to **{e1_sensitivity_050["false_survival"]:.2f}** and lowers the deterrence threshold from **{e1_sensitivity_010["bond_threshold_multiplier"]:.2f}\\times V** to **{e1_sensitivity_050["bond_threshold_multiplier"]:.2f}\\times V**.
+- **E2:** At initial competence 0.70 and $K=1.25$, mean relevance error is **{e2_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2_point["mean_abs_error_ci95"]:.3f}** (95% CI, $N={int(e2_point["n_seeds"])}$ seeds), cancelled-round share is **{e2_point["cancelled_round_share_mean"]:.3f} $\\pm$ {e2_point["cancelled_round_share_ci95"]:.3f}**, and final competent stake share is **{e2_point["final_competent_stake_share_mean"]:.2f} $\\pm$ {e2_point["final_competent_stake_share_ci95"]:.2f}**.
+- **E3:** Closed-form scenario analysis only. At non-falsifiable share 0.25, bad-item retention is **{e3_point["baseline_bad_item_retention"]:.2f}** under an illustrative forced-binary assumption of $p=0.55$ versus **{e3_point["defended_bad_item_retention"]:.2f}** when a dedicated `NonFalsifiable` challenge reason raises the assumed per-juror accuracy to $p=0.85$.
+- **E1-Adv:** A well-funded adversary submitting {int(e1_adv_point["n_attacks"])} false claims at $p=0.80$ and representative $p_\\mathrm{{detect}}={params_e1.p_detect:.2f}$ achieves survival rate **{e1_adv_point["survival_rate_mean"]:.2f} $\\pm$ {e1_adv_point["survival_rate_ci95"]:.2f}** (95% CI, $N={int(e1_adv_point["n_seeds"])}$ seeds) with cumulative balance **{e1_adv_point["adversary_balance_mean"]:.0f} $\\pm$ {e1_adv_point["adversary_balance_ci95"]:.0f}**.
 - **E2-Adv:** A 15% colluding bloc shifts mean relevance error from **{e2_adv_base["mean_abs_error_mean"]:.3f}** to **{e2_adv_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2_adv_point["mean_abs_error_ci95"]:.3f}** and ends with **{e2_adv_point["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2_adv_point["final_colluder_stake_share_ci95"]:.3f}** stake share.
-- **E4a:** By round {int(e4a_point["round"])}, median honest-author reputation reaches **{e4a_point["honest_median_rep"]:.2f}** while median dishonest-author reputation remains at **{e4a_point["dishonest_median_rep"]:.2f}**.
+- **E4a:** By round {int(e4a_point["round"])}, median honest-author reputation reaches **{e4a_point["honest_median_rep_mean"]:.2f} $\\pm$ {e4a_point["honest_median_rep_ci95"]:.2f}** (95% CI, $N={int(e4a_point["n_seeds"])}$ seeds) while median dishonest-author reputation remains at **{e4a_point["dishonest_median_rep_mean"]:.2f} $\\pm$ {e4a_point["dishonest_median_rep_ci95"]:.2f}**.
+- **E4b:** In a counterfactual reputation-weighted committee with decay $\\delta=0.01$, a random high-reputation attacker stays above median weight for **{e4b_random["above_median_rounds_mean"]:.0f} $\\pm$ {e4b_random["above_median_rounds_ci95"]:.0f}** rounds, while a $+0.15$ strategic-bias attacker lasts **{e4b_biased["above_median_rounds_mean"]:.0f} $\\pm$ {e4b_biased["above_median_rounds_ci95"]:.0f}** rounds and shifts the final signal upward by **{e4b_biased["mean_signal_shift_mean"]:.3f} $\\pm$ {e4b_biased["mean_signal_shift_ci95"]:.3f}**.
+- **E4d:** After building reputation in Pool L, an unscoped attacker enters Pool H with **{e4d_point["imported_rep_at_entry_mean"]:.2f} $\\pm$ {e4d_point["imported_rep_at_entry_ci95"]:.2f}** imported reputation units (95% CI, $N={int(e4d_point["n_seeds"])}$ seeds); over the first 10 attack rounds, mean attacker share of Pool H author reputation is **{e4d_point["mean_attacker_rep_share_unscoped_first10"]:.3f} $\\pm$ {e4d_point["mean_attacker_rep_share_unscoped_first10_ci95"]:.3f}** unscoped versus **{e4d_point["mean_attacker_rep_share_scoped_first10"]:.3f} $\\pm$ {e4d_point["mean_attacker_rep_share_scoped_first10_ci95"]:.3f}** when reputation is pool-scoped, and the imported advantage decays to within {E4dParams().exhaustion_epsilon:.2f} reputation units after **{e4d_point["advantage_exhaustion_round_mean"]:.1f} $\\pm$ {e4d_point["advantage_exhaustion_round_ci95"]:.1f}** attack rounds.
 """
     (OUT_DIR / "eval_summary.md").write_text(summary, encoding="utf-8")
 
@@ -919,11 +1636,14 @@ def main() -> None:
     ensure_dirs()
     save_metadata()
     run_e1(E1Params())
+    run_e1_detection_sensitivity(E1SensitivityParams())
     run_e1_adversarial(E1AdvParams())
     run_e2(E2Params())
     run_e2_adversarial(E2AdvParams())
     run_e3(E3Params())
     run_e4a(E4aParams())
+    run_e4b(E4bParams())
+    run_e4d(E4dParams())
     write_eval_summary()
     write_reading_time()
 
