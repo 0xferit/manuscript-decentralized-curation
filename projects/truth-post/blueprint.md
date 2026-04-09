@@ -1226,7 +1226,7 @@ Concrete example: with the reference pool's target of 15 drafted curators, contr
 
 This reveals a tension between permissionless participation and Sybil resistance. A low `curatorMinStakeWei` makes curation accessible but makes Sybil eligibility cheap. A high `curatorMinStakeWei` raises the eligibility floor but restricts participation to well-capitalized curators. Neither value alone resolves the tension without external identity verification or a sufficiently deep honest-stake pool that dilutes the attacker's draft probability.
 
-Pools that require the coherence game to resist coordinated manipulation SHOULD treat identity verification (proof-of-personhood, allowlisted credentials, or equivalent) as a practical necessity rather than an optional enhancement. Pools that operate without identity verification SHOULD acknowledge that the weight cap provides concentration limits only against non-Sybil whales and offers no defense against an adversary willing to split stake across multiple addresses.
+Pools that cannot rely on a sufficiently deep honest-stake pool to dilute attackers SHOULD consider identity verification (proof-of-personhood, allowlisted credentials, or equivalent) as a mitigation. Pools that operate without identity verification SHOULD acknowledge that the weight cap provides concentration limits only against non-Sybil whales and offers no defense against an adversary willing to split stake across multiple addresses.
 
 ### Cold Start
 
@@ -1249,7 +1249,7 @@ The deterrent fails under specific conditions:
 
 - **High DDR fees relative to counter-stake**: if arbitration fees dominate the challenger's cost structure, the counter-stake loss becomes a secondary concern and the deterrent weakens. At sufficiently high fees, both frivolous and legitimate challenges become unprofitable.
 - **High-value suppression targets**: for claims whose removal from the main feed creates value exceeding the expected counter-stake loss (e.g., politically sensitive claims, market-moving information), the suppression cost may be acceptable to a well-funded adversary. The asymmetry between legitimate-challenge reward and frivolous-challenge penalty means suppression is cheaper than one might expect from the +0.87x figure alone.
-- **Serial suppression economics**: the cost to suppress one claim for the duration of DDR resolution is approximately `counter-stake + challenge tax + DDR fee`. For a claim with a 0.1 ETH bond, this is roughly 0.03 ETH per challenge cycle. Sequential queued challenges can extend suppression at this marginal cost per cycle, and the 24-hour cancellation window between cycles is the only pause.
+- **Serial suppression economics**: the cost to suppress one claim for the duration of DDR resolution is `counter-stake + challenge tax + DDR fee`. For a claim with a 0.1 ETH bond: counter-stake is 0.025 ETH (at S/B=0.25), challenge tax is 0.0005 ETH (at 0.5%), and the DDR fee is external and variable. The non-DDR cost floor is approximately 0.026 ETH per challenge cycle; total cost depends on the DDR provider's fee schedule. Sequential queued challenges can extend suppression at this marginal cost per cycle, and the 24-hour cancellation window between cycles is the only pause.
 
 The protocol does not attempt to eliminate suppression attacks entirely. The claim is that the cost structure makes sustained suppression expensive relative to the value of most claims. Whether this holds in practice depends on the distribution of claim values and adversary budgets, which cannot be determined analytically.
 
