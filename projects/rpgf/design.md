@@ -395,7 +395,7 @@ No. Voters are not forbidden from having preferences. The mechanism simply does 
 
 ### What is a coherence game and why does it help?
 
-A coherence game rewards participants for independently converging on the same answer, without trusted communication. By the Schelling principle, when coordination is only possible through shared logic and shared rules, the focal point tends to be the answer best supported by the publicly stated criteria. This makes merit-based judgment the dominant strategy, not collusion or popularity chasing.
+A coherence game rewards participants for independently converging on the same answer, without trusted communication. By the Schelling principle, when coordination is only possible through shared logic and shared rules, the focal point tends to be the answer best supported by the publicly stated criteria. Under the conditions identified in the main paper (Proposition 3), merit-based judgment is a Bayesian Nash equilibrium: (i) the curation policy must be specific enough that competent curators' signals cluster around the true value, (ii) the coherence threshold K must be large enough that honest reports within normal noise are not slashed, and (iii) the colluding stake fraction must remain below a threshold phi* (empirically ~15-20% at K=1.25 with 15-member committees). When condition (iii) fails, a coordinating bloc can shift the weighted mean and punish honest reporters. In the RPGF context, where fund redirection creates direct financial incentives for collusion, this threshold is the binding constraint on the mechanism's integrity.
 
 ### Why won't this collapse into a Keynesian beauty contest?
 
