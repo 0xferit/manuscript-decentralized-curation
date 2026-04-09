@@ -207,7 +207,7 @@ The pool's **relevance policy** defines the scoring question and rubric. Example
 
 **Double-counting and attribution**: when multiple nominations claim credit for the same downstream effect, the relevance layer handles it through scoring. The relevance policy SHOULD instruct curators to consider uniqueness of contribution and discount overlapping claims across nominations in the same round. No protocol enforcement of exclusive attribution. Limitation: the coherence game rewards consensus on scalar scores, not accurate causal attribution. If curators do not notice overlap, multiple nominations may receive overlapping credit for the same downstream effect. This is an accepted limitation.
 
-Broad pools (covering heterogeneous project types) are allowed. The relevance policy rubric is responsible for making comparisons meaningful. If a pool's rubric is bad, curators produce bad scores, users migrate to better pools, and the bad pool loses relevance. Bad pools fail locally: users migrate to better pools rather than governance intervening.
+Broad pools (covering heterogeneous project types) are allowed. The relevance policy rubric is responsible for making comparisons meaningful. If a pool's rubric is bad, curators produce bad scores, users migrate to better pools, and the bad pool loses relevance. The design intent is that bad pools fail locally through exit rather than governance intervention. However, exit is subject to friction from reputation lock-in, funder coordination costs, and round-cycle capital commitment (see Open Problems: Pool migration friction).
 
 ## Challenge Incentives
 
@@ -383,7 +383,13 @@ Positive reputation decays toward zero over time, which means sustained good beh
 
 ### Pool migration friction
 
-Pool-scoped reputation creates switching costs: established projects with high reputation in one pool face reputation reset if they migrate to a new pool. This friction may slow the "bad pools fail locally" dynamic, since the projects whose participation would make a new pool viable are exactly the ones with the highest switching cost.
+The "bad pools fail locally" dynamic depends on participants exiting bad pools at a pace that limits misallocation. Three compounding friction sources slow this exit:
+
+1. **Reputation lock-in**: pool-scoped reputation resets on migration. Established projects with high reputation in one pool face the highest switching cost, and their presence is exactly what validates a pool. The actors best positioned to seed a competing pool are the ones most penalized for leaving.
+2. **Funder coordination failure**: a better pool with no funding is useless. Funders must collectively migrate for a new pool to be viable, which is a coordination problem that individual exit does not automatically solve. A critical mass of funders must move roughly simultaneously, and each funder's incentive to move depends on whether others have already moved.
+3. **Round-cycle lock-in**: pool parameters are immutable and rounds last ~60+ days (submission window + holdback). Capital committed to a round cannot move to a competing pool until that round completes. This temporal lock-in means that even if participants recognize a pool is bad, funds already in-flight are irrecoverable for the current round.
+
+These frictions do not invalidate the exit argument (exit is still structurally better than governance capture of a shared mechanism), but they mean "bad pools fail locally" is a design aspiration that depends on short rounds, low minimum viable pool sizes, and sufficient funder coordination. Deployments should monitor pool concentration and exit rates as empirical signals of whether the dynamic functions as hypothesized.
 
 ## FAQ
 
