@@ -166,7 +166,7 @@ Observed behavior from browser automation:
 - article fetches to `https://ipfs.kleros.io/ipfs/...` failed with `ERR_NAME_NOT_RESOLVED`
 - the app crashed with `Unexpected Application Error! Failed to fetch`
 
-This failure is consistent with a structural vulnerability rather than an isolated operational accident. The report's own architectural analysis (see "Off-chain dependence for readability" above) documents that article content depends on IPFS resolution through a single gateway (`ipfs.kleros.io`), and the "Missing Relative to the Thesis" section lists interface redundancy as absent. The contract logic may be sound in isolation, but the system as deployed had no redundancy for this off-chain dependency. The observed failure matches what the thesis later identified as a design gap, though confirming a single root cause would require more diagnostic data than the browser-automation tests provide.
+This failure is consistent with a known structural vulnerability. The report's own architectural analysis (see "Off-chain dependence for readability" above) documents that article content depends on IPFS resolution through a single gateway (`ipfs.kleros.io`), and the "Missing Relative to the Thesis" section lists interface redundancy as absent. The contract logic may be sound in isolation, but the system as deployed had no redundancy for this off-chain dependency. The observed failure matches what the thesis later identified as a design gap, though confirming a single root cause would require more diagnostic data than the browser-automation tests provide.
 
 ## Verification Notes
 
