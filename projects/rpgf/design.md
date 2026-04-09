@@ -249,12 +249,16 @@ The break-even success probability is piecewise because the minimum challenge st
 
 Worked reference example: let `P = 100 ETH`, `a = 0.30`, `b = 0.30`, `B = 0.01 ETH`, `c = 0.25`, `S_min = 0.01 ETH`, and `t = 0.005`. The proportional branch binds because `c*b*P = 7.5 ETH > S_min`. The challenge tax is `T = 0.15 ETH`, and the redirection gain on success is `a*b/(1-b) * P = 12.857 ETH`. Therefore:
 
-- `U_success = 12.867 ETH - F`
+- `U_success = 12.717 ETH - F`
 - `U_fail = -7.650 ETH - F`
-- `EV = p * (12.867 - F) + (1-p) * (-7.650 - F)`
+- `EV = p * (12.717 - F) + (1-p) * (-7.650 - F)`
 - `p* = (7.650 + F) / 20.367`
 
 The strategic result is local, not universal. Challenge profitability depends on absolute pool size `P`, concentration `a`, target share `b`, fixed bond `B`, fee burden `F`, and whether the minimum-stake floor binds. Small pools and small nominations are dominated by fixed costs; large concentrated nominations are more exposed to strategic challenge. The one-active-nomination-per-registry-entry rule limits direct fragmentation, but an actor controlling many registry entries can still lower the effective break-even. Registry quality and Sybil resistance remain the deeper constraints.
+
+**Limitation: pure challengers face negative EV.** The competitive redirection term `a*b/(1-b)*P` requires `a > 0`: the challenger must hold a nomination in the same pool. A pure third-party challenger with no nomination (`a = 0`) reduces to `U_success = B - T - F`. Under reference parameters, `B = 0.01 ETH` and `T = 0.15 ETH`, so `U_success = -0.14 ETH - F`: negative even on a winning challenge. This means challenge incentives under reference parameters are operative only for competing nominees, not for independent watchdogs. Deterrence against fraudulent nominations depends on at least one honest competing nominee having sufficient stake concentration to make the challenge profitable. If all nominees in a pool are colluding, no external challenger has a positive-EV path to debunk them.
+
+Three levers could widen the challenger base if empirical deployment shows the nominee-only incentive is insufficient: (1) raising the fixed bond `B` above `T + F` so pure challengers at least break even on success; (2) refunding the challenge tax on successful challenges so the sunk cost is only the DDR fee; (3) introducing an explicit bounty funded from the pool budget for successful debunkings. Each trades off differently against the risk of frivolous challenges. The current design accepts the nominee-dependency and relies on the assumption that pools with meaningful funding will attract enough competing nominees to sustain challenge pressure.
 
 ## Funding Distribution
 
