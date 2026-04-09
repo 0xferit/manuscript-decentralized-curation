@@ -754,7 +754,16 @@ Transitions are driven by the DDR adapter. Truth Post MUST mirror the authoritat
 
 - If the eligible curator set is smaller than `minRevealQuorum`, the round is cancelled before drafting, nobody is slashed, and the claim keeps its previous relevance score if one exists.
 - If the round is drafted but revealed participation ends below `minRevealQuorum`, drafted curators who failed to commit or reveal MUST be slashed as non-participants, but no curator reward MUST be paid and no new relevance score MUST be produced. Non-participation slashes from such a cancelled round MUST be credited to the pool reward budget. Pre-reveal leak slashes, if any, MUST still be paid to the reporter per the leak-report payout rules and MUST NOT be redirected to the pool budget. A replacement round is scheduled at the next cadence.
-- If the round reaches reveal but `stdDev < pool.flatRoundStdDevMin`, the round is cancelled as degenerate, no relevance score update occurs, and no round reward is paid. Design note: a round with `stdDev` below `flatRoundStdDevMin` MAY reflect genuine consensus rather than collusion or low-information voting. The protocol intentionally treats such rounds as non-informative for scoring and rewards: no relevance score update occurs, no round reward is paid, and a later round with a different draft is expected to test whether that consensus persists. More broadly, the coherence mechanism assumes that a pool's relevance policy is specific enough to anchor curator signals near a defensible ground truth. If all curators share the same bias, they will converge on a wrong answer and be rewarded. The defense is competitive pool selection: a pool with biased curation will produce bad feeds, users will migrate to better pools, and the biased pool will lose relevance. The protocol does not prevent bad curation within a pool; it prevents bad curation from becoming protocol-global.
+- If the round reaches reveal but `stdDev < pool.flatRoundStdDevMin`, the round is cancelled as degenerate, no relevance score update occurs, and no round reward is paid. Design note: a round with `stdDev` below `flatRoundStdDevMin` MAY reflect genuine consensus rather than collusion or low-information voting. The protocol intentionally treats such rounds as non-informative for scoring and rewards: no relevance score update occurs, no round reward is paid, and a later round with a different draft is expected to test whether that consensus persists. More broadly, the coherence mechanism assumes that a pool's relevance policy is specific enough to anchor curator signals near a defensible ground truth. If all curators share the same bias, they will converge on a wrong answer and be rewarded. The hypothesized defense is competitive pool selection: if biased curation produces bad feeds, users migrate to better pools, and the biased pool loses relevance. The protocol does not prevent bad curation within a pool; the design intention is that bad curation remains pool-local rather than protocol-global.
+
+This hypothesis has not been empirically validated. Several well-documented dynamics in platform economics could prevent pool competition from functioning as described:
+
+- **Information asymmetry**: users cannot easily evaluate curation quality without independently verifying claims, which defeats the purpose of the protocol. Biased curation produces outputs that look normal to users who share the bias, making quality differences difficult to observe.
+- **Network effects**: the first pool with sufficient curators and content may dominate regardless of quality, because authors go where curators are and curators go where claims are. This winner-take-most dynamic is common in two-sided platforms and does not require the winning pool to be the highest-quality one.
+- **Switching costs**: curators who have staked capital face a lockup period before they can exit; authors who have accumulated confidence on claims in one pool lose that history if they repost in another. These frictions slow migration even when quality differences are recognized.
+- **Coordination failure**: migration requires multiple actors (curators, authors, sponsors) to move roughly simultaneously for a new pool to be viable. Individual exit does not automatically solve this collective action problem (see the analogous analysis of pool migration friction in the RPGF design document).
+
+Empirical signals that would indicate whether pool competition is functioning: measurable user migration from pools with demonstrably biased feeds, successful bootstrapping of competing pools in the same topic domain, and declining curator participation in pools whose feeds diverge from verifiable ground truth. Until these signals are observed, the protocol should be understood as relying on an untested market mechanism for its primary defense against within-pool bias.
 
 ## Curator Stake State Model
 
@@ -792,7 +801,7 @@ Design note:
 
 - this flow deliberately replaces the MVP's single static News metaevidence policy with separately versioned template, evidence, and relevance policy objects
 - claims posted under one pool version remain bound to that version forever
-- bad pool design should fail locally through non-use rather than through a protocol-level governance gate
+- the design intention is that bad pool design fails locally through non-use rather than through a protocol-level governance gate; this relies on the competitive pool selection hypothesis described in the Relevance Round State Model, which has not been empirically validated and may fail under network effects or coordination failures
 
 ### Flow B: Author Submission And Template Validation
 
@@ -1061,6 +1070,12 @@ Rules:
 - if the budget cannot cover the configured round reward floor, new relevance rounds pause until the pool is funded again
 - no protocol mechanism creates a sponsorship incentive; pool economics depend on external actors (pool creators, sponsors, or third parties) voluntarily funding the reward budget; if funding does not materialize, the relevance layer pauses but the accuracy layer remains fully functional; this is a critical bootstrapping dependency
 
+**Sustainability and the free-rider problem.** The relevance layer exhibits a classic public-goods free-rider problem: curated feeds benefit all readers, but only sponsors bear the cost. Rational sponsors have an incentive to let others fund the pool while still consuming its outputs. A well-functioning pool with few challenges generates negligible self-funding because challenge-tax and failed-challenge inflows are inherently tied to dispute volume: a peaceful pool (the desired outcome) produces the least endogenous revenue.
+
+When funding dries up, the cascade is predictable: relevance rounds pause, new claims receive no relevance score, the main feed stops updating (since it requires a finalized relevance round for inclusion), and the user-facing product degrades to an accuracy dispute system without ranking. The protocol's competitive pool selection hypothesis (see Relevance Round State Model) also depends on funded competitors existing; if no pool in a given topic domain is funded, there is no competitive alternative for users to migrate toward.
+
+The current design accepts this as a limitation. The protocol intentionally avoids endogenous funding mechanisms (token inflation, mandatory protocol fees, or automated treasury management) because each introduces governance surfaces that conflict with the design ordering `NoNeedForGovernance > GoodGovernance`. Whether exogenous sponsorship can sustain a pool long-term is an open empirical question. Possible external funding models (advertising revenue sharing, subscription access, grant funding, or interface-operator subsidies) exist but are outside the protocol's scope and have not been analyzed for incentive compatibility with the curation mechanism.
+
 ### Flow H: Withdrawal, Historical Persistence, And No TTL
 
 Truth Post claims do not expire by protocol TTL.
@@ -1201,7 +1216,15 @@ The complete implementation MUST satisfy these invariants:
 - cap per-identity round weight
 - keep reputation decaying and pool-scoped
 - keep confidence linear in bonded stake-time, but rely on relevance gating so large bonds do not automatically dominate the main feed
-- the per-identity effective weight cap limits influence per protocol identity only; it MUST NOT be represented as a Sybil-resistance guarantee; pools MAY require external identity attestations, proof-of-personhood integrations, allowlisted credentials, or higher `curatorMinStakeWei` to raise the cost of stake-splitting across many identities
+- the per-identity effective weight cap limits influence per protocol identity only; it MUST NOT be represented as a Sybil-resistance guarantee
+
+**Sybil attack cost analysis.** The per-identity weight cap of 10% means a single identity can control at most 10% of a drafted round's effective weight. However, creating additional Ethereum addresses is costless. The real Sybil deterrent is `curatorMinStakeWei`: each identity must independently meet the minimum stake to be eligible for drafting. For a whale with capital C who splits across N identities, the total cost is `N * curatorMinStakeWei`, and they control up to `min(N * 10%, 100%)` of round weight.
+
+Concrete example: with the reference pool's target of 15 drafted curators, controlling a majority of round weight requires 6 identities (60% weight). If `curatorMinStakeWei` is 0.1 ETH, the Sybil attack costs 0.6 ETH in locked capital. If `curatorMinStakeWei` is 1.0 ETH, the attack costs 6.0 ETH. At 10 identities, the attacker controls the entire round at a cost of `10 * curatorMinStakeWei`.
+
+This reveals a fundamental tension between permissionless participation and Sybil resistance. A low `curatorMinStakeWei` makes curation accessible but makes Sybil attacks cheap. A high `curatorMinStakeWei` deters stake-splitting but restricts participation to well-capitalized curators, undermining the protocol's permissionless character. There is no value of `curatorMinStakeWei` that simultaneously achieves both goals without external identity verification.
+
+Pools that require the coherence game to resist coordinated manipulation SHOULD treat identity verification (proof-of-personhood, allowlisted credentials, or equivalent) as a practical necessity rather than an optional enhancement. Pools that operate without identity verification SHOULD acknowledge that the weight cap provides concentration limits only against non-Sybil whales and offers no defense against an adversary willing to split stake across multiple addresses.
 
 ### Cold Start
 
@@ -1215,6 +1238,17 @@ The complete implementation MUST satisfy these invariants:
 - sequential queued challenges can extend suppression; the 24-hour cancellation window limits but does not eliminate this
 - interfaces MAY choose to show challenged claims in a prominent `Under Dispute` view to mitigate suppression impact
 - the design accepts this tradeoff: removing challenged claims from the main feed is the price of making the accuracy signal conservative
+
+**Quantitative deterrence conditions.** The economic deterrent against frivolous challenges depends on the challenger losing their counter-stake when the challenge fails. The paper's E1 simulation establishes the conditions under which challenging is profitable for a legitimate challenger: at juror accuracy p=0.80, jury size N=5, and stake-to-bounty ratio S/B=0.25, challenger expected value is approximately 0.87 times the bounty. This means the mechanism works in reverse for frivolous challengers: a suppression attacker who files a challenge they expect to lose faces negative expected value of roughly the same magnitude.
+
+The deterrent fails under specific conditions:
+
+- **Low juror accuracy**: if juror accuracy falls below approximately 0.60, even legitimate challenges become unprofitable and the distinction between frivolous and genuine challenges becomes unreliable. At low accuracy, the DDR system cannot reliably punish frivolous challengers, reducing the economic deterrent.
+- **High DDR fees relative to counter-stake**: if arbitration fees dominate the challenger's cost structure, the counter-stake loss becomes a secondary concern and the deterrent weakens.
+- **High-value suppression targets**: for claims whose removal from the main feed creates value exceeding the expected counter-stake loss (e.g., politically sensitive claims, market-moving information), the suppression cost may be acceptable to a well-funded adversary.
+- **Serial suppression economics**: the cost to suppress one claim for the duration of DDR resolution is approximately `counter-stake + challenge tax + DDR fee`. For a claim with a 0.1 ETH bond, this is roughly 0.03 ETH per challenge cycle. Sequential queued challenges can extend suppression at this marginal cost per cycle, and the 24-hour cancellation window between cycles is the only pause.
+
+The protocol does not attempt to eliminate suppression attacks entirely. The claim is that the cost structure makes sustained suppression expensive relative to the value of most claims. Whether this holds in practice depends on the distribution of claim values and adversary budgets, which cannot be determined analytically.
 
 ### Indexer Or Gateway Failure
 
