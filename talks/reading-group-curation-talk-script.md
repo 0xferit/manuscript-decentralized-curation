@@ -181,7 +181,7 @@ Relevance stays inside the pool and is judged by drafted curators under the pool
 
 This is also where I rely on Schelling-style reasoning, but with caution. The system does not assume that people coordinate directly on truth. It assumes they coordinate on expected defensible judgment under explicit rules. That is a weaker claim, but I think it is the more realistic one.
 
-A known limitation: the mechanism resists small colluding minorities, but at our reference parameters (K=1.25, 15-member committees) it degrades when a coordinated bloc exceeds roughly 15 to 20 percent of drafted stake. The threshold depends on the coherence parameter, committee size, and policy specificity. Below that threshold, colluder impact remains limited in our simulations; above it, a coordinating bloc can bend the relevance signal. This constraint is quantified in the paper but not yet solved.
+A known limitation: the mechanism resists small colluding minorities, but at our reference parameters (K=1.25, 15-member committees) it degrades when a coordinated bloc exceeds roughly 15 to 20 percent of colluding fraction. The threshold depends on the coherence parameter, committee size, and policy specificity. Below that threshold, colluder impact remains limited in our simulations; above it, a coordinating bloc can bend the relevance signal. This constraint is quantified in the paper but not yet solved.
 
 The deeper point is that mechanism design begins only after the conceptual decomposition is done. If we start with mechanism design too early, we usually end up solving the wrong problem.
 
