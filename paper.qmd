@@ -19,7 +19,7 @@ bibliography: references.bib
 
 The internet solved access to information but not access to knowledge. The unresolved bottleneck is **curation**: the transformation of raw information into decision-grade knowledge. This bottleneck is upstream of many failures usually described as failures of governance, media, or coordination. The problem is becoming structurally worse because generative AI makes the form of quality cheap while leaving the substance of quality expensive. We can now generate fluent prose, plausible structure, and respectable presentation far more cheaply than we can generate correctness, coherence, or grounded judgment.
 
-This paper argues that many hard problems decompose into a curate-then-coordinate structure and that the difficulty is concentrated in the curation phase rather than the coordination phase. It proposes a general framework for trustless decentralized curation. The framework has four steps: identify the hidden curation problem behind an apparent downstream failure; identify the relevant quality dimensions; require falsifiability where the mechanism depends on challenge; and design distinct mechanisms for each quality dimension instead of collapsing all quality into one score. We instantiate the framework for news, where two dimensions dominate: **accuracy**, which is global and binary, and **relevance**, which is local and scalar.
+This paper proposes, as a working hypothesis, that many information-heavy coordination problems decompose into a curate-then-coordinate structure and that the difficulty is concentrated in the curation phase rather than the coordination phase. It develops a general framework for trustless decentralized curation and tests the hypothesis on one domain (news) with full mechanism design, simulation, and partial deployment. The framework has four steps: identify the hidden curation problem behind an apparent downstream failure; identify the relevant quality dimensions; require falsifiability where the mechanism depends on challenge; and design distinct mechanisms for each quality dimension instead of collapsing all quality into one score. We instantiate the framework for news, where two dimensions dominate: **accuracy**, which is global and binary, and **relevance**, which is local and scalar.
 
 The protocol design reflects that decomposition. Accuracy is handled through bonded publication, open challenges, and external decentralized dispute resolution. Relevance is handled through drafted curator rounds under a public policy, with coherence-based rewards and slashing. Confidence is accumulated bond-time rather than a truth label. Author reputation acts as a slow-moving non-monetary bond. Pool creation is permissionless, contracts are treated as immutable, and governance is minimized by design: we prefer no need for governance over good governance.
 
@@ -33,7 +33,7 @@ When you search for travel destinations, you are consuming someone else's curati
 
 This dependency matters because information is not knowledge. Raw information becomes useful only after it has been selected, verified, and contextualized. That transformation is curation. The internet radically improved access to information; it did not solve access to knowledge.
 
-This paper argues that **many hard problems decompose into curate-then-coordinate, and that the difficulty is concentrated in the curation phase, not the coordination phase.**
+This paper proposes a working hypothesis: **many information-heavy coordination problems decompose into curate-then-coordinate, and the difficulty is concentrated in the curation phase, not the coordination phase.** The hypothesis is tested on one domain (news) with full mechanism design, simulation, and partial deployment; other domains are discussed as plausible extensions, not proven applications.
 
 Take news. A newspaper is a curated set of claims about reality. People consume those claims and then make decisions. In a democracy, those decisions are collective and consequential. If the curation layer is incompetent, voters act on low-quality knowledge. If the curation layer is weaponized, voters act on poisoned knowledge [@chomsky1988manufacturing]. In both cases the downstream damage is the same: people coordinate on corrupted inputs.
 
@@ -59,7 +59,7 @@ That is why curation is not a side problem. It is becoming the central bottlenec
 
 This paper contributes:
 
-- **A general framework for trustless decentralized curation.** The framework is not a news-only theory. It is a method for identifying when decentralized curation is feasible and how to decompose the mechanism.
+- **A general framework for trustless decentralized curation.** The framework is a method for identifying when decentralized curation is feasible and how to decompose the mechanism. This paper fully instantiates it for news (with mechanism design, simulation, and partial deployment) and sketches a second application to advertising; broader generality is a design goal, not a demonstrated property.
 - **A complete end-state protocol architecture for Truth Post.** The design separates accuracy from relevance, distinguishes on-chain canonical state from replaceable interfaces, makes pool creation permissionless, and treats contracts as immutable with cross-version coexistence rather than in-place upgrades.
 - **A simulation-based evaluation program.** The experiments test the economic viability of challenge-based accuracy verification, the filtering power and collusion resistance of drafted-curator relevance rounds, and the separating effect of author reputation as a standing bond.
 - **A deployment retrospective.** Truth Post (2023) proved the on-chain submission-and-challenge flow and revealed the bootstrapping conditions the current design must satisfy.
@@ -73,9 +73,9 @@ The central contribution of this paper is a general four-step framework (@fig-fr
 3. **Falsifiability requirement.** Use challenge-based mechanisms only where falsification is feasible and cheaper than exhaustive verification.
 4. **Mechanism design by dimension.** Design different mechanisms for different quality dimensions instead of forcing all quality into one signal.
 
-The framework is deliberately domain-agnostic. What changes across domains is not the method, but the quality decomposition and the mechanism mix.
+The framework is designed to be domain-agnostic: the four steps are not specific to any single domain, and what changes across domains is the quality decomposition and the mechanism mix. This paper fully instantiates one domain (news) and sketches a second (advertising). The architectural pattern is intended to generalize, but demonstrated generality requires additional instantiations beyond those presented here.
 
-![Four-step framework for trustless decentralized curation. The method is domain-agnostic; what changes across domains is the quality decomposition and mechanism mix.](diagrams/fig-framework.png){#fig-framework}
+![Four-step framework for trustless decentralized curation. The steps are domain-independent; what changes across domains is the quality decomposition and mechanism mix.](diagrams/fig-framework.png){#fig-framework}
 
 ## Step 1: identify the hidden curation problem
 
@@ -115,7 +115,7 @@ Advertising shows that the framework is not confined to journalism. Advertising 
 
 A different advertising game is possible. Instead of paying for distribution regardless of truth, advertisers can express ads as claims and post a bond behind them. If the claim is true, the cost is mainly temporary capital lockup. If the claim is false, the capital is lost to challengers. This inverts the current cost structure: honest advertisers are cheap to accommodate, dishonest advertisers become expensive.
 
-Advertising therefore serves two purposes in this paper. It demonstrates that the framework generalizes beyond news, and it provides a plausible funding source for curation labor even when political or journalistic disputes are quiet [@juniperresearch2023adfraud].
+Advertising therefore serves two purposes in this paper. It illustrates that the framework's four steps can be applied outside journalism, though this sketch does not constitute a full instantiation (no quality decomposition, simulation, or deployment has been performed for advertising). It also provides a plausible funding source for curation labor even when political or journalistic disputes are quiet [@juniperresearch2023adfraud].
 
 # Instantiating The Framework For News
 
@@ -514,7 +514,7 @@ Scalability, structured claim authoring, challenge participation, legal exposure
 
 # Conclusion
 
-The core claim of this paper is that the bottleneck behind many hard problems is not governance, voting, or coordination in the narrow sense. It is the upstream transformation of raw information into decision-grade knowledge. I call that transformation **curation**.
+The working hypothesis of this paper is that the bottleneck behind many information-heavy coordination problems is not governance, voting, or coordination in the narrow sense, but the upstream transformation of raw information into decision-grade knowledge. I call that transformation **curation**. The paper tests this hypothesis on one domain (news) and sketches its application to a second (advertising); whether the decomposition holds more broadly remains an open question.
 
 The paper contributes a general framework for trustless decentralized curation and instantiates it for news. The framework starts with problem definition, identifies the relevant quality dimensions, requires falsifiability where challenge is the mechanism, and designs incentives dimension by dimension rather than collapsing everything into one score. In the news instantiation, that yields an accuracy layer based on bonded publication and open challenge, and a relevance layer based on drafted curator rounds under a public policy.
 
