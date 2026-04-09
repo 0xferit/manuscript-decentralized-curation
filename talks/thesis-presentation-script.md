@@ -62,7 +62,7 @@ Fourth, design mechanisms dimension by dimension. Different information qualitie
 
 That framework is the backbone of the thesis.
 
-It is domain-agnostic. In the thesis I instantiate it mainly for news, because news is where the problem is socially visible and the cost of failure is broadly distributed. But it is not a news-only framework.
+It is designed to be domain-agnostic, though that generality has not been demonstrated. In the thesis I instantiate it mainly for news, because news is where the problem is socially visible and the cost of failure is broadly distributed. But it is not a news-only framework.
 
 ## Why News Is The First Serious Use Case
 
@@ -110,7 +110,7 @@ Relevance is different. Relevance is not well served by a binary yes-or-no proce
 
 So for relevance I use a policy-guided coherence game. Curators stake into a pool, are drafted into rounds, and independently rate how strongly a claim conforms to the pool’s curation policy. Outliers are slashed. Coherent participants are rewarded.
 
-This mechanism resists small colluding minorities, but at our reference parameters (K=1.25, 15-member committees) it degrades when a coordinated bloc exceeds roughly colluding fraction of roughly 15 to 20 percent. The threshold depends on the coherence parameter, committee size, and policy specificity; it is not a universal constant. Below that threshold, colluder impact remains limited in our simulations; above it, a coordinating bloc can bend the signal. This is a known constraint, not a solved problem.
+This mechanism resists small colluding minorities, but at our reference parameters (K=1.25, 15-member committees) it degrades when a coordinated bloc exceeds a colluding fraction of roughly 15 to 20 percent. The threshold depends on the coherence parameter, committee size, and policy specificity; it is not a universal constant. Below that threshold, colluder impact remains limited in our simulations; above it, a coordinating bloc can bend the signal. This is a known constraint, not a solved problem.
 
 This is where Schelling-style reasoning becomes important. The mechanism does not ask curators to assert global truth. It asks them to converge on policy-grounded relevance under conditions where their incentives favor disciplined judgment.
 
