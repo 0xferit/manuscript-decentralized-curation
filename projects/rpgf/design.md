@@ -332,6 +332,18 @@ These policy objects and dependency references are versioned by content hash. No
 | Curator exit cooldown | 7 days |
 | DDR timeout | 90 days (funding rounds have deadlines) |
 
+### Parameter Calibration Status
+
+These defaults are reference-pool starting points, not empirically validated optima. The table above exists so an initial RPGF pool can be implemented and analyzed end to end. It should not be read as claiming that the listed values have already passed formal calibration or sensitivity analysis.
+
+Challenge-cost parameters (counter-stake ratio, challenge tax, author bond) are partially grounded by the challenge incentive analysis above: the worked example shows how they interact to determine break-even success probabilities. But the analysis is local to one parameter configuration and does not identify robust optima across heterogeneous pool sizes, DDR fee regimes, or nomination value distributions.
+
+Relevance-game parameters (coherence threshold K, slash rate, degenerate-round threshold, per-identity weight cap, round reward floor) are calibration placeholders carried from the news instantiation blueprint. Their intended role is clear: values that are too low weaken discipline against incoherent or concentrated scoring, while values that are too high risk curator non-participation or excessive round cancellation. No RPGF-specific equilibrium analysis has been conducted.
+
+Reputation parameters (reward, penalty, decay) are likewise directional: the 5:1 penalty-to-reward ratio and 30-day decay epoch are design choices intended to make debunking costly while allowing recovery. The effective recovery time analysis in the Registry Entry Reputation section provides a first-order check, but interaction with round frequency, pool count, and heterogeneous project quality remains unvalidated.
+
+Accordingly, these are coherent starting defaults for a reference RPGF pool, sufficient to specify an implementable mechanism and to support the illustrative calculations, but not sufficient to claim robustness or optimality. The same three categories of sensitivity work identified for the news instantiation apply here: one-at-a-time sweeps, joint sweeps for coupled parameters, and adversarial tests.
+
 ## Differences From News Instantiation
 
 The following table compares the RPGF instantiation with the thesis's other instantiation (a continuous news-curation protocol) to highlight domain-specific adaptations.
@@ -390,6 +402,14 @@ The "bad pools fail locally" dynamic depends on participants exiting bad pools a
 3. **Round-cycle lock-in**: pool parameters are immutable and rounds last ~60+ days (submission window + holdback). Capital committed to a round cannot move to a competing pool until that round completes. This temporal lock-in means that even if participants recognize a pool is bad, funds already in-flight are irrecoverable for the current round.
 
 These frictions do not invalidate the exit argument (exit is still structurally better than governance capture of a shared mechanism), but they mean "bad pools fail locally" is a design aspiration that depends on short rounds, low minimum viable pool sizes, and sufficient funder coordination. Deployments should monitor pool concentration and exit rates as empirical signals of whether the dynamic functions as hypothesized.
+
+### DDR dependency
+
+The accuracy layer delegates adjudication to an external DDR provider (Kleros v1). If the external court is captured, lazy, or inaccurate, the accuracy layer inherits that degradation. In the RPGF context, this risk is amplified relative to the news instantiation because challenge outcomes directly redirect funding: a single corrupted DDR ruling can redirect a nomination's entire provisional share. The main paper's analysis of inherited DDR dependency applies here with higher stakes per ruling. The 90-day timeout fallback addresses only DDR liveness (non-resolution); it does not mitigate capture or inaccuracy and actually defaults unresolved disputes to author victory, converting stalled challenges into false negatives. This design does not independently model DDR capture cost or correctness-layer mitigation.
+
+### Pool bootstrapping
+
+A new RPGF pool requires curators staked and ready before the first evaluation period, a funded curation budget before nominations can be scored, and enough nominations to justify curator participation. These three dependencies create a bootstrapping coordination problem: curators will not stake without content, nominees will not submit without curators, and funders will not fund without both. The design does not specify a bootstrapping mechanism. Whether the permissionless pool creation model can produce viable pools without external coordination (e.g., a foundation seeding the initial pool) is an open empirical question.
 
 ## FAQ
 
