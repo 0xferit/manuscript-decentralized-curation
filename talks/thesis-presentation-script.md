@@ -193,7 +193,7 @@ Third, I already have a real deployment retrospective. That is rare in work of t
 
 Fourth, the complete protocol blueprint is no longer vague. It has concrete actors, objects, state machines, challenge flows, relevance flows, economic rules, and failure models. The design decisions are concrete enough to constrain an implementation, even though additional specification work remains.
 
-And fifth, the framework generalizes.
+And fifth, the framework is designed to generalize, though this remains a hypothesis rather than a demonstrated property.
 
 ## Advertising As A Second Instantiation
 
@@ -213,7 +213,7 @@ If the claim is false, they lose the capital.
 
 That inverts the current cost structure. Honest actors become cheap to accommodate. Dishonest actors become expensive to sustain.
 
-And this is exactly why I include advertising in the thesis. It demonstrates that the framework is not tied to one political or journalistic niche. It applies wherever there is an information-to-knowledge bottleneck, public evidence, and feasible falsification.
+And this is exactly why I include advertising in the thesis. It suggests that the framework is not tied to one political or journalistic niche. It could apply wherever there is an information-to-knowledge bottleneck, public evidence, and feasible falsification, though the advertising sketch is not a full instantiation and does not prove generality.
 
 ## What This Thesis Is Actually Claiming
 
@@ -253,7 +253,7 @@ And if I reduce the contribution to one sentence, it is this:
 
 I am not just naming that bottleneck; I am proposing a general framework and a concrete protocol architecture for removing trust from it.
 
-News is the main instantiation because it makes the problem visible. Truth Post is the implementation example because it shows this work has already passed the stage of vague speculation. Advertising is the second instantiation because it shows the framework is general.
+News is the main instantiation because it makes the problem visible. Truth Post is the implementation example because it shows this work has already passed the stage of vague speculation. Advertising is a preliminary sketch suggesting the framework could generalize beyond news, though that remains to be demonstrated.
 
 What I want the audience to take away is not merely that I have a protocol idea.
 
