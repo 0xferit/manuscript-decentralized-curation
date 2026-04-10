@@ -11,7 +11,7 @@ _These attacks have been neutralized, and their defenses are integrated into the
 ### 1. The "Lazy Majority" Equilibrium
 
 **Attack:** Curators will just copy the majority vote (or whale vote) without checking facts to win rewards.
-**Defense:** Commit-reveal voting prevents vote copying during the commitment phase. Coherence-based slashing punishes curators whose scores fall outside the |v_i - mu| <= K*sigma band, making rubber-stamping risky when it diverges from the informed distribution. Per-identity weight caps (10% of round weight) prevent any single curator from dominating committee outcomes. Degenerate-round detection cancels near-flat rounds rather than accepting them as meaningful curation.
+**Defense:** Commit-reveal voting prevents vote copying during the commitment phase. Coherence-based slashing punishes curators whose scores fall outside the |v_i - mu| <= K*sigma band, making rubber-stamping risky when it diverges from the informed distribution.
 
 ### 2. The "Subreddit War" (Echo Chambers)
 
@@ -31,7 +31,7 @@ _These attacks have been neutralized, and their defenses are integrated into the
 ### 6. The "Rich Get Richer"
 
 **Attack:** Competent curators accumulate all the capital, forming an oligarchy.
-**Defense:** The design optimizes for truth quality, not curator equality. Curation uses pure stake-weighted drafting (d_i = s_i) with per-identity weight caps (10% of round weight). Permissionless pool creation allows alternative communities to form. The weight cap bounds per-identity influence within a single committee but does not prevent stake concentration across multiple protocol identities. Curator reputation has been eliminated entirely; no reputation-weighted mechanism influences drafting or scoring.
+**Defense:** The design optimizes for truth quality, not curator equality. Curation uses pure stake-weighted drafting (d_i = s_i) with weight caps: w_i = min(s_i, c * total_committee_stake). Permissionless pool creation allows alternative communities to form. The weight cap bounds individual influence within a single committee but does not prevent stake concentration across multiple protocol identities. Curator reputation has been eliminated entirely; no reputation-weighted mechanism influences drafting or scoring.
 
 ### 7. The "Chilling Effect" (Liability)
 
@@ -69,7 +69,7 @@ _These attacks have been neutralized, and their defenses are integrated into the
 **Defense:** The system treats question design as first-class:
 
 1. **Semantic Precision / Claim Templates:** Claims must be falsifiable and well-posed (timeframe, definitions, sources). Under-specified claims are rejected/slashable via `NonFalsifiable` challenge reason instead of forcing jurors to guess.
-2. **Topic Pools + Stake-Weighted Drafting:** Curators are drafted from staked pools via stake-weighted lottery with per-identity weight caps. No reputation influences drafting or scoring; curation is entirely stake-driven.
+2. **Topic Pools + Stake-Weighted Drafting:** Curators are drafted from staked pools via stake-weighted lottery with weight caps (w_i = min(s_i, c * total_committee_stake)). No reputation influences drafting or scoring; curation is entirely stake-driven.
 3. **External DDR Appeals:** If a lazy majority converges on the wrong outcome, appeals are handled entirely by the external DDR. The protocol does not implement its own escalating-stakes appeal ladder or any protocol-native "lone expert versus herd" jackpot.
 4. **Policy-defined Domains:** When a dispute is inherently normative (e.g., "what counts as X under policy"), jurors adjudicate policy compliance, not metaphysical truth.
 
@@ -97,7 +97,7 @@ _These attacks are partially mitigated but not fully resolved. Each entry notes 
 ### OV-1. Off-Chain Collusion Above the Colluding-Bloc Threshold
 
 **Attack:** Curators coordinate off-chain to align their scores, shifting the weighted mean toward a biased target. Honest reporters then fall outside the coherence band and are slashed while dishonest reporters survive.
-**Status:** Partially mitigated. Commit-reveal prevents direct vote copying. Per-identity weight caps limit individual influence. E2-Adv characterizes the collusion threshold empirically: at K=1.25 with 15-member committees, the mechanism degrades visibly when the colluding fraction exceeds approximately 0.15 to 0.20. Below this threshold, small colluding minorities cause limited damage. Above it, coordinated blocs can bend the signal and preserve their own stake. The design narrows the attack surface but does not eliminate it. Off-chain coordination that does not require explicit vote exchange (e.g., tacit agreements to "all vote 0.9") is not detectable by commit-reveal.
+**Status:** Partially mitigated. Commit-reveal prevents direct vote copying. Weight caps limit individual influence within each committee. E2-Adv characterizes the collusion threshold empirically: at K=1.25 with 15-member committees, the mechanism degrades visibly when the colluding fraction exceeds approximately 0.15 to 0.20. Below this threshold, small colluding minorities cause limited damage. Above it, coordinated blocs can bend the signal and preserve their own stake. The design narrows the attack surface but does not eliminate it. Off-chain coordination that does not require explicit vote exchange (e.g., tacit agreements to "all vote 0.9") is not detectable by commit-reveal.
 
 ### OV-2. Legal Pressure Against Visible Participants
 
@@ -112,7 +112,7 @@ _These attacks are partially mitigated but not fully resolved. Each entry notes 
 ### OV-4. Coordinated Capture Above the Colluding-Bloc Threshold
 
 **Attack:** A well-funded adversary acquires enough stake across multiple identities to exceed the colluding-bloc threshold in targeted pools, systematically distorting relevance scores.
-**Status:** Partially mitigated. Per-identity weight caps (10% of round weight) force the adversary to acquire multiple identities. The same collusion threshold described in OV-1 applies, but this vector differs in attack surface: a funded adversary can manufacture the required identities rather than relying on organic coordination. The paper does not model the cost of acquiring the required stake fraction in specific pools or the cost of maintaining Sybil identities. The per-identity weight cap limits influence per protocol identity only; it is not a Sybil-resistance guarantee.
+**Status:** Partially mitigated. Weight caps (w_i = min(s_i, c * total_committee_stake)) force the adversary to acquire multiple identities to control committee outcomes. The same collusion threshold described in OV-1 applies, but this vector differs in attack surface: a funded adversary can manufacture the required identities rather than relying on organic coordination. The paper does not model the cost of acquiring the required stake fraction in specific pools or the cost of maintaining Sybil identities. The weight cap limits influence per protocol identity only; it is not a Sybil-resistance guarantee.
 
 ### OV-5. DDR Capture / Degradation
 
