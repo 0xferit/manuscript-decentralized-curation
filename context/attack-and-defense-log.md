@@ -41,7 +41,7 @@ _These attacks have been neutralized, and their defenses are integrated into the
 ### 8. The "Meta-Curation" Trap
 
 **Attack:** The Protocol is neutral, but the Interface (Wallet/App) re-centralizes control.
-**Defense:** The protocol provides canonical on-chain state. Users can always bypass a biased interface to check the raw protocol data. Multiple interfaces can coexist; interface centralization is addressed by the explicit protocol-interface separation in the architecture.
+**Defense:** Protocol state is canonical and publicly readable on-chain, so a biased interface cannot falsify protocol outputs; it can only choose what to surface. Multiple interfaces can coexist because all curation work (adjudication, relevance scoring, confidence accounting) is done on-chain; an interface only reads and renders, making the barrier to entry for a transparent competitor low. A distorting interface creates a differentiation opportunity for any competitor willing to render canonical state faithfully. In practice, the defense depends on interface competition actually materializing rather than on individual users reading raw chain data. The architecture is a precondition for this competition, not a guarantee of it.
 
 ### 9. The "Deflationary Spiral" (No Yield in Peacetime)
 
