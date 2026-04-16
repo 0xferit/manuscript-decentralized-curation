@@ -36,7 +36,7 @@ _These attacks have been neutralized, and their defenses are integrated into the
 ### 7. The "Chilling Effect" (Liability)
 
 **Attack:** Staking on truth exposes curators to libel lawsuits.
-**Defense:** Curators stake into topic pools and are randomly drafted into committees. This randomness creates herd immunity against targeted liability. The paper acknowledges this is a partial mitigation: pooled staking and random drafting do not establish immunity from targeted legal action.
+**Defense:** Curators stake into topic pools and are randomly drafted into committees. This randomness reduces targeted pre-selection: curators do not choose which claims they score, and an adversary cannot predict committee membership before drafting. All participants operate under pseudonymous on-chain addresses, which raises the cost of linking protocol activity to a real-world identity targetable by legal action. Authors and challengers face higher legal exposure than curators because they voluntarily select specific claims to publish or challenge; random drafting does not protect them. The paper acknowledges this is a partial mitigation: pooled staking and random drafting do not establish immunity from targeted legal action.
 
 ### 8. The "Meta-Curation" Trap
 
