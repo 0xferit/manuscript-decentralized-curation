@@ -21,7 +21,7 @@ _These attacks have been neutralized, and their defenses are integrated into the
 ### 3. The "Post-Truth" Apathy
 
 **Attack:** Users don't care about truth; they want dopamine.
-**Defense:** The protocol is middleware. It provides the truth supply chain. If a consumer app wants to sell truth, the protocol enables it. The protocol does not force users to consume verified content, but it labels the unverified content for interfaces that choose to use it.
+**Defense:** The protocol is middleware. It provides a contestable accuracy signal. If a consumer app wants to sell truth, the protocol enables it. The protocol does not force users to consume verified content, but it produces adjudication outcomes for bonded claims that interfaces can use to distinguish tested from untested content.
 
 ### 4. The "Boring Dystopia" (Liquidity Crisis)
 
