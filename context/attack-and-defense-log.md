@@ -16,7 +16,7 @@ _These attacks have been neutralized, and their defenses are integrated into the
 ### 2. The "Subreddit War" (Echo Chambers)
 
 **Attack:** A "Conspiracy Pool" will successfully curate lies because their policy allows it.
-**Defense:** A pool can have a biased relevance policy, but accuracy is a global standard enforced by the cross-pool external DDR court. You can curate "Relevant Conspiracy Theories," but you cannot tag them as "Accurate" without the claim being challengeable and debunkable through external DDR.
+**Defense:** A pool can have a biased relevance policy, but accuracy is adjudicated by a cross-pool external DDR court. Any bonded claim is challengeable regardless of which pool it belongs to; a conspiracy pool cannot shelter a factually false claim from external DDR. However, the accuracy/relevance separation addresses only the factual half of the echo chamber problem. A biased pool can still distort which accurate claims are surfaced by scoring them as highly or lowly relevant. The design relies on pool competition and user exit for relevance quality, not on a protocol-level guarantee.
 
 ### 3. The "Post-Truth" Apathy
 
