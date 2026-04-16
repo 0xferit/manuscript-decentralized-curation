@@ -51,7 +51,7 @@ _These attacks have been neutralized, and their defenses are integrated into the
 ### 10. The "Toxic Content" Trap
 
 **Attack:** Permissionless publishing means hosting hate speech/illegal content.
-**Defense:** The protocol is the neutral pipe; the interface is the filter. Interfaces can block toxic pools to comply with local laws without compromising the protocol's censorship resistance. The protocol-interface separation makes this architecturally explicit.
+**Defense:** The protocol is the neutral pipe; the interface is the filter. Interfaces can block toxic pools to comply with local laws without compromising the protocol's censorship resistance. The protocol-interface separation makes this architecturally explicit. Content-layer operators (indexers, gateways, pinning services) face analogous filtering decisions: they choose which claim blobs to host or serve, and may face jurisdiction-specific legal pressure independently of interface operators.
 
 ### 12. The "Context Collapse" (Epistemic Vacuum)
 
