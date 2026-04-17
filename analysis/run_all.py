@@ -446,7 +446,7 @@ class E2Params:
     rounds: int = 200
     slash_rate: float = 0.03
     noise_sigma: float = 0.08
-    coherence_cap_share: float = 1.0  # no per-identity cap; draw-and-lock replaces caps
+    coherence_cap_share: float = 1.0  # cap disabled for this run
     flat_round_stddev_min: float = 0.02
     ks: tuple[float, ...] = (0.8, 1.0, 1.25, 1.5)
     competent_fracs: tuple[float, ...] = (0.1, 0.3, 0.5, 0.7, 0.9)
@@ -672,7 +672,7 @@ class E2AdvParams:
     rounds: int = 200
     slash_rate: float = 0.03
     noise_sigma: float = 0.08
-    coherence_cap_share: float = 1.0  # no per-identity cap; draw-and-lock replaces caps
+    coherence_cap_share: float = 1.0  # cap disabled for this run
     flat_round_stddev_min: float = 0.02
     K: float = 1.25
     competent_frac: float = 0.6
