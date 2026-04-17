@@ -11,7 +11,7 @@ _These attacks have been neutralized, and their defenses are integrated into the
 ### 1. The "Lazy Majority" Equilibrium
 
 **Attack:** Curators will just copy the majority vote (or whale vote) without checking facts to win rewards.
-**Defense:** Commit-reveal voting prevents vote copying during the commitment phase. Coherence-based slashing punishes curators whose scores fall outside the |v_i - mu| <= K*sigma band, making rubber-stamping risky when it diverges from the informed distribution.
+**Defense:** Commit-reveal voting prevents vote copying during the commitment phase. Graduated coherence-based slashing penalizes curators whose scores fall outside the |v_i - mu| <= K*sigma band, with penalty scaling linearly from zero at the boundary to total loss of locked tokens at twice the boundary distance. This makes rubber-stamping risky when it diverges from the informed distribution, with harsher penalties for larger deviations.
 
 ### 2. The "Subreddit War" (Echo Chambers)
 
@@ -31,7 +31,7 @@ _These attacks have been neutralized, and their defenses are integrated into the
 ### 6. The "Rich Get Richer"
 
 **Attack:** Competent curators accumulate all the capital, forming an oligarchy.
-**Defense:** The design optimizes for truth quality, not curator equality. Curation uses pure stake-weighted drafting (d_i = s_i) with weight caps: w_i = min(s_i, c * total_committee_stake). Permissionless pool creation allows alternative communities to form. The weight cap bounds individual influence within a single committee but does not prevent stake concentration across multiple protocol identities. Curator reputation has been eliminated entirely; no reputation-weighted mechanism influences drafting or scoring.
+**Defense:** The design optimizes for truth quality, not curator equality. Curation uses draw-and-lock staking: curators stake into a pool, the protocol draws seats proportional to stake, and each seat locks a fixed token amount that determines both round weight and maximum loss. Larger stakers draw more seats, contributing more information to the mean and facing proportionally larger penalties if incoherent. Permissionless pool creation allows alternative communities to form. The defense against whale manipulation is escalation: a dishonest whale who dominates a round faces a larger appeal committee where their stake fraction is diluted and their losses scale with their position. A whale who captures a pool also degrades its value, making the attack economically self-defeating for profit-seeking actors. Curator reputation has been eliminated entirely; no reputation-weighted mechanism influences drafting or scoring.
 
 ### 7. The "Chilling Effect" (Liability)
 
@@ -69,9 +69,11 @@ _These attacks have been neutralized, and their defenses are integrated into the
 **Defense:** The system treats question design as first-class:
 
 1. **Semantic Precision / Claim Templates:** Claims must be falsifiable and well-posed (timeframe, definitions, sources). Under-specified claims are rejected/slashable via `NonFalsifiable` challenge reason instead of forcing jurors to guess.
-2. **Topic Pools + Stake-Weighted Drafting:** Curators are drafted from staked pools via stake-weighted lottery with weight caps (w_i = min(s_i, c * total_committee_stake)). No reputation influences drafting or scoring; curation is entirely stake-driven.
+2. **Topic Pools + Draw-and-Lock Staking:** Curators are drafted from staked pools via stake-weighted lottery. Each drafted seat locks a fixed token amount that determines both round weight and maximum loss. No reputation influences drafting or scoring; curation is entirely stake-driven.
 3. **Escalation on both layers:** For accuracy disputes, DDR handles appeals via its own escalation mechanism (larger juries at higher stakes). For relevance disputes, relevance-round escalation allows dissenting curators to appeal to a larger committee at higher stakes; the threat of appeal shifts the Schelling point from lazy consensus toward what a better-informed committee would produce.
 4. **Policy-defined Domains:** When a dispute is inherently normative (e.g., "what counts as X under policy"), jurors adjudicate policy compliance, not metaphysical truth.
+
+The defense rests on three load-bearing conditions: (a) the pool's relevance policy must be specific enough that competent curators' signals cluster around the policy-implied true value; when it is not, the mechanism degenerates toward a beauty contest; (b) escalation must shift the Schelling point from lazy consensus toward what a larger committee would produce; (c) draw-and-lock with graduated slashing must make dishonest scoring proportionally costly. The mechanism does not claim to produce truth. It produces the most common independent interpretation of a specific rubric by staked participants, bounded by escalation discipline and the aggregate collusion threshold.
 
 ---
 
@@ -97,7 +99,7 @@ _These attacks are partially mitigated but not fully resolved. Each entry notes 
 ### OV-1. Off-Chain Collusion Above the Colluding-Bloc Threshold
 
 **Attack:** Curators coordinate off-chain to align their scores, shifting the weighted mean toward a biased target. Honest reporters then fall outside the coherence band and are slashed while dishonest reporters survive.
-**Status:** Partially mitigated. Commit-reveal prevents direct vote copying. Weight caps limit individual influence within each committee. E2-Adv characterizes the collusion threshold empirically: at K=1.25 with 15-member committees, the mechanism degrades visibly when the colluding fraction exceeds approximately 0.15 to 0.20. Below this threshold, small colluding minorities cause limited damage. Above it, coordinated blocs can bend the signal and preserve their own stake. The design narrows the attack surface but does not eliminate it. Off-chain coordination that does not require explicit vote exchange (e.g., tacit agreements to "all vote 0.9") is not detectable by commit-reveal.
+**Status:** Partially mitigated. Commit-reveal prevents direct vote copying. Draw-and-lock ties each curator's influence to their locked tokens; graduated slashing scales penalty with deviation distance. Escalation allows honest minorities to overturn captured rounds by appealing to a larger committee at higher stakes. E2-Adv characterizes the collusion threshold empirically: at K=1.25 with 15-member committees, the mechanism degrades visibly when the colluding fraction exceeds approximately 0.15 to 0.20. Below this threshold, small colluding minorities cause limited damage. Above it, coordinated blocs can bend the signal and preserve their own stake. The design narrows the attack surface but does not eliminate it. Off-chain coordination that does not require explicit vote exchange (e.g., tacit agreements to "all vote 0.9") is not detectable by commit-reveal.
 
 ### OV-2. Legal Pressure Against Visible Participants
 
@@ -112,7 +114,7 @@ _These attacks are partially mitigated but not fully resolved. Each entry notes 
 ### OV-4. Coordinated Capture Above the Colluding-Bloc Threshold
 
 **Attack:** A well-funded adversary acquires enough stake across multiple identities to exceed the colluding-bloc threshold in targeted pools, systematically distorting relevance scores.
-**Status:** Partially mitigated. Weight caps (w_i = min(s_i, c * total_committee_stake)) force the adversary to acquire multiple identities to control committee outcomes. The same collusion threshold described in OV-1 applies, but this vector differs in attack surface: a funded adversary can manufacture the required identities rather than relying on organic coordination. The paper does not model the cost of acquiring the required stake fraction in specific pools or the cost of maintaining Sybil identities. The weight cap limits influence per protocol identity only; it is not a Sybil-resistance guarantee.
+**Status:** Partially mitigated. Per-identity weight caps have been removed because they constrain only honest single-identity participants; a Sybil adversary distributes stake across cheap identities to bypass per-identity caps. The real constraint is the aggregate collusion threshold phi* combined with escalation. The adversary must acquire enough total stake to exceed phi*, and if they do, they face proportionally larger losses when honest curators appeal to a larger committee that overturns the captured round. A whale who captures a pool also degrades its curation quality, causing users to migrate to competitors; the whale's locked stake loses value. This makes capture economically self-defeating for profit-seeking actors but does not deter externally motivated attackers who treat stake loss as an operational expense. The paper does not model the cost of acquiring the required stake fraction in specific pools.
 
 ### OV-5. DDR Capture / Degradation
 
