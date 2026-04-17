@@ -441,7 +441,7 @@ def run_e1_adversarial(params: E1AdvParams) -> None:
 
 @dataclass(frozen=True)
 class E2Params:
-    """Predecessor model (binary slash, no draw-and-lock). Cap disabled."""
+    """Predecessor model (binary coherence test, fixed-rate slashing, no draw-and-lock). Cap disabled."""
     n_curators: int = 200
     committee_size: int = 15
     rounds: int = 200
@@ -668,7 +668,7 @@ def run_e2(params: E2Params) -> None:
 
 @dataclass(frozen=True)
 class E2AdvParams:
-    """Predecessor model (binary slash, no draw-and-lock). Cap disabled."""
+    """Predecessor model (binary coherence test, fixed-rate slashing, no draw-and-lock). Cap disabled."""
     n_curators: int = 200
     committee_size: int = 15
     rounds: int = 200
