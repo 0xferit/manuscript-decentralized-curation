@@ -224,18 +224,23 @@ $$
 d_i = s_i
 $$
 
-4. Drafted curators commit and reveal relevance scores in $[0,1]$.
-5. Final round weight is based on **slashable stake only**. Let $w_i$ denote curator $i$'s effective round weight, and let $c$ denote the maximum share of total committee stake any one curator may contribute:
+4. When drafted, the protocol draws seats from each curator proportional to their stake. Each seat locks a fixed token amount $L$ (pool-configurable). Let $n_i$ denote the number of seats drawn for curator $i$. The curator's round weight $w_i$ equals their total locked tokens:
 
 $$
-w_i = \min(s_i, c \cdot \text{total committee stake})
+w_i = n_i \cdot L
 $$
 
-6. The protocol computes the weighted mean $\mu$ of submitted scores and the weighted standard deviation $\sigma$. Let $v_i$ denote curator $i$'s revealed score and let $K$ denote the coherence-threshold multiplier. Curators outside the coherence band are slashed:
+Locked tokens are simultaneously the curator's influence on the weighted mean and their maximum loss. Unlocked tokens remain freely movable.
+
+5. Drafted curators commit and reveal relevance scores in $[0,1]$.
+
+6. The protocol computes the weighted mean $\mu$ of submitted scores and the weighted standard deviation $\sigma$. Let $v_i$ denote curator $i$'s revealed score and let $K$ denote the coherence-threshold multiplier. Curators inside the coherence band ($|v_i - \mu| \le K\sigma$) are not penalized. Curators outside the band lose a fraction of their locked tokens that scales linearly with distance:
 
 $$
-|v_i - \mu| \le K\sigma
+p_i = \min\!\Bigl(1,\;\frac{|v_i - \mu|/\sigma - K}{K}\Bigr)
 $$
+
+At the band boundary the penalty is zero; at twice the boundary distance ($2K\sigma$ from the mean) the penalty is total loss of locked tokens. This graduated slashing replaces binary slashing: near-boundary deviations incur small losses, while extreme deviations incur total loss.
 
 7. Near-flat rounds are cancelled as degenerate rather than accepted as meaningful curation.
 
@@ -243,7 +248,7 @@ $$
 
 The primary function of escalation is not the appeal itself but its threat. First-round curators who anticipate that a lazy or biased score could be overturned by a larger, better-informed appeal committee have an incentive to score carefully from the start. The Schelling focal point shifts from "converge with what the current committee will vote" to "converge with what would survive appeal." By the Condorcet jury theorem, larger committees with independent signals produce means closer to the policy-implied true relevance, so the appeal court is the higher-accuracy anchor. This gives a well-informed minority a credible path to overturn a lazy majority: they appeal, a larger committee is drawn, and the outcome converges toward the policy-faithful score.
 
-![Relevance round sequence. Curators stake into a pool, are drafted proportional to stake, commit/reveal scores, and face coherence-based slashing. Weight capping limits whale influence; near-flat rounds are discarded. Dissenting curators may appeal to a larger committee at escalating stakes.](diagrams/fig-relevance-round.png){#fig-relevance-round}
+![Relevance round sequence. Curators stake into a pool, are drafted proportional to stake with draw-and-lock seat allocation, commit/reveal scores, and face graduated coherence-based slashing. Dissenting curators may appeal to a larger committee at escalating stakes.](diagrams/fig-relevance-round.png){#fig-relevance-round}
 
 This design keeps curation entirely stake-driven: no reputation-weighted mechanism influences either drafting or voting. That is a major departure from the earlier design.
 
@@ -341,13 +346,13 @@ The coherence game requires curators to independently report relevance scores in
 
 *When condition (iii) fails, a coalition of fraction $\phi > \phi^*$ that coordinates on a biased report shifts the weighted mean toward the coalition's target. Honest reporters may then fall outside the coherence band and be slashed, while dishonest reporters survive. At this point, honest voting ceases to be a best response.*
 
-The collusion threshold $\phi^*$ depends on the cap share $c$, the committee size, and the coherence threshold $K$. E2-Adv characterizes this threshold empirically: at $K = 1.25$ with 15-member committees, the mechanism degrades visibly when the colluding fraction exceeds approximately 0.15 to 0.20.
+The collusion threshold $\phi^*$ depends on the committee size and the coherence threshold $K$. E2-Adv characterizes this threshold empirically: at $K = 1.25$ with 15-member committees, the mechanism degrades visibly when the colluding fraction exceeds approximately 0.15 to 0.20.
 
 George's impossibility result constrains what can be claimed here [@george2023strategic]. For games with three or more ranked alternatives and minimal attack resistance, truthful reporting cannot always be a Nash equilibrium. The coherence game escapes this impossibility because curators report on a continuous scalar aggregated by weighted mean with a deviation penalty, not a ranking over discrete alternatives. The game structure is formally different from the ranked-alternative games covered by the impossibility. This escape is defensible but structural rather than airtight: the impossibility does not directly bind, but the coherence game is not immune to all strategic manipulation.
 
-The theoretical structure of the escape deserves scrutiny. For single-peaked preferences on a single dimension, the generalized median mechanism is strategyproof: no individual voter can benefit from misreporting [@moulin1980strategy]. The coherence game operates on the same single dimension (relevance in $[0, 1]$). If curators' preferences are single-peaked around their true signal, the comparison to Moulin's result applies. However, the aggregation rule is the stake-weighted mean, not the median. The mean is manipulable: any individual curator can shift it by reporting an extreme value. The $K \sigma$ coherence band partially compensates by slashing reports far from the mean, making unilateral extreme-value manipulation costly. But the band does not prevent a coordinated coalition from shifting the mean itself: if enough curators agree on a biased target, the mean moves toward the target and the coalition stays inside the band while honest reporters may fall outside it. This is exactly the failure mode E2-Adv characterizes. The formal escape from George's impossibility (continuous scalars, not ranked alternatives) coexists with a distinct manipulability gap: the weighted mean is vulnerable to coalition coordination at lower stake fractions than a median-based mechanism would require. The design does not claim to eliminate strategic manipulation; it claims to narrow the attack surface to coordinated coalitions exceeding a measurable stake threshold $\phi^*$.
+The theoretical structure of the escape deserves scrutiny. For single-peaked preferences on a single dimension, the generalized median mechanism is strategyproof: no individual voter can benefit from misreporting [@moulin1980strategy]. The coherence game operates on the same single dimension (relevance in $[0, 1]$). If curators' preferences are single-peaked around their true signal, the comparison to Moulin's result applies. However, the aggregation rule is the stake-weighted mean, not the median. The mean is manipulable: any individual curator can shift it by reporting an extreme value. The graduated $K\sigma$ coherence band partially compensates by imposing losses that scale with deviation distance, making unilateral extreme-value manipulation costly. But the band does not prevent a coordinated coalition from shifting the mean itself: if enough curators agree on a biased target, the mean moves toward the target and the coalition stays inside the band while honest reporters may fall outside it. This is exactly the failure mode E2-Adv characterizes. Escalation compensates where the band cannot: a coordinated coalition that shifts the mean in round 1 faces a larger appeal committee where its stake fraction is diluted. The formal escape from George's impossibility (continuous scalars, not ranked alternatives) coexists with a distinct manipulability gap: the weighted mean is vulnerable to coalition coordination, but the combination of graduated slashing and escalation narrows the attack surface to coordinated coalitions exceeding a measurable stake threshold $\phi^*$ across multiple committee sizes.
 
-Relevance-round escalation changes the equilibrium analysis. Without escalation, curators converge on "what the current committee will vote," which is vulnerable to lazy or coordinated majorities that exceed $\phi^*$ within the committee. With escalation, the focal point shifts to "what would survive appeal by a larger committee." By the Condorcet jury theorem, a larger committee with independent signals produces a mean closer to the policy-implied true relevance than a smaller one. A dissenting minority that believes the first-round score is wrong can appeal; if the appeal committee agrees with the minority, the original majority is slashed. The threat of this outcome disciplines first-round curators to score carefully rather than lazily. The effective $\phi^*$ rises because a colluding bloc must be large enough to survive not only the current round but also a potential appeal round with a larger committee. The formal conditions under which escalation shifts the equilibrium are a design argument grounded in the Condorcet analogy, not a proven theorem; simulation of escalation dynamics is future work.
+Relevance-round escalation changes the equilibrium analysis. Without escalation, curators converge on "what the current committee will vote," which is vulnerable to lazy or coordinated majorities that exceed $\phi^*$ within the committee. With escalation, the focal point shifts to "what would survive appeal by a larger committee." By the Condorcet jury theorem, a larger committee with independent signals produces a mean closer to the policy-implied true relevance than a smaller one. A dissenting minority that believes the first-round score is wrong can appeal; if the appeal committee agrees with the minority, the original majority is slashed. The threat of this outcome disciplines first-round curators to score carefully rather than lazily. Escalation replaces per-identity weight caps as the defense against whale manipulation: a dishonest whale who dominates round 1 by locking many seats faces proportionally larger losses on appeal when a larger committee overturns the score. The effective $\phi^*$ rises because a colluding bloc must be large enough to survive not only the current round but also a potential appeal round with a larger committee. The formal conditions under which escalation shifts the equilibrium are a design argument grounded in the Condorcet analogy, not a proven theorem; simulation of escalation dynamics is future work.
 
 ## Participation equilibrium
 
@@ -400,7 +405,7 @@ The protocol assumes adversaries can be rational, coordinated, well-funded, and 
 | Attack | Design response |
 |---|---|
 | False claims survive because challenging is uneconomic | Bonded publication plus debunking rewards |
-| Colluding curators try to bend relevance | Drafted committees, stake-only round weight, weight caps, slashing, relevance-round escalation |
+| Colluding curators try to bend relevance | Drafted committees, draw-and-lock with graduated slashing, relevance-round escalation |
 | Non-falsifiable or vague claims exploit semantic ambiguity | Structured claim templates plus `NonFalsifiable` challenge reason |
 | Off-topic claims pollute a pool | `ScopeViolation` challenge reason for topic mismatch |
 | Claims bypass template rules via direct contract interaction | On-chain structural validation at submission; `TemplateViolation` challenge reason for semantic non-conformance |
@@ -457,7 +462,7 @@ The result is economically punitive. At $p=0.80$, the adversary's cumulative bal
 
 ## E2: Relevance with drafted curators
 
-E2 evaluates the current relevance design rather than the earlier weight-allocation model. Curators are drafted into committees from a larger pool using purely stake-weighted selection. Here $\mu$ denotes the weighted mean of committee scores, $\sigma$ denotes the weighted standard deviation, and $K$ denotes the coherence-threshold multiplier used in the slashing rule. Near-flat rounds are cancelled rather than treated as meaningful curation.
+E2 evaluates the relevance layer under a simplified predecessor model: curators are drafted into committees from a larger pool using purely stake-weighted selection with a per-identity weight cap. The current design replaces weight caps with draw-and-lock seat allocation and graduated slashing; E2 has not yet been updated to reflect these changes. The qualitative dynamics (competence filtering, collusion thresholds) are expected to carry over because the underlying incentive structure (stake-weighted influence, coherence-based penalties) is preserved, but simulation validation of the draw-and-lock model with graduated slashing is future work. Here $\mu$ denotes the weighted mean of committee scores, $\sigma$ denotes the weighted standard deviation, and $K$ denotes the coherence-threshold multiplier used in the slashing rule. Near-flat rounds are cancelled rather than treated as meaningful curation.
 
 ![E2: Mean relevance error versus the initial fraction of competent curators, for four coherence thresholds. Error bands show 95% confidence intervals over 100 seeds.](analysis/fig/e2_relevance_error.png){#fig-e2-error}
 
@@ -549,7 +554,7 @@ The protocol delegates accuracy adjudication to an external DDR layer. That is a
 
 This paper does not model the token-market cost of capturing the external court or the economics of forking away from a captured court. Any claim that external DDR capture is uneconomic depends on provider-specific market capitalization, circulating float, liquidity, and attacker budget, and is therefore outside the paper's validated claims.
 
-The relevance layer has a parallel boundary. Drafting uncertainty, stake-only round weight, weight caps, and slashing make collusive distortion harder and costlier, but they do not eliminate it. Sufficiently large coordinated blocs can still bend relevance signals.
+The relevance layer has a parallel boundary. Drafting uncertainty, draw-and-lock staking, graduated slashing, and relevance-round escalation make collusive distortion harder and costlier, but they do not eliminate it. Sufficiently large coordinated blocs can still bend relevance signals.
 
 ## Pool quality, interface burden, and cold start
 
