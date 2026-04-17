@@ -70,7 +70,7 @@ _These attacks have been neutralized, and their defenses are integrated into the
 
 1. **Semantic Precision / Claim Templates:** Claims must be falsifiable and well-posed (timeframe, definitions, sources). Under-specified claims are rejected/slashable via `NonFalsifiable` challenge reason instead of forcing jurors to guess.
 2. **Topic Pools + Stake-Weighted Drafting:** Curators are drafted from staked pools via stake-weighted lottery with weight caps (w_i = min(s_i, c * total_committee_stake)). No reputation influences drafting or scoring; curation is entirely stake-driven.
-3. **External DDR Appeals:** If a lazy majority converges on the wrong outcome, appeals are handled entirely by the external DDR. The protocol does not implement its own escalating-stakes appeal ladder or any protocol-native "lone expert versus herd" jackpot.
+3. **Escalation on both layers:** For accuracy disputes, DDR handles appeals via its own escalation mechanism (larger juries at higher stakes). For relevance disputes, relevance-round escalation allows dissenting curators to appeal to a larger committee at higher stakes; the threat of appeal shifts the Schelling point from lazy consensus toward what a better-informed committee would produce.
 4. **Policy-defined Domains:** When a dispute is inherently normative (e.g., "what counts as X under policy"), jurors adjudicate policy compliance, not metaphysical truth.
 
 ---
