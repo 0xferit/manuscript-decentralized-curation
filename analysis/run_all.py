@@ -441,12 +441,13 @@ def run_e1_adversarial(params: E1AdvParams) -> None:
 
 @dataclass(frozen=True)
 class E2Params:
+    """Predecessor model (binary coherence test, fixed-rate slashing, no draw-and-lock). Cap disabled."""
     n_curators: int = 200
     committee_size: int = 15
     rounds: int = 200
     slash_rate: float = 0.03
     noise_sigma: float = 0.08
-    coherence_cap_share: float = 0.10
+    coherence_cap_share: float = 1.0  # cap disabled for this run
     flat_round_stddev_min: float = 0.02
     ks: tuple[float, ...] = (0.8, 1.0, 1.25, 1.5)
     competent_fracs: tuple[float, ...] = (0.1, 0.3, 0.5, 0.7, 0.9)
@@ -667,12 +668,13 @@ def run_e2(params: E2Params) -> None:
 
 @dataclass(frozen=True)
 class E2AdvParams:
+    """Predecessor model (binary coherence test, fixed-rate slashing, no draw-and-lock). Cap disabled."""
     n_curators: int = 200
     committee_size: int = 15
     rounds: int = 200
     slash_rate: float = 0.03
     noise_sigma: float = 0.08
-    coherence_cap_share: float = 0.10
+    coherence_cap_share: float = 1.0  # cap disabled for this run
     flat_round_stddev_min: float = 0.02
     K: float = 1.25
     competent_frac: float = 0.6
