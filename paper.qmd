@@ -224,15 +224,15 @@ $$
 d_i = s_i
 $$
 
-4. When drafted, the protocol draws seats from each curator proportional to their stake. Each seat locks a fixed token amount $L$ (pool-configurable). Let $n_i$ denote the number of seats drawn for curator $i$. The curator's round weight $w_i$ equals their total locked tokens:
+4. When drafted, the protocol draws seats from each curator proportional to their stake. Each seat locks a fixed token amount $L$ (pool-configurable). A curator with staked capital $s_i$ is eligible for at most $\lfloor s_i / L \rfloor$ seats; curators with $s_i < L$ are not eligible for drafting. Let $n_i$ denote the number of seats drawn for curator $i$. The curator's round weight $w_i$ equals their total locked tokens:
 
 $$
 w_i = n_i \cdot L
 $$
 
-Locked tokens are simultaneously the curator's influence on the weighted mean and their maximum loss. Unlocked tokens remain freely movable.
+Locked tokens are simultaneously the curator's influence on the weighted mean and their maximum loss. Unlocked tokens ($s_i - n_i \cdot L$) remain freely movable.
 
-5. Drafted curators commit and reveal relevance scores in $[0,1]$.
+5. Each drafted curator commits and reveals a single relevance score in $[0,1]$, weighted by $w_i$. Multiple seats increase the curator's weight on that single score, not the number of independent votes.
 
 6. The protocol computes the weighted mean $\mu$ of submitted scores and the weighted standard deviation $\sigma$. Near-flat rounds ($\sigma$ below a pool-configurable floor) are cancelled as degenerate rather than accepted as meaningful curation; the slashing formula below is not applied in that case.
 
