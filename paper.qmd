@@ -216,9 +216,9 @@ The protocol supports four typed challenge reasons, none of which is a separate 
 
 The relevance mechanism is a drafted curator coherence game (@fig-relevance-round).
 
-1. Curators stake into a pool.
+1. Curators deposit tokens into a pool contract. Let $s_i$ denote curator $i$'s deposited balance, with both $s_i$ and the seat size $L$ measured in the token's smallest on-chain unit. The deposited balance is the curator's total capital in the pool; portions not locked in active rounds are withdrawable at any time.
 2. Relevance rounds are scheduled for `Live` items at a pool-defined cadence.
-3. Each seat in the lottery corresponds to $L$ locked tokens (pool-configurable, $L > 0$). Let $s_i$ denote curator $i$'s staked capital. Only curators with $s_i \ge L$ are eligible; the draft weight $d_i$ is the number of seat-tickets the curator holds:
+3. Each seat in the lottery corresponds to $L$ locked tokens (pool-configurable, $L > 0$). Only curators with $s_i \ge L$ are eligible; the draft weight $d_i$ is the integer number of full seat-tickets the curator holds, computed by rounding down:
 
 $$
 d_i = \lfloor s_i / L \rfloor
@@ -230,11 +230,11 @@ $$
 w_i = n_i \cdot L
 $$
 
-Locked tokens are simultaneously the curator's influence on the weighted mean and their maximum loss. Unlocked tokens ($s_i - n_i \cdot L$) remain freely movable.
+Locked tokens are simultaneously the curator's influence on the weighted mean and their maximum loss. The unlocked remainder ($s_i - n_i \cdot L$) stays in the pool contract but is not at risk in this round and is withdrawable.
 
 5. Each drafted curator commits and reveals a single relevance score in $[0,1]$, weighted by $w_i$. Multiple seats increase the curator's weight on that single score, not the number of independent votes.
 
-6. The protocol computes the weighted mean $\mu$ of submitted scores and the weighted standard deviation $\sigma$. Rounds with $\sigma \le \sigma_{\min}$ (pool-configurable floor, $\sigma_{\min} > 0$) are cancelled as degenerate rather than accepted as meaningful curation; the slashing formula below is not applied in that case.
+6. The protocol computes the weighted mean $\mu$ of submitted scores and the weighted standard deviation $\sigma$. Rounds with $\sigma < \sigma_{\min}$ (pool-configurable floor, $\sigma_{\min} > 0$) are cancelled as degenerate rather than accepted as meaningful curation; the slashing formula below is not applied in that case.
 
 7. Let $v_i$ denote curator $i$'s revealed score and let $K$ denote the coherence-threshold multiplier ($K > 0$). Curators inside the coherence band ($|v_i - \mu| \le K\sigma$) are not penalized. Curators outside the band lose a fraction of their locked tokens that scales linearly with distance:
 
