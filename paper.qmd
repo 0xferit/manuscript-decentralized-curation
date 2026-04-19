@@ -234,7 +234,13 @@ Locked tokens are simultaneously the curator's influence on the weighted mean an
 
 5. Each drafted curator commits and reveals a single relevance score in $[0,1]$, weighted by $w_i$. Multiple seats increase the curator's weight on that single score, not the number of independent votes.
 
-6. The protocol computes the weighted mean $\mu$ of submitted scores and the weighted standard deviation $\sigma$. Round rewards scale linearly with $\sigma$ rather than switching at a threshold. Let $\varepsilon_\sigma > 0$ denote a pool-configurable dispersion floor, and define the reference dispersion level by
+6. The protocol computes the weighted mean $\mu$ and weighted standard deviation $\sigma$ of submitted scores. Let $W = \sum_i w_i$ denote the total round weight:
+
+$$
+\mu = \frac{1}{W}\sum_i w_i \, v_i, \qquad \sigma = \sqrt{\frac{\sum_i w_i (v_i - \mu)^2}{W}}.
+$$
+
+Round rewards scale linearly with $\sigma$ rather than switching at a threshold. Let $\varepsilon_\sigma > 0$ denote a pool-configurable dispersion floor, and define the reference dispersion level by
 
 $$
 \sigma_{\mathrm{ref}} := \max\!\Bigl(\varepsilon_\sigma,\;\operatorname{median}(\sigma_{t-h},\ldots,\sigma_{t-1})\Bigr),
@@ -254,7 +260,13 @@ $$
 p_i = \min\!\Bigl(1,\;\max\!\bigl(0,\;\frac{|v_i - \mu|/\sigma - K}{K}\bigr)\Bigr)
 $$
 
-At the band boundary the penalty is zero; at twice the boundary distance ($2K\sigma$ from the mean) the penalty is total loss of locked tokens. The protocol slashes $p_i \cdot w_i$ tokens from curator $i$'s locked amount and returns the remaining $(1 - p_i) \cdot w_i$. This graduated slashing replaces binary slashing: near-boundary deviations incur small losses, while extreme deviations incur total loss. If $\sigma < \varepsilon_\sigma$, step 7 is skipped entirely: $p_i = 0$ for all curators and all locked tokens are released from finalization.
+At the band boundary the penalty is zero; at twice the boundary distance ($2K\sigma$ from the mean) the penalty is total loss of locked tokens. Since $w_i$ is measured in smallest on-chain units (integers), the slashed amount is rounded down:
+
+$$
+s_i = \lfloor p_i \cdot w_i \rfloor, \qquad r_i = w_i - s_i.
+$$
+
+The protocol slashes $s_i$ tokens and returns the remainder $r_i$. This graduated slashing replaces binary slashing: near-boundary deviations incur small losses, while extreme deviations incur total loss. If $\sigma < \varepsilon_\sigma$, step 7 is skipped entirely: $p_i = 0$ for all curators, $s_i = 0$, and all locked tokens are released from finalization.
 
 8. Any curator with a deposited balance in the pool may appeal a finalized relevance round by posting an appeal stake (separate from the drafting eligibility threshold; a curator with $s_i < L$ who cannot be drafted may still appeal). The appeal triggers a new round with a larger drafted committee at higher stakes. The appeal committee independently scores the same claim under the same policy. If the appeal committee's weighted mean differs from the original round's mean by more than a pool-configurable threshold, the appeal succeeds: the appeal score replaces the original, and original-round curators whose scores were closer to the overturned mean than to the appeal mean are slashed. If the difference is within the threshold, the appeal fails and the appellant's stake is slashed. Multiple escalation rounds may occur, each with a larger committee and higher cost, up to a pool-configurable maximum depth.
 
