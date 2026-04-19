@@ -1,3 +1,5 @@
+> Licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Copyright (c) 2026 Ferit Tunçer.
+
 This document applies the decentralized curation framework to retroactive public good funding (RPGF). It specifies the complete mechanism design: nomination lifecycle, challenge system, relevance scoring, funding distribution, and reputation model.
 
 ## Problem

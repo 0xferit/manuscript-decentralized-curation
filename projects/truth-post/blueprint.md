@@ -1,3 +1,5 @@
+> Licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Copyright (c) 2026 Ferit Tunçer.
+
 Status: end-state design blueprint. This document describes the **complete Truth Post system that should exist**, not the 2023 MVP that was partially deployed.
 
 Normative language: **MUST**, **SHOULD**, and **MAY** are used in their usual engineering sense.

@@ -1,3 +1,5 @@
+> Licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Copyright (c) 2026 Ferit Tunçer.
+
 # Truth Post Implementation Report
 
 Date of analysis: March 9, 2026
