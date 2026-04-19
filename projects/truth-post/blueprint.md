@@ -972,7 +972,7 @@ Important clarification:
 ```text
 target = pool.relevanceRoundTargetSize
 quorum = pool.minRevealQuorum
-n = min(target, eligibleCuratorCount)
+n = min(target, sum(d_i for all eligible curators))
 ```
 
 6. If `n < quorum`, the round is cancelled as underpopulated:
@@ -1018,7 +1018,7 @@ sigma = sqrt(sum(w_i * (v_i - mu)^2 for i in V) / W)
 sigma_ref = max(epsilon_sigma, ema_sigma)
 ```
 
-where `ema_sigma` is an exponential moving average of recent round sigmas: `ema_sigma = alpha * sigma_latest + (1 - alpha) * ema_sigma_prev`, with smoothing factor `alpha = pool.sigmaRefAlpha` (suggested default: 0.05). EMA requires only one stored value per pool (constant gas), avoids on-chain sorting, and approximates the rolling median for stationary distributions. At bootstrap (no prior rounds), `ema_sigma = 0` and `sigma_ref = epsilon_sigma`. This preserves adaptation without governance while guaranteeing `sigma_ref > 0` even during sustained consensus. Let `R` denote the base round reward drawn from the pool’s reward budget, and `rho = pool.rho` the minimum reward fraction for zero-dispersion rounds. The reward factor is:
+where `ema_sigma` is an exponential moving average of recent round sigmas: `ema_sigma = alpha * sigma_latest + (1 - alpha) * ema_sigma_prev`, with smoothing factor `alpha = pool.sigmaRefAlpha` (suggested default: 0.05). EMA requires only one stored value per pool (constant gas), avoids on-chain sorting, and provides a smoothed reference level for recent dispersion. At bootstrap (no prior rounds), `ema_sigma = 0` and `sigma_ref = epsilon_sigma`. This preserves adaptation without governance while guaranteeing `sigma_ref > 0` even during sustained consensus. Let `R` denote the base round reward drawn from the pool’s reward budget, and `rho = pool.rho` the minimum reward fraction for zero-dispersion rounds. The reward factor is:
 
 ```text
 f_reward = rho + (1 - rho) * min(1, sigma / sigma_ref)
@@ -1026,7 +1026,7 @@ f_reward = rho + (1 - rho) * min(1, sigma / sigma_ref)
 
 At `sigma = 0` the reward is `rho * R` (minimum). At `sigma >= sigma_ref` the reward is full `R`. Between them the transition is linear.
 
-14. Slashing guard: if `sigma < epsilon_sigma`, distance-based graduated slashing is skipped for curators who successfully committed and revealed a valid score (`p_i = 0`, `delta_i = 0` for those curators). This guard does NOT waive non-participation penalties: failures to commit or reveal remain slashable at `p_i = 1` under the non-participation rules below. The mean is still accepted as a valid relevance score. Released tokens remain slashable during the appeal window: withdrawals during the appeal window are allowed only to the extent that they do not reduce the deposited balance below the curator’s outstanding appeal exposure.
+14. Slashing guard: if `sigma < epsilon_sigma`, distance-based graduated slashing is skipped for curators who successfully committed and revealed a valid score (`p_i = 0`, `delta_i = 0` for those curators). This guard does NOT waive non-participation penalties: failures to commit or reveal remain slashable at `p_i = 1` under the non-participation rules below. The mean is still accepted as a valid relevance score. Rewards in this branch: all valid revealers are coherent (`p_i = 0`), so `sum(delta_j) = 0` (no distance-based slashing revenue) and the reward pool is `f_reward * R` only, distributed proportionally to `w_i` among valid revealers. Non-participants who are slashed at `p_i = 1` contribute their `delta_i = w_i` to the pool budget, not to the reward distribution. Released tokens remain slashable during the appeal window: withdrawals during the appeal window are allowed only to the extent that they do not reduce the deposited balance below the curator’s outstanding appeal exposure.
 
 15. If `sigma >= epsilon_sigma`, graduated slashing applies. Let `v_i` denote curator `i`’s revealed score and `K = pool.coherenceK` the coherence-threshold multiplier. Curators inside the coherence band (`abs(v_i - mu) <= K * sigma`) are not penalized. Curators outside the band lose a fraction of their locked tokens that scales linearly with distance:
 
