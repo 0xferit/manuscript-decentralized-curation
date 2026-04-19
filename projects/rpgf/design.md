@@ -174,7 +174,7 @@ Three adjudication outcomes, orthogonal to operational state:
 
 **Scoring failure paths.** Degenerate rounds and quorum failure are treated differently:
 
-- *Degenerate round* (sigma < degenerate threshold): the round's mean is accepted as a valid relevance score. Coherence slashing is skipped because the band has collapsed, and round rewards are withheld. Curators receive no reward and face no penalty. This preserves genuine consensus signals (if curators honestly agree, the score stands) while removing the low-effort equilibrium where curators earn rewards for undifferentiated scoring. In a batch model, cancelling degenerate rounds is counterproductive: if a nomination genuinely deserves a consensus score, every retry will also be degenerate, eventually excluding a nomination that curators unanimously evaluated.
+- *Low-dispersion round* (sigma below the dispersion floor): the round's mean is accepted as a valid relevance score. Coherence slashing is skipped because the band has collapsed, and round rewards are reduced (scaled by the minimum reward fraction rho). This preserves genuine consensus signals (if curators honestly agree, the score stands) while reducing the incentive for undifferentiated scoring. In a batch model, cancelling low-dispersion rounds is counterproductive: if a nomination genuinely deserves a consensus score, every retry will also produce low dispersion, eventually excluding a nomination that curators unanimously evaluated.
 - *Quorum failure* (reveals < minimum quorum): the round is retried once with a fresh draft. If the retry also fails quorum, the nomination transitions to `Unscored`: excluded from allocation, bond refunded, no reputation change, bypasses holdback. The author is not penalized for curator infrastructure failure. `Unscored` is distinct from a score of 0 (which means "judged irrelevant" under the rubric).
 
 **DDR timeout defaults to author victory.** If DDR does not resolve within the timeout period (90 days), the nomination is treated as if the challenge failed. The author is not guilty unless proven; it is the challenger's burden to win the dispute.
@@ -197,7 +197,9 @@ Instead:
 
 ## Relevance Scoring and Attribution
 
-Each impact nomination receives a relevance score through the coherence game. Curators stake into a pool, are drafted via a stake-weighted lottery, and commit-reveal relevance scores in [0,1]. The protocol computes the weighted mean and standard deviation; curators outside the coherence band (|v_i - mu| > K * sigma) are slashed. Degenerate rounds (sigma < degenerate threshold) keep the round mean as the nomination's relevance score, but no curator reward is paid and no coherence slashing is applied.
+Each impact nomination receives a relevance score through the coherence game. The RPGF relevance mechanism inherits draw-and-lock staking, graduated slashing, smooth reward scaling, and relevance-round escalation (appeals) from the paper's coherence game design. The paper is the canonical specification for these mechanisms; this section summarizes the operational flow without re-specifying the full formalism.
+
+Curators deposit tokens into a pool and receive seat-tickets proportional to their deposited balance. The protocol draws seats via a stake-weighted lottery; each drawn seat locks L tokens from the corresponding curator. Drafted curators commit-reveal relevance scores in [0,1], weighted by their total locked tokens. The protocol computes the weighted mean and standard deviation; curators outside the coherence band are subject to graduated slashing (near-boundary deviations incur small losses; extreme deviations incur total loss). Low-dispersion rounds (sigma below the dispersion floor) keep the round mean as the nomination's relevance score, but slashing is skipped and rewards are reduced. Any curator with a deposited balance may appeal a finalized round, triggering a larger committee at escalating stakes.
 
 Each scheduled relevance round reserves one `roundRewardFloor` from the pool's curation budget. If a round pays rewards, the reserved amount is distributed on finalization. If a round fails quorum and is cancelled, or finalizes degenerate with no reward, the reserved amount is released back to the curation budget before any retry or later round is scheduled. Curators score nominations one at a time, and the protocol normalizes across all eligible nominations in the pool. Relevance round rewards are funded from the pool's curation budget, which SHOULD be reserved as a percentage of the pool's total funding budget before allocation scoring begins (suggested default: 5% of pool funding budget reserved for curation costs). Under the reference profile, the nomination cap and curation budget are parameterized so each initially scheduled nomination round can reserve exactly one `roundRewardFloor`; this is a consequence of the reserve rule, not a separate allocation rule. Round rewards are distributed among coherent curators (those within the coherence band) proportional to their effective round weight. A curator's stake slice for a given round is the portion of their total staked capital at risk in that round, equal to their effective round weight.
 
@@ -318,13 +320,11 @@ These policy objects and dependency references are versioned by content hash. No
 | Relevance round cadence | One initial round per nomination during the evaluation period; one retry on quorum failure |
 | Relevance draft committee size | 15 curators |
 | Minimum reveal quorum | 5 curators |
-| Degenerate round threshold | sigma < 0.02 (mean accepted; no rewards, no slashing) |
-| Per-identity effective weight cap | 10% of drafted round weight |
+| Dispersion floor (epsilon_sigma) | 0.02 (below this: mean accepted, rewards reduced to rho * R, no slashing) |
 | Round reward floor | 0.01 ETH equivalent from pool curation budget |
 | Commit window | 48 hours |
 | Reveal window | 48 hours |
-| Relevance coherence threshold K | 1.25 |
-| Relevance slash rate | 3% of curator stake slice |
+| Relevance coherence threshold K | 1.25 (also governs graduated slashing gradient) |
 | Registry-entry reputation: initial value | 0 |
 | Registry-entry reputation: surviving round reward | +1 per round |
 | Registry-entry reputation: debunking penalty | -5 per debunked nomination |
@@ -338,7 +338,7 @@ These defaults are reference-pool starting points, not empirically validated opt
 
 Challenge-cost parameters (counter-stake ratio, challenge tax, author bond) are partially grounded by the challenge incentive analysis above: the worked example shows how they interact to determine break-even success probabilities. But the analysis is local to one parameter configuration and does not identify robust optima across heterogeneous pool sizes, DDR fee regimes, or nomination value distributions.
 
-Relevance-game parameters (coherence threshold K, slash rate, degenerate-round threshold, per-identity weight cap, round reward floor) are calibration placeholders carried from the news instantiation blueprint. Their intended role is clear: values that are too low weaken discipline against incoherent or concentrated scoring, while values that are too high risk curator non-participation or excessive round cancellation. No RPGF-specific equilibrium analysis has been conducted.
+Relevance-game parameters are inherited from the paper's coherence game design and include new mechanisms not present in earlier versions. Draw-and-lock staking introduces seat size L as a calibration parameter: too small and single-curator weight concentration re-emerges; too large and small curators are excluded. Graduated slashing replaces the former binary slash rate; K now governs both the coherence threshold and the penalty gradient (at the band boundary the penalty is zero; at twice the boundary distance it is total loss of locked tokens). Per-identity weight caps have been removed; weight concentration is instead bounded by the seat-based lottery and the draw-and-lock mechanism. Smooth reward scaling introduces rho (minimum reward fraction for zero-dispersion rounds) and epsilon_sigma (dispersion floor), replacing the former all-or-nothing degenerate-round reward switch. Relevance-round escalation adds appeal-specific parameters (appeal committee size multiplier, appeal-success threshold, maximum escalation depth). No RPGF-specific equilibrium analysis has been conducted for any of these parameters.
 
 Reputation parameters (reward, penalty, decay) are likewise directional: the 5:1 penalty-to-reward ratio and 30-day decay epoch are design choices intended to make debunking costly while allowing recovery. The effective recovery time analysis in the Registry Entry Reputation section provides a first-order check, but interaction with round frequency, pool count, and heterogeneous project quality remains unvalidated.
 
