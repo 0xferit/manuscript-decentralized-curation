@@ -18,7 +18,7 @@ quarto render                # outputs: thesis + project routes under outputs/, 
 
 Every push to `main` triggers a [GitHub Actions workflow](.github/workflows/publish-cloudflare-pages.yml) that runs simulations, renders HTML, and deploys to [manuscript-decentralized-curation.pages.dev](https://manuscript-decentralized-curation.pages.dev) via Cloudflare Pages Direct Upload. Pull requests get a preview URL automatically.
 
-The workflow requires two GitHub Actions secrets: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+The workflow requires one GitHub Actions secret: `CLOUDFLARE_API_TOKEN`. The Cloudflare account ID is not sensitive and is hardcoded in the workflow file.
 
 Published routes:
 
