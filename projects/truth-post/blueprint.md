@@ -83,18 +83,23 @@ Challenge tax is a pool-configurable parameter, not a single global constant. Th
 | Claim lifetime | Infinite while bonded; historical after withdrawal |
 | Challenger counter-stake | `max(0.0125 ETH, 25% of author bond)` |
 | Challenge tax | Variable; suggested default `0.5%` of author bond |
-| Relevance round target size | 15 drafted curators |
+| Relevance round target size | 15 seat-tickets drawn |
 | Minimum reveal quorum | 5 curators |
 | Relevance cadence | Variable; suggested default one round per week while claim is live |
 | Relevance coherence threshold `K` | 1.25 |
-| Relevance slash rate | 3% of active curator stake slice per failed round |
-| Pre-reveal leak slash multiplier | Variable; suggested default `3x` incoherent slash |
+| Seat size `L` | Pool-configurable; `L > 0`, measured in smallest on-chain token unit |
+| Dispersion floor `epsilon_sigma` | 0.02 |
+| Minimum reward fraction `rho` | Pool-configurable; `rho in [0, 1]` |
+| Pre-reveal leak slash multiplier | Variable; suggested default `3x` locked tokens (`w_i`); capped at deposited balance |
+| Appeal window (`appealWindowSeconds`) | Suggested default 7 days (604,800 seconds) after round finalization |
+| Sigma-ref EMA alpha (`sigmaRefAlpha`) | Suggested default 0.05; `sigma_ref = epsilon_sigma` at bootstrap |
+| Counter-stake author split (`counterStakeAuthorSplitBps`) | 8000 (80% to author, 20% to pool budget; pool-configurable) |
 | Author reputation decay | Variable; suggested default `1%` per 30-day epoch |
 | Author busted-publication slash | Variable; suggested default `50%` of current author reputation |
 | Author successful-defense reward | Variable; suggested default `+1` reputation unit |
-| Curator exit cooldown | 7 days |
-| Flat-round std-dev epsilon | 0.02 |
-| Per-identity effective weight cap | 10% of drafted round weight |
+| Appeal stake | Pool-configurable; separate from drafting eligibility |
+| Appeal mean-difference threshold | Pool-configurable |
+| Maximum escalation depth | Pool-configurable |
 | Round reward floor | 0.01 ETH equivalent from pool reward budget |
 | Protocol grace period | 7 days (604,800 seconds) |
 
@@ -104,11 +109,11 @@ These defaults are reference-deployment starting points, not empirically validat
 
 The parameter families also have different justification levels. Challenge-friction parameters such as the counter-stake, challenge tax, and failed-challenge payout split are partially grounded by the later deterrence arithmetic in this blueprint: under the stated assumptions, raising challenger cost improves frivolous-challenge deterrence but also makes legitimate correction harder, while lowering challenger cost does the reverse. That supports only directional claims under those assumptions. It does not identify a robust optimum across heterogeneous claim values, bond sizes, or DDR fee regimes.
 
-Relevance-game parameters such as coherence threshold `K`, curator slash rates, the leak multiplier, `flatRoundStdDevMin`, the round reward floor, and the per-identity weight cap are currently calibration placeholders. Their intended role is clear: values that are too low weaken discipline against incoherent, concentrated, or low-effort curation, while values that are too high risk curator non-participation, excessive round cancellation, or overly conservative scoring. The blueprint does not yet provide a formal equilibrium analysis or simulation sweep for this parameter family.
+Relevance-game parameters such as coherence threshold `K`, seat size `L`, dispersion floor `epsilon_sigma`, minimum reward fraction `rho`, the leak multiplier, appeal stake, appeal threshold, maximum escalation depth, and the round reward floor are currently calibration placeholders. Their intended role is clear: values that are too low weaken discipline against incoherent, concentrated, or low-effort curation, while values that are too high risk curator non-participation, excessive round cancellation, or overly conservative scoring. The blueprint does not yet provide a formal equilibrium analysis or simulation sweep for this parameter family.
 
 Reputation parameters such as decay, successful-defense reward, and bust slash are likewise placeholders for how much long-run publisher history should matter relative to single-claim outcomes. If set too low, reputation becomes mostly cosmetic; if set too high, a small number of outcomes can dominate future participation. Their interaction with posting frequency, pool migration, and heterogeneous author quality remains unvalidated.
 
-Accordingly, the strongest justified claim at present is narrow: these are coherent starting defaults for a reference Truth Post news pool, sufficient to specify an implementable mechanism and to support the later illustrative calculations, but not sufficient to claim robustness or optimality. Before treating them as validated economics, the design still needs at least three kinds of sensitivity work: one-at-a-time sweeps for the challenge, relevance, and reputation parameter families; joint sweeps for coupled parameters such as counter-stake/tax/payout split, `K`/slash rate/`flatRoundStdDevMin`, and reputation decay/reward/slash size; and adversarial tests covering suppression, low-participation rounds, and stake concentration.
+Accordingly, the strongest justified claim at present is narrow: these are coherent starting defaults for a reference Truth Post news pool, sufficient to specify an implementable mechanism and to support the later illustrative calculations, but not sufficient to claim robustness or optimality. Before treating them as validated economics, the design still needs at least three kinds of sensitivity work: one-at-a-time sweeps for the challenge, relevance, and reputation parameter families; joint sweeps for coupled parameters such as counter-stake/tax/payout split, `K`/`L`/`epsilon_sigma`/`rho`/appeal parameters, and reputation decay/reward/slash size; and adversarial tests covering suppression, low-participation rounds, escalation dynamics, and stake concentration.
 
 ## System Overview
 
@@ -223,21 +228,26 @@ Required fields:
 - `withdrawalCooldownSeconds`
 - `minChallengeStakeWei`
 - `challengeTaxBps`
-- `curatorMinStakeWei`
+- `counterStakeAuthorSplitBps` (pool-configurable; suggested default 8000 = 80%)
+- `seatSizeWei` (L; the fixed token amount locked per drawn seat)
 - `relevanceRoundTargetSize`
 - `minRevealQuorum`
 - `relevanceCadenceSeconds`
 - `coherenceK`
-- `relevanceSlashBps`
+- `epsilonSigma` (dispersion floor)
+- `rho` (minimum reward fraction for zero-dispersion rounds)
 - `preRevealLeakSlashMultiplier`
-- `flatRoundStdDevMin`
+- `appealStakeWei`
+- `appealMeanDiffThreshold`
+- `appealWindowSeconds`
+- `maxEscalationDepth`
+- `sigmaRefAlpha`
+- `emaSigma` (mutable; initialized to `0` at pool creation; effective round reference is `sigma_ref = max(epsilonSigma, emaSigma)`, so in the first round `sigma_ref = epsilonSigma`; updated at each round finalization as `emaSigma = sigmaRefAlpha * sigma_round + (1 - sigmaRefAlpha) * emaSigma`)
 - `authorReputationDecayBpsPerEpoch`
 - `authorReputationDecayEpochSeconds`
 - `authorBustSlashBps`
 - `authorChallengeFailedRepReward`
-- `curatorExitCooldownSeconds`
 - `roundRewardFloorWei`
-- `perIdentityWeightCapBps`
 - `protocolGracePeriodSeconds`
 - `ddrTimeoutSeconds`
 - `ddrProviderId`
@@ -248,7 +258,7 @@ Required fields:
 Authority:
 
 - created permissionlessly by any address
-- immutable after creation, except for discovery metadata: the creator MAY mark the pool `Deprecated` or publish a successor reference for interface discovery
+- pool parameters and policy references are immutable after creation; mutable per-pool state (e.g., `emaSigma`, reward budget balances) is updated by the protocol at round finalization. The creator MAY mark the pool `Deprecated` or publish a successor reference for interface discovery
 
 Storage plane:
 
@@ -483,10 +493,10 @@ Required fields:
 - `stakeId`
 - `poolId`
 - `curator`
-- `amountWei`
-- `lockedWei`
-- `status` (`Pending`, `Active`, `Cooldown`, `Exited`)
-- `cooldownEndsAt`
+- `depositedWei` (total deposited balance)
+- `lockedWei` (tokens locked in active rounds; not withdrawable)
+- `appealExposureWei` (sum of `w_i` across all finalized rounds whose appeal window has not yet expired; set to `appealExposureWei += w_i` at each round finalization, decremented by `w_i` when the corresponding appeal window expires or the appeal resolves; withdrawals MUST NOT reduce `depositedBalanceWei` below `appealExposureWei`)
+- `status` (`Pending`, `Active`, `Exited`)
 - `joinedAt`
 - `lastSlashedAt`
 
@@ -501,7 +511,7 @@ Storage plane:
 
 ### RelevanceRound
 
-Purpose: compute a pool-local relevance score and slash incoherent curation.
+Purpose: compute a pool-local relevance score via draw-and-lock staking, graduated slashing, and smooth reward scaling.
 
 Required fields:
 
@@ -520,8 +530,10 @@ Required fields:
 - `effectiveWeights`
 - `meanScore`
 - `stdDev`
-- `flatRoundStdDevMin`
-- `degeneracyReason`
+- `epsilonSigma`
+- `sigmaRef`
+- `rewardFactor`
+- `distanceSlashingSkipped` (boolean; true when sigma < epsilonSigma; non-participation slashing may still apply)
 - `coherentCurators`
 - `preRevealLeakReports`
 - `relevanceScore`
@@ -635,7 +647,7 @@ Storage plane:
 - pool parameters and version pointers
 - claim ids, state, bond accounting, confidence integral
 - challenge ids, queue state, and counter-stake accounting
-- curator stakes and cooldowns
+- curator deposits, locks, and appeal exposure
 - relevance round commitments, reveals, slashes, rewards
 - reputation balances and decay
 - pool reward budgets
@@ -766,13 +778,13 @@ Transitions are driven by the DDR adapter. Truth Post MUST mirror the authoritat
 
 - If the eligible curator set is smaller than `minRevealQuorum`, the round is cancelled before drafting, nobody is slashed, and the claim keeps its previous relevance score if one exists.
 - If the round is drafted but revealed participation ends below `minRevealQuorum`, drafted curators who failed to commit or reveal MUST be slashed as non-participants, but no curator reward MUST be paid and no new relevance score MUST be produced. Non-participation slashes from such a cancelled round MUST be credited to the pool reward budget. Pre-reveal leak slashes, if any, MUST still be paid to the reporter per the leak-report payout rules and MUST NOT be redirected to the pool budget. A replacement round is scheduled at the next cadence.
-- If the round reaches reveal but `stdDev < pool.flatRoundStdDevMin`, the round is cancelled as degenerate, no relevance score update occurs, and no round reward is paid. Design note: this check detects only low dispersion in revealed scores. A round with `stdDev` below `flatRoundStdDevMin` MAY reflect genuine consensus, tacit collusion, explicit coordination on a common score, or low-information herding; the threshold does not identify which of those mechanisms produced the flat round. Conversely, coordinated voting that keeps `stdDev` just above the threshold is not caught by this check and proceeds to ordinary coherence scoring. The protocol intentionally treats low-dispersion rounds as non-informative for scoring and rewards: no relevance score update occurs and no round reward is paid. This creates a known residual failure mode: if a claim repeatedly elicits honest near-unanimity, later rounds may also be cancelled, leaving the claim on its previous relevance score indefinitely, or unscored indefinitely if no prior finalized round exists. A later round with a different draft can test whether that consensus persists across drafted cohorts, but repeated agreement still does not establish correctness. The current blueprint does not specify an escape hatch for repeated degenerate rounds. The reference value `flatRoundStdDevMin = 0.02` is therefore a provisional heuristic, not an empirically justified separator; validating or replacing it requires measuring honest-vote variance across round sizes, pool policies, and claim types. More broadly, the coherence mechanism assumes that a pool's relevance policy is specific enough to anchor curator signals near a defensible ground truth. If all curators share the same bias, they will converge on a wrong answer and be rewarded. The hypothesized defense is competitive pool selection: if biased curation produces bad feeds, users migrate to better pools, and the biased pool loses relevance. The protocol does not prevent bad curation within a pool; the design intention is that bad curation remains pool-local rather than protocol-global. Note: the master paper source (paper.qmd) currently describes pool switching as "costless"; this blueprint's analysis identifies switching costs (reputation lock-in, funder coordination, round-cycle lock-in) that qualify that assumption. The two documents should be reconciled when the paper is next revised.
+- Low-dispersion rounds are no longer cancelled as degenerate. Instead, rewards scale smoothly with sigma. Let `R` denote the base round reward, `rho` the minimum reward fraction, `epsilon_sigma` the dispersion floor, and `sigma_ref = max(epsilon_sigma, ema_sigma)`, where `ema_sigma` is the EMA-based reference dispersion defined in Flow F. The reward factor is `f_reward = rho + (1 - rho) * min(1, sigma / sigma_ref)`. At `sigma = 0` the reward is `rho * R` (minimum); at `sigma >= sigma_ref` the full `R` is paid; between them the transition is linear. When `sigma < epsilon_sigma`, the low-dispersion guard suppresses only distance-based slashing for valid revealers (`p_i = 0` for that purpose); non-participation slashes for drafted curators who fail to commit or reveal still apply. The weighted mean is still accepted as a valid relevance score. Released tokens remain slashable during the appeal window: withdrawals during the appeal window are allowed only to the extent that they do not reduce the deposited balance below the curator's outstanding appeal exposure. If a subsequent appeal succeeds, the protocol debits the slash from that reserved balance; if no appeal is filed before the window closes, the reserve is removed and the balance becomes fully withdrawable. Design note: smooth reward scaling eliminates the cliff that degenerate-round cancellation created. A step function that switched from zero to full rewards at a fixed cutoff would incentivize curators to inject artificial variance to cross the threshold, producing systematic bias. The smooth curve removes that discontinuity. More broadly, the coherence mechanism assumes that a pool's relevance policy is specific enough to anchor curator signals near a defensible ground truth. If all curators share the same bias, they will converge on a wrong answer and be rewarded. The hypothesized defense is competitive pool selection: if biased curation produces bad feeds, users migrate to better pools, and the biased pool loses relevance. The protocol does not prevent bad curation within a pool; the design intention is that bad curation remains pool-local rather than protocol-global. The additional defense is escalation: a dissenting minority that believes the first-round score is wrong can appeal, and if the appeal committee agrees with the minority, the original majority is slashed (see Flow F-bis: Relevance-Round Escalation).
 
 This hypothesis has not been empirically validated. Several well-documented dynamics in platform economics could prevent pool competition from functioning as described:
 
 - **Information asymmetry**: users cannot easily evaluate curation quality without independently verifying claims, which defeats the purpose of the protocol. Biased curation produces outputs that look normal to users who share the bias, making quality differences difficult to observe.
 - **Network effects**: the first pool with sufficient curators and content may dominate regardless of quality, because authors go where curators are and curators go where claims are. This winner-take-most dynamic is common in two-sided platforms and does not require the winning pool to be the highest-quality one.
-- **Switching costs**: curators who have staked capital face a lockup period before they can exit; authors who have accumulated confidence on claims in one pool lose that history if they repost in another. These frictions slow migration even when quality differences are recognized.
+- **Switching costs**: curators who have tokens locked in active rounds or reserved against pending appeal windows cannot withdraw immediately; authors who have accumulated confidence on claims in one pool lose that history if they repost in another. These frictions slow migration even when quality differences are recognized.
 - **Coordination failure**: migration requires multiple actors (curators, authors, sponsors) to move roughly simultaneously for a new pool to be viable. Individual exit does not automatically solve this collective action problem (see the analogous analysis of pool migration friction in the RPGF design document).
 
 Competitive pool selection should therefore be read as a conditional hypothesis, not as an intrinsic correction mechanism. It can discipline within-pool bias only if users can observe persistent quality differences, at least one funded alternative pool for the same domain exists, and authors, curators, and sponsors can coordinate migration before incumbency and network effects entrench the biased pool. If those conditions do not hold, the coherence game remains a consensus mechanism without an internal path from consensus to correctness.
@@ -783,17 +795,15 @@ Empirical signals that would indicate whether pool competition is functioning: m
 
 - `Pending`
 - `Active`
-- `Cooldown`
 - `Exited`
 
 Transitions:
 
 - `Pending -> Active` after stake finalization
-- `Active -> Cooldown` when curator requests exit for stake that is not locked in unresolved rounds
-- `Cooldown -> Exited` after cooldown and no unresolved slash obligations on the exiting slice
-- `Active -> Active` after slash/reward events
+- `Active -> Exited` when curator requests exit and no tokens are locked in unresolved rounds or reserved against pending appeal windows
+- `Active -> Active` after slash/reward events, deposit top-ups, or partial withdrawals of unlocked balance
 
-There is no separate `Slashed` state. Slashing is an accounting event against an active stake.
+There is no separate `Slashed` state. Slashing is an accounting event against an active stake. There is no curator exit cooldown: curators may withdraw any tokens that are not locked in active rounds and not reserved against pending appeal windows at any time.
 
 ## Protocol Flows
 
@@ -929,28 +939,25 @@ Default payout rule (suggested; requires empirical calibration; all amounts refe
   - losing-side appeal reward logic is inherited from DDR
 - if challenger loses:
   - author keeps author bond locked unless later withdrawn
-  - 80% of challenger counter-stake is paid to author
-  - 20% of challenger counter-stake is credited to the challenged pool reward budget
+  - challenger counter-stake is split between author reward and pool reward budget at `pool.counterStakeAuthorSplitBps` (suggested default: 8000 = 80% author, remainder to pool budget)
   - DDR fee is not refunded by Truth Post
 
-The 80/20 split between author reward and pool budget contribution is a suggested starting point. No sensitivity analysis has been conducted on this ratio; see Parameter Status And Calibration Limits above for the current epistemic status of this default.
+The counter-stake split ratio is a pool-configurable parameter. The suggested 80/20 default is a starting point. No sensitivity analysis has been conducted on this ratio; see Parameter Status And Calibration Limits above for the current epistemic status of this default.
 
-### Flow E: Pooled Staking And Curator Eligibility
+### Flow E: Draw-And-Lock Staking And Curator Eligibility
 
-1. A curator stakes into one pool.
+1. A curator deposits tokens into a pool contract. Let `s_i` denote curator `i`’s deposited balance, with both `s_i` and the seat size `L` (`pool.seatSizeWei`) measured in the token’s smallest on-chain unit.
 2. The curator’s stake becomes `Active` after confirmation.
-3. While active, the curator becomes eligible for drafting into relevance rounds in that pool.
-4. The protocol tracks which slice of the curator's active stake is locked in unresolved rounds.
-5. A curator MAY request exit only for stake that is not currently locked.
-6. The exiting amount enters `Cooldown` for `pool.curatorExitCooldownSeconds`; the suggested default for the reference news pool is 7 days.
-7. During cooldown:
-   - no new rounds may draft the exiting amount
-   - unresolved slash liabilities still apply to any still-locked amount
-8. After cooldown, the curator may withdraw the exiting amount.
+3. Only curators with `s_i >= L` are eligible for drafting. The draft weight is the integer number of full seat-tickets the curator holds: `d_i = floor(s_i / L)`.
+4. When drafted, each drawn ticket locks `L` tokens from the curator’s deposited balance. Let `n_i` denote the number of seats drawn for curator `i`. The curator’s round weight is `w_i = n_i * L`. Locked tokens are simultaneously the curator’s influence on the weighted mean and their maximum loss from coherence slashing in that round.
+5. The unlocked remainder (`s_i - n_i * L`) stays in the pool contract, is not subject to coherence slashing in that round, and remains withdrawable subject to appeal-window reserves (see Flow F-bis), but may still be exposed to separately specified penalties such as pre-reveal leak penalties.
+6. Each curator submits one score weighted by `w_i`. Multiple seats increase the curator’s weight on that single score, not the number of independent votes.
+7. A curator MAY withdraw any tokens that are not locked in active rounds and not reserved against pending appeal windows at any time. There is no exit cooldown.
+8. A curator MAY exit fully when no tokens are locked and no appeal-window reserves remain.
 
 Important clarification:
 
-- pooled staking belongs only to the internal relevance layer
+- draw-and-lock staking belongs only to the internal relevance layer
 - authors still bond claims individually
 - challengers still challenge claims individually
 - external DDR jurors still resolve accuracy disputes independently of curator pools
@@ -966,90 +973,117 @@ Important clarification:
 ```text
 target = pool.relevanceRoundTargetSize
 quorum = pool.minRevealQuorum
-n = min(target, eligibleCuratorCount)
+eligibleCuratorCount = count of curators with s_i >= L
+n = min(target, sum(d_i for all eligible curators))
 ```
 
-6. If `n < quorum`, the round is cancelled as underpopulated:
+6. If `eligibleCuratorCount < quorum`, the round is cancelled as underpopulated (quorum is defined in terms of distinct curator reveals, not seat count; since each curator submits one score regardless of seats held, the quorum check must use distinct curators):
    - no new relevance score is produced
    - any previous relevance score remains in force
    - claims with no prior finalized relevance round remain out of the default main feed
    - a replacement round is scheduled at the next cadence
-7. Otherwise, the scheduler drafts `n` curators using VRF randomness. Drafting MUST use a verifiable randomness source. The seed MUST be derived as `seed = H(poolId, claimId, roundId, snapshotBlock, randomness(snapshotBlock+1))`. If randomness is unavailable by a configurable deadline, the round MUST be cancelled and rescheduled. Drafting weight is purely stake-based:
+7. Otherwise, the scheduler draws `n` seats from the ticket pool using VRF randomness. The draw samples individual seat-tickets (not unique curators); a curator with more tickets may be drawn multiple times. Drafting MUST use a verifiable randomness source. The seed MUST be derived as `seed = H(poolId, claimId, roundId, snapshotBlock, randomness(snapshotBlock+1))`. If randomness is unavailable by a configurable deadline, the round MUST be cancelled and rescheduled. `relevanceRoundTargetSize` defines the number of seats to draw (not the number of distinct curators). Each curator's ticket count is:
 
 ```text
-d_i = s_i
+d_i = floor(s_i / L)
 ```
-8. Effective round weight is:
+
+where `L = pool.seatSizeWei`. Only curators with `s_i >= L` are eligible.
+
+8. The protocol draws seats from the ticket pool. Each drawn ticket locks `L` tokens from the corresponding curator. A curator may receive at most `d_i` seats in a single round. Let `n_i` denote the number of seats drawn for curator `i`. The curator’s round weight equals their total locked tokens:
 
 ```text
-w_i = min(s_i, pool.perIdentityWeightCapBps / 10,000 * S_drafted)
+w_i = n_i * L
 ```
 
-where `S_drafted = sum(s_j)` over all drafted curators before any cap is applied. Implementations MUST use uncapped drafted stake for `S_drafted`; they MUST NOT solve the cap recursively against capped weights.
+Locked tokens are simultaneously the curator’s influence on the weighted mean and their maximum loss from coherence and non-participation slashing. The unlocked remainder (`s_i - n_i * L`) stays in the pool contract and is not subject to coherence slashing; it remains withdrawable subject to appeal-window reserves but may be exposed to separately specified penalties (e.g., pre-reveal leak). Define `availableDepositedWei_i = depositedWei_i - lockedWei_i - appealExposureWei_i` as the curator’s unencumbered deposited balance (total deposited minus tokens locked in active rounds minus tokens reserved against pending appeal windows). Drafting MUST be implemented as a deterministic pseudorandom permutation of the snapshot seat-ticket pool derived from the round seed. The protocol iterates through that ordered ticket list, visiting at most `min(totalTickets, 3 * n)` tickets (a hard cap that bounds gas consumption even for large pools): for each visited ticket, the protocol attempts to lock one seat of size `L` for that ticket’s curator. A ticket is fundable only if the curator’s available balance can cover the additional lock (i.e., after `k` seats already locked for curator `i` in this round, the next ticket is fundable only if `availableDepositedWei_i >= (k + 1) * L`). Unfundable tickets are skipped. If `n` backed seats are locked before the iteration cap is reached, drafting succeeds. If the iteration cap is exhausted before `n` backed seats are locked, the round is cancelled as underfunded (no score produced, previous score retained, replacement round scheduled at next cadence). Only `w_i` MAY determine vote weight or coherence/non-participation slash exposure for that round.
 
-When a curator is drafted, the protocol MUST lock `roundStakeWei_i = w_i` from that curator's currently available active stake. A curator MUST NOT be drafted unless `availableActiveStakeWei_i >= roundStakeWei_i`. Only `roundStakeWei_i` MAY determine vote weight or slash exposure for that round.
-
-9. Each drafted curator commits a relevance score in `[0,1]`.
+9. Each drafted curator commits a single relevance score in `[0,1]`, weighted by `w_i`. Multiple seats increase the curator’s weight on that single score, not the number of independent votes.
 10. Each drafted curator reveals the score.
 11. If the number of valid reveals is below `quorum`, the round is cancelled:
-   - drafted curators who failed to commit or reveal are slashed at the same rate as incoherent participants
+   - drafted curators who failed to commit or reveal are slashed as non-participants (graduated slashing applies using a penalty fraction of 1, i.e., total loss of locked tokens)
    - any previous relevance score remains in force
    - if the claim has no previous finalized relevance round, it remains unscored for feed purposes
    - a replacement round is scheduled at the next cadence
-12. Otherwise, the protocol computes weighted mean and standard deviation. For a round with valid reveal set `V`, let `W = sum(w_i for i in V)`. The protocol MUST compute:
+12. Otherwise, the protocol computes weighted mean and standard deviation. For a round with valid reveal set `V` (guaranteed non-empty by the quorum check in step 11), let `W = sum(w_i for i in V) > 0`. The protocol MUST compute:
 
 ```text
 mu = sum(w_i * v_i for i in V) / W
 sigma = sqrt(sum(w_i * (v_i - mu)^2 for i in V) / W)
 ```
 
-`mu` and `sigma` MUST be computed over valid reveals only. All slashing and rewards in the round MUST use `pool.relevanceSlashBps`; the reference-pool 3% value is a default, not a hardcoded constant.
-13. If `sigma < pool.flatRoundStdDevMin`, the round is cancelled as degenerate:
-   - no new relevance score is produced
-   - no round reward is paid
-   - a replacement round is scheduled at the next cadence
+`mu` and `sigma` MUST be computed over valid reveals only.
 
-This condition records low dispersion only. It does not distinguish honest consensus from collusion or low-information voting, and it does not detect coordinated voting that keeps `sigma` above the threshold. The current design also accepts that repeated degenerate cancellations can indefinitely delay score formation for claims that reliably produce honest low-variance votes. Whether a fixed `flatRoundStdDevMin = 0.02` is useful across different reveal counts, pool policies, and claim types remains an empirical calibration question.
-
-14. Otherwise, a curator is coherent iff:
+13. Round rewards scale linearly with `sigma` rather than switching at a threshold. Let `epsilon_sigma = pool.epsilonSigma` denote the dispersion floor, and define the reference dispersion level:
 
 ```text
-abs(v_i - mu) <= pool.coherenceK * sigma
+sigma_ref = max(epsilon_sigma, ema_sigma)
 ```
 
-with `pool.coherenceK = 1.25` by default.
+where `ema_sigma` is an exponential moving average of recent round sigmas: `ema_sigma = alpha * sigma_latest + (1 - alpha) * ema_sigma_prev`, with smoothing factor `alpha = pool.sigmaRefAlpha` (suggested default: 0.05). EMA requires only one stored value per pool (constant gas), avoids on-chain sorting, and provides a smoothed reference level for recent dispersion. At bootstrap (no prior rounds), `emaSigma = 0`, so `sigma_ref = max(epsilon_sigma, 0) = epsilon_sigma`. This preserves adaptation without governance while guaranteeing `sigma_ref > 0` even during sustained consensus. Let `R` denote the base round reward drawn from the pool’s reward budget, and `rho = pool.rho` the minimum reward fraction for zero-dispersion rounds. The reward factor is:
 
-15. An incoherent curator MUST lose `pool.relevanceSlashBps * roundStakeWei_i / 10,000`.
-16. Each coherent curator MUST receive `(w_i / sum(w_j for j in coherent)) * (sum(slashedWei_j) + reservedRoundRewardWei)`.
+```text
+f_reward = rho + (1 - rho) * min(1, sigma / sigma_ref)
+```
+
+At `sigma = 0` the reward is `rho * R` (minimum). At `sigma >= sigma_ref` the reward is full `R`. Between them the transition is linear.
+
+14. Slashing guard: if `sigma < epsilon_sigma`, distance-based graduated slashing is skipped for curators who successfully committed and revealed a valid score (`p_i = 0`, `delta_i = 0` for those curators). This guard does NOT waive non-participation penalties: failures to commit or reveal remain slashable at `p_i = 1` under the non-participation rules below. The mean is still accepted as a valid relevance score. Rewards in this branch: all valid revealers are coherent (`p_i = 0`), so `sum(delta_j) = 0` (no distance-based slashing revenue) and the reward pool is `f_reward * R` only, distributed proportionally to `w_i` among valid revealers. Non-participants who are slashed at `p_i = 1` contribute their `delta_i = w_i` to the pool budget, not to the reward distribution. Released tokens remain slashable during the appeal window: withdrawals during the appeal window are allowed only to the extent that they do not reduce the deposited balance below the curator’s outstanding appeal exposure.
+
+15. If `sigma >= epsilon_sigma`, graduated slashing applies. Let `v_i` denote curator `i`’s revealed score and `K = pool.coherenceK` the coherence-threshold multiplier. Curators inside the coherence band (`abs(v_i - mu) <= K * sigma`) are not penalized. Curators outside the band lose a fraction of their locked tokens that scales linearly with distance:
+
+```text
+p_i = min(1, max(0, (abs(v_i - mu) / sigma - K) / K))
+```
+
+At the band boundary the penalty is zero; at twice the boundary distance (`2 * K * sigma` from the mean) the penalty is total loss of locked tokens. Since `w_i` is measured in smallest on-chain units (integers), the slashed amount is rounded down:
+
+```text
+delta_i = floor(p_i * w_i)
+q_i = w_i - delta_i
+```
+
+The protocol slashes `delta_i` tokens and returns the remainder `q_i`. This graduated slashing replaces binary slashing: near-boundary deviations incur small losses, while extreme deviations incur total loss.
+
+16. Each coherent curator (those with `p_i = 0`) MUST receive `(w_i / sum(w_j for j in coherent)) * (sum(delta_j) + f_reward * R)`. If the coherent set is empty (all curators slashed), the slashed tokens and the round reward remain in the pool budget; no curator receives a payout. The pool MUST enforce `K > 0` so the `p_i` formula is well-defined and MUST enforce `epsilon_sigma > 0` so the low-dispersion guard and reward scaling are well-defined.
 17. Pre-reveal leak reporting remains open until round finalization.
 18. A reporter who receives a leaked intended vote MAY precommit `hash(leakedPayload)` before reveal closes.
 19. After reveal, the reporter MAY open the payload.
-20. A leak report is valid only if the opened payload proves that a drafted curator disclosed their vote before their on-chain reveal and the payload later matches the curator's actual reveal and commitment for that round.
-21. If a valid leak report is confirmed, the guilty curator is slashed. For every drafted curator `i`, define `baseRoundSlashWei_i = pool.relevanceSlashBps * roundStakeWei_i / 10,000` regardless of whether curator `i` is later coherent, incoherent, or part of a cancelled round. A confirmed pre-reveal leak by curator `i` MUST trigger:
+20. A leak report is valid only if the opened payload proves that a drafted curator disclosed their vote before their on-chain reveal and the payload later matches the curator’s actual reveal and commitment for that round.
+21. If a valid leak report is confirmed, the guilty curator is slashed. For every drafted curator `i`, define `baseLeakSlashWei_i = w_i` (total locked tokens for that curator) regardless of whether curator `i` is later coherent or incoherent. A confirmed pre-reveal leak by curator `i` MUST trigger:
 
 ```text
-preRevealLeakSlashWei_i = pool.preRevealLeakSlashMultiplier * baseRoundSlashWei_i
+preRevealLeakSlashWei_i = min(pool.preRevealLeakSlashMultiplier * baseLeakSlashWei_i, depositedWei_i)
 ```
 
-The successful reporter MUST receive the full `preRevealLeakSlashWei_i`. If multiple valid reports exist for the same leak, the earliest valid precommit MUST win. `preRevealLeakSlashWei_i` MUST NOT be added to the coherent-curator reward pool.
+The leak penalty may exceed the curator's locked tokens (`w_i`) and is drawn from the curator's total deposited balance (including currently locked tokens). It is capped at `depositedWei_i` to prevent the protocol from slashing more than the curator holds in the pool. The successful reporter MUST receive the full `preRevealLeakSlashWei_i`. If multiple valid reports exist for the same leak, the earliest valid precommit MUST win. `preRevealLeakSlashWei_i` MUST NOT be added to the coherent-curator reward pool.
 
-22. This penalty is in addition to any incoherent-participation slash that already applies in the same round.
+22. This penalty is in addition to any graduated slashing that already applies in the same round.
 23. The claim’s `relevanceScore` becomes `mu`.
-24. The round finalizes.
+24. The round finalizes. An appeal window opens (see Flow F-bis).
 
 Non-participation rules:
 
-- failure to commit or reveal counts as incoherent
-- drafted curators who fail to commit or reveal are slashed at the same rate as incoherent participants for that round
-- repeated non-participation beyond 3 missed rounds in 30 days SHOULD auto-start stake cooldown
+- failure to commit or reveal counts as maximum-penalty incoherence (`p_i = 1`, total loss of locked tokens)
+- repeated non-participation beyond 3 missed rounds in 30 days SHOULD auto-exit the curator
 
 Pre-reveal leak rules:
 
 - a drafted curator MUST NOT disclose their intended vote or reveal preimage before their own on-chain reveal
 - successful collusion requires revealing the intended vote to at least one other participant
 - any recipient of that leak can defect by precommitting the leaked payload and later opening it for a slash reward
-- only cryptographically verifiable reports that match the curator's later reveal and commitment count
-- a confirmed leak triggers an additional slash equal to `pool.preRevealLeakSlashMultiplier` times the round's incoherent slash amount for that curator
+- only cryptographically verifiable reports that match the curator’s later reveal and commitment count
+- a confirmed leak triggers an additional slash equal to `pool.preRevealLeakSlashMultiplier` times the curator’s locked tokens for that round
+
+### Flow F-bis: Relevance-Round Escalation (Appeals)
+
+1. Any curator with a deposited balance in the pool MAY appeal a finalized relevance round by posting an appeal stake (`pool.appealStakeWei`). A curator with `s_i < L` who cannot be drafted MAY still appeal. The appeal MUST be filed within `pool.appealWindowSeconds` (suggested default: 7 days) after round finalization.
+2. The appeal triggers a new round with a larger drafted committee at higher stakes. The appeal committee independently scores the same claim under the same pool relevance policy.
+3. If the appeal committee’s weighted mean differs from the original round’s mean by more than `pool.appealMeanDiffThreshold`, the appeal succeeds: the appeal score replaces the original, and original-round curators whose scores were closer to the original round mean than to the appeal mean are slashed via the graduated slashing formula using the appeal round’s weighted mean and dispersion (`mu_appeal`, `sigma_appeal`) as reference values. The slash is charged against each such curator’s original round locked amount `w_i`; no new locked amount is created for original-round curators during the appeal.
+4. If the difference is within the threshold, the appeal fails and the appellant’s stake is slashed.
+5. Multiple escalation rounds MAY occur, each with a larger committee and higher cost, up to `pool.maxEscalationDepth`.
+6. The threat of appeal is the primary disciplining force: first-round curators converge on "what would survive appeal by a larger committee" rather than "what the current committee will vote." Under continuous-signal assumptions (unbiased, independent, finite-variance signals), the appeal-round mean concentrates more tightly around the latent relevance target as the number of distinct drafted curators grows. Additional seats assigned to the same curator do not create new independent observations; the defense is effective when escalation increases independent participation.
+7. Escalation replaces per-identity weight caps as the defense against whale manipulation: a dishonest whale who dominates round 1 by locking many seats faces proportionally larger losses on appeal when the appeal round broadens independent participation enough to reduce the weighted mean’s variance and overturn the original score. This defense is effective when the whale is a stake minority; a majority-stake whale dominates any committee size. The residual defense is economic rather than mechanical: distorting a pool’s output degrades its utility and the attacker’s locked capital with it, which deters profit-seeking attackers but not externally motivated ones.
 
 ### Flow G: Rewards, Slashing, And Withdrawals
 
@@ -1185,10 +1219,9 @@ The complete implementation MUST satisfy these invariants:
 - confidence is monotone while active, paused during dispute/withdraw cooldown, terminated on terminal exit
 - withdrawn claims MUST remain queryable as historical records with their last finalized confidence value
 - author reputation balances are pool-scoped and non-transferable
-- no curator may exceed the per-identity round weight cap
-- only slashable stake MAY determine final vote weight inside a relevance round
+- only locked tokens MAY determine vote weight and ordinary relevance-round slash exposure (coherence and non-participation); the pre-reveal leak penalty is an explicit exception that may draw from the full deposited balance
 - a revealed relevance score must match its commitment hash
-- a confirmed pre-reveal leak MUST trigger an additional slash equal to `pool.preRevealLeakSlashMultiplier * incoherentSlashAmountForThatRound`
+- a confirmed pre-reveal leak MUST trigger an additional slash equal to `pool.preRevealLeakSlashMultiplier * lockedTokensForThatRound`
 - no amendment may start while a claim has an active or queued challenge
 - main-feed inclusion MUST require non-terminal adjudication status and at least one finalized relevance round
 - claims that are `Debunked` MUST never return to active feeds
@@ -1229,25 +1262,25 @@ The complete implementation MUST satisfy these invariants:
 
 - use commit-reveal
 - use drafted curators, not self-selected per-claim curators
-- cap effective round weight per identity at 10%
+- escalation: a coordinated coalition that shifts the mean in round 1 faces a larger appeal committee where sampling variance is reduced, making overrepresentation from lucky draws less likely and the committee mean more reflective of the pool's true stake-weighted distribution; the effective collusion threshold phi* rises because a colluding bloc must survive not only the current round but also a potential appeal round with a larger committee
 - destabilize collusion modes that require explicit pre-reveal vote disclosure: any recipient of a leaked intended vote can defect by precommitting the leaked payload and later reporting it for a multiplicative slash; this does not detect tacit coordination (e.g., "we all vote 0.9"), off-chain agreements without vote exchange, or disciplined collusion where no party defects
 
 ### Whale Concentration
 
-- cap per-identity round weight
+- escalation: a dishonest whale who dominates round 1 by locking many seats faces proportionally larger losses on appeal when the appeal round broadens independent participation enough to reduce the weighted mean's variance and overturn the original score; this defense is effective when the whale is a stake minority
+- economic self-destruction: a majority-stake whale that distorts a pool's curation output degrades the pool's utility, driving users and curators to competing pools and reducing the value of the attacker's locked position; this argument holds for profit-seeking attackers whose locked capital exceeds the external value of capturing the pool but does not hold for externally motivated attackers (state actors, competitors) who treat the stake as an operational expense
 - keep reputation decaying and pool-scoped
 - keep confidence linear in bonded stake-time, but rely on relevance gating so large bonds do not automatically dominate the main feed
-- the per-identity effective weight cap limits influence per protocol identity only; it MUST NOT be represented as a Sybil-resistance guarantee
 
-**Sybil attack cost analysis.** The per-identity weight cap bounds each identity's effective weight to `min(s_i, 10% * S_drafted)`, where `S_drafted` is the sum of uncapped stakes of all drafted curators. This cap limits influence per identity but does not directly translate to a fixed share of effective round weight: when some draftees fall below the cap, a capped identity's share of effective weight can exceed 10%. The actual share an attacker obtains depends on the full distribution of drafted stakes, not just the number of attacker identities.
+Per-identity weight caps were removed as security theater: Sybil adversaries bypass them by creating cheap identities. The defense against whale concentration is the combination of escalation, graduated slashing, and economic self-destruction described above.
 
-Creating additional Ethereum addresses is costless. The real Sybil deterrent is `curatorMinStakeWei`: each identity must independently meet the minimum stake to be eligible for drafting. Eligibility does not guarantee drafting; the protocol uses VRF stake-weighted randomness from the full eligible set, so an attacker whose total stake is a small fraction of the pool's eligible stake will have most identities go undrafted. Even when drafted, minimum-stake identities in a well-capitalized pool carry negligible effective weight relative to high-stake honest curators.
+**Sybil attack cost analysis.** Creating additional Ethereum addresses is costless. The real Sybil deterrent is `pool.seatSizeWei` (L): each identity must hold at least `L` deposited tokens to be eligible for drafting (`d_i = floor(s_i / L) >= 1`). Eligibility does not guarantee drafting; the protocol uses VRF stake-weighted randomness from the full eligible set, so an attacker whose total stake is a small fraction of the pool's eligible stake will have most identities go undrafted. Even when drafted, minimum-stake identities in a well-capitalized pool carry negligible effective weight relative to high-stake honest curators.
 
-The Sybil threat is therefore most acute in low-liquidity pools where attacker stake dominates the eligible set. In such pools, the attacker's identities are likely to be drafted and to represent a large share of effective weight. `curatorMinStakeWei` sets a per-identity eligibility floor, but the effective defense depends on the pool's total honest-stake depth, not on `curatorMinStakeWei` alone.
+The Sybil threat is therefore most acute in low-liquidity pools where attacker stake dominates the eligible set. In such pools, the attacker's identities are likely to be drafted and to represent a large share of effective weight. The seat size `L` sets a per-identity eligibility floor, but the effective defense depends on the pool's total honest-stake depth, the aggregate collusion threshold phi*, and the threat of escalation, not on `L` alone.
 
-This reveals a tension between permissionless participation and Sybil resistance. A low `curatorMinStakeWei` makes curation accessible but makes Sybil eligibility cheap. A high `curatorMinStakeWei` raises the eligibility floor but restricts participation to well-capitalized curators. Neither value alone resolves the tension without external identity verification or a sufficiently deep honest-stake pool that dilutes the attacker's draft probability.
+This reveals a tension between permissionless participation and Sybil resistance. A low `L` makes curation accessible but makes Sybil eligibility cheap. A high `L` raises the eligibility floor but restricts participation to well-capitalized curators. Neither value alone resolves the tension without external identity verification or a sufficiently deep honest-stake pool that dilutes the attacker's draft probability.
 
-Pools that cannot rely on a sufficiently deep honest-stake pool to dilute attackers SHOULD consider identity verification (proof-of-personhood, allowlisted credentials, or equivalent) as a mitigation. Pools that operate without identity verification SHOULD acknowledge that the weight cap provides concentration limits only against non-Sybil whales and offers no defense against an adversary willing to split stake across multiple addresses.
+Pools that cannot rely on a sufficiently deep honest-stake pool to dilute attackers SHOULD consider identity verification (proof-of-personhood, allowlisted credentials, or equivalent) as a mitigation. Pools that operate without identity verification SHOULD acknowledge that the draw-and-lock model provides proportional influence (more stake, more seats, more weight and more risk) but offers no defense against an adversary willing to split stake across multiple addresses beyond the aggregate economic deterrence of escalation and graduated slashing.
 
 ### Cold Start
 
@@ -1309,7 +1342,7 @@ The first complete implementation SHOULD use the following contract/module split
 - `ChallengeManager`
   - challenge queueing, tax routing, counter-stake accounting, DDR dispute hooks
 - `RelevanceEngine`
-  - curator drafting, commit-reveal, degenerate-round detection, scoring, slashing, round rewards
+  - curator drafting, draw-and-lock seat allocation, commit-reveal, graduated slashing, smooth reward scaling, relevance-round escalation (appeals)
 - `ReputationLedger`
   - author reputation balances, rewards, slashes, and decay
 - `PoolBudgetLedger`
@@ -1367,7 +1400,7 @@ Interfaces SHOULD label forfeiture outcomes distinctly (e.g., "debunked by forfe
 
 Appeal funding follows the DDR provider's native crowdfunding mechanism. Any address MAY fund either side. The protocol MUST NOT add its own appeal layer on top of the DDR's appeal mechanics.
 
-Accordingly, the protocol does not implement an internal escalating-stakes appeal ladder. Any "lone expert versus herd" payoff exists only if it is supplied by the external DDR's native appeal rules; it is not a Truth Post mechanism and is not analyzed here as one.
+The accuracy layer does not implement an internal appeal ladder; accuracy appeals are handled entirely by the external DDR's native appeal and crowdfunding mechanics. The relevance layer does implement an internal escalating-stakes appeal mechanism (see Flow F-bis: Relevance-Round Escalation), which is separate from and independent of DDR appeals.
 
 ## Migration And Version Coexistence
 
@@ -1383,6 +1416,8 @@ Default migration semantics:
 
 ## Differences From Current Thesis Draft
 
+The blueprint’s relevance-layer mechanism design now matches the paper: draw-and-lock staking, graduated slashing, smooth reward scaling, and relevance-round escalation are shared between both documents. The remaining differences are implementation-level specifics that the paper does not address:
+
 - This blueprint keeps external DDR jurors fully separate from internal curators. The initial complete build does not reuse curator pools for accuracy adjudication.
 - This blueprint treats a claim as a bonded, content-addressed blob that may contain multiple subclaims. Challenges target an explicit natural-language proposition inside that blob, and a successful challenge debunks the whole blob.
 - This blueprint removes protocol TTL entirely. Claims remain active while bonded and remain historically visible as `Withdrawn` after bond removal.
@@ -1391,7 +1426,7 @@ Default migration semantics:
 - This blueprint prefers immutable contracts and explicit redeployment over upgradeable contracts.
 - This blueprint adds author bond adjustment with a pool-scoped grace period.
 - This blueprint makes `PendingEdit` claims challengeable on their last finalized revision.
-- This blueprint replaces evidence bundles with flat per-item evidence aligned with Kleros v1's native evidence model.
+- This blueprint replaces evidence bundles with flat per-item evidence aligned with Kleros v1’s native evidence model.
 - This blueprint adds `TemplateViolation` as a fourth challenge reason for semantic template non-conformance.
 - This blueprint pins challenges to the exact claim revision and bond at filing time.
 - This blueprint includes a full DDR Integration Specification assuming Kleros v1 as the external provider.
