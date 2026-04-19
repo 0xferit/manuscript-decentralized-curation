@@ -242,7 +242,7 @@ Required fields:
 - `appealWindowSeconds`
 - `maxEscalationDepth`
 - `sigmaRefAlpha`
-- `emaSigma` (mutable; initialized to `epsilonSigma` at pool creation; updated at each round finalization as `emaSigma = sigmaRefAlpha * sigma_round + (1 - sigmaRefAlpha) * emaSigma`)
+- `emaSigma` (mutable; initialized to `0` at pool creation; effective round reference is `sigma_ref = max(epsilonSigma, emaSigma)`, so in the first round `sigma_ref = epsilonSigma`; updated at each round finalization as `emaSigma = sigmaRefAlpha * sigma_round + (1 - sigmaRefAlpha) * emaSigma`)
 - `authorReputationDecayBpsPerEpoch`
 - `authorReputationDecayEpochSeconds`
 - `authorBustSlashBps`
@@ -1019,7 +1019,7 @@ sigma = sqrt(sum(w_i * (v_i - mu)^2 for i in V) / W)
 sigma_ref = max(epsilon_sigma, ema_sigma)
 ```
 
-where `ema_sigma` is an exponential moving average of recent round sigmas: `ema_sigma = alpha * sigma_latest + (1 - alpha) * ema_sigma_prev`, with smoothing factor `alpha = pool.sigmaRefAlpha` (suggested default: 0.05). EMA requires only one stored value per pool (constant gas), avoids on-chain sorting, and provides a smoothed reference level for recent dispersion. At bootstrap (no prior rounds), `ema_sigma = 0` and `sigma_ref = epsilon_sigma`. This preserves adaptation without governance while guaranteeing `sigma_ref > 0` even during sustained consensus. Let `R` denote the base round reward drawn from the pool’s reward budget, and `rho = pool.rho` the minimum reward fraction for zero-dispersion rounds. The reward factor is:
+where `ema_sigma` is an exponential moving average of recent round sigmas: `ema_sigma = alpha * sigma_latest + (1 - alpha) * ema_sigma_prev`, with smoothing factor `alpha = pool.sigmaRefAlpha` (suggested default: 0.05). EMA requires only one stored value per pool (constant gas), avoids on-chain sorting, and provides a smoothed reference level for recent dispersion. At bootstrap (no prior rounds), `emaSigma = 0`, so `sigma_ref = max(epsilon_sigma, 0) = epsilon_sigma`. This preserves adaptation without governance while guaranteeing `sigma_ref > 0` even during sustained consensus. Let `R` denote the base round reward drawn from the pool’s reward budget, and `rho = pool.rho` the minimum reward fraction for zero-dispersion rounds. The reward factor is:
 
 ```text
 f_reward = rho + (1 - rho) * min(1, sigma / sigma_ref)
@@ -1052,10 +1052,10 @@ The protocol slashes `delta_i` tokens and returns the remainder `q_i`. This grad
 21. If a valid leak report is confirmed, the guilty curator is slashed. For every drafted curator `i`, define `baseLeakSlashWei_i = w_i` (total locked tokens for that curator) regardless of whether curator `i` is later coherent or incoherent. A confirmed pre-reveal leak by curator `i` MUST trigger:
 
 ```text
-preRevealLeakSlashWei_i = min(pool.preRevealLeakSlashMultiplier * baseLeakSlashWei_i, availableDepositedWei_i)
+preRevealLeakSlashWei_i = min(pool.preRevealLeakSlashMultiplier * baseLeakSlashWei_i, depositedBalanceWei_i)
 ```
 
-The leak penalty may exceed the curator's locked tokens (`w_i`) and is drawn from the curator's full deposited balance. It is capped at `availableDepositedWei_i` (the deposited balance minus any other outstanding lock obligations) to prevent the protocol from slashing more than the curator holds. The successful reporter MUST receive the full `preRevealLeakSlashWei_i`. If multiple valid reports exist for the same leak, the earliest valid precommit MUST win. `preRevealLeakSlashWei_i` MUST NOT be added to the coherent-curator reward pool.
+The leak penalty may exceed the curator's locked tokens (`w_i`) and is drawn from the curator's total deposited balance (including currently locked tokens). It is capped at `depositedBalanceWei_i` to prevent the protocol from slashing more than the curator holds in the pool. The successful reporter MUST receive the full `preRevealLeakSlashWei_i`. If multiple valid reports exist for the same leak, the earliest valid precommit MUST win. `preRevealLeakSlashWei_i` MUST NOT be added to the coherent-curator reward pool.
 
 22. This penalty is in addition to any graduated slashing that already applies in the same round.
 23. The claim’s `relevanceScore` becomes `mu`.
