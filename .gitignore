@@ -21,9 +21,6 @@ paper.docx
 paper_files/
 paper.tex
 
-# Archived generated outputs (do not version)
-legacy/quarto-outputs-pre-normalization/
-
 /.quarto/
 **/*.quarto_ipynb
 
@@ -34,7 +31,7 @@ allgeneratedimagesbynanobanana/
 output/
 
 # Presentation artifacts (binaries/exports)
-draftSlidesOfMarch10/
+legacy/draftSlidesOfMarch10/
 march10-presentation.zip
 talks/*.pdf
 talks/slides/
