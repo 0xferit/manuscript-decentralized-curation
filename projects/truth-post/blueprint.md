@@ -92,7 +92,8 @@ Challenge tax is a pool-configurable parameter, not a single global constant. Th
 | Minimum reward fraction `rho` | Pool-configurable; `rho in [0, 1]` |
 | Pre-reveal leak slash multiplier | Variable; suggested default `3x` locked tokens (`w_i`); capped at deposited balance |
 | Appeal window (`appealWindowSeconds`) | Suggested default 7 days (604,800 seconds) after round finalization |
-| Sigma-ref window size | Suggested default 50 rounds; `sigma_ref = epsilon_sigma` until populated |
+| Sigma-ref EMA alpha (`sigmaRefAlpha`) | Suggested default 0.05; `sigma_ref = epsilon_sigma` at bootstrap |
+| Counter-stake author split (`counterStakeAuthorSplitBps`) | 8000 (80% to author, 20% to pool budget; pool-configurable) |
 | Author reputation decay | Variable; suggested default `1%` per 30-day epoch |
 | Author busted-publication slash | Variable; suggested default `50%` of current author reputation |
 | Author successful-defense reward | Variable; suggested default `+1` reputation unit |
@@ -238,7 +239,9 @@ Required fields:
 - `preRevealLeakSlashMultiplier`
 - `appealStakeWei`
 - `appealMeanDiffThreshold`
+- `appealWindowSeconds`
 - `maxEscalationDepth`
+- `sigmaRefAlpha`
 - `authorReputationDecayBpsPerEpoch`
 - `authorReputationDecayEpochSeconds`
 - `authorBustSlashBps`
@@ -935,7 +938,7 @@ Default payout rule (suggested; requires empirical calibration; all amounts refe
   - losing-side appeal reward logic is inherited from DDR
 - if challenger loses:
   - author keeps author bond locked unless later withdrawn
-  - challenger counter-stake is split between author reward and pool reward budget at a pool-configurable ratio (suggested default: 80% author / 20% pool)
+  - challenger counter-stake is split between author reward and pool reward budget at `pool.counterStakeAuthorSplitBps` (suggested default: 8000 = 80% author, remainder to pool budget)
   - DDR fee is not refunded by Truth Post
 
 The counter-stake split ratio is a pool-configurable parameter. The suggested 80/20 default is a starting point. No sensitivity analysis has been conducted on this ratio; see Parameter Status And Calibration Limits above for the current epistemic status of this default.
@@ -945,7 +948,8 @@ The counter-stake split ratio is a pool-configurable parameter. The suggested 80
 1. A curator deposits tokens into a pool contract. Let `s_i` denote curator `i`’s deposited balance, with both `s_i` and the seat size `L` (`pool.seatSizeWei`) measured in the token’s smallest on-chain unit.
 2. The curator’s stake becomes `Active` after confirmation.
 3. Only curators with `s_i >= L` are eligible for drafting. The draft weight is the integer number of full seat-tickets the curator holds: `d_i = floor(s_i / L)`.
-4. When drafted, each drawn ticket locks `L` tokens from the curator’s deposited balance. Let `n_i` denote the number of seats drawn for curator `i`. The curator’s round weight is `w_i = n_i * L`. Locked tokens are simultaneously the curator’s influence on the weighted mean and their maximum loss.
+4. When drafted, each drawn ticket locks `L` tokens from the curator’s deposited balance. Let `n_i` denote the number of seats drawn for curator `i`. The curator’s round weight is `w_i = n_i * L`. Locked tokens are simultaneously the curator’s influence on the weighted mean and their maximum loss from coherence slashing in that round.
+5. The unlocked remainder (`s_i - n_i * L`) stays in the pool contract and is not subject to coherence slashing; it remains withdrawable subject to appeal-window reserves (see Flow F-bis), but may still be exposed to separately specified penalties such as pre-reveal leak penalties.
 5. The unlocked remainder (`s_i - n_i * L`) stays in the pool contract but is not at risk in that round and is withdrawable, subject to appeal-window reserves (see Flow F-bis).
 6. Each curator submits one score weighted by `w_i`. Multiple seats increase the curator’s weight on that single score, not the number of independent votes.
 7. A curator MAY withdraw any tokens that are not locked in active rounds and not reserved against pending appeal windows at any time. There is no exit cooldown.
@@ -991,7 +995,7 @@ where `L = pool.seatSizeWei`. Only curators with `s_i >= L` are eligible.
 w_i = n_i * L
 ```
 
-Locked tokens are simultaneously the curator’s influence on the weighted mean and their maximum loss. The unlocked remainder (`s_i - n_i * L`) stays in the pool contract but is not at risk in this round and is withdrawable (subject to appeal-window reserves). A curator MUST NOT be finalized as drafted unless `availableDepositedWei_i >= w_i = n_i * L` at the time seats are locked; if this condition fails (e.g., a withdrawal between snapshot and drafting reduced the balance), the protocol MUST discard that curator’s unfunded seats and continue drawing replacement seats using the same round seed until all `n` seats are fully backed or the round is cancelled. Only `w_i` MAY determine vote weight or slash exposure for that round.
+Locked tokens are simultaneously the curator’s influence on the weighted mean and their maximum loss from coherence and non-participation slashing. The unlocked remainder (`s_i - n_i * L`) stays in the pool contract and is not subject to coherence slashing; it remains withdrawable subject to appeal-window reserves but may be exposed to separately specified penalties (e.g., pre-reveal leak). A curator MUST NOT be finalized as drafted unless `availableDepositedWei_i >= w_i = n_i * L` at the time seats are locked; if this condition fails (e.g., a withdrawal between snapshot and drafting reduced the balance), the protocol MUST discard that curator’s unfunded seats and continue drawing replacement seats using the same round seed until all `n` seats are fully backed or the round is cancelled. Only `w_i` MAY determine vote weight or coherence/non-participation slash exposure for that round.
 
 9. Each drafted curator commits a single relevance score in `[0,1]`, weighted by `w_i`. Multiple seats increase the curator’s weight on that single score, not the number of independent votes.
 10. Each drafted curator reveals the score.
@@ -1000,7 +1004,7 @@ Locked tokens are simultaneously the curator’s influence on the weighted mean 
    - any previous relevance score remains in force
    - if the claim has no previous finalized relevance round, it remains unscored for feed purposes
    - a replacement round is scheduled at the next cadence
-12. Otherwise, the protocol computes weighted mean and standard deviation. For a round with valid reveal set `V`, let `W = sum(w_i for i in V)`. If no curators reveal (`W = 0`), the round is cancelled: no score is produced, the claim retains its previous relevance score if one exists, and all locked tokens are returned. Otherwise the protocol MUST compute:
+12. Otherwise, the protocol computes weighted mean and standard deviation. For a round with valid reveal set `V` (guaranteed non-empty by the quorum check in step 11), let `W = sum(w_i for i in V) > 0`. The protocol MUST compute:
 
 ```text
 mu = sum(w_i * v_i for i in V) / W
@@ -1012,10 +1016,10 @@ sigma = sqrt(sum(w_i * (v_i - mu)^2 for i in V) / W)
 13. Round rewards scale linearly with `sigma` rather than switching at a threshold. Let `epsilon_sigma = pool.epsilonSigma` denote the dispersion floor, and define the reference dispersion level:
 
 ```text
-sigma_ref = max(epsilon_sigma, median(sigma over rolling window of recent rounds))
+sigma_ref = max(epsilon_sigma, ema_sigma)
 ```
 
-The rolling window length is a pool parameter (`pool.sigmaRefWindowSize`, suggested default: 50 rounds). Until the window is populated (fewer historical rounds than the window size), `sigma_ref = epsilon_sigma`. This preserves adaptation without governance while guaranteeing `sigma_ref > 0` even during sustained consensus or at bootstrap. Let `R` denote the base round reward drawn from the pool’s reward budget, and `rho = pool.rho` the minimum reward fraction for zero-dispersion rounds. The reward factor is:
+where `ema_sigma` is an exponential moving average of recent round sigmas: `ema_sigma = alpha * sigma_latest + (1 - alpha) * ema_sigma_prev`, with smoothing factor `alpha = pool.sigmaRefAlpha` (suggested default: 0.05). EMA requires only one stored value per pool (constant gas), avoids on-chain sorting, and approximates the rolling median for stationary distributions. At bootstrap (no prior rounds), `ema_sigma = 0` and `sigma_ref = epsilon_sigma`. This preserves adaptation without governance while guaranteeing `sigma_ref > 0` even during sustained consensus. Let `R` denote the base round reward drawn from the pool’s reward budget, and `rho = pool.rho` the minimum reward fraction for zero-dispersion rounds. The reward factor is:
 
 ```text
 f_reward = rho + (1 - rho) * min(1, sigma / sigma_ref)
@@ -1023,7 +1027,7 @@ f_reward = rho + (1 - rho) * min(1, sigma / sigma_ref)
 
 At `sigma = 0` the reward is `rho * R` (minimum). At `sigma >= sigma_ref` the reward is full `R`. Between them the transition is linear.
 
-14. Slashing guard: if `sigma < epsilon_sigma`, graduated slashing is skipped (`p_i = 0` for all curators, `delta_i = 0`), and all locked tokens are released from finalization. The mean is still accepted as a valid relevance score. Released tokens remain slashable during the appeal window: withdrawals during the appeal window are allowed only to the extent that they do not reduce the deposited balance below the curator’s outstanding appeal exposure.
+14. Slashing guard: if `sigma < epsilon_sigma`, distance-based graduated slashing is skipped for curators who successfully committed and revealed a valid score (`p_i = 0`, `delta_i = 0` for those curators). This guard does NOT waive non-participation penalties: failures to commit or reveal remain slashable at `p_i = 1` under the non-participation rules below. The mean is still accepted as a valid relevance score. Released tokens remain slashable during the appeal window: withdrawals during the appeal window are allowed only to the extent that they do not reduce the deposited balance below the curator’s outstanding appeal exposure.
 
 15. If `sigma >= epsilon_sigma`, graduated slashing applies. Let `v_i` denote curator `i`’s revealed score and `K = pool.coherenceK` the coherence-threshold multiplier. Curators inside the coherence band (`abs(v_i - mu) <= K * sigma`) are not penalized. Curators outside the band lose a fraction of their locked tokens that scales linearly with distance:
 
@@ -1074,7 +1078,7 @@ Pre-reveal leak rules:
 
 1. Any curator with a deposited balance in the pool MAY appeal a finalized relevance round by posting an appeal stake (`pool.appealStakeWei`). A curator with `s_i < L` who cannot be drafted MAY still appeal. The appeal MUST be filed within `pool.appealWindowSeconds` (suggested default: 7 days) after round finalization.
 2. The appeal triggers a new round with a larger drafted committee at higher stakes. The appeal committee independently scores the same claim under the same pool relevance policy.
-3. If the appeal committee’s weighted mean differs from the original round’s mean by more than `pool.appealMeanDiffThreshold`, the appeal succeeds: the appeal score replaces the original, and original-round curators whose scores were closer to the overturned mean than to the appeal mean are slashed via the same graduated slashing formula applied against the appeal committee’s mean.
+3. If the appeal committee’s weighted mean differs from the original round’s mean by more than `pool.appealMeanDiffThreshold`, the appeal succeeds: the appeal score replaces the original, and original-round curators whose scores were closer to the original round mean than to the appeal mean are slashed via the same graduated slashing formula applied against the appeal committee’s mean.
 4. If the difference is within the threshold, the appeal fails and the appellant’s stake is slashed.
 5. Multiple escalation rounds MAY occur, each with a larger committee and higher cost, up to `pool.maxEscalationDepth`.
 6. The threat of appeal is the primary disciplining force: first-round curators converge on "what would survive appeal by a larger committee" rather than "what the current committee will vote." Under continuous-signal assumptions (unbiased, independent, finite-variance signals), the appeal-round mean concentrates more tightly around the latent relevance target as the number of distinct drafted curators grows. Additional seats assigned to the same curator do not create new independent observations; the defense is effective when escalation increases independent participation.
