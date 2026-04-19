@@ -15,7 +15,6 @@ format:
     output-file: index
     embed-resources: true
     theme: default
-    # To use the PUW theme: theme: [default, themes/puw.scss]
     page-layout: article
     grid:
       body-width: 820px

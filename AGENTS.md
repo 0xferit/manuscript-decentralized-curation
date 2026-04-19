@@ -16,7 +16,6 @@ This project is workspace for my thesis on decentralized curation.
 - `talks/` contains presentation materials (slide decks, talk scripts). Not part of the Quarto render pipeline.
 - Quarto project files:
   - `_quarto.yml` (render config)
-  - `themes/puw.scss` (PUW custom HTML theme; aligned with `proveuswrong/website`)
   - `references.bib` (citations)
   - `analysis/run_all.py` + `requirements.txt` (deterministic simulations; generates `analysis/out/*` + `analysis/fig/*` on each run)
   - `_build-info.md` (overwritten in CI; shows deployed version + build time)
