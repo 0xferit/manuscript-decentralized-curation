@@ -6,12 +6,12 @@ This document tracks the "Red Teaming" exercises conducted against the Decentral
 
 ## Section 1: Successfully Defended Attacks
 
-_These attacks have been neutralized, and their defenses are integrated into the main manuscript._
+_These attacks have been neutralized, and their defenses are integrated into the main manuscript. Numbering preserves legacy attack identifiers for cross-reference consistency; some numbers are intentionally absent here because those attacks were moved to Section 2._
 
 ### 1. The "Lazy Majority" Equilibrium
 
 **Attack:** Curators will just copy the majority vote (or whale vote) without checking facts to win rewards.
-**Defense:** Commit-reveal voting prevents vote copying during the commitment phase. Graduated coherence-based slashing penalizes curators whose scores fall outside the |v_i - mu| <= K*sigma band, with penalty scaling linearly from zero at the boundary to total loss of locked tokens at twice the boundary distance. This makes rubber-stamping risky when it diverges from the informed distribution, with harsher penalties for larger deviations.
+**Defense:** Commit-reveal voting prevents vote copying during the commitment phase. Graduated coherence-based slashing penalizes curators whose scores fall outside the $|v_i - \mu| \le K\sigma$ band, with penalty scaling linearly from zero at the boundary to total loss of locked tokens at $2K\sigma$. This makes rubber-stamping risky when it diverges from the informed distribution, with harsher penalties for larger deviations.
 
 ### 2. The "Subreddit War" (Echo Chambers)
 
@@ -26,7 +26,7 @@ _These attacks have been neutralized, and their defenses are integrated into the
 ### 4. The "Boring Dystopia" (Liquidity Crisis)
 
 **Attack:** Low-stakes lies will survive because no one bothers to challenge them.
-**Defense:** Low stake equals low signal. Confidence is continuous bond-time; there is no protocol-level dollar cutoff at which a claim becomes "noise." A low-bond claim carries weak evidence because little capital is at risk and, by Claim 1, the bond is too small to deter high-value deception. The blueprint confirms: "There is no protocol-level hard cutoff." Any fixed visibility threshold (such as the "$5 stake" interface illustration) is a downstream interface choice with no protocol guidance on where to draw that line, not a validated protocol constant.
+**Defense:** Low stake equals low signal. Confidence is continuous bond-time; there is no protocol-level dollar cutoff at which a claim becomes "noise." A low-bond claim carries weak evidence because little capital is at risk and, by Claim 1, the bond is too small to deter high-value deception. The blueprint (`projects/truth-post/blueprint.md`, confidence score section) confirms: "There is no protocol-level hard cutoff." Any fixed visibility threshold (such as the "$5 stake" interface illustration) is a downstream interface choice with no protocol guidance on where to draw that line, not a validated protocol constant.
 
 ### 6. The "Rich Get Richer"
 
@@ -101,7 +101,7 @@ _Identifier note: plain numeric headings retain legacy attack IDs from the origi
 ### OV-1. Off-Chain Collusion Above the Colluding-Bloc Threshold
 
 **Attack:** Curators coordinate off-chain to align their scores, shifting the weighted mean toward a biased target. Honest curators then fall outside the coherence band and are slashed while dishonest curators survive.
-**Status:** Partially mitigated by a four-layer defense: (1) commit-reveal prevents real-time on-chain vote copying; (2) draw-and-lock with graduated slashing penalizes individual deviants proportionally to their deviation distance; (3) escalation allows honest minorities to overturn captured rounds by appealing to a larger committee where sampling variance is reduced; (4) economic self-destruction deters profit-seeking majority-stake attackers because distorting a pool degrades its value and the attacker's locked capital with it. E2-Adv characterizes the collusion threshold empirically under a predecessor model (binary coherence test, fixed-rate slashing): at K=1.25 with 15-member committees, the mechanism degrades visibly when the colluding fraction exceeds approximately 0.15 to 0.20; the threshold under draw-and-lock with graduated slashing may differ and is future work. The irreducible residual: off-chain coordination by a stake majority above phi* cannot be prevented by any protocol mechanism; it can only be made detectable and economically painful. Detection is a precondition for the exit-based defense to function: interfaces and monitoring tools can observe distorted score distributions and abnormal escalation frequency, but the protocol does not automate this detection. Off-chain coordination that does not require explicit vote exchange (e.g., tacit agreements to "all vote 0.9") is not detectable by commit-reveal.
+**Status:** Partially mitigated by a four-layer defense: (1) commit-reveal prevents real-time on-chain vote copying; (2) draw-and-lock with graduated slashing penalizes individual deviants proportionally to their deviation distance; (3) escalation allows honest minorities to overturn captured rounds by appealing to a larger committee where sampling variance is reduced; (4) economic self-destruction deters profit-seeking majority-stake attackers because distorting a pool degrades its value and the attacker's locked capital with it. E2-Adv characterizes the collusion threshold empirically under a predecessor model (binary coherence test, fixed-rate slashing): at $K = 1.25$ with 15-member committees, the mechanism degrades visibly when the colluding fraction exceeds approximately $0.15$ to $0.20$; the threshold under draw-and-lock with graduated slashing may differ and is future work. The irreducible residual: off-chain coordination by a stake majority above $\phi^*$ cannot be prevented by any protocol mechanism; it can only be made detectable and economically painful. Detection is a precondition for the exit-based defense to function: interfaces and monitoring tools can observe distorted score distributions and abnormal escalation frequency, but the protocol does not automate this detection. Off-chain coordination that does not require explicit vote exchange (e.g., tacit agreements to "all vote 0.9") is not detectable by commit-reveal.
 
 ### OV-2. Legal Pressure Against Visible Participants
 
