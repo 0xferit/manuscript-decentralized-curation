@@ -21,7 +21,7 @@ This project is workspace for my thesis on decentralized curation.
   - `analysis/run_all.py` + `requirements.txt` (deterministic simulations; generates `analysis/out/*` + `analysis/fig/*` on each run)
   - `_build-info.md` (overwritten in CI; shows deployed version + build time)
   - `outputs/` (rendered artifacts; gitignored)
-  - `.github/workflows/publish-cloudflare-pages-branch.yml` (CI publish: run sims → render HTML → push `cf-pages/public/index.html`)
+  - `.github/workflows/publish-cloudflare-pages.yml` (CI publish: run sims → render HTML → Direct Upload to Cloudflare Pages)
   - `.github/workflows/copilot-setup-steps.yml` (Copilot coding agent environment: installs Python deps, runs sims, verifies Quarto render)
   - `.github/agents/peer-reviewer.agent.md` (GitHub Copilot agent: 7-stage scientific peer review using Claude Opus)
 
@@ -31,7 +31,7 @@ This project is workspace for my thesis on decentralized curation.
 - If you cut a release, follow the “Release procedure (hash-versioned)” in `README.md`.
 - Do not assume “today’s date” inside the manuscript; verify if a claim depends on currentness.
 - Prefer rendering via Quarto (`quarto render`) so outputs stay consistent across formats (and run `python3 analysis/run_all.py` first if figures/summaries are referenced).
-- Publishing: commits to `main` trigger HTML publish to the `cf-pages` branch (see `README.md`).
+- Publishing: commits to `main` trigger HTML publish to Cloudflare Pages via Direct Upload (see `README.md`).
 - Treat the repo root as the thesis/shared-assets layer. Standalone project docs belong under `projects/`, not at the root.
 - Route wrapper files at the repo root exist only to publish stable URLs for project papers. Edit project prose under `projects/`, not in those wrappers.
 
