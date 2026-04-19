@@ -18,6 +18,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import numba
 from numba import njit
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,6 +46,7 @@ def save_metadata() -> None:
             "numpy": np.__version__,
             "pandas": pd.__version__,
             "matplotlib": plt.matplotlib.__version__,
+            "numba": numba.__version__,
         },
     }
     (OUT_DIR / "metadata.json").write_text(
