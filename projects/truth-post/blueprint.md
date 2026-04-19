@@ -90,7 +90,9 @@ Challenge tax is a pool-configurable parameter, not a single global constant. Th
 | Seat size `L` | Pool-configurable; `L > 0`, measured in smallest on-chain token unit |
 | Dispersion floor `epsilon_sigma` | 0.02 |
 | Minimum reward fraction `rho` | Pool-configurable; `rho in [0, 1]` |
-| Pre-reveal leak slash multiplier | Variable; suggested default `3x` base round slash |
+| Pre-reveal leak slash multiplier | Variable; suggested default `3x` locked tokens (`w_i`); capped at deposited balance |
+| Appeal window (`appealWindowSeconds`) | Suggested default 7 days (604,800 seconds) after round finalization |
+| Sigma-ref window size | Suggested default 50 rounds; `sigma_ref = epsilon_sigma` until populated |
 | Author reputation decay | Variable; suggested default `1%` per 30-day epoch |
 | Author busted-publication slash | Variable; suggested default `50%` of current author reputation |
 | Author successful-defense reward | Variable; suggested default `+1` reputation unit |
@@ -975,7 +977,7 @@ n = min(target, eligibleCuratorCount)
    - any previous relevance score remains in force
    - claims with no prior finalized relevance round remain out of the default main feed
    - a replacement round is scheduled at the next cadence
-7. Otherwise, the scheduler drafts `n` curators using VRF randomness. Drafting MUST use a verifiable randomness source. The seed MUST be derived as `seed = H(poolId, claimId, roundId, snapshotBlock, randomness(snapshotBlock+1))`. If randomness is unavailable by a configurable deadline, the round MUST be cancelled and rescheduled. Drafting weight is the integer number of full seat-tickets the curator holds:
+7. Otherwise, the scheduler draws `n` seats from the ticket pool using VRF randomness. The draw samples individual seat-tickets (not unique curators); a curator with more tickets may be drawn multiple times. Drafting MUST use a verifiable randomness source. The seed MUST be derived as `seed = H(poolId, claimId, roundId, snapshotBlock, randomness(snapshotBlock+1))`. If randomness is unavailable by a configurable deadline, the round MUST be cancelled and rescheduled. `relevanceRoundTargetSize` defines the number of seats to draw (not the number of distinct curators). Each curator's ticket count is:
 
 ```text
 d_i = floor(s_i / L)
@@ -989,7 +991,7 @@ where `L = pool.seatSizeWei`. Only curators with `s_i >= L` are eligible.
 w_i = n_i * L
 ```
 
-Locked tokens are simultaneously the curator’s influence on the weighted mean and their maximum loss. The unlocked remainder (`s_i - n_i * L`) stays in the pool contract but is not at risk in this round and is withdrawable (subject to appeal-window reserves). A curator MUST NOT be drafted unless `availableDepositedWei_i >= L`. Only `w_i` MAY determine vote weight or slash exposure for that round.
+Locked tokens are simultaneously the curator’s influence on the weighted mean and their maximum loss. The unlocked remainder (`s_i - n_i * L`) stays in the pool contract but is not at risk in this round and is withdrawable (subject to appeal-window reserves). A curator MUST NOT be finalized as drafted unless `availableDepositedWei_i >= w_i = n_i * L` at the time seats are locked; if this condition fails (e.g., a withdrawal between snapshot and drafting reduced the balance), the protocol MUST discard that curator’s unfunded seats and continue drawing replacement seats using the same round seed until all `n` seats are fully backed or the round is cancelled. Only `w_i` MAY determine vote weight or slash exposure for that round.
 
 9. Each drafted curator commits a single relevance score in `[0,1]`, weighted by `w_i`. Multiple seats increase the curator’s weight on that single score, not the number of independent votes.
 10. Each drafted curator reveals the score.
@@ -1013,7 +1015,7 @@ sigma = sqrt(sum(w_i * (v_i - mu)^2 for i in V) / W)
 sigma_ref = max(epsilon_sigma, median(sigma over rolling window of recent rounds))
 ```
 
-This preserves adaptation without governance while guaranteeing `sigma_ref > 0` even during sustained consensus. Let `R` denote the base round reward drawn from the pool’s reward budget, and `rho = pool.rho` the minimum reward fraction for zero-dispersion rounds. The reward factor is:
+The rolling window length is a pool parameter (`pool.sigmaRefWindowSize`, suggested default: 50 rounds). Until the window is populated (fewer historical rounds than the window size), `sigma_ref = epsilon_sigma`. This preserves adaptation without governance while guaranteeing `sigma_ref > 0` even during sustained consensus or at bootstrap. Let `R` denote the base round reward drawn from the pool’s reward budget, and `rho = pool.rho` the minimum reward fraction for zero-dispersion rounds. The reward factor is:
 
 ```text
 f_reward = rho + (1 - rho) * min(1, sigma / sigma_ref)
@@ -1038,7 +1040,7 @@ q_i = w_i - delta_i
 
 The protocol slashes `delta_i` tokens and returns the remainder `q_i`. This graduated slashing replaces binary slashing: near-boundary deviations incur small losses, while extreme deviations incur total loss.
 
-16. Each coherent curator (those with `p_i = 0`) MUST receive `(w_i / sum(w_j for j in coherent)) * (sum(delta_j) + f_reward * R)`.
+16. Each coherent curator (those with `p_i = 0`) MUST receive `(w_i / sum(w_j for j in coherent)) * (sum(delta_j) + f_reward * R)`. If the coherent set is empty (all curators slashed), the slashed tokens and the round reward remain in the pool budget; no curator receives a payout. The pool MUST enforce `K > 0` and `epsilon_sigma > 0` to prevent degenerate parameter configurations that could produce an empty coherent set under normal conditions.
 17. Pre-reveal leak reporting remains open until round finalization.
 18. A reporter who receives a leaked intended vote MAY precommit `hash(leakedPayload)` before reveal closes.
 19. After reveal, the reporter MAY open the payload.
@@ -1046,10 +1048,10 @@ The protocol slashes `delta_i` tokens and returns the remainder `q_i`. This grad
 21. If a valid leak report is confirmed, the guilty curator is slashed. For every drafted curator `i`, define `baseLeakSlashWei_i = w_i` (total locked tokens for that curator) regardless of whether curator `i` is later coherent or incoherent. A confirmed pre-reveal leak by curator `i` MUST trigger:
 
 ```text
-preRevealLeakSlashWei_i = pool.preRevealLeakSlashMultiplier * baseLeakSlashWei_i
+preRevealLeakSlashWei_i = min(pool.preRevealLeakSlashMultiplier * baseLeakSlashWei_i, availableDepositedWei_i)
 ```
 
-The successful reporter MUST receive the full `preRevealLeakSlashWei_i`. If multiple valid reports exist for the same leak, the earliest valid precommit MUST win. `preRevealLeakSlashWei_i` MUST NOT be added to the coherent-curator reward pool.
+The leak penalty may exceed the curator's locked tokens (`w_i`) and is drawn from the curator's full deposited balance. It is capped at `availableDepositedWei_i` (the deposited balance minus any other outstanding lock obligations) to prevent the protocol from slashing more than the curator holds. The successful reporter MUST receive the full `preRevealLeakSlashWei_i`. If multiple valid reports exist for the same leak, the earliest valid precommit MUST win. `preRevealLeakSlashWei_i` MUST NOT be added to the coherent-curator reward pool.
 
 22. This penalty is in addition to any graduated slashing that already applies in the same round.
 23. The claim’s `relevanceScore` becomes `mu`.
@@ -1070,7 +1072,7 @@ Pre-reveal leak rules:
 
 ### Flow F-bis: Relevance-Round Escalation (Appeals)
 
-1. Any curator with a deposited balance in the pool MAY appeal a finalized relevance round by posting an appeal stake (`pool.appealStakeWei`). A curator with `s_i < L` who cannot be drafted MAY still appeal. The appeal MUST be filed within the pool-configurable appeal window after round finalization.
+1. Any curator with a deposited balance in the pool MAY appeal a finalized relevance round by posting an appeal stake (`pool.appealStakeWei`). A curator with `s_i < L` who cannot be drafted MAY still appeal. The appeal MUST be filed within `pool.appealWindowSeconds` (suggested default: 7 days) after round finalization.
 2. The appeal triggers a new round with a larger drafted committee at higher stakes. The appeal committee independently scores the same claim under the same pool relevance policy.
 3. If the appeal committee’s weighted mean differs from the original round’s mean by more than `pool.appealMeanDiffThreshold`, the appeal succeeds: the appeal score replaces the original, and original-round curators whose scores were closer to the overturned mean than to the appeal mean are slashed via the same graduated slashing formula applied against the appeal committee’s mean.
 4. If the difference is within the threshold, the appeal fails and the appellant’s stake is slashed.
