@@ -242,6 +242,7 @@ Required fields:
 - `appealWindowSeconds`
 - `maxEscalationDepth`
 - `sigmaRefAlpha`
+- `emaSigma` (mutable; initialized to `epsilonSigma` at pool creation; updated at each round finalization as `emaSigma = sigmaRefAlpha * sigma_round + (1 - sigmaRefAlpha) * emaSigma`)
 - `authorReputationDecayBpsPerEpoch`
 - `authorReputationDecayEpochSeconds`
 - `authorBustSlashBps`
@@ -494,7 +495,7 @@ Required fields:
 - `curator`
 - `depositedWei` (total deposited balance)
 - `lockedWei` (tokens locked in active rounds; not withdrawable)
-- `appealExposureWei` (tokens reserved against pending appeal windows; not withdrawable)
+- `appealExposureWei` (sum of `w_i` across all finalized rounds whose appeal window has not yet expired; set to `appealExposureWei += w_i` at each round finalization, decremented by `w_i` when the corresponding appeal window expires or the appeal resolves; withdrawals MUST NOT reduce `depositedBalanceWei` below `appealExposureWei`)
 - `status` (`Pending`, `Active`, `Exited`)
 - `joinedAt`
 - `lastSlashedAt`
@@ -994,7 +995,7 @@ where `L = pool.seatSizeWei`. Only curators with `s_i >= L` are eligible.
 w_i = n_i * L
 ```
 
-Locked tokens are simultaneously the curator’s influence on the weighted mean and their maximum loss from coherence and non-participation slashing. The unlocked remainder (`s_i - n_i * L`) stays in the pool contract and is not subject to coherence slashing; it remains withdrawable subject to appeal-window reserves but may be exposed to separately specified penalties (e.g., pre-reveal leak). A curator MUST NOT be finalized as drafted unless `availableDepositedWei_i >= w_i = n_i * L` at the time seats are locked; if this condition fails (e.g., a withdrawal between snapshot and drafting reduced the balance), the protocol MUST discard that curator’s unfunded seats and continue drawing replacement seats using the same round seed until all `n` seats are fully backed or the round is cancelled. Only `w_i` MAY determine vote weight or coherence/non-participation slash exposure for that round.
+Locked tokens are simultaneously the curator’s influence on the weighted mean and their maximum loss from coherence and non-participation slashing. The unlocked remainder (`s_i - n_i * L`) stays in the pool contract and is not subject to coherence slashing; it remains withdrawable subject to appeal-window reserves but may be exposed to separately specified penalties (e.g., pre-reveal leak). Drafting MUST be implemented as a deterministic pseudorandom permutation of the full snapshot seat-ticket pool derived from the round seed. The protocol iterates through that ordered ticket list at most once: for each visited ticket, the protocol attempts to lock one seat of size `L` for that ticket’s curator. A ticket is fundable only if the curator’s unencumbered deposited balance can cover the additional lock (i.e., after `k` seats already locked for curator `i`, the next ticket is fundable only if `availableDepositedWei_i >= (k + 1) * L`). Unfundable tickets are skipped, not redrawn. If the list is exhausted before `n` backed seats are locked, the round is cancelled as underfunded (no score produced, previous score retained, replacement round scheduled at next cadence). This bounded single-pass procedure prevents unbounded gas consumption. Only `w_i` MAY determine vote weight or coherence/non-participation slash exposure for that round.
 
 9. Each drafted curator commits a single relevance score in `[0,1]`, weighted by `w_i`. Multiple seats increase the curator’s weight on that single score, not the number of independent votes.
 10. Each drafted curator reveals the score.
@@ -1043,7 +1044,7 @@ q_i = w_i - delta_i
 
 The protocol slashes `delta_i` tokens and returns the remainder `q_i`. This graduated slashing replaces binary slashing: near-boundary deviations incur small losses, while extreme deviations incur total loss.
 
-16. Each coherent curator (those with `p_i = 0`) MUST receive `(w_i / sum(w_j for j in coherent)) * (sum(delta_j) + f_reward * R)`. If the coherent set is empty (all curators slashed), the slashed tokens and the round reward remain in the pool budget; no curator receives a payout. The pool MUST enforce `K > 0` and `epsilon_sigma > 0` to prevent degenerate parameter configurations that could produce an empty coherent set under normal conditions.
+16. Each coherent curator (those with `p_i = 0`) MUST receive `(w_i / sum(w_j for j in coherent)) * (sum(delta_j) + f_reward * R)`. If the coherent set is empty (all curators slashed), the slashed tokens and the round reward remain in the pool budget; no curator receives a payout. The pool MUST enforce `K > 0` so the `p_i` formula is well-defined and MUST enforce `epsilon_sigma > 0` so the low-dispersion guard and reward scaling are well-defined.
 17. Pre-reveal leak reporting remains open until round finalization.
 18. A reporter who receives a leaked intended vote MAY precommit `hash(leakedPayload)` before reveal closes.
 19. After reveal, the reporter MAY open the payload.
@@ -1077,7 +1078,7 @@ Pre-reveal leak rules:
 
 1. Any curator with a deposited balance in the pool MAY appeal a finalized relevance round by posting an appeal stake (`pool.appealStakeWei`). A curator with `s_i < L` who cannot be drafted MAY still appeal. The appeal MUST be filed within `pool.appealWindowSeconds` (suggested default: 7 days) after round finalization.
 2. The appeal triggers a new round with a larger drafted committee at higher stakes. The appeal committee independently scores the same claim under the same pool relevance policy.
-3. If the appeal committee’s weighted mean differs from the original round’s mean by more than `pool.appealMeanDiffThreshold`, the appeal succeeds: the appeal score replaces the original, and original-round curators whose scores were closer to the original round mean than to the appeal mean are slashed via the same graduated slashing formula applied against the appeal committee’s mean.
+3. If the appeal committee’s weighted mean differs from the original round’s mean by more than `pool.appealMeanDiffThreshold`, the appeal succeeds: the appeal score replaces the original, and original-round curators whose scores were closer to the original round mean than to the appeal mean are slashed via the graduated slashing formula using the appeal round’s weighted mean and dispersion (`mu_appeal`, `sigma_appeal`) as reference values. The slash is charged against each such curator’s original round locked amount `w_i`; no new locked amount is created for original-round curators during the appeal.
 4. If the difference is within the threshold, the appeal fails and the appellant’s stake is slashed.
 5. Multiple escalation rounds MAY occur, each with a larger committee and higher cost, up to `pool.maxEscalationDepth`.
 6. The threat of appeal is the primary disciplining force: first-round curators converge on "what would survive appeal by a larger committee" rather than "what the current committee will vote." Under continuous-signal assumptions (unbiased, independent, finite-variance signals), the appeal-round mean concentrates more tightly around the latent relevance target as the number of distinct drafted curators grows. Additional seats assigned to the same curator do not create new independent observations; the defense is effective when escalation increases independent participation.
@@ -1217,7 +1218,7 @@ The complete implementation MUST satisfy these invariants:
 - confidence is monotone while active, paused during dispute/withdraw cooldown, terminated on terminal exit
 - withdrawn claims MUST remain queryable as historical records with their last finalized confidence value
 - author reputation balances are pool-scoped and non-transferable
-- only locked tokens MAY determine vote weight or slash exposure inside a relevance round
+- only locked tokens MAY determine vote weight and ordinary relevance-round slash exposure (coherence and non-participation); the pre-reveal leak penalty is an explicit exception that may draw from the full deposited balance
 - a revealed relevance score must match its commitment hash
 - a confirmed pre-reveal leak MUST trigger an additional slash equal to `pool.preRevealLeakSlashMultiplier * lockedTokensForThatRound`
 - no amendment may start while a claim has an active or queued challenge
