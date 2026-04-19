@@ -9,11 +9,11 @@ This project is workspace for my thesis on decentralized curation.
 - `projects/truth-post/implementation-report.md` is the **Truth Post deployment retrospective**.
 - `projects/rpgf/design.md` is the **canonical RPGF design doc**.
 - `truth-post/` and `rpgf/` at the repo root are **publish-route wrappers only**, not canonical content sources.
-- `legacy/manuscript-7-part-series.md` is the **legacy series draft** (pre-paper).
 - `context/attack-and-defense-log.md` tracks red-team attacks/defenses integrated into the manuscript.
 - `projects/README.md` indexes the spinout project documents.
-- `legacy/` contains archived pre-Quarto artifacts (older snapshots/exports).
 - `releases/` (when present) contains frozen hash-versioned releases (snapshot + rendered outputs).
+- `diagrams/generate_diagrams.py` generates conceptual figures (claim states, actor flow, architecture, etc.) into `diagrams/fig-*.png`. Uses matplotlib; run directly with `python3 diagrams/generate_diagrams.py`.
+- `talks/` contains presentation materials (slide decks, talk scripts). Not part of the Quarto render pipeline.
 - Quarto project files:
   - `_quarto.yml` (render config)
   - `themes/puw.scss` (PUW custom HTML theme; aligned with `proveuswrong/website`)
@@ -22,6 +22,8 @@ This project is workspace for my thesis on decentralized curation.
   - `_build-info.md` (overwritten in CI; shows deployed version + build time)
   - `outputs/` (rendered artifacts; gitignored)
   - `.github/workflows/publish-cloudflare-pages-branch.yml` (CI publish: run sims → render HTML → push `cf-pages/public/index.html`)
+  - `.github/workflows/copilot-setup-steps.yml` (Copilot coding agent environment: installs Python deps, runs sims, verifies Quarto render)
+  - `.github/agents/peer-reviewer.agent.md` (GitHub Copilot agent: 7-stage scientific peer review using Claude Opus)
 
 ### Workflow expectations
 

@@ -40,7 +40,6 @@ Published routes:
 - `_quarto.yml`: Quarto render config for the paper
 - `diagrams/`: shared thesis/project diagrams
 - `context/`: thesis-supporting notes and logs
-- `legacy/`: pre-Quarto drafts and exports
 - `talks/`: slides and talk scripts derived from the thesis
 
 ## Projects
