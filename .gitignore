@@ -9,6 +9,12 @@ outputs/
 analysis/out/
 analysis/fig/
 
+# Python bytecode and Numba JIT cache
+__pycache__/
+*.pyc
+*.nbi
+*.nbc
+
 # LaTeX build artifacts (from Quarto PDF)
 *.aux
 *.log

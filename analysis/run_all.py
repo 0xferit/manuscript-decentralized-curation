@@ -18,6 +18,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import numba
+from numba import njit
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "analysis" / "out"
@@ -44,6 +46,7 @@ def save_metadata() -> None:
             "numpy": np.__version__,
             "pandas": pd.__version__,
             "matplotlib": plt.matplotlib.__version__,
+            "numba": numba.__version__,
         },
     }
     (OUT_DIR / "metadata.json").write_text(
@@ -79,34 +82,37 @@ def bond_threshold_multiplier(p_detect: float, p_majority: float) -> float:
     return (1 - detection_success) / detection_success
 
 
-def _truncate_0_1(x: np.ndarray) -> np.ndarray:
-    return np.clip(x, 0.0, 1.0)
-
-
 def _ci95(values: np.ndarray) -> float:
     return float(1.96 * values.std() / np.sqrt(len(values)))
 
 
-def _weighted_sample_without_replacement(
+@njit(cache=True)
+def _weighted_sample_es_njit(
     rng: np.random.Generator, weights: np.ndarray, k: int
 ) -> np.ndarray:
-    k = min(k, len(weights))
-    if k <= 0:
-        return np.array([], dtype=int)
-    total = float(weights.sum())
-    if total <= 0:
-        probs = np.full(len(weights), 1.0 / len(weights))
+    n = weights.shape[0]
+    k_eff = k if k < n else n
+    if k_eff <= 0:
+        return np.empty(0, dtype=np.int64)
+    if k_eff == n:
+        return np.arange(n).astype(np.int64)
+    total = weights.sum()
+    u = rng.random(n)
+    if total <= 0.0:
+        keys = u
     else:
-        probs = weights / total
-    return rng.choice(len(weights), size=k, replace=False, p=probs)
+        keys = np.log(u) / weights
+    return np.argpartition(-keys, k_eff - 1)[:k_eff].astype(np.int64)
 
 
-def _committee_weights(stakes: np.ndarray, cap_share: float) -> np.ndarray:
-    if len(stakes) == 0:
+@njit(cache=True)
+def _committee_weights_njit(stakes: np.ndarray, cap_share: float) -> np.ndarray:
+    n = stakes.shape[0]
+    if n == 0:
         return stakes
-    total = float(stakes.sum())
-    if total <= 0:
-        return np.zeros_like(stakes)
+    total = stakes.sum()
+    if total <= 0.0:
+        return np.zeros(n)
     cap = cap_share * total
     return np.minimum(stakes, cap)
 
@@ -327,17 +333,20 @@ class E1AdvParams:
     n_seeds: int = 100
 
 
-def _e1_adv_single_run(params: E1AdvParams, p: float, seed_idx: int) -> dict:
-    rng = np.random.default_rng(seed_idx)
-    p_majority = majority_correct_probability(params.n_jurors, p)
-    b = params.bounty
-    s = b * params.stake_ratio
-    sunk = b * params.challenge_tax_bps / 10_000.0 + params.ddr_fee
+@njit(cache=True)
+def _e1_adv_core(
+    rng: np.random.Generator,
+    n_attacks: int,
+    p_majority: float,
+    b: float,
+    s: float,
+    sunk: float,
+    p_detect: float,
+):
     adv_balance = 0.0
     survived = 0
-
-    for _ in range(params.n_attacks):
-        detected = rng.random() < params.p_detect
+    for _ in range(n_attacks):
+        detected = rng.random() < p_detect
         if not detected:
             survived += 1
             continue
@@ -348,24 +357,36 @@ def _e1_adv_single_run(params: E1AdvParams, p: float, seed_idx: int) -> dict:
             adv_balance += s
             survived += 1
         adv_balance -= sunk
+    return survived, adv_balance
+
+
+def _e1_adv_single_run(params: E1AdvParams, p: float, seed_idx: int) -> dict:
+    rng = np.random.default_rng(seed_idx)
+    p_majority = majority_correct_probability(params.n_jurors, p)
+    b = params.bounty
+    s = b * params.stake_ratio
+    sunk = b * params.challenge_tax_bps / 10_000.0 + params.ddr_fee
+
+    survived, adv_balance = _e1_adv_core(
+        rng, params.n_attacks, p_majority, b, s, sunk, params.p_detect
+    )
 
     return {
         "survival_rate": survived / params.n_attacks,
-        "adversary_balance": adv_balance,
-        "adversary_balance_per_attack": adv_balance / params.n_attacks,
+        "adversary_balance": float(adv_balance),
+        "adversary_balance_per_attack": float(adv_balance) / params.n_attacks,
     }
 
 
-def run_e1_adversarial(params: E1AdvParams) -> None:
+def run_e1_adversarial(params: E1AdvParams, executor: ProcessPoolExecutor) -> None:
     rows: list[dict] = []
     for p in params.p_juror_range:
-        with ProcessPoolExecutor() as executor:
-            seed_results = list(
-                executor.map(
-                    functools.partial(_e1_adv_single_run, params, p),
-                    range(params.n_seeds),
-                )
+        seed_results = list(
+            executor.map(
+                functools.partial(_e1_adv_single_run, params, p),
+                range(params.n_seeds),
             )
+        )
 
         sr = np.array([r["survival_rate"] for r in seed_results])
         bal = np.array([r["adversary_balance"] for r in seed_results])
@@ -454,8 +475,9 @@ class E2Params:
     n_seeds: int = 100
 
 
-def _run_relevance_process(
-    *,
+@njit(cache=True)
+def _relevance_core(
+    rng: np.random.Generator,
     n_curators: int,
     committee_size: int,
     rounds: int,
@@ -464,130 +486,131 @@ def _run_relevance_process(
     coherence_cap_share: float,
     flat_round_stddev_min: float,
     k: float,
-    rng: np.random.Generator,
     types: np.ndarray,
-    initial_stakes: np.ndarray | None = None,
-) -> dict:
-    if initial_stakes is None:
-        stakes = np.ones(n_curators, dtype=float)
-    else:
-        stakes = initial_stakes.astype(float).copy()
-    abs_errors: list[float] = []
+):
+    stakes = np.ones(n_curators)
+    abs_errors = np.empty(rounds)
+    n_errors = 0
     cancelled_rounds = 0
-    selection_counts = np.zeros(n_curators, dtype=int)
+    selection_counts = np.zeros(n_curators, dtype=np.int64)
 
     for _ in range(rounds):
         draft_scores = stakes.copy()
-        drafted = _weighted_sample_without_replacement(rng, draft_scores, committee_size)
-        selection_counts[drafted] += 1
+        drafted = _weighted_sample_es_njit(rng, draft_scores, committee_size)
+        for i in range(drafted.shape[0]):
+            selection_counts[drafted[i]] += 1
 
-        r_true = float(rng.uniform(0.0, 1.0))
-        votes = np.empty(len(drafted), dtype=float)
-
+        r_true = rng.uniform(0.0, 1.0)
+        n_drafted = drafted.shape[0]
+        votes = np.empty(n_drafted)
         drafted_types = types[drafted]
+
         comp_mask = drafted_types == 0
         noisy_mask = drafted_types == 1
         colluder_mask = drafted_types == 2
 
-        if comp_mask.any():
-            votes[comp_mask] = _truncate_0_1(
-                rng.normal(loc=r_true, scale=noise_sigma, size=comp_mask.sum())
+        comp_count = int(comp_mask.sum())
+        if comp_count > 0:
+            votes[comp_mask] = np.clip(
+                rng.normal(r_true, noise_sigma, comp_count), 0.0, 1.0
             )
-        if noisy_mask.any():
-            votes[noisy_mask] = rng.uniform(0.0, 1.0, size=noisy_mask.sum())
-        if colluder_mask.any():
-            biased_target = min(1.0, r_true + 0.30)
-            votes[colluder_mask] = _truncate_0_1(
-                rng.normal(
-                    loc=biased_target,
-                    scale=noise_sigma * 0.5,
-                    size=colluder_mask.sum(),
-                )
+        noisy_count = int(noisy_mask.sum())
+        if noisy_count > 0:
+            votes[noisy_mask] = rng.uniform(0.0, 1.0, noisy_count)
+        colluder_count = int(colluder_mask.sum())
+        if colluder_count > 0:
+            biased_target = r_true + 0.30
+            if biased_target > 1.0:
+                biased_target = 1.0
+            votes[colluder_mask] = np.clip(
+                rng.normal(biased_target, noise_sigma * 0.5, colluder_count),
+                0.0,
+                1.0,
             )
 
-        weights = _committee_weights(stakes[drafted], coherence_cap_share)
-        weight_sum = float(weights.sum())
-        if weight_sum <= 0:
+        weights = _committee_weights_njit(stakes[drafted], coherence_cap_share)
+        weight_sum = weights.sum()
+        if weight_sum <= 0.0:
             cancelled_rounds += 1
             continue
 
-        mu = float((weights * votes).sum() / weight_sum)
-        sigma = float(np.sqrt(((weights * (votes - mu) ** 2).sum() / weight_sum)))
-
+        mu = (weights * votes).sum() / weight_sum
+        sigma = np.sqrt((weights * (votes - mu) ** 2).sum() / weight_sum)
         if sigma < flat_round_stddev_min:
             cancelled_rounds += 1
             continue
 
-        coherent = np.abs(votes - mu) <= (k * sigma)
-        incoherent = ~coherent
-        incoherent_idx = drafted[incoherent]
-        coherent_idx = drafted[coherent]
+        threshold = k * sigma
+        coherent_mask = np.abs(votes - mu) <= threshold
 
-        slashed = slash_rate * stakes[incoherent_idx]
-        total_slashed = float(slashed.sum())
-        stakes[incoherent_idx] -= slashed
+        total_slashed = 0.0
+        coherent_total = 0.0
+        for i in range(n_drafted):
+            idx = drafted[i]
+            if coherent_mask[i]:
+                coherent_total += stakes[idx]
+            else:
+                slashed = slash_rate * stakes[idx]
+                stakes[idx] -= slashed
+                total_slashed += slashed
 
-        if total_slashed > 0 and len(coherent_idx) > 0:
-            coherent_stakes = stakes[coherent_idx]
-            coherent_total = float(coherent_stakes.sum())
-            if coherent_total > 0:
-                stakes[coherent_idx] += total_slashed * (coherent_stakes / coherent_total)
+        if total_slashed > 0.0 and coherent_total > 0.0:
+            for i in range(n_drafted):
+                if coherent_mask[i]:
+                    idx = drafted[i]
+                    stakes[idx] += total_slashed * (stakes[idx] / coherent_total)
 
-        abs_errors.append(abs(mu - r_true))
+        abs_errors[n_errors] = abs(mu - r_true)
+        n_errors += 1
 
-    return {
-        "mean_abs_error": float(np.mean(abs_errors)) if abs_errors else 0.0,
-        "cancelled_round_share": cancelled_rounds / rounds,
-        "selection_counts": selection_counts,
-        "stakes": stakes,
-    }
+    mean_abs_error = abs_errors[:n_errors].mean() if n_errors > 0 else 0.0
+    cancelled_round_share = cancelled_rounds / rounds
+    return mean_abs_error, cancelled_round_share, selection_counts, stakes
 
 
 def _e2_single_run(params: E2Params, frac: float, k: float, seed_idx: int) -> dict:
     rng = np.random.default_rng(seed_idx * 10_000 + int(1_000 * frac) + int(100 * k))
     n_comp = int(round(params.n_curators * frac))
-    types = np.array([0] * n_comp + [1] * (params.n_curators - n_comp), dtype=int)
+    types = np.array([0] * n_comp + [1] * (params.n_curators - n_comp), dtype=np.int64)
     rng.shuffle(types)
 
-    result = _run_relevance_process(
-        n_curators=params.n_curators,
-        committee_size=params.committee_size,
-        rounds=params.rounds,
-        slash_rate=params.slash_rate,
-        noise_sigma=params.noise_sigma,
-        coherence_cap_share=params.coherence_cap_share,
-        flat_round_stddev_min=params.flat_round_stddev_min,
-        k=k,
-        rng=rng,
-        types=types,
+    mean_abs_error, cancelled_round_share, selection_counts, stakes = _relevance_core(
+        rng,
+        params.n_curators,
+        params.committee_size,
+        params.rounds,
+        params.slash_rate,
+        params.noise_sigma,
+        params.coherence_cap_share,
+        params.flat_round_stddev_min,
+        float(k),
+        types,
     )
 
     competent_mask = types == 0
     return {
-        "mean_abs_error": result["mean_abs_error"],
-        "cancelled_round_share": result["cancelled_round_share"],
+        "mean_abs_error": float(mean_abs_error),
+        "cancelled_round_share": float(cancelled_round_share),
         "final_competent_stake_share": float(
-            result["stakes"][competent_mask].sum() / result["stakes"].sum()
+            stakes[competent_mask].sum() / stakes.sum()
         ),
         "competent_draft_share": float(
-            result["selection_counts"][competent_mask].sum()
-            / result["selection_counts"].sum()
+            selection_counts[competent_mask].sum() / selection_counts.sum()
         ),
     }
 
 
-def run_e2(params: E2Params) -> None:
+def run_e2(params: E2Params, executor: ProcessPoolExecutor) -> None:
     rows: list[dict] = []
 
     for frac in params.competent_fracs:
         for k in params.ks:
-            with ProcessPoolExecutor() as executor:
-                seed_results = list(
-                    executor.map(
-                        functools.partial(_e2_single_run, params, frac, k),
-                        range(params.n_seeds),
-                    )
+            seed_results = list(
+                executor.map(
+                    functools.partial(_e2_single_run, params, frac, k),
+                    range(params.n_seeds),
                 )
+            )
 
             errors = np.array([r["mean_abs_error"] for r in seed_results])
             cancelled = np.array([r["cancelled_round_share"] for r in seed_results])
@@ -690,51 +713,50 @@ def _e2_adv_single_run(params: E2AdvParams, col_frac: float, seed_idx: int) -> d
     n_noisy = params.n_curators - n_honest_comp - n_collude
     types = np.array(
         [0] * n_honest_comp + [1] * n_noisy + [2] * n_collude,
-        dtype=int,
+        dtype=np.int64,
     )
     rng.shuffle(types)
 
-    result = _run_relevance_process(
-        n_curators=params.n_curators,
-        committee_size=params.committee_size,
-        rounds=params.rounds,
-        slash_rate=params.slash_rate,
-        noise_sigma=params.noise_sigma,
-        coherence_cap_share=params.coherence_cap_share,
-        flat_round_stddev_min=params.flat_round_stddev_min,
-        k=params.K,
-        rng=rng,
-        types=types,
+    mean_abs_error, cancelled_round_share, selection_counts, stakes = _relevance_core(
+        rng,
+        params.n_curators,
+        params.committee_size,
+        params.rounds,
+        params.slash_rate,
+        params.noise_sigma,
+        params.coherence_cap_share,
+        params.flat_round_stddev_min,
+        float(params.K),
+        types,
     )
 
     colluder_mask = types == 2
-    draft_total = int(result["selection_counts"].sum())
+    draft_total = int(selection_counts.sum())
     return {
-        "mean_abs_error": result["mean_abs_error"],
+        "mean_abs_error": float(mean_abs_error),
         "final_colluder_stake_share": float(
-            result["stakes"][colluder_mask].sum() / result["stakes"].sum()
+            stakes[colluder_mask].sum() / stakes.sum()
         )
         if colluder_mask.any()
         else 0.0,
         "colluder_draft_share": float(
-            result["selection_counts"][colluder_mask].sum() / draft_total
+            selection_counts[colluder_mask].sum() / draft_total
         )
         if colluder_mask.any() and draft_total > 0
         else 0.0,
-        "cancelled_round_share": result["cancelled_round_share"],
+        "cancelled_round_share": float(cancelled_round_share),
     }
 
 
-def run_e2_adversarial(params: E2AdvParams) -> None:
+def run_e2_adversarial(params: E2AdvParams, executor: ProcessPoolExecutor) -> None:
     rows: list[dict] = []
     for col_frac in params.colluding_fracs:
-        with ProcessPoolExecutor() as executor:
-            seed_results = list(
-                executor.map(
-                    functools.partial(_e2_adv_single_run, params, col_frac),
-                    range(params.n_seeds),
-                )
+        seed_results = list(
+            executor.map(
+                functools.partial(_e2_adv_single_run, params, col_frac),
+                range(params.n_seeds),
             )
+        )
 
         errors = np.array([r["mean_abs_error"] for r in seed_results])
         stake_shares = np.array([r["final_colluder_stake_share"] for r in seed_results])
@@ -1341,19 +1363,86 @@ class E4bParams:
     n_seeds: int = 100
 
 
-def _e4b_attacker_vote(
+ATTACKER_KIND_RANDOM = 0
+ATTACKER_KIND_BIAS = 1
+
+
+@njit(cache=True)
+def _e4b_core(
     rng: np.random.Generator,
-    r_true: float,
-    attacker_model: str,
+    rounds: int,
+    n_honest: int,
+    honest_rep_0: float,
+    attacker_rep_0: float,
+    honest_noise_sigma: float,
     attacker_noise_sigma: float,
-) -> float:
+    K: float,
+    rep_decay: float,
+    attacker_kind: int,
+    attacker_bias: float,
+):
+    rep = np.full(n_honest + 1, honest_rep_0)
+    rep[-1] = attacker_rep_0
+
+    above_median_rounds = 0
+    sum_abs_error = 0.0
+    sum_excess_abs_error = 0.0
+    sum_signal_shift = 0.0
+
+    votes = np.empty(n_honest + 1)
+    for _ in range(rounds):
+        r_true = rng.uniform(0.0, 1.0)
+        honest_votes = np.clip(
+            rng.normal(r_true, honest_noise_sigma, n_honest), 0.0, 1.0
+        )
+        if attacker_kind == ATTACKER_KIND_RANDOM:
+            attacker_vote = rng.uniform(0.0, 1.0)
+        else:
+            sample = rng.normal(r_true + attacker_bias, attacker_noise_sigma)
+            if sample < 0.0:
+                sample = 0.0
+            elif sample > 1.0:
+                sample = 1.0
+            attacker_vote = sample
+        votes[:n_honest] = honest_votes
+        votes[-1] = attacker_vote
+
+        total_rep = rep.sum()
+        if total_rep <= 0.0:
+            weights = np.full(n_honest + 1, 1.0 / (n_honest + 1))
+        else:
+            weights = rep / total_rep
+
+        mu = (weights * votes).sum()
+        sigma = np.sqrt((weights * (votes - mu) ** 2).sum())
+        honest_mu = honest_votes.mean()
+
+        sum_abs_error += abs(mu - r_true)
+        sum_excess_abs_error += abs(mu - r_true) - abs(honest_mu - r_true)
+        sum_signal_shift += mu - honest_mu
+
+        coherent = np.abs(votes - mu) <= (K * sigma)
+        rep = rep * (1.0 - rep_decay) + coherent.astype(np.float64)
+        if rep[-1] > np.median(rep[:-1]):
+            above_median_rounds += 1
+
+    mean_abs_error = sum_abs_error / rounds
+    mean_excess_abs_error = sum_excess_abs_error / rounds
+    mean_signal_shift = sum_signal_shift / rounds
+    return (
+        above_median_rounds,
+        mean_abs_error,
+        mean_excess_abs_error,
+        mean_signal_shift,
+    )
+
+
+def _parse_attacker_model(attacker_model: str) -> tuple[int, float]:
     if attacker_model == "random":
-        return float(rng.uniform(0.0, 1.0))
+        return ATTACKER_KIND_RANDOM, 0.0
     if attacker_model.startswith("bias_"):
         bias = float(attacker_model.split("_", maxsplit=1)[1])
-        return float(
-            _truncate_0_1(rng.normal(r_true + bias, attacker_noise_sigma, size=1))[0]
-        )
+        return ATTACKER_KIND_BIAS, bias
     raise ValueError(f"unknown attacker model: {attacker_model}")
 
 
@@ -1362,70 +1451,48 @@ def _e4b_single_run(params: E4bParams, rep_decay: float, attacker_model: str, se
         ord(ch) for ch in attacker_model
     )
     rng = np.random.default_rng(seed)
+    attacker_kind, attacker_bias = _parse_attacker_model(attacker_model)
 
-    rep = np.full(params.n_honest_curators + 1, params.honest_rep_0, dtype=float)
-    rep[-1] = params.attacker_rep_0
-
-    above_median_rounds = 0
-    mean_abs_errors: list[float] = []
-    mean_excess_abs_errors: list[float] = []
-    mean_signal_shifts: list[float] = []
-
-    for _ in range(params.rounds):
-        r_true = float(rng.uniform(0.0, 1.0))
-        honest_votes = _truncate_0_1(
-            rng.normal(
-                loc=r_true,
-                scale=params.honest_noise_sigma,
-                size=params.n_honest_curators,
-            )
-        )
-        attacker_vote = _e4b_attacker_vote(
-            rng, r_true, attacker_model, params.attacker_noise_sigma
-        )
-        votes = np.concatenate([honest_votes, [attacker_vote]])
-
-        total_rep = float(rep.sum())
-        if total_rep <= 0:
-            weights = np.full_like(rep, 1.0 / len(rep))
-        else:
-            weights = rep / total_rep
-
-        mu = float((weights * votes).sum())
-        sigma = float(np.sqrt((weights * (votes - mu) ** 2).sum()))
-        honest_mu = float(honest_votes.mean())
-
-        mean_abs_errors.append(abs(mu - r_true))
-        mean_excess_abs_errors.append(abs(mu - r_true) - abs(honest_mu - r_true))
-        mean_signal_shifts.append(mu - honest_mu)
-
-        coherent = np.abs(votes - mu) <= (params.K * sigma)
-        rep = rep * (1.0 - rep_decay) + coherent.astype(float)
-        if rep[-1] > float(np.median(rep[:-1])):
-            above_median_rounds += 1
+    (
+        above_median_rounds,
+        mean_abs_error,
+        mean_excess_abs_error,
+        mean_signal_shift,
+    ) = _e4b_core(
+        rng,
+        params.rounds,
+        params.n_honest_curators,
+        params.honest_rep_0,
+        params.attacker_rep_0,
+        params.honest_noise_sigma,
+        params.attacker_noise_sigma,
+        float(params.K),
+        float(rep_decay),
+        attacker_kind,
+        attacker_bias,
+    )
 
     return {
         "above_median_rounds": float(above_median_rounds),
         "above_median_round_share": above_median_rounds / params.rounds,
-        "mean_abs_error": float(np.mean(mean_abs_errors)),
-        "mean_excess_abs_error": float(np.mean(mean_excess_abs_errors)),
-        "mean_signal_shift": float(np.mean(mean_signal_shifts)),
+        "mean_abs_error": float(mean_abs_error),
+        "mean_excess_abs_error": float(mean_excess_abs_error),
+        "mean_signal_shift": float(mean_signal_shift),
     }
 
 
-def run_e4b(params: E4bParams) -> None:
+def run_e4b(params: E4bParams, executor: ProcessPoolExecutor) -> None:
     rows: list[dict] = []
     attacker_models = ["random", *[f"bias_{bias:.2f}" for bias in params.attacker_biases]]
 
     for rep_decay in params.rep_decays:
         for attacker_model in attacker_models:
-            with ProcessPoolExecutor() as executor:
-                seed_results = list(
-                    executor.map(
-                        functools.partial(_e4b_single_run, params, rep_decay, attacker_model),
-                        range(params.n_seeds),
-                    )
+            seed_results = list(
+                executor.map(
+                    functools.partial(_e4b_single_run, params, rep_decay, attacker_model),
+                    range(params.n_seeds),
                 )
+            )
 
             above = np.array([r["above_median_rounds"] for r in seed_results])
             above_share = np.array([r["above_median_round_share"] for r in seed_results])
@@ -1639,13 +1706,14 @@ def main() -> None:
     save_metadata()
     run_e1(E1Params())
     run_e1_detection_sensitivity(E1SensitivityParams())
-    run_e1_adversarial(E1AdvParams())
-    run_e2(E2Params())
-    run_e2_adversarial(E2AdvParams())
     run_e3(E3Params())
     run_e4a(E4aParams())
-    run_e4b(E4bParams())
     run_e4d(E4dParams())
+    with ProcessPoolExecutor() as executor:
+        run_e1_adversarial(E1AdvParams(), executor)
+        run_e2(E2Params(), executor)
+        run_e2_adversarial(E2AdvParams(), executor)
+        run_e4b(E4bParams(), executor)
     write_eval_summary()
     write_reading_time()
 
