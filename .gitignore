@@ -31,6 +31,7 @@ paper.tex
 **/*.quarto_ipynb
 
 .claude/
+.idea/
 
 # Generated image dumps
 allgeneratedimagesbynanobanana/
