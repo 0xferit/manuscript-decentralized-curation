@@ -973,10 +973,11 @@ Important clarification:
 ```text
 target = pool.relevanceRoundTargetSize
 quorum = pool.minRevealQuorum
+eligibleCuratorCount = count of curators with s_i >= L
 n = min(target, sum(d_i for all eligible curators))
 ```
 
-6. If `n < quorum`, the round is cancelled as underpopulated:
+6. If `eligibleCuratorCount < quorum`, the round is cancelled as underpopulated (quorum is defined in terms of distinct curator reveals, not seat count; since each curator submits one score regardless of seats held, the quorum check must use distinct curators):
    - no new relevance score is produced
    - any previous relevance score remains in force
    - claims with no prior finalized relevance round remain out of the default main feed
@@ -995,7 +996,7 @@ where `L = pool.seatSizeWei`. Only curators with `s_i >= L` are eligible.
 w_i = n_i * L
 ```
 
-Locked tokens are simultaneously the curator’s influence on the weighted mean and their maximum loss from coherence and non-participation slashing. The unlocked remainder (`s_i - n_i * L`) stays in the pool contract and is not subject to coherence slashing; it remains withdrawable subject to appeal-window reserves but may be exposed to separately specified penalties (e.g., pre-reveal leak). Define `availableDepositedWei_i = depositedBalanceWei_i - lockedWei_i - appealExposureWei_i` as the curator’s unencumbered deposited balance (total deposited minus tokens locked in active rounds minus tokens reserved against pending appeal windows). Drafting MUST be implemented as a deterministic pseudorandom permutation of the snapshot seat-ticket pool derived from the round seed. The protocol iterates through that ordered ticket list, visiting at most `min(totalTickets, 3 * n)` tickets (a hard cap that bounds gas consumption even for large pools): for each visited ticket, the protocol attempts to lock one seat of size `L` for that ticket’s curator. A ticket is fundable only if the curator’s available balance can cover the additional lock (i.e., after `k` seats already locked for curator `i` in this round, the next ticket is fundable only if `availableDepositedWei_i >= (k + 1) * L`). Unfundable tickets are skipped. If `n` backed seats are locked before the iteration cap is reached, drafting succeeds. If the iteration cap is exhausted before `n` backed seats are locked, the round is cancelled as underfunded (no score produced, previous score retained, replacement round scheduled at next cadence). Only `w_i` MAY determine vote weight or coherence/non-participation slash exposure for that round.
+Locked tokens are simultaneously the curator’s influence on the weighted mean and their maximum loss from coherence and non-participation slashing. The unlocked remainder (`s_i - n_i * L`) stays in the pool contract and is not subject to coherence slashing; it remains withdrawable subject to appeal-window reserves but may be exposed to separately specified penalties (e.g., pre-reveal leak). Define `availableDepositedWei_i = depositedWei_i - lockedWei_i - appealExposureWei_i` as the curator’s unencumbered deposited balance (total deposited minus tokens locked in active rounds minus tokens reserved against pending appeal windows). Drafting MUST be implemented as a deterministic pseudorandom permutation of the snapshot seat-ticket pool derived from the round seed. The protocol iterates through that ordered ticket list, visiting at most `min(totalTickets, 3 * n)` tickets (a hard cap that bounds gas consumption even for large pools): for each visited ticket, the protocol attempts to lock one seat of size `L` for that ticket’s curator. A ticket is fundable only if the curator’s available balance can cover the additional lock (i.e., after `k` seats already locked for curator `i` in this round, the next ticket is fundable only if `availableDepositedWei_i >= (k + 1) * L`). Unfundable tickets are skipped. If `n` backed seats are locked before the iteration cap is reached, drafting succeeds. If the iteration cap is exhausted before `n` backed seats are locked, the round is cancelled as underfunded (no score produced, previous score retained, replacement round scheduled at next cadence). Only `w_i` MAY determine vote weight or coherence/non-participation slash exposure for that round.
 
 9. Each drafted curator commits a single relevance score in `[0,1]`, weighted by `w_i`. Multiple seats increase the curator’s weight on that single score, not the number of independent votes.
 10. Each drafted curator reveals the score.
@@ -1052,10 +1053,10 @@ The protocol slashes `delta_i` tokens and returns the remainder `q_i`. This grad
 21. If a valid leak report is confirmed, the guilty curator is slashed. For every drafted curator `i`, define `baseLeakSlashWei_i = w_i` (total locked tokens for that curator) regardless of whether curator `i` is later coherent or incoherent. A confirmed pre-reveal leak by curator `i` MUST trigger:
 
 ```text
-preRevealLeakSlashWei_i = min(pool.preRevealLeakSlashMultiplier * baseLeakSlashWei_i, depositedBalanceWei_i)
+preRevealLeakSlashWei_i = min(pool.preRevealLeakSlashMultiplier * baseLeakSlashWei_i, depositedWei_i)
 ```
 
-The leak penalty may exceed the curator's locked tokens (`w_i`) and is drawn from the curator's total deposited balance (including currently locked tokens). It is capped at `depositedBalanceWei_i` to prevent the protocol from slashing more than the curator holds in the pool. The successful reporter MUST receive the full `preRevealLeakSlashWei_i`. If multiple valid reports exist for the same leak, the earliest valid precommit MUST win. `preRevealLeakSlashWei_i` MUST NOT be added to the coherent-curator reward pool.
+The leak penalty may exceed the curator's locked tokens (`w_i`) and is drawn from the curator's total deposited balance (including currently locked tokens). It is capped at `depositedWei_i` to prevent the protocol from slashing more than the curator holds in the pool. The successful reporter MUST receive the full `preRevealLeakSlashWei_i`. If multiple valid reports exist for the same leak, the earliest valid precommit MUST win. `preRevealLeakSlashWei_i` MUST NOT be added to the coherent-curator reward pool.
 
 22. This penalty is in addition to any graduated slashing that already applies in the same round.
 23. The claim’s `relevanceScore` becomes `mu`.
