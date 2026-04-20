@@ -1637,6 +1637,9 @@ def write_eval_summary() -> None:
     e1_sub = e1[e1["stake_over_bounty"] == 0.25].copy()
     e1_sub["p_delta"] = (e1_sub["p_juror_correct"] - 0.8).abs()
     e1_point = e1_sub.sort_values("p_delta").iloc[0]
+    # DRIFT RISK: the E1 sensitivity sweep values emitted below (p_detect in
+    # {0.05, 0.10, 0.35, 0.50, 0.80}) are also hard-coded into paper.qmd
+    # lines ~335, 339, 477. Update both if the sweep range changes.
     e1_sensitivity_010 = e1_sensitivity.iloc[
         (e1_sensitivity["p_detect"] - 0.10).abs().argmin()
     ]

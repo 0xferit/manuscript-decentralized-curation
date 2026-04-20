@@ -332,7 +332,7 @@ $$
 B^* = V \cdot \frac{1 - p_{\text{detect}} \cdot P_{\text{maj}}}{p_{\text{detect}} \cdot P_{\text{maj}}}
 $$
 
-**Claim 1.** *For any value $V$ that a surviving false claim generates, honest authoring is strictly preferred when the bond exceeds $B^*$. Holding jury quality fixed at $P_{\text{maj}}(0.80, 5) \approx 0.94$, the threshold scales as $B^*/V = (1 - p_{\text{detect}} \cdot P_{\text{maj}}) / (p_{\text{detect}} \cdot P_{\text{maj}})$: $B^*/V$ falls from roughly $20V$ at $p_{\text{detect}}=0.05$ to $9.6V$ at $0.10$, $2.0V$ at $0.35$, $1.1V$ at $0.50$, and $0.3V$ at $0.80$. The bond requirement is therefore a function of detection coverage, not a fixed multiple of $V$. The reference point used throughout the paper ($p_{\text{detect}}=0.35$, $B^* \approx 2.0V$) is an illustrative anchor, not a calibrated prediction.*
+**Claim 1.** *For any value $V$ that a surviving false claim generates, honest authoring is strictly preferred when the bond exceeds $B^*$. Holding jury quality fixed at $P_{\text{maj}}(0.80, 5) \approx 0.94$, the threshold scales as $B^*/V = (1 - p_{\text{detect}} \cdot P_{\text{maj}}) / (p_{\text{detect}} \cdot P_{\text{maj}})$: $B^*/V$ falls from roughly $20$ at $p_{\text{detect}}=0.05$ to $9.6$ at $0.10$, $2.0$ at $0.35$, $1.1$ at $0.50$, and $0.3$ at $0.80$. The bond requirement is therefore a function of detection coverage, not a fixed multiple of $V$. The reference point used throughout the paper ($p_{\text{detect}}=0.35$, $B^* \approx 2.0V$) is an illustrative anchor, not a calibrated prediction.*
 
 The design consequence is direct: bond size must be calibrated to the value at stake. Low-bond items carry low confidence for exactly this reason; the bond is insufficient to deter high-value deception.
 
@@ -470,9 +470,9 @@ Figure @fig-e1-ev shows that conditional challenger EV becomes strongly positive
 
 ![E1: Challenger expected value on a debunking challenge as juror accuracy varies, for four stake-to-bounty ratios. Challenge tax and DDR fees are included as sunk challenger costs. Bands show 95% confidence intervals over 100 seeds.](analysis/fig/e1_challenger_ev.png){#fig-e1-ev}
 
-![E1: False-claim survival probability after one detection-and-challenge window. Bands show 95% confidence intervals over 100 seeds.](analysis/fig/e1_false_survival.png){#fig-e1-survival}
-
 ![E1: Sensitivity of single-window false-claim survival and required deterrence bond $B^*/V$ to the reduced-form detection parameter $p_{\text{detect}}$, holding $p=0.80$ and $N=5$ fixed. The dashed line marks the illustrative representative value $p_{\text{detect}}=0.35$.](analysis/fig/e1_detection_sensitivity.png){#fig-e1-detect-sensitivity}
+
+![E1: False-claim survival probability after one detection-and-challenge window. Bands show 95% confidence intervals over 100 seeds.](analysis/fig/e1_false_survival.png){#fig-e1-survival}
 
 Figure @fig-e1-detect-sensitivity reports the primary accuracy-layer finding directly. At $p=0.80$ and $N=5$, single-window false-claim survival falls monotonically from about $0.95$ at $p_{\text{detect}}=0.05$ to $0.91$ at $0.10$, $0.67$ at $0.35$, $0.53$ at $0.50$, and $0.25$ at $0.80$. Over the same range, the deterrence threshold $B^*/V$ falls from roughly $20$ to $0.3$. The accuracy layer therefore does not bind the paper to any single survival estimate; it binds detection coverage to a well-defined tradeoff curve with the author bond. At the illustrative $p_{\text{detect}}=0.35$ anchor, a challenge at $S/B=0.25$ yields roughly $0.87\times$ bounty expected value for the challenger while false-claim survival is approximately $0.67$ after one window; this point is used for cross-referencing later claims, not as the result the paper argues for. Detection coverage, not jury math alone, is the first-order viability condition.
 
