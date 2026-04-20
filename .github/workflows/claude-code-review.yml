@@ -12,12 +12,17 @@ on:
 
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-
+    # Skip on bot-authored PRs (Copilot, Dependabot). claude-code-action
+    # exchanges the workflow's OIDC token for a GitHub App installation
+    # token; the server-side exchange rejects actors without repo write
+    # access. The action's allowed_bots input would normally fix this,
+    # but v1.0.88 has a client-side bug that crashes on actors without
+    # the "[bot]" suffix (Copilot's login is "Copilot"). Tracked in
+    # anthropics/claude-code-action#1133; fix PRs #1144/#1213 unmerged.
+    # Remove this guard once the pin is lifted and allowed_bots works.
+    if: >-
+      github.event.pull_request.user.login != 'Copilot' &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
