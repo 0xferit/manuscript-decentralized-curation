@@ -370,7 +370,7 @@ The coherence game requires curators to independently report relevance scores in
 
 *When condition (iii) fails, a coalition of fraction $\phi > \phi^*$ that coordinates on a biased report shifts the weighted mean toward the coalition's target. Honest reporters may then fall outside the coherence band and be slashed, while dishonest reporters survive. At this point, honest voting ceases to be a best response.*
 
-The collusion threshold $\phi^*$ depends on the committee size and the coherence threshold $K$. E2-Adv characterizes this threshold empirically: at $K = 1.25$ with 15-member committees, the mechanism degrades visibly when the colluding fraction exceeds approximately 0.15 to 0.20.
+The collusion threshold $\phi^*$ depends on the committee size and the coherence threshold $K$. E2-Adv characterizes this threshold empirically under the predecessor mechanism (fixed-rate binary slashing, no draw-and-lock): at $K = 1.25$ with 15-member committees, the mechanism degrades visibly when the colluding fraction exceeds approximately 0.15 to 0.20. E2' (see @sec-e2-prime) re-runs the same sweep under the final mechanism (draw-and-lock seat allocation, graduated slashing, ambiguity-driven abstention) and reports the corresponding $\phi^*$ in parallel.
 
 George's impossibility result constrains what can be claimed here [@george2023strategic]. For games with three or more ranked alternatives and minimal attack resistance, truthful reporting cannot always be a Nash equilibrium. The coherence game escapes this impossibility because curators report on a continuous scalar aggregated by weighted mean with a deviation penalty, not a ranking over discrete alternatives. The game structure is formally different from the ranked-alternative games covered by the impossibility. This escape is defensible but structural rather than airtight: the impossibility does not directly bind, but the coherence game is not immune to all strategic manipulation.
 
@@ -505,6 +505,18 @@ E2-Adv introduces a colluding bloc of competent-but-biased curators. They vote c
 ![E2-Adv: Mean relevance error and final colluder stake share as collusion grows. Error bands show 95% confidence intervals over 100 seeds.](analysis/fig/e2_adversarial.png){#fig-e2-adv}
 
 The mechanism behaves as expected: small colluding minorities cause limited damage and do not expand much, but sufficiently large coordinated blocs begin to bend the signal and preserve their own stake. The current design does not eliminate this risk. It narrows the attack surface relative to the older reputation-weighted voting model by keeping all curation mechanics purely stake-driven.
+
+## E2': Relevance under the final mechanism {#sec-e2-prime}
+
+E2 and E2-Adv report the predecessor mechanism (fixed-rate binary slashing, no seat-ticket draw-and-lock). E2' re-runs the same sweeps under the final relevance mechanism specified in the Equilibrium Analysis section above and in `projects/truth-post/blueprint.md` §Flow F: each curator $i$ receives seat-tickets $d_i = \lfloor s_i / L \rfloor$, the scheduler draws $n$ seats without replacement from the ticket pool, each drawn ticket locks $L$ tokens, and graduated slashing follows $p_i = \min(1, \max(0, (|v_i - \mu|/\sigma - K)/K))$ with the $\sigma < \varepsilon_\sigma$ guard. E2' additionally models a hidden per-round ambiguity flag: each drafted curator draws a noisy signal correlated with the flag and may abstain; if abstentions exceed a super-majority threshold the round cancels, and individual abstainers lose their locked tokens per blueprint step 11.
+
+![E2': Mean relevance error versus the initial fraction of competent curators under the final mechanism. Error bands show 95% confidence intervals over 100 seeds.](analysis/fig/e2_prime_relevance_error.png){#fig-e2-prime-error}
+
+![E2': Final competent stake share under the final mechanism at $K=1.25$. Error band shows 95% confidence interval over 100 seeds.](analysis/fig/e2_prime_competence_filter.png){#fig-e2-prime-filter}
+
+![E2'-Adv: Mean relevance error and final colluder stake share under the final mechanism as collusion grows. Error bands show 95% confidence intervals over 100 seeds.](analysis/fig/e2_prime_adversarial.png){#fig-e2-prime-adv}
+
+Under E2'-Adv at $K=1.25$ with 15-seat committees, mean relevance error rises from 0.080 at $\phi=0$ to 0.103 at $\phi=0.15$, 0.114 at $\phi=0.20$, and 0.135 at $\phi=0.30$. The same qualitative break as predecessor E2-Adv appears in roughly the same band ($\phi^* \approx 0.15$ to $0.20$), consistent with the equilibrium argument in Claim 3: the decisive quantity is whether a colluding bloc is large enough to shift the weighted mean by more than the coherence band half-width, which is a function of $K$ and committee size rather than of the slashing functional form. Graduated slashing permits higher terminal colluder stake at the same $\phi$ (0.225 at $\phi=0.20$ vs 0.203 under E2-Adv) because near-boundary deviations incur only partial loss, but the mean-error curve is not worse and is slightly better at every tested $\phi$. The ambiguity layer cancels roughly 15% of rounds at the tested parameters without producing excess error on the non-cancelled rounds. These results should be read as a corroboration, not a recalibration, of the predecessor $\phi^*$ estimate.
 
 ## E3: Dedicated `NonFalsifiable` challenges
 
