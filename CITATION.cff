@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it using the metadata from this file."
+type: dataset
+title: "Decentralized Curation: Trustless Transformation of Information into Knowledge"
+authors:
+  - given-names: Ferit
+    family-names: Tunçer
+    email: ferit@cryptolab.net
+repository-code: "https://github.com/0xferit/manuscript-decentralized-curation"
+url: "https://github.com/0xferit/manuscript-decentralized-curation"
+abstract: >-
+  A working draft thesis on decentralized curation: the trustless
+  transformation of raw information into decision-grade knowledge.
+  Proposes a general framework and instantiates it on news via bonded
+  publication, open challenges, external decentralized dispute
+  resolution, and drafted-curator relevance rounds.
+keywords:
+  - decentralized curation
+  - mechanism design
+  - trustless systems
+  - blockchain
+  - information quality
+  - knowledge aggregation
+  - Schelling point
+  - dispute resolution
+license: CC-BY-4.0
+version: draft-2026-04
+date-released: "2026-04-20"
+preferred-citation:
+  type: unpublished
+  title: "Decentralized Curation: Trustless Transformation of Information into Knowledge"
+  authors:
+    - given-names: Ferit
+      family-names: Tunçer
+      email: ferit@cryptolab.net
+  year: 2026
+  month: 4
+  url: "https://github.com/0xferit/manuscript-decentralized-curation"
+  status: "in-preparation"
