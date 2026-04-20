@@ -30,6 +30,11 @@ FIG_DIR = ROOT / "analysis" / "fig"
 # which is why scipy is not a required dependency here.
 Z_CRITICAL_95 = 1.96
 
+# Epsilon for ticket-count division: guards against IEEE-754 round-off where
+# e.g. `1.0 // 0.2` evaluates to 4.0 instead of 5.0. Applied as
+# `floor(stake / L + EPS)` so integer-boundary stakes round up.
+TICKET_COUNT_EPSILON = 1e-9
+
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
@@ -929,13 +934,13 @@ def _draft_seats_njit(
     n = stakes.shape[0]
     total_tickets = 0
     for i in range(n):
-        total_tickets += int(stakes[i] // seat_size_L)
+        total_tickets += int(np.floor(stakes[i] / seat_size_L + TICKET_COUNT_EPSILON))
     if total_tickets <= 0:
         return np.empty(0, dtype=np.int64)
     ticket_curator = np.empty(total_tickets, dtype=np.int64)
     idx = 0
     for i in range(n):
-        d_i = int(stakes[i] // seat_size_L)
+        d_i = int(np.floor(stakes[i] / seat_size_L + TICKET_COUNT_EPSILON))
         for _ in range(d_i):
             ticket_curator[idx] = i
             idx += 1
@@ -967,6 +972,7 @@ def _relevance_core_prime(
     abstain_threshold: float,
     abstain_supermajority: float,
     min_reveal_quorum: int,
+    sigma_ref_alpha: float,
     types: np.ndarray,
     colluder_bias: float,
     colluder_noise_factor: float,
@@ -977,11 +983,19 @@ def _relevance_core_prime(
     cancelled_rounds = 0
     ambiguous_cancelled_rounds = 0
     selection_counts = np.zeros(n_curators, dtype=np.int64)
+    # EMA of round sigma per blueprint step 13: initialized to 0 at seed start
+    # (bootstrap yields sigma_ref = epsilon_sigma). Persists across rounds
+    # within a single seed run; intentionally reset per seed so independent
+    # seeds do not share dispersion state.
+    ema_sigma = 0.0
 
     for _ in range(rounds):
         drafted = _draft_seats_njit(rng, stakes, seat_size_L, target_seats)
         n_drafted = drafted.shape[0]
-        if n_drafted == 0:
+        # Blueprint step 8 "underfunded" cancellation: cancel when fewer than
+        # target_seats backed seats are locked. The strict n_drafted == 0 case
+        # is a subset of this since zero drafted means zero seats locked.
+        if n_drafted < target_seats:
             cancelled_rounds += 1
             continue
         for i in range(n_drafted):
@@ -1123,14 +1137,19 @@ def _relevance_core_prime(
 
         # Distance-based delta_i contributes to reward pool; incoherent revealers
         # lose delta_i, coherent revealers get refund + share of pool + f_reward * R.
-        # sigma_ref: use epsilon_sigma as bootstrap (no EMA tracked across seeds here;
-        # this is a design simplification documented in the PR).
-        sigma_ref = epsilon_sigma
+        # sigma_ref per blueprint step 13: max(epsilon_sigma, ema_sigma). At
+        # bootstrap ema_sigma = 0 so sigma_ref collapses to epsilon_sigma, then
+        # the EMA adapts as subsequent rounds reveal dispersion.
+        sigma_ref = epsilon_sigma if ema_sigma < epsilon_sigma else ema_sigma
         ratio = sigma / sigma_ref
         if ratio > 1.0:
             ratio = 1.0
         f_reward = rho + (1.0 - rho) * ratio
         round_reward_effective = f_reward * round_reward
+        # Update EMA after using the current sigma_ref so the new value feeds
+        # into the next round; matches blueprint "updated at each round
+        # finalization" semantics.
+        ema_sigma = sigma_ref_alpha * sigma + (1.0 - sigma_ref_alpha) * ema_sigma
 
         for i in range(n_revealers):
             cur = revealer_idx[i]
@@ -1185,6 +1204,7 @@ class E2PrimeParams:
     abstain_signal_threshold: float = E2P_ABSTAIN_SIGNAL_THRESHOLD
     abstain_supermajority: float = E2P_ABSTAIN_SUPERMAJORITY
     min_reveal_quorum: int = E2P_MIN_REVEAL_QUORUM
+    sigma_ref_alpha: float = 0.05
     ks: tuple[float, ...] = (0.8, 1.0, 1.25, 1.5)
     competent_fracs: tuple[float, ...] = (0.1, 0.3, 0.5, 0.7, 0.9)
     n_seeds: int = 100
@@ -1224,6 +1244,7 @@ def _e2_prime_single_run(
         params.abstain_signal_threshold,
         params.abstain_supermajority,
         params.min_reveal_quorum,
+        params.sigma_ref_alpha,
         types,
         0.0,  # no collusion bias for E2'
         1.0,
@@ -1356,6 +1377,7 @@ class E2PrimeAdvParams:
     abstain_signal_threshold: float = E2P_ABSTAIN_SIGNAL_THRESHOLD
     abstain_supermajority: float = E2P_ABSTAIN_SUPERMAJORITY
     min_reveal_quorum: int = E2P_MIN_REVEAL_QUORUM
+    sigma_ref_alpha: float = 0.05
     K: float = 1.25
     competent_frac: float = 0.6
     colluding_fracs: tuple[float, ...] = (0.0, 0.05, 0.10, 0.15, 0.20, 0.30)
@@ -1402,6 +1424,7 @@ def _e2_prime_adv_single_run(
         params.abstain_signal_threshold,
         params.abstain_supermajority,
         params.min_reveal_quorum,
+        params.sigma_ref_alpha,
         types,
         params.colluder_bias,
         params.colluder_noise_factor,
