@@ -30,11 +30,6 @@ FIG_DIR = ROOT / "analysis" / "fig"
 # which is why scipy is not a required dependency here.
 Z_CRITICAL_95 = 1.96
 
-# Exclusive upper bound for deriving uint64 seeds from a rng. Using the
-# signed-int64 max avoids any overflow risk when numba coerces the value
-# through rng.integers(..., dtype=int64).
-SEED_UPPER_EXCLUSIVE = 2**63 - 1
-
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
@@ -99,12 +94,14 @@ def _ci95(values: np.ndarray) -> float:
 
 @njit(cache=True)
 def _weighted_sample_es_njit(
-    seed: np.uint64, weights: np.ndarray, k: int
+    u: np.ndarray, weights: np.ndarray, k: int
 ) -> np.ndarray:
-    # Seed numba's internal PRNG instead of consuming a
-    # np.random.Generator inside @njit. The Generator API is
-    # feature-gated and version-dependent under numba; np.random.seed
-    # + np.random.random are part of the stable supported subset.
+    # Efraimidis-Spirakis weighted reservoir sampling without
+    # replacement. The caller supplies the uniform-(0,1) samples ``u``
+    # so the full 64-bit PRNG entropy from the caller's
+    # np.random.Generator is preserved; seeding numba's internal PRNG
+    # inside @njit truncates the seed to ~32 bits under current
+    # numba/numpy toolchains.
     n = weights.shape[0]
     k_eff = k if k < n else n
     if k_eff <= 0:
@@ -112,13 +109,25 @@ def _weighted_sample_es_njit(
     if k_eff == n:
         return np.arange(n).astype(np.int64)
     total = weights.sum()
-    np.random.seed(seed)
-    u = np.random.random(n)
     if total <= 0.0:
         keys = u
     else:
         keys = np.log(u) / weights
     return np.argpartition(-keys, k_eff - 1)[:k_eff].astype(np.int64)
+
+
+def _assert_weighted_sample_deterministic() -> None:
+    # Guard against future PRNG-stream changes or refactor regressions
+    # in _weighted_sample_es_njit. The hard-coded expected output was
+    # captured by running the function once on this fixed input; any
+    # silent drift in the sampling stream (e.g., a numba/numpy update
+    # altering np.argpartition tie-breaking, or a regression that
+    # re-seeds inside @njit) will trip this assertion on every run.
+    u = np.array([0.1, 0.9, 0.3, 0.7, 0.5])
+    weights = np.array([1.0, 1.0, 1.0, 1.0, 1.0])
+    out = _weighted_sample_es_njit(u, weights, 2)
+    expected = np.array([1, 3], dtype=np.int64)
+    assert np.array_equal(out, expected), (out, expected)
 
 
 @njit(cache=True)
@@ -512,8 +521,8 @@ def _relevance_core(
 
     for _ in range(rounds):
         draft_scores = stakes.copy()
-        draft_seed = np.uint64(rng.integers(0, SEED_UPPER_EXCLUSIVE))
-        drafted = _weighted_sample_es_njit(draft_seed, draft_scores, committee_size)
+        draft_u = rng.random(n_curators)
+        drafted = _weighted_sample_es_njit(draft_u, draft_scores, committee_size)
         for i in range(drafted.shape[0]):
             selection_counts[drafted[i]] += 1
 
@@ -1719,6 +1728,7 @@ def write_reading_time() -> None:
 
 
 def main() -> None:
+    _assert_weighted_sample_deterministic()
     ensure_dirs()
     save_metadata()
     run_e1(E1Params())
