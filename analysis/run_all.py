@@ -97,7 +97,7 @@ def _weighted_sample_es_njit(
     u: np.ndarray, weights: np.ndarray, k: int
 ) -> np.ndarray:
     # Efraimidis-Spirakis weighted reservoir sampling without
-    # replacement. The caller supplies the uniform-(0,1) samples ``u``
+    # replacement. The caller supplies the uniform-[0,1) samples ``u``
     # so the full 64-bit PRNG entropy from the caller's
     # np.random.Generator is preserved; seeding numba's internal PRNG
     # inside @njit truncates the seed to ~32 bits under current
@@ -127,7 +127,14 @@ def _assert_weighted_sample_deterministic() -> None:
     weights = np.array([1.0, 1.0, 1.0, 1.0, 1.0])
     out = _weighted_sample_es_njit(u, weights, 2)
     expected = np.array([1, 3], dtype=np.int64)
-    assert np.array_equal(out, expected), (out, expected)
+    # Sort before comparing: np.argpartition does not guarantee order
+    # within the first k_eff indices, so the function's semantic output
+    # is the set of selected indices, not a sequence.
+    if not np.array_equal(np.sort(out), np.sort(expected)):
+        raise RuntimeError(
+            f"Determinism guard failed for _weighted_sample_es_njit: "
+            f"got {out}, expected {expected}"
+        )
 
 
 @njit(cache=True)
