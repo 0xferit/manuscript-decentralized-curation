@@ -7,14 +7,23 @@ pipeline and scope of the deployment credential.
 
 ## Reporting a vulnerability
 
-For issues in this repository (build pipeline, leaked credentials, published
-content integrity), open a GitHub issue at
-`https://github.com/0xferit/manuscript-decentralized-curation/issues`. For
-vulnerabilities that should not be disclosed publicly until triaged, email
-`ferit@octantlabs.io` with `[security]` in the subject line.
+Two channels, and the boundary between them matters:
 
-Do not use this channel for vulnerabilities in third-party systems referenced
-by the manuscript (e.g., Kleros, Ethereum); report those upstream.
+- Public GitHub issues
+  (`https://github.com/0xferit/manuscript-decentralized-curation/issues`)
+  are for build-pipeline bugs, broken links, typos, and disagreements with
+  published content. Do not post anything sensitive here; a GitHub issue is
+  a public disclosure the moment it is filed.
+- Email `ferit@octantlabs.io` with `[security]` in the subject line is the
+  only supported route for leaked credentials, suspected compromises, and
+  any other security-sensitive report. Posting a leaked credential in a
+  public issue is itself a public credential disclosure; send it by email
+  instead.
+
+If you are unsure whether to use email, use email.
+
+Do not use either channel for vulnerabilities in third-party systems
+referenced by the manuscript (e.g., Kleros, Ethereum); report those upstream.
 
 ## Deployment credential scope
 
@@ -53,8 +62,13 @@ A token scoped as above can: create, update, and delete Pages projects,
 deployments, and custom domains within the single Cloudflare account. It
 cannot: read or modify DNS records outside Pages, access R2 buckets, Workers
 KV, D1, Workers scripts, or billing. The practical attack is defacement of the
-published site or deletion of the Pages project, both of which are recoverable
-from the repository by re-running the workflow.
+published site or deletion of the Pages project. Content and the default
+`*.pages.dev` deployment are recoverable from the repository by re-running the
+workflow. Custom-domain bindings, project-level environment variables, and any
+state configured outside git are NOT recoverable automatically and would need
+to be re-applied in the Cloudflare dashboard. The current deployment uses only
+the default `manuscript-decentralized-curation.pages.dev` URL; if a custom
+domain is added, revisit this recovery claim.
 
 A token scoped more broadly (for example `Account` > `Cloudflare Pages` >
 `Edit` plus unrelated permissions, or applied to `All accounts`) expands the
@@ -93,8 +107,11 @@ exposure to upstream compromise:
 - Python dependencies are installed from `requirements.txt`. Simulation
   outputs are cached by the hash of `analysis/run_all.py`.
 
-Bumping any of the pinned versions is a deliberate maintainer action, not a
-silent acceptance of whatever ships as `latest`.
+Major-tag pinning does accept upstream minor and patch releases from the
+pinned action author silently. SHA-pinning would close that gap but adds
+maintenance overhead; for a static-site workflow with the blast radius scoped
+above, major-tag pinning is currently acceptable. Revisit this choice if the
+token's scope or the site's integrity guarantees grow.
 
 ## Out of scope
 
