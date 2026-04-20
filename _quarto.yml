@@ -14,7 +14,10 @@ format:
   html:
     output-file: index
     embed-resources: true
-    theme: default
+    theme:
+      light: flatly
+      dark: darkly
+    respect-user-color-scheme: true
     page-layout: article
     grid:
       body-width: 820px
