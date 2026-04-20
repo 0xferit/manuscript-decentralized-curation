@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this work, please cite it using the metadata from this file."
-type: dataset
+type: software
 title: "Decentralized Curation: Trustless Transformation of Information into Knowledge"
 authors:
   - given-names: Ferit
@@ -23,9 +23,9 @@ keywords:
   - knowledge aggregation
   - Schelling point
   - dispute resolution
-license: CC-BY-4.0
-version: draft-2026-04
-date-released: "2026-04-20"
+license:
+  - CC-BY-4.0
+  - MIT
 preferred-citation:
   type: unpublished
   title: "Decentralized Curation: Trustless Transformation of Information into Knowledge"
@@ -34,6 +34,5 @@ preferred-citation:
       family-names: Tunçer
       email: ferit@cryptolab.net
   year: 2026
-  month: 4
   url: "https://github.com/0xferit/manuscript-decentralized-curation"
   status: "in-preparation"
