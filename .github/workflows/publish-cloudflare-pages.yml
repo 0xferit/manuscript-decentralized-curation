@@ -43,7 +43,7 @@ jobs:
           path: |
             analysis/out
             analysis/fig
-          key: sims-${{ hashFiles('analysis/run_all.py', 'requirements.txt') }}
+          key: sims-${{ hashFiles('analysis/run_all.py', 'requirements.txt', 'paper.qmd', 'rpgf/design/index.qmd', 'truth-post/blueprint/index.qmd') }}
 
       - name: Run simulations
         if: steps.sim-cache.outputs.cache-hit != 'true'
