@@ -117,12 +117,13 @@ def _weighted_sample_es_njit(
 
 
 def _assert_weighted_sample_deterministic() -> None:
-    # Guard against future PRNG-stream changes or refactor regressions
-    # in _weighted_sample_es_njit. The hard-coded expected output was
-    # captured by running the function once on this fixed input; any
-    # silent drift in the sampling stream (e.g., a numba/numpy update
-    # altering np.argpartition tie-breaking, or a regression that
-    # re-seeds inside @njit) will trip this assertion on every run.
+    # Guard against PRNG-stream changes or refactor regressions in
+    # _weighted_sample_es_njit. The expected selected set for this
+    # fixed input was captured once; any drift in the uniform stream
+    # (e.g., a regression that re-seeds inside @njit) will trip the
+    # check on every run. Argpartition tie-breaking drift is NOT
+    # caught here: both sides of the comparison are sorted, matching
+    # the function's set-valued semantics.
     u = np.array([0.1, 0.9, 0.3, 0.7, 0.5])
     weights = np.array([1.0, 1.0, 1.0, 1.0, 1.0])
     out = _weighted_sample_es_njit(u, weights, 2)
