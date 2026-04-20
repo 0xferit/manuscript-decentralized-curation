@@ -83,7 +83,10 @@ def bond_threshold_multiplier(p_detect: float, p_majority: float) -> float:
 
 
 def _ci95(values: np.ndarray) -> float:
-    return float(1.96 * values.std() / np.sqrt(len(values)))
+    # Sample std (Bessel's correction) with the z-critical 1.96; the z form is
+    # a large-N approximation of the t-critical. At N>=100 seeds the residual
+    # error vs scipy.stats.t.ppf is under 1.5%.
+    return float(1.96 * values.std(ddof=1) / np.sqrt(len(values)))
 
 
 @njit(cache=True)
