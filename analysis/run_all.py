@@ -871,6 +871,651 @@ def run_e2_adversarial(params: E2AdvParams, executor: ProcessPoolExecutor) -> No
 
 
 # ---------------------------------------------------------------------------
+# E2': Relevance under the final mechanism (draw-and-lock + graduated slashing
+# + ambiguity-driven abstention). Additive to E2, not a refactor: the
+# predecessor E2 and E2-Adv runs above remain unchanged.
+#
+# Modelling decisions (see PR description):
+#   - Seat-ticket draw-and-lock: each curator gets d_i = floor(s_i / L) tickets,
+#     the scheduler draws `target_seats` tickets without replacement weighted
+#     by per-ticket mass (one ticket == L tokens), locking n_i * L per draft.
+#     Round weight w_i = n_i * L. We use draw without replacement by running
+#     _weighted_sample_es_njit over a flattened ticket->curator map so that
+#     multi-ticket curators can be drawn up to d_i times in one round.
+#   - Graduated slashing follows blueprint step 15 exactly: p_i = min(1, max(0,
+#     (|v_i - mu|/sigma - K) / K)). When sigma < epsilon_sigma, distance-based
+#     slashing is skipped (p_i = 0). Non-participation (abstention) is slashed
+#     at p_i = 1 per blueprint step 11.
+#   - Under-specified / ambiguity: blueprint does not define an explicit
+#     third verdict, and paper.qmd line 511 documents that the third verdict
+#     was removed from the design. We model the audit-claim's "abstain on
+#     ambiguity" intent by simulating a hidden per-round is_ambiguous flag
+#     (Bernoulli(ambig_prob)). Each drafted curator draws a noisy ambiguity
+#     signal correlated with the hidden flag and abstains when the signal
+#     exceeds `abstain_signal_threshold`. If abstainers exceed
+#     `abstain_supermajority` (super-majority) of drafted seats, the round
+#     cancels (no score, no slashing of participants, non-participants lose
+#     locked tokens). Otherwise abstainers are slashed at p_i = 1 and the
+#     remaining reveals produce mu, sigma, and graduated slashing.
+# ---------------------------------------------------------------------------
+
+
+# E2' model-specific constants (named to avoid magic numbers).
+E2P_SEAT_SIZE_L = 0.2
+E2P_EPSILON_SIGMA = 0.02
+E2P_RHO_REWARD = 0.1
+E2P_ROUND_REWARD = 0.05
+E2P_AMBIG_PROB = 0.15
+E2P_AMBIG_SIGNAL_TRUE = 0.8
+E2P_AMBIG_SIGNAL_FALSE = 0.2
+E2P_AMBIG_SIGNAL_NOISE = 0.15
+E2P_ABSTAIN_SIGNAL_THRESHOLD = 0.5
+E2P_ABSTAIN_SUPERMAJORITY = 0.5
+E2P_MIN_REVEAL_QUORUM = 5
+E2P_COLLUDER_BIAS = 0.30
+E2P_COLLUDER_NOISE_FACTOR = 0.5
+
+
+@njit(cache=True)
+def _draft_seats_njit(
+    rng: np.random.Generator,
+    stakes: np.ndarray,
+    seat_size_L: float,
+    target_seats: int,
+) -> np.ndarray:
+    """Flatten per-curator tickets into a curator-id array and sample target_seats
+    tickets without replacement with uniform weights (each ticket == L tokens).
+    Returns the drafted curator ids (length <= target_seats, may repeat)."""
+    n = stakes.shape[0]
+    total_tickets = 0
+    for i in range(n):
+        total_tickets += int(stakes[i] // seat_size_L)
+    if total_tickets <= 0:
+        return np.empty(0, dtype=np.int64)
+    ticket_curator = np.empty(total_tickets, dtype=np.int64)
+    idx = 0
+    for i in range(n):
+        d_i = int(stakes[i] // seat_size_L)
+        for _ in range(d_i):
+            ticket_curator[idx] = i
+            idx += 1
+    uniform_weights = np.ones(total_tickets)
+    k = target_seats if target_seats < total_tickets else total_tickets
+    drawn_ticket_ix = _weighted_sample_es_njit(rng, uniform_weights, k)
+    drafted = np.empty(drawn_ticket_ix.shape[0], dtype=np.int64)
+    for i in range(drawn_ticket_ix.shape[0]):
+        drafted[i] = ticket_curator[drawn_ticket_ix[i]]
+    return drafted
+
+
+@njit(cache=True)
+def _relevance_core_prime(
+    rng: np.random.Generator,
+    n_curators: int,
+    target_seats: int,
+    rounds: int,
+    noise_sigma: float,
+    K: float,
+    seat_size_L: float,
+    epsilon_sigma: float,
+    rho: float,
+    round_reward: float,
+    ambig_prob: float,
+    ambig_signal_true: float,
+    ambig_signal_false: float,
+    ambig_signal_noise: float,
+    abstain_threshold: float,
+    abstain_supermajority: float,
+    min_reveal_quorum: int,
+    types: np.ndarray,
+    colluder_bias: float,
+    colluder_noise_factor: float,
+):
+    stakes = np.ones(n_curators)
+    abs_errors = np.empty(rounds)
+    n_errors = 0
+    cancelled_rounds = 0
+    ambiguous_cancelled_rounds = 0
+    selection_counts = np.zeros(n_curators, dtype=np.int64)
+
+    for _ in range(rounds):
+        drafted = _draft_seats_njit(rng, stakes, seat_size_L, target_seats)
+        n_drafted = drafted.shape[0]
+        if n_drafted == 0:
+            cancelled_rounds += 1
+            continue
+        for i in range(n_drafted):
+            selection_counts[drafted[i]] += 1
+
+        # Seat locks: each drawn ticket locks L tokens for its curator.
+        # Since drafted may contain a curator multiple times, w_i accumulates L per seat.
+        w = np.zeros(n_curators)
+        for i in range(n_drafted):
+            w[drafted[i]] += seat_size_L
+        # Physically lock the tokens out of stake for this round.
+        for i in range(n_curators):
+            if w[i] > 0.0:
+                stakes[i] -= w[i]
+
+        # Hidden ambiguity flag for this round.
+        is_ambiguous = rng.random() < ambig_prob
+        r_true = rng.uniform(0.0, 1.0)
+
+        # One score per distinct drafted curator; multiple seats scale weight, not votes.
+        # Build the distinct-curator committee.
+        seen = np.zeros(n_curators, dtype=np.int64)
+        committee = np.empty(n_drafted, dtype=np.int64)
+        n_committee = 0
+        for i in range(n_drafted):
+            idx = drafted[i]
+            if seen[idx] == 0:
+                seen[idx] = 1
+                committee[n_committee] = idx
+                n_committee += 1
+        committee = committee[:n_committee]
+
+        # Draw ambiguity signals; abstain when signal > threshold.
+        abstain_mask = np.zeros(n_committee, dtype=np.int64)
+        base_signal = ambig_signal_true if is_ambiguous else ambig_signal_false
+        for i in range(n_committee):
+            s = base_signal + rng.normal(0.0, ambig_signal_noise)
+            if s > abstain_threshold:
+                abstain_mask[i] = 1
+
+        n_abstain = 0
+        for i in range(n_committee):
+            n_abstain += abstain_mask[i]
+
+        # Supermajority abstention cancels the round; participants keep their
+        # lock intact but abstainers are still slashed at p_i = 1.
+        abstain_cancel = (
+            n_committee > 0 and (n_abstain / n_committee) > abstain_supermajority
+        )
+        n_revealers = n_committee - n_abstain
+        quorum_fail = n_revealers < min_reveal_quorum
+
+        if abstain_cancel or quorum_fail:
+            # Non-participants (abstainers) are slashed at p_i = 1.
+            # Revealers' locks are returned (no distance slashing when round cancels).
+            for i in range(n_committee):
+                idx = committee[i]
+                if abstain_mask[i] == 1:
+                    # full loss of locked tokens (already subtracted from stakes).
+                    pass
+                else:
+                    stakes[idx] += w[idx]
+            cancelled_rounds += 1
+            if is_ambiguous and abstain_cancel:
+                ambiguous_cancelled_rounds += 1
+            continue
+
+        # Build revealer votes.
+        votes = np.empty(n_revealers)
+        revealer_idx = np.empty(n_revealers, dtype=np.int64)
+        j = 0
+        for i in range(n_committee):
+            if abstain_mask[i] == 1:
+                continue
+            cur = committee[i]
+            t = types[cur]
+            if t == 0:  # competent
+                v = r_true + rng.normal(0.0, noise_sigma)
+            elif t == 1:  # noisy
+                v = rng.uniform(0.0, 1.0)
+            else:  # colluder
+                target = r_true + colluder_bias
+                if target > 1.0:
+                    target = 1.0
+                v = target + rng.normal(0.0, noise_sigma * colluder_noise_factor)
+            if v < 0.0:
+                v = 0.0
+            elif v > 1.0:
+                v = 1.0
+            votes[j] = v
+            revealer_idx[j] = cur
+            j += 1
+
+        # Weighted statistics over revealers (weights = locked w_i).
+        wsum = 0.0
+        for i in range(n_revealers):
+            wsum += w[revealer_idx[i]]
+        if wsum <= 0.0:
+            # Safety fallback: treat as cancelled.
+            for i in range(n_committee):
+                idx = committee[i]
+                if abstain_mask[i] == 0:
+                    stakes[idx] += w[idx]
+            cancelled_rounds += 1
+            continue
+        mu = 0.0
+        for i in range(n_revealers):
+            mu += w[revealer_idx[i]] * votes[i]
+        mu /= wsum
+        varw = 0.0
+        for i in range(n_revealers):
+            d = votes[i] - mu
+            varw += w[revealer_idx[i]] * d * d
+        sigma = np.sqrt(varw / wsum)
+
+        # Graduated slashing.
+        delta_sum = 0.0
+        coherent_w_sum = 0.0
+        p_i_arr = np.zeros(n_revealers)
+        if sigma >= epsilon_sigma:
+            for i in range(n_revealers):
+                dist = abs(votes[i] - mu)
+                # p_i per blueprint step 15.
+                raw = (dist / sigma - K) / K
+                if raw < 0.0:
+                    p = 0.0
+                elif raw > 1.0:
+                    p = 1.0
+                else:
+                    p = raw
+                p_i_arr[i] = p
+
+        # Abstainers: slashed at p_i = 1, delta contributes to coherent reward pool.
+        for i in range(n_committee):
+            if abstain_mask[i] == 1:
+                cur = committee[i]
+                delta_sum += w[cur]
+                # locked tokens already gone (not returned); no further action.
+
+        # Distance-based delta_i contributes to reward pool; incoherent revealers
+        # lose delta_i, coherent revealers get refund + share of pool + f_reward * R.
+        # sigma_ref: use epsilon_sigma as bootstrap (no EMA tracked across seeds here;
+        # this is a design simplification documented in the PR).
+        sigma_ref = epsilon_sigma
+        ratio = sigma / sigma_ref
+        if ratio > 1.0:
+            ratio = 1.0
+        f_reward = rho + (1.0 - rho) * ratio
+        round_reward_effective = f_reward * round_reward
+
+        for i in range(n_revealers):
+            cur = revealer_idx[i]
+            p = p_i_arr[i]
+            slashed = p * w[cur]
+            if slashed > 0.0:
+                delta_sum += slashed
+            returned = w[cur] - slashed
+            stakes[cur] += returned
+            if p == 0.0:
+                coherent_w_sum += w[cur]
+
+        if coherent_w_sum > 0.0:
+            pool = delta_sum + round_reward_effective
+            for i in range(n_revealers):
+                cur = revealer_idx[i]
+                if p_i_arr[i] == 0.0:
+                    stakes[cur] += pool * (w[cur] / coherent_w_sum)
+        # If coherent_w_sum == 0, slashed tokens remain off-book (not returned).
+
+        abs_errors[n_errors] = abs(mu - r_true)
+        n_errors += 1
+
+    mean_abs_error = abs_errors[:n_errors].mean() if n_errors > 0 else 0.0
+    cancelled_round_share = cancelled_rounds / rounds
+    ambiguous_cancel_share = ambiguous_cancelled_rounds / rounds
+    return (
+        mean_abs_error,
+        cancelled_round_share,
+        ambiguous_cancel_share,
+        selection_counts,
+        stakes,
+    )
+
+
+@dataclass(frozen=True)
+class E2PrimeParams:
+    """Final relevance mechanism (draw-and-lock + graduated slashing + ambiguity abstention)."""
+
+    n_curators: int = 200
+    target_seats: int = 15
+    rounds: int = 200
+    noise_sigma: float = 0.08
+    seat_size_L: float = E2P_SEAT_SIZE_L
+    epsilon_sigma: float = E2P_EPSILON_SIGMA
+    rho: float = E2P_RHO_REWARD
+    round_reward: float = E2P_ROUND_REWARD
+    ambig_prob: float = E2P_AMBIG_PROB
+    ambig_signal_true: float = E2P_AMBIG_SIGNAL_TRUE
+    ambig_signal_false: float = E2P_AMBIG_SIGNAL_FALSE
+    ambig_signal_noise: float = E2P_AMBIG_SIGNAL_NOISE
+    abstain_signal_threshold: float = E2P_ABSTAIN_SIGNAL_THRESHOLD
+    abstain_supermajority: float = E2P_ABSTAIN_SUPERMAJORITY
+    min_reveal_quorum: int = E2P_MIN_REVEAL_QUORUM
+    ks: tuple[float, ...] = (0.8, 1.0, 1.25, 1.5)
+    competent_fracs: tuple[float, ...] = (0.1, 0.3, 0.5, 0.7, 0.9)
+    n_seeds: int = 100
+
+
+def _e2_prime_single_run(
+    params: E2PrimeParams, frac: float, k: float, seed_idx: int
+) -> dict:
+    rng = np.random.default_rng(
+        seed_idx * 10_000 + int(1_000 * frac) + int(100 * k) + 7
+    )
+    n_comp = int(round(params.n_curators * frac))
+    types = np.array([0] * n_comp + [1] * (params.n_curators - n_comp), dtype=np.int64)
+    rng.shuffle(types)
+
+    (
+        mean_abs_error,
+        cancelled_round_share,
+        ambiguous_cancel_share,
+        selection_counts,
+        stakes,
+    ) = _relevance_core_prime(
+        rng,
+        params.n_curators,
+        params.target_seats,
+        params.rounds,
+        params.noise_sigma,
+        float(k),
+        params.seat_size_L,
+        params.epsilon_sigma,
+        params.rho,
+        params.round_reward,
+        params.ambig_prob,
+        params.ambig_signal_true,
+        params.ambig_signal_false,
+        params.ambig_signal_noise,
+        params.abstain_signal_threshold,
+        params.abstain_supermajority,
+        params.min_reveal_quorum,
+        types,
+        0.0,  # no collusion bias for E2'
+        1.0,
+    )
+
+    competent_mask = types == 0
+    total_stake = stakes.sum()
+    total_sel = int(selection_counts.sum())
+    return {
+        "mean_abs_error": float(mean_abs_error),
+        "cancelled_round_share": float(cancelled_round_share),
+        "ambiguous_cancel_share": float(ambiguous_cancel_share),
+        "final_competent_stake_share": float(
+            stakes[competent_mask].sum() / total_stake
+        )
+        if total_stake > 0
+        else 0.0,
+        "competent_draft_share": float(
+            selection_counts[competent_mask].sum() / total_sel
+        )
+        if total_sel > 0
+        else 0.0,
+    }
+
+
+def run_e2_prime(params: E2PrimeParams, executor: ProcessPoolExecutor) -> None:
+    rows: list[dict] = []
+    for frac in params.competent_fracs:
+        for k in params.ks:
+            seed_results = list(
+                executor.map(
+                    functools.partial(_e2_prime_single_run, params, frac, k),
+                    range(params.n_seeds),
+                )
+            )
+            errors = np.array([r["mean_abs_error"] for r in seed_results])
+            cancelled = np.array([r["cancelled_round_share"] for r in seed_results])
+            ambig = np.array([r["ambiguous_cancel_share"] for r in seed_results])
+            stakes = np.array(
+                [r["final_competent_stake_share"] for r in seed_results]
+            )
+            draft = np.array([r["competent_draft_share"] for r in seed_results])
+
+            rows.append(
+                {
+                    "competent_frac": float(frac),
+                    "K": float(k),
+                    "n_seeds": params.n_seeds,
+                    "mean_abs_error_mean": float(errors.mean()),
+                    "mean_abs_error_ci95": _ci95(errors),
+                    "cancelled_round_share_mean": float(cancelled.mean()),
+                    "cancelled_round_share_ci95": _ci95(cancelled),
+                    "ambiguous_cancel_share_mean": float(ambig.mean()),
+                    "ambiguous_cancel_share_ci95": _ci95(ambig),
+                    "final_competent_stake_share_mean": float(stakes.mean()),
+                    "final_competent_stake_share_ci95": _ci95(stakes),
+                    "competent_draft_share_mean": float(draft.mean()),
+                    "competent_draft_share_ci95": _ci95(draft),
+                }
+            )
+
+    df = pd.DataFrame(rows)
+    df.to_csv(OUT_DIR / "e2_prime_results.csv", index=False)
+
+    plt.figure(figsize=(7.0, 4.0))
+    for k in params.ks:
+        sub = df[df["K"] == k].sort_values("competent_frac")
+        plt.plot(
+            sub["competent_frac"],
+            sub["mean_abs_error_mean"],
+            marker="o",
+            label=f"K={k:g}",
+        )
+        plt.fill_between(
+            sub["competent_frac"],
+            sub["mean_abs_error_mean"] - sub["mean_abs_error_ci95"],
+            sub["mean_abs_error_mean"] + sub["mean_abs_error_ci95"],
+            alpha=0.15,
+        )
+    plt.xlabel("Fraction competent curators")
+    plt.ylabel("Mean |mu - r|")
+    plt.title(
+        f"E2': Final-mechanism relevance error vs competence and K (N={params.n_seeds} seeds)"
+    )
+    plt.legend(frameon=False, ncol=2)
+    plt.tight_layout()
+    plt.savefig(FIG_DIR / "e2_prime_relevance_error.png", dpi=200)
+    plt.close()
+
+    plt.figure(figsize=(7.0, 4.0))
+    sub = df[df["K"] == 1.25].sort_values("competent_frac")
+    plt.plot(
+        sub["competent_frac"], sub["final_competent_stake_share_mean"], marker="o"
+    )
+    plt.fill_between(
+        sub["competent_frac"],
+        sub["final_competent_stake_share_mean"]
+        - sub["final_competent_stake_share_ci95"],
+        sub["final_competent_stake_share_mean"]
+        + sub["final_competent_stake_share_ci95"],
+        alpha=0.2,
+    )
+    plt.xlabel("Initial fraction competent curators")
+    plt.ylabel("Final competent stake share")
+    plt.title(
+        f"E2': Competence filter under final mechanism (K=1.25, N={params.n_seeds} seeds)"
+    )
+    plt.ylim(0.0, 1.0)
+    plt.tight_layout()
+    plt.savefig(FIG_DIR / "e2_prime_competence_filter.png", dpi=200)
+    plt.close()
+
+
+@dataclass(frozen=True)
+class E2PrimeAdvParams:
+    """Adversarial sweep for the final relevance mechanism: characterize phi*."""
+
+    n_curators: int = 200
+    target_seats: int = 15
+    rounds: int = 200
+    noise_sigma: float = 0.08
+    seat_size_L: float = E2P_SEAT_SIZE_L
+    epsilon_sigma: float = E2P_EPSILON_SIGMA
+    rho: float = E2P_RHO_REWARD
+    round_reward: float = E2P_ROUND_REWARD
+    ambig_prob: float = E2P_AMBIG_PROB
+    ambig_signal_true: float = E2P_AMBIG_SIGNAL_TRUE
+    ambig_signal_false: float = E2P_AMBIG_SIGNAL_FALSE
+    ambig_signal_noise: float = E2P_AMBIG_SIGNAL_NOISE
+    abstain_signal_threshold: float = E2P_ABSTAIN_SIGNAL_THRESHOLD
+    abstain_supermajority: float = E2P_ABSTAIN_SUPERMAJORITY
+    min_reveal_quorum: int = E2P_MIN_REVEAL_QUORUM
+    K: float = 1.25
+    competent_frac: float = 0.6
+    colluding_fracs: tuple[float, ...] = (0.0, 0.05, 0.10, 0.15, 0.20, 0.30)
+    colluder_bias: float = E2P_COLLUDER_BIAS
+    colluder_noise_factor: float = E2P_COLLUDER_NOISE_FACTOR
+    n_seeds: int = 100
+
+
+def _e2_prime_adv_single_run(
+    params: E2PrimeAdvParams, col_frac: float, seed_idx: int
+) -> dict:
+    rng = np.random.default_rng(int(10_000 * col_frac + seed_idx) + 17)
+    n_comp = int(round(params.n_curators * params.competent_frac))
+    n_collude = int(round(params.n_curators * col_frac))
+    n_honest_comp = max(0, n_comp - n_collude)
+    n_noisy = params.n_curators - n_honest_comp - n_collude
+    types = np.array(
+        [0] * n_honest_comp + [1] * n_noisy + [2] * n_collude,
+        dtype=np.int64,
+    )
+    rng.shuffle(types)
+
+    (
+        mean_abs_error,
+        cancelled_round_share,
+        ambiguous_cancel_share,
+        selection_counts,
+        stakes,
+    ) = _relevance_core_prime(
+        rng,
+        params.n_curators,
+        params.target_seats,
+        params.rounds,
+        params.noise_sigma,
+        float(params.K),
+        params.seat_size_L,
+        params.epsilon_sigma,
+        params.rho,
+        params.round_reward,
+        params.ambig_prob,
+        params.ambig_signal_true,
+        params.ambig_signal_false,
+        params.ambig_signal_noise,
+        params.abstain_signal_threshold,
+        params.abstain_supermajority,
+        params.min_reveal_quorum,
+        types,
+        params.colluder_bias,
+        params.colluder_noise_factor,
+    )
+
+    colluder_mask = types == 2
+    total_stake = stakes.sum()
+    total_sel = int(selection_counts.sum())
+    return {
+        "mean_abs_error": float(mean_abs_error),
+        "final_colluder_stake_share": float(
+            stakes[colluder_mask].sum() / total_stake
+        )
+        if colluder_mask.any() and total_stake > 0
+        else 0.0,
+        "colluder_draft_share": float(
+            selection_counts[colluder_mask].sum() / total_sel
+        )
+        if colluder_mask.any() and total_sel > 0
+        else 0.0,
+        "cancelled_round_share": float(cancelled_round_share),
+        "ambiguous_cancel_share": float(ambiguous_cancel_share),
+    }
+
+
+def run_e2_prime_adversarial(
+    params: E2PrimeAdvParams, executor: ProcessPoolExecutor
+) -> None:
+    rows: list[dict] = []
+    for col_frac in params.colluding_fracs:
+        seed_results = list(
+            executor.map(
+                functools.partial(_e2_prime_adv_single_run, params, col_frac),
+                range(params.n_seeds),
+            )
+        )
+        errors = np.array([r["mean_abs_error"] for r in seed_results])
+        stake_shares = np.array([r["final_colluder_stake_share"] for r in seed_results])
+        draft_shares = np.array([r["colluder_draft_share"] for r in seed_results])
+        cancelled = np.array([r["cancelled_round_share"] for r in seed_results])
+        ambig = np.array([r["ambiguous_cancel_share"] for r in seed_results])
+
+        rows.append(
+            {
+                "colluding_frac": float(col_frac),
+                "n_seeds": params.n_seeds,
+                "mean_abs_error_mean": float(errors.mean()),
+                "mean_abs_error_ci95": _ci95(errors),
+                "final_colluder_stake_share_mean": float(stake_shares.mean()),
+                "final_colluder_stake_share_ci95": _ci95(stake_shares),
+                "colluder_draft_share_mean": float(draft_shares.mean()),
+                "colluder_draft_share_ci95": _ci95(draft_shares),
+                "cancelled_round_share_mean": float(cancelled.mean()),
+                "ambiguous_cancel_share_mean": float(ambig.mean()),
+                "initial_colluder_stake_share": float(col_frac),
+            }
+        )
+
+    df = pd.DataFrame(rows)
+    df.to_csv(OUT_DIR / "e2_prime_adversarial_results.csv", index=False)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.0, 4.5))
+    x = df["colluding_frac"]
+
+    ax1.plot(x, df["mean_abs_error_mean"], marker="o", color="#4C72B0")
+    ax1.fill_between(
+        x,
+        df["mean_abs_error_mean"] - df["mean_abs_error_ci95"],
+        df["mean_abs_error_mean"] + df["mean_abs_error_ci95"],
+        alpha=0.2,
+        color="#4C72B0",
+    )
+    ax1.set_xlabel("Fraction of colluding curators")
+    ax1.set_ylabel("Mean |mu - r|")
+    ax1.set_title(
+        f"E2'-Adv: Final-mechanism signal error under collusion (K={params.K}, N={params.n_seeds} seeds)"
+    )
+
+    ax2.plot(
+        x,
+        df["initial_colluder_stake_share"],
+        marker="o",
+        linestyle="--",
+        color="gray",
+        label="Initial stake share",
+    )
+    ax2.plot(
+        x,
+        df["final_colluder_stake_share_mean"],
+        marker="o",
+        color="#C44E52",
+        label="Final stake share",
+    )
+    ax2.fill_between(
+        x,
+        df["final_colluder_stake_share_mean"] - df["final_colluder_stake_share_ci95"],
+        df["final_colluder_stake_share_mean"] + df["final_colluder_stake_share_ci95"],
+        alpha=0.2,
+        color="#C44E52",
+    )
+    ax2.set_xlabel("Fraction of colluding curators")
+    ax2.set_ylabel("Colluder stake share")
+    ax2.set_title(
+        f"E2'-Adv: Colluder stake share under final mechanism (N={params.n_seeds} seeds)"
+    )
+    ax2.set_ylim(0.0, max(0.4, df["initial_colluder_stake_share"].max() * 1.2))
+    ax2.legend(frameon=False, fontsize=9)
+
+    plt.tight_layout()
+    plt.savefig(FIG_DIR / "e2_prime_adversarial.png", dpi=200)
+    plt.close()
+
+
+# ---------------------------------------------------------------------------
 # E3: Non-falsifiable challenge defense
 # ---------------------------------------------------------------------------
 
@@ -1666,6 +2311,9 @@ def write_eval_summary() -> None:
     e1_adv_point = e1_adv[e1_adv["p_juror_correct"] == 0.80].iloc[0]
     e2_adv_point = e2_adv[e2_adv["colluding_frac"] == 0.15].iloc[0]
     e2_adv_base = e2_adv[e2_adv["colluding_frac"] == 0.0].iloc[0]
+    e2p_adv = pd.read_csv(OUT_DIR / "e2_prime_adversarial_results.csv")
+    e2p_adv_point = e2p_adv[e2p_adv["colluding_frac"] == 0.15].iloc[0]
+    e2p_adv_base = e2p_adv[e2p_adv["colluding_frac"] == 0.0].iloc[0]
     e4a_point = e4a.iloc[-1]
     e4b_random = e4b[(e4b["rep_decay"] == 0.01) & (e4b["attacker_model"] == "random")].iloc[0]
     e4b_biased = e4b[(e4b["rep_decay"] == 0.01) & (e4b["attacker_model"] == "bias_0.15")].iloc[0]
@@ -1678,7 +2326,8 @@ def write_eval_summary() -> None:
 - **E2:** At initial competence 0.70 and $K=1.25$, mean relevance error is **{e2_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2_point["mean_abs_error_ci95"]:.3f}** (95% CI, $N={int(e2_point["n_seeds"])}$ seeds), cancelled-round share is **{e2_point["cancelled_round_share_mean"]:.3f} $\\pm$ {e2_point["cancelled_round_share_ci95"]:.3f}**, and final competent stake share is **{e2_point["final_competent_stake_share_mean"]:.2f} $\\pm$ {e2_point["final_competent_stake_share_ci95"]:.2f}**.
 - **E3:** Closed-form scenario analysis only. At non-falsifiable share 0.25, bad-item retention is **{e3_point["baseline_bad_item_retention"]:.2f}** under an illustrative forced-binary assumption of $p=0.55$ versus **{e3_point["defended_bad_item_retention"]:.2f}** when a dedicated `NonFalsifiable` challenge reason raises the assumed per-juror accuracy to $p=0.85$.
 - **E1-Adv:** A well-funded adversary submitting {int(e1_adv_point["n_attacks"])} false claims at $p=0.80$ and illustrative anchor $p_\\mathrm{{detect}}={params_e1.p_detect:.2f}$ achieves survival rate **{e1_adv_point["survival_rate_mean"]:.2f} $\\pm$ {e1_adv_point["survival_rate_ci95"]:.2f}** (95% CI, $N={int(e1_adv_point["n_seeds"])}$ seeds) with cumulative balance **{e1_adv_point["adversary_balance_mean"]:.0f} $\\pm$ {e1_adv_point["adversary_balance_ci95"]:.0f}**.
-- **E2-Adv:** A 15% colluding bloc shifts mean relevance error from **{e2_adv_base["mean_abs_error_mean"]:.3f}** to **{e2_adv_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2_adv_point["mean_abs_error_ci95"]:.3f}** and ends with **{e2_adv_point["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2_adv_point["final_colluder_stake_share_ci95"]:.3f}** stake share.
+- **E2-Adv (predecessor mechanism):** A 15% colluding bloc shifts mean relevance error from **{e2_adv_base["mean_abs_error_mean"]:.3f}** to **{e2_adv_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2_adv_point["mean_abs_error_ci95"]:.3f}** and ends with **{e2_adv_point["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2_adv_point["final_colluder_stake_share_ci95"]:.3f}** stake share.
+- **E2'-Adv (final mechanism):** Under draw-and-lock + graduated slashing + ambiguity abstention, a 15% colluding bloc shifts mean relevance error from **{e2p_adv_base["mean_abs_error_mean"]:.3f}** to **{e2p_adv_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_adv_point["mean_abs_error_ci95"]:.3f}** and ends with **{e2p_adv_point["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_adv_point["final_colluder_stake_share_ci95"]:.3f}** stake share.
 - **E4a:** By round {int(e4a_point["round"])}, median honest-author reputation reaches **{e4a_point["honest_median_rep_mean"]:.2f} $\\pm$ {e4a_point["honest_median_rep_ci95"]:.2f}** (95% CI, $N={int(e4a_point["n_seeds"])}$ seeds) while median dishonest-author reputation remains at **{e4a_point["dishonest_median_rep_mean"]:.2f} $\\pm$ {e4a_point["dishonest_median_rep_ci95"]:.2f}**.
 - **E4b:** In a counterfactual reputation-weighted committee with decay $\\delta=0.01$, a random high-reputation attacker stays above median weight for **{e4b_random["above_median_rounds_mean"]:.0f} $\\pm$ {e4b_random["above_median_rounds_ci95"]:.0f}** rounds, while a $+0.15$ strategic-bias attacker lasts **{e4b_biased["above_median_rounds_mean"]:.0f} $\\pm$ {e4b_biased["above_median_rounds_ci95"]:.0f}** rounds and shifts the final signal upward by **{e4b_biased["mean_signal_shift_mean"]:.3f} $\\pm$ {e4b_biased["mean_signal_shift_ci95"]:.3f}**.
 - **E4d:** After building reputation in Pool L, an unscoped attacker enters Pool H with **{e4d_point["imported_rep_at_entry_mean"]:.2f} $\\pm$ {e4d_point["imported_rep_at_entry_ci95"]:.2f}** imported reputation units (95% CI, $N={int(e4d_point["n_seeds"])}$ seeds); over the first 10 attack rounds, mean attacker share of Pool H author reputation is **{e4d_point["mean_attacker_rep_share_unscoped_first10"]:.3f} $\\pm$ {e4d_point["mean_attacker_rep_share_unscoped_first10_ci95"]:.3f}** unscoped versus **{e4d_point["mean_attacker_rep_share_scoped_first10"]:.3f} $\\pm$ {e4d_point["mean_attacker_rep_share_scoped_first10_ci95"]:.3f}** when reputation is pool-scoped, and the imported advantage decays to within {E4dParams().exhaustion_epsilon:.2f} reputation units after **{e4d_point["advantage_exhaustion_round_mean"]:.1f} $\\pm$ {e4d_point["advantage_exhaustion_round_ci95"]:.1f}** attack rounds.
@@ -1766,6 +2415,8 @@ def main() -> None:
         run_e1_adversarial(E1AdvParams(), executor)
         run_e2(E2Params(), executor)
         run_e2_adversarial(E2AdvParams(), executor)
+        run_e2_prime(E2PrimeParams(), executor)
+        run_e2_prime_adversarial(E2PrimeAdvParams(), executor)
         run_e4b(E4bParams(), executor)
     write_eval_summary()
     write_reading_time()
