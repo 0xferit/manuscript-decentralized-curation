@@ -30,6 +30,11 @@ FIG_DIR = ROOT / "analysis" / "fig"
 # which is why scipy is not a required dependency here.
 Z_CRITICAL_95 = 1.96
 
+# Exclusive upper bound for deriving uint64 seeds from a rng. Using the
+# signed-int64 max avoids any overflow risk when numba coerces the value
+# through rng.integers(..., dtype=int64).
+SEED_UPPER_EXCLUSIVE = 2**63 - 1
+
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
@@ -94,8 +99,12 @@ def _ci95(values: np.ndarray) -> float:
 
 @njit(cache=True)
 def _weighted_sample_es_njit(
-    rng: np.random.Generator, weights: np.ndarray, k: int
+    seed: np.uint64, weights: np.ndarray, k: int
 ) -> np.ndarray:
+    # Seed numba's internal PRNG instead of consuming a
+    # np.random.Generator inside @njit. The Generator API is
+    # feature-gated and version-dependent under numba; np.random.seed
+    # + np.random.random are part of the stable supported subset.
     n = weights.shape[0]
     k_eff = k if k < n else n
     if k_eff <= 0:
@@ -103,7 +112,8 @@ def _weighted_sample_es_njit(
     if k_eff == n:
         return np.arange(n).astype(np.int64)
     total = weights.sum()
-    u = rng.random(n)
+    np.random.seed(seed)
+    u = np.random.random(n)
     if total <= 0.0:
         keys = u
     else:
@@ -502,7 +512,8 @@ def _relevance_core(
 
     for _ in range(rounds):
         draft_scores = stakes.copy()
-        drafted = _weighted_sample_es_njit(rng, draft_scores, committee_size)
+        draft_seed = np.uint64(rng.integers(0, SEED_UPPER_EXCLUSIVE))
+        drafted = _weighted_sample_es_njit(draft_seed, draft_scores, committee_size)
         for i in range(drafted.shape[0]):
             selection_counts[drafted[i]] += 1
 
