@@ -28,18 +28,13 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Install Quarto and Python deps
-        run: |
-          pip install -r requirements.txt &
-          PIP_PID=$!
+      - name: Install Python deps
+        run: pip install -r requirements.txt
 
-          QUARTO_VER=$(curl -s https://api.github.com/repos/quarto-dev/quarto-cli/releases/latest \
-            | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
-          curl -sLo /tmp/quarto.deb \
-            "https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VER}/quarto-${QUARTO_VER}-linux-amd64.deb"
-          sudo dpkg -i /tmp/quarto.deb
-
-          wait $PIP_PID
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: "1.9.37"
 
       - name: Cache simulation outputs
         uses: actions/cache@v5
