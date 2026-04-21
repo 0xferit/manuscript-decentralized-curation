@@ -9,10 +9,23 @@ A paper-first workspace for a Quarto-based academic manuscript on decentralized 
 Prerequisites: [Quarto](https://quarto.org/docs/get-started/), Python 3.11+, and (for PDF) a LaTeX distribution (`quarto install tinytex`).
 
 ```bash
-pip install -r requirements.txt
-python analysis/run_all.py   # deterministic simulations (figures + data)
-quarto render                # outputs: thesis + project routes under outputs/, plus outputs/paper.pdf
+make setup
+make render-html            # cold-safe HTML render; regenerates analysis outputs first when needed
+make render-pdf             # cold-safe PDF render
 ```
+
+Useful agent-friendly entrypoints:
+
+```bash
+make check-invariants       # wrapper/source-of-truth + citation sanity checks
+make verify-fast            # fast repo checks + reading-time snippet refresh
+make verify-full            # invariants + deterministic analysis + HTML render
+make analysis               # regenerate the full analysis bundle only
+python3 analysis/run_all.py reading-time
+python3 analysis/run_all.py summary
+```
+
+Raw `quarto render` is intentionally not the recommended entrypoint for local or agent-driven work, because the manuscript includes generated snippets from `analysis/out/`.
 
 ## Publishing
 
@@ -36,7 +49,9 @@ Published routes:
 - `projects/rpgf/`: RPGF spinout documents
 - `references.bib`: BibTeX citations for the thesis
 - `analysis/run_all.py`: simulation code (E1-E4, adversarial variants)
+- `Makefile`: canonical task entrypoints for setup, verification, analysis, and render
 - `analysis/fig/`, `analysis/out/`: generated figures and data (gitignored)
+- `scripts/check_repo_invariants.py`: machine-checkable wrapper/render/citation guardrails
 - `_quarto.yml`: Quarto render config for the paper
 - `diagrams/`: shared thesis/project diagrams
 - `context/`: thesis-supporting notes and logs
@@ -59,7 +74,7 @@ Publish wrappers:
 ## Release procedure
 
 1. Compute release id: first 8 hex chars of `shasum -a 256 paper.qmd`
-2. Build: `python analysis/run_all.py && quarto render`
+2. Build: `make render`
 3. Freeze artifacts into `releases/<hash>/` (source, outputs, config, analysis script)
 
 ## License

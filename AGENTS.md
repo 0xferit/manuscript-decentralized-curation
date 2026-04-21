@@ -17,9 +17,11 @@ This file is the canonical agent-facing guidance for the repository. `CLAUDE.md`
 - `diagrams/generate_diagrams.py` generates conceptual figures (claim states, actor flow, architecture, etc.) into `diagrams/fig-*.png`. Uses matplotlib; run directly with `python3 diagrams/generate_diagrams.py`.
 - `talks/` contains presentation materials (slide decks, talk scripts). Not part of the Quarto render pipeline.
 - Quarto project files:
+  - `Makefile` (canonical task entrypoints: `make render-html`, `make verify-full`, `make check-invariants`)
   - `_quarto.yml` (render config)
   - `references.bib` (citations)
   - `analysis/run_all.py` + `requirements.txt` (deterministic simulations; generates `analysis/out/*` + `analysis/fig/*` on each run)
+  - `scripts/check_repo_invariants.py` (machine-checkable wrapper/render/citation guardrails)
   - `_build-info.md` (overwritten in CI; shows deployed version + build time)
   - `outputs/` (rendered artifacts; gitignored)
   - `.github/workflows/publish-cloudflare-pages.yml` (CI publish: run sims → render HTML → Direct Upload to Cloudflare Pages)
@@ -31,7 +33,8 @@ This file is the canonical agent-facing guidance for the repository. `CLAUDE.md`
 - Keep wording unchanged when asked to do “formatting only” (only add Markdown structure/whitespace).
 - If you cut a release, follow the “Release procedure (hash-versioned)” in `README.md`.
 - Do not assume “today’s date” inside the manuscript; verify if a claim depends on currentness.
-- Prefer rendering via Quarto (`quarto render`) so outputs stay consistent across formats (and run `python3 analysis/run_all.py` first if figures/summaries are referenced).
+- Prefer the repo task entrypoints over ad hoc commands: `make render-html`, `make render`, `make verify-full`, and `make check-invariants` encode the required prerequisites and guardrails.
+- Raw `quarto render` is not a cold-safe local entrypoint because the manuscript includes generated snippets from `analysis/out/`; if you must call Quarto directly, regenerate prerequisites first.
 - Publishing: commits to `main` trigger HTML publish to Cloudflare Pages via Direct Upload (see `README.md`).
 - Treat the repo root as the thesis/shared-assets layer. Standalone project docs belong under `projects/`, not at the root.
 - Route wrapper files at the repo root exist only to publish stable URLs for project papers. Edit project prose under `projects/`, not in those wrappers.

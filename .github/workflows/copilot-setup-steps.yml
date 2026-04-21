@@ -27,13 +27,13 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
+      - name: Check repo invariants
+        run: make check-invariants
+
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         with:
           version: "1.9.37"
 
-      - name: Run simulations
-        run: python analysis/run_all.py
-
       - name: Verify Quarto render
-        run: quarto render --to html
+        run: make render-html
