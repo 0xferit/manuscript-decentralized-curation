@@ -46,3 +46,6 @@ march10-presentation.zip
 talks/*.pdf
 talks/slides/
 talks/march10-presentation/
+
+# Formal review reports (generated)
+formal-reviews/
