@@ -667,7 +667,7 @@ here
 ## Page 074
 
 HUE CIRCLES BASED ON ADDITIVE COMPLEMENTARIES
-A hue circle based on additive complimentary relationships is the relevant
+A hue circle based on additive complementary relationships is the relevant
 choice for all questions where light
 stimulus
 is the issue.
@@ -885,7 +885,7 @@ Figure 7.14.
 CIE Lab Colour space
 . Left: Gamut of RGB
 colours in Lab space viewed in ab plane, using ColorSpace. Note that the
-additive complimentary pairs are not exactly opposite each other in CIE
+additive complementary pairs are not exactly opposite each other in CIE
 Lab space. Right: Graphical representation of Lab space in the colour
 picker in Photoshop CS2, showing relationship to hue, relative chroma
 and lightness.

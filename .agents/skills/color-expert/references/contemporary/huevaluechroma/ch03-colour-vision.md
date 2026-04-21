@@ -607,7 +607,7 @@ light. (Do not confuse this phenomenon with the hobby painter's recipe of adding
 the pigmentary complementary of the colour of the
 object
 to
-get its colour in shadow). The induced complimentary effect is the basis of
+get its colour in shadow). The induced complementary effect is the basis of
 the artist's conventional rule of warm lights creating cool shadows and
 vice
 versa
