@@ -2493,7 +2493,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="command")
 
-    commands = {
+    commands: dict[str, tuple[Callable[[], None], str]] = {
         "full": (
             run_full,
             "Regenerate the full analysis bundle (CSV outputs, figures, summary, and reading-time snippets).",
@@ -2512,23 +2512,18 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     }
 
-    for name, (_, help_text) in commands.items():
-        subparsers.add_parser(name, help=help_text, description=help_text)
+    for name, (handler, help_text) in commands.items():
+        subparser = subparsers.add_parser(name, help=help_text, description=help_text)
+        subparser.set_defaults(func=handler)
 
-    parser.set_defaults(command="full")
+    parser.set_defaults(command="full", func=run_full)
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
-    handlers: dict[str, Callable[[], None]] = {
-        "full": run_full,
-        "metadata": run_metadata_only,
-        "reading-time": run_reading_time_only,
-        "summary": run_eval_summary_only,
-    }
-    handlers[args.command]()
+    args.func()
 
 
 if __name__ == "__main__":

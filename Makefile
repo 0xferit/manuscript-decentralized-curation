@@ -12,20 +12,20 @@ setup:
 
 analysis:
 	@mkdir -p analysis/out
-	@needs_run=0; \
+	@current_hash="$$(shasum -a 256 $(ANALYSIS_INPUTS) | shasum -a 256 | awk '{print $$1}')"; \
+	needs_run=0; \
 	if [ ! -f "$(ANALYSIS_STAMP)" ]; then needs_run=1; fi; \
 	for output in $(ANALYSIS_REQUIRED); do \
 		if [ ! -f "$$output" ]; then needs_run=1; fi; \
 	done; \
 	if [ "$$needs_run" -eq 0 ]; then \
-		for input in $(ANALYSIS_INPUTS); do \
-			if [ "$$input" -nt "$(ANALYSIS_STAMP)" ]; then needs_run=1; break; fi; \
-		done; \
+		cached_hash="$$(cat "$(ANALYSIS_STAMP)")"; \
+		if [ "$$current_hash" != "$$cached_hash" ]; then needs_run=1; fi; \
 	fi; \
 	if [ "$$needs_run" -eq 1 ]; then \
 		echo "Regenerating analysis outputs"; \
 		$(PYTHON) analysis/run_all.py full && \
-		touch "$(ANALYSIS_STAMP)"; \
+		printf '%s\n' "$$current_hash" > "$(ANALYSIS_STAMP)"; \
 	else \
 		echo "Analysis outputs are up to date"; \
 	fi
