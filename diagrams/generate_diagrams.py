@@ -20,23 +20,43 @@ import matplotlib.font_manager as fm
 import numpy as np
 import os
 
-# ── PUW brand font ──
-# Prefer Space Mono if installed; fall back to generic monospace.
-_MONO_CANDIDATES = ['Space Mono', 'monospace']
+# ── Font ──
+_SANS_CANDIDATES = ['IBM Plex Sans', 'Inter', 'Source Sans 3', 'DejaVu Sans', 'sans-serif']
 _available = {f.name for f in fm.fontManager.ttflist}
-_font = next((f for f in _MONO_CANDIDATES if f in _available), 'monospace')
+_font = next((f for f in _SANS_CANDIDATES if f in _available), 'sans-serif')
 plt.rcParams.update({
     'font.family': _font,
     'mathtext.default': 'regular',
 })
 
-# ── PUW brand colors ──
-C = dict(
-    bg='#171717',
-    text='#ececec', box='#1f1f1f', edge='#505050',
-    term='#2a2a2a', term_e='#ff355e', accent='#ff355e',
-    arrow='#727272', L1='#1f1f1f', L2='#2a2a2a', L3='#333333',
-)
+# ── Theme palettes ──
+PALETTES = {
+    'light': dict(
+        bg='#f9fafb',
+        text='#111827', box='#f4f7f7', edge='#c7d1da',
+        term='#f0fdf9', term_e='#0c6e65', accent='#0c6e65',
+        arrow='#98a4b2', label='#6f7d8d', L1='#f4f7f6', L2='#eceff0', L3='#e2e9e7',
+        muted='#5f6e7d', soft='#70807e', inverse='#ffffff',
+        positive='#23867b', warning='#b76b37', warning_fill='#f3e3cf',
+        danger_fill='#eadde2',
+    ),
+    'dark': dict(
+        bg='#0f1817',
+        text='#edf6f4', box='#111c1a', edge='#2c4542',
+        term='#142321', term_e='#54dccd', accent='#54dccd',
+        arrow='#88a29d', label='#a9bfba', L1='#101918', L2='#12211f', L3='#18302d',
+        muted='#9db6b1', soft='#859b97', inverse='#081210',
+        positive='#54dccd', warning='#d0a36d', warning_fill='#2a241b',
+        danger_fill='#251c20',
+    ),
+}
+
+C = PALETTES['light']
+
+
+def set_palette(name):
+    global C
+    C = PALETTES[name]
 
 
 def _ep(cx, cy, w, h, tx, ty):
@@ -70,6 +90,7 @@ def _box(ax, cx, cy, w, h, label, term=False, fill=None, ec=None,
             lw=0.8, zorder=zorder + 1))
     ax.text(cx, cy, label, fontsize=fs,
             fontweight='bold' if bold else 'normal',
+            linespacing=1.1,
             color=C['text'], ha='center', va='center', zorder=zorder + 2)
 
 
@@ -77,17 +98,18 @@ def _arr(ax, x0, y0, x1, y1, label='', rad=0., lo=(0, 0), fs=8,
          color=None, style='->'):
     """Arrow with optional label at midpoint."""
     color = color or C['arrow']
+    label_color = C.get('label', color) if color == C['arrow'] else color
     ax.annotate('', xy=(x1, y1), xytext=(x0, y0),
                 arrowprops=dict(arrowstyle=style, color=color,
                                connectionstyle=f'arc3,rad={rad}',
-                               lw=1.2, mutation_scale=14),
+                               lw=1.45, mutation_scale=16),
                 zorder=1)
     if label:
         ax.text((x0 + x1) / 2 + lo[0], (y0 + y1) / 2 + lo[1], label,
-                fontsize=fs, color=color, ha='center', va='center',
+                fontsize=max(fs, 8.8), color=label_color, ha='center', va='center',
                 zorder=10,
                 bbox=dict(boxstyle='round,pad=0.12', fc=C['bg'],
-                          ec='none', alpha=0.9))
+                          ec='none', alpha=0.96))
 
 
 # ══════════════════════════════════════════════════════════
@@ -176,9 +198,9 @@ def fig1_claim_states(out):
                 xytext=(P['Challenged'][0] + W / 2 + 0.05, P['Challenged'][1] - 0.1),
                 arrowprops=dict(arrowstyle='->', color=C['arrow'],
                                connectionstyle='arc3,rad=-1.8',
-                               lw=1.2, mutation_scale=14), zorder=1)
+                               lw=1.35, mutation_scale=15), zorder=1)
     ax.text(P['Challenged'][0] + W / 2 + 0.9, P['Challenged'][1],
-            'queued\nchallenge', fontsize=6, color=C['arrow'],
+            'queued\nchallenge', fontsize=7.6, color=C['label'],
             ha='left', va='center')
 
     fig.savefig(out, dpi=300, bbox_inches='tight',
@@ -203,14 +225,14 @@ def fig2_actor_flow(out):
         boxstyle='round,pad=0.12', fc=C['L1'], ec=C['accent'],
         lw=2, zorder=1))
     ax.text(pcx, pcy + ph / 2 - 0.35, 'Protocol',
-            fontsize=13, fontweight='bold', color=C['accent'],
+            fontsize=14.5, fontweight='bold', color=C['accent'],
             ha='center', va='center', zorder=4)
 
     # Sub-components inside protocol
     subs = ['Pools', 'Claims & Bonds', 'Challenge State', 'Relevance Rounds']
     for i, s in enumerate(subs):
         sy = pcy + 1.2 - i * 0.9
-        _box(ax, pcx, sy, 3.0, 0.55, s, fs=8, bold=False,
+        _box(ax, pcx, sy, 3.0, 0.55, s, fs=9, bold=False,
              fill=C['L2'], ec=C['edge'])
 
     # Left-side actors
@@ -222,7 +244,7 @@ def fig2_actor_flow(out):
         ('Pool Creators', 1.1),
     ]
     for name, y in left_actors:
-        _box(ax, 1.5, y, AW, AH, name, fs=9)
+        _box(ax, 1.5, y, AW, AH, name, fs=10)
 
     # Right-side actors
     right_actors = [
@@ -230,7 +252,7 @@ def fig2_actor_flow(out):
         ('Interface\nOperators', 2.0),
     ]
     for name, y in right_actors:
-        _box(ax, 11.2, y, AW, AH, name, fs=9)
+        _box(ax, 11.2, y, AW, AH, name, fs=10)
 
     # Arrows: left actors → protocol
     left_flows = [
@@ -256,7 +278,7 @@ def fig2_actor_flow(out):
     # Annotation
     ax.text(pcx, pcy - ph / 2 - 0.35,
             'challenge tax \u2192 pool reward budget',
-            fontsize=8, fontstyle='italic', color=C['accent'],
+            fontsize=8.8, fontstyle='italic', color=C['accent'],
             ha='center', va='top')
 
     fig.savefig(out, dpi=300, bbox_inches='tight',
@@ -295,10 +317,10 @@ def fig3_architecture(out):
             (lx, cy - lh_box / 2), lw_box, lh_box,
             boxstyle='round,pad=0.1', fc=color, ec=C['edge'],
             lw=1.5, zorder=2))
-        ax.text(lx + 0.3, cy + 0.25, title, fontsize=9,
+        ax.text(lx + 0.3, cy + 0.25, title, fontsize=10.4,
                 fontweight='bold', color=C['text'], va='center', zorder=4)
-        ax.text(lx + 0.3, cy - 0.3, desc, fontsize=7,
-                fontstyle='italic', color='#999999', va='center', zorder=4)
+        ax.text(lx + 0.3, cy - 0.3, desc, fontsize=8.8,
+                fontstyle='italic', color=C['muted'], va='center', zorder=4)
 
     # Inter-layer arrows
     mid_x = lx + lw_box / 2
@@ -307,25 +329,25 @@ def fig3_architecture(out):
     _arr(ax, mid_x, 1.8 - lh_box / 2, mid_x, -0.2 + lh_box / 2)
 
     # Architectural commitments (top left)
-    ax.text(1.2, 7.4, 'Architectural commitments', fontsize=9,
+    ax.text(1.2, 7.4, 'Architectural commitments', fontsize=10.4,
             fontweight='bold', color=C['accent'])
     for i, c in enumerate([
         'Permissionless pools',
         'Immutable contracts',
         'Minimal governance',
     ]):
-        ax.text(1.5, 7.0 - i * 0.35, '\u2022  ' + c, fontsize=8,
+        ax.text(1.5, 7.0 - i * 0.35, '\u2022  ' + c, fontsize=9.5,
                 color=C['text'])
 
     # Pool economics (top right)
-    ax.text(6.5, 7.4, 'Pool economics', fontsize=9,
+    ax.text(6.5, 7.4, 'Pool economics', fontsize=10.4,
             fontweight='bold', color=C['accent'])
     for i, c in enumerate([
         'Local reward budgets',
         'Challenge tax \u2192 pool budget',
         'No global treasury',
     ]):
-        ax.text(6.8, 7.0 - i * 0.35, '\u2022  ' + c, fontsize=8,
+        ax.text(6.8, 7.0 - i * 0.35, '\u2022  ' + c, fontsize=9.5,
                 color=C['text'])
 
     fig.savefig(out, dpi=300, bbox_inches='tight',
@@ -370,10 +392,10 @@ def fig4_relevance_round(out):
         circ = plt.Circle((ncx, cy), 0.22, fc=C['accent'],
                           ec='none', zorder=5)
         ax.add_patch(circ)
-        ax.text(ncx, cy, num, fontsize=10, fontweight='bold',
-                color='white', ha='center', va='center', zorder=6)
+        ax.text(ncx, cy, num, fontsize=10.5, fontweight='bold',
+                color=C['inverse'], ha='center', va='center', zorder=6)
 
-        _box(ax, cx, cy, bw, bh, text, fs=8, bold=False)
+        _box(ax, cx, cy, bw, bh, text, fs=9, bold=False)
 
         # Arrow to next step
         if i < len(steps) - 1:
@@ -410,8 +432,8 @@ def fig5_framework(out):
         circ = plt.Circle((ncx, cy), 0.22, fc=C['accent'],
                           ec='none', zorder=5)
         ax.add_patch(circ)
-        ax.text(ncx, cy, num, fontsize=10, fontweight='bold',
-                color='white', ha='center', va='center', zorder=6)
+        ax.text(ncx, cy, num, fontsize=10.5, fontweight='bold',
+                color=C['inverse'], ha='center', va='center', zorder=6)
         _box(ax, cx, cy, bw, bh, text, fs=9, bold=False)
         # Arrow to next step
         _arr(ax, cx, cy - bh / 2, cx, cy - gap + bh / 2)
@@ -437,13 +459,13 @@ def fig5_framework(out):
     circ3 = plt.Circle((ncx3, s3y), 0.22, fc=C['accent'],
                        ec='none', zorder=5)
     ax.add_patch(circ3)
-    ax.text(ncx3, s3y, '3', fontsize=10, fontweight='bold',
-            color='white', ha='center', va='center', zorder=6)
+    ax.text(ncx3, s3y, '3', fontsize=10.5, fontweight='bold',
+            color=C['inverse'], ha='center', va='center', zorder=6)
 
     # "Out of scope" branch from right vertex
     oos_x = cx + dw + 1.8
     _arr(ax, cx + dw, s3y, oos_x - 0.1, s3y, fs=7)
-    ax.text(oos_x, s3y, 'Out of scope', fontsize=8, fontstyle='italic',
+    ax.text(oos_x, s3y, 'Out of scope', fontsize=9.2, fontstyle='italic',
             color=C['accent'], ha='left', va='center', zorder=4)
 
     # Arrow from diamond bottom to step 4
@@ -455,8 +477,8 @@ def fig5_framework(out):
     circ4 = plt.Circle((ncx4, s4y), 0.22, fc=C['accent'],
                        ec='none', zorder=5)
     ax.add_patch(circ4)
-    ax.text(ncx4, s4y, '4', fontsize=10, fontweight='bold',
-            color='white', ha='center', va='center', zorder=6)
+    ax.text(ncx4, s4y, '4', fontsize=10.5, fontweight='bold',
+            color=C['inverse'], ha='center', va='center', zorder=6)
     _box(ax, cx, s4y, bw, bh, 'Design per-dimension mechanisms',
          fs=9, bold=False)
 
@@ -467,12 +489,12 @@ def fig5_framework(out):
 
     # Zone labels on left margin
     framework_mid_y = (y0 + s4y) / 2
-    ax.text(-1.2, framework_mid_y, 'FRAMEWORK', fontsize=7,
-            fontweight='bold', color=C['edge'], ha='center', va='center',
+    ax.text(-1.2, framework_mid_y, 'FRAMEWORK', fontsize=8.4,
+            fontweight='bold', color=C['muted'], ha='center', va='center',
             rotation=90, zorder=4)
     inst_mid_y = boundary_y - 2.0
-    ax.text(-1.2, inst_mid_y, 'INSTANTIATION', fontsize=7,
-            fontweight='bold', color=C['edge'], ha='center', va='center',
+    ax.text(-1.2, inst_mid_y, 'INSTANTIATION', fontsize=8.4,
+            fontweight='bold', color=C['muted'], ha='center', va='center',
             rotation=90, zorder=4)
 
     # ── Instantiation section ──
@@ -498,13 +520,13 @@ def fig5_framework(out):
          left_x, leaf1_y + leaf_bh / 2)
     _box(ax, left_x, leaf1_y, leaf_bw, leaf_bh,
          'Accuracy: bonded publication\n+ open challenge',
-         fs=7.5, bold=False, fill=C['L1'], ec=C['accent'])
+         fs=8.8, bold=False, fill=C['L1'], ec=C['accent'])
 
     _arr(ax, left_x, leaf1_y - leaf_bh / 2,
          left_x, leaf2_y + leaf_bh / 2)
     _box(ax, left_x, leaf2_y, leaf_bw, leaf_bh,
          'Relevance: drafted curator rounds\n+ coherence slashing',
-         fs=7.5, bold=False, fill=C['L1'], ec=C['accent'])
+         fs=8.8, bold=False, fill=C['L1'], ec=C['accent'])
 
     # --- Advertising column (right, grey border) ---
     _box(ax, right_x, header_y, 2.8, header_bh, 'Advertising',
@@ -515,13 +537,13 @@ def fig5_framework(out):
          right_x, ad_leaf_y + leaf_bh / 2)
     _box(ax, right_x, ad_leaf_y, leaf_bw, leaf_bh,
          'Truthfulness: bonded claims',
-         fs=7.5, bold=False, fill=C['L2'], ec=C['edge'])
+         fs=8.8, bold=False, fill=C['L2'], ec=C['edge'])
 
     # ── Bottom annotation ──
     bottom_y = min(leaf2_y, ad_leaf_y) - leaf_bh / 2 - 0.4
     ax.text(cx, bottom_y,
             'Same framework, different decompositions',
-            fontsize=8, fontstyle='italic', color=C['accent'],
+            fontsize=8.8, fontstyle='italic', color=C['accent'],
             ha='center', va='top')
 
     fig.savefig(out, dpi=300, bbox_inches='tight',
@@ -543,7 +565,7 @@ def fig6_falsifiability(out):
     bar_h = 1.0
     seg_w = [3.5, 5.5, 3.5]
     seg_x = [0.5, 4.0, 9.5]
-    seg_colors = [C['L3'], C['L1'], '#3d1a22']
+    seg_colors = [C['L3'], C['L1'], C['danger_fill']]
     seg_labels = ['Trivially\nverifiable', 'Optimally\nfalsifiable', 'Non-\nfalsifiable']
     seg_examples = ['"2 + 2 = 4"', 'News claims, ad claims,\nhistorical events',
                     'Subjective opinions,\nunfalsifiable predictions']
@@ -557,8 +579,8 @@ def fig6_falsifiability(out):
         ax.text(x + w / 2, bar_y + 0.1, label, fontsize=9,
                 fontweight='bold', color=C['text'],
                 ha='center', va='center', zorder=4)
-        ax.text(x + w / 2, bar_y - 0.3, ex, fontsize=7,
-                fontstyle='italic', color='#999999',
+        ax.text(x + w / 2, bar_y - 0.3, ex, fontsize=7.8,
+                fontstyle='italic', color=C['soft'],
                 ha='center', va='center', zorder=4)
 
     # Bracket over center region
@@ -570,7 +592,7 @@ def fig6_falsifiability(out):
             color=C['accent'], lw=1.8, zorder=5)
     ax.text((bx0 + bx1) / 2, bracket_y + brace_h + 0.2,
             'Challenge mechanisms work here',
-            fontsize=8, fontweight='bold', color=C['accent'],
+            fontsize=8.6, fontweight='bold', color=C['accent'],
             ha='center', va='bottom', zorder=5)
 
     # Arrows showing direction
@@ -579,9 +601,9 @@ def fig6_falsifiability(out):
                 arrowprops=dict(arrowstyle='<->', color=C['edge'],
                                lw=1.0, mutation_scale=12))
     ax.text(0.5, bar_y - bar_h / 2 - 0.5, 'Easy to verify',
-            fontsize=7, color=C['edge'], ha='left', va='top')
+            fontsize=7.8, color=C['muted'], ha='left', va='top')
     ax.text(13, bar_y - bar_h / 2 - 0.5, 'Impossible to falsify',
-            fontsize=7, color=C['edge'], ha='right', va='top')
+            fontsize=7.8, color=C['muted'], ha='right', va='top')
 
     fig.savefig(out, dpi=300, bbox_inches='tight',
                 facecolor=C['bg'], pad_inches=0.3)
@@ -601,13 +623,13 @@ def fig7_confidence_reputation(out):
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_color(C['edge'])
         ax.spines['bottom'].set_color(C['edge'])
-        ax.tick_params(colors=C['edge'], labelsize=8)
+        ax.tick_params(colors=C['muted'], labelsize=9)
 
     # ── Left panel: Confidence (bond-time) ──
-    ax1.set_title('Confidence (bond-time)', fontsize=11,
+    ax1.set_title('Confidence (bond-time)', fontsize=12,
                   fontweight='bold', color=C['text'], pad=10)
-    ax1.set_xlabel('Time', fontsize=9, color=C['text'])
-    ax1.set_ylabel('Score', fontsize=9, color=C['text'])
+    ax1.set_xlabel('Time', fontsize=10, color=C['text'])
+    ax1.set_ylabel('Score', fontsize=10, color=C['text'])
 
     # Rising, pause during challenge, resume, then freeze at retraction
     t1 = np.linspace(0, 3, 30)     # rising
@@ -622,18 +644,18 @@ def fig7_confidence_reputation(out):
 
     ax1.plot(np.concatenate([t1, t2, t3, t4]),
              np.concatenate([y1, y2, y3, y4]),
-             color='#4ec9b0', lw=2.5, zorder=3)
+             color=C['positive'], lw=2.5, zorder=3)
 
     # Shaded regions
-    ax1.axvspan(3, 5, alpha=0.18, color='#E8A040', zorder=1)
+    ax1.axvspan(3, 5, alpha=0.18, color=C['warning_fill'], zorder=1)
     ax1.axvspan(7.5, 10, alpha=0.18, color=C['accent'], zorder=1)
 
     # Annotations
     ax1.annotate('Challenged\n(paused)', xy=(4, y1[-1] + 0.3),
-                 fontsize=8, color='#E8A040', ha='center', va='bottom',
+                 fontsize=8.8, color=C['warning'], ha='center', va='bottom',
                  fontweight='bold')
     ax1.annotate('Withdrawn\n(frozen)', xy=(8.75, y3[-1] + 0.3),
-                 fontsize=8, color=C['accent'], ha='center', va='bottom',
+                 fontsize=8.8, color=C['accent'], ha='center', va='bottom',
                  fontweight='bold')
 
     ax1.set_xlim(0, 10)
@@ -642,10 +664,10 @@ def fig7_confidence_reputation(out):
     ax1.set_yticks([])
 
     # ── Right panel: Author Reputation ──
-    ax2.set_title('Author Reputation', fontsize=11,
+    ax2.set_title('Author Reputation', fontsize=12,
                   fontweight='bold', color=C['text'], pad=10)
-    ax2.set_xlabel('Publication rounds', fontsize=9, color=C['text'])
-    ax2.set_ylabel('Reputation', fontsize=9, color=C['text'])
+    ax2.set_xlabel('Publication rounds', fontsize=10, color=C['text'])
+    ax2.set_ylabel('Reputation', fontsize=10, color=C['text'])
 
     # Honest author: slow rise, one debunk slash at t~4.5, then recovery
     t = np.linspace(0, 10, 200)
@@ -665,7 +687,7 @@ def fig7_confidence_reputation(out):
             if abs(t[i] - sp) < 0.1:
                 dishonest[i] = max(0, dishonest[i] - 2.0)
 
-    ax2.plot(t, honest, color='#4ec9b0', lw=2.5, label='Honest author',
+    ax2.plot(t, honest, color=C['positive'], lw=2.5, label='Honest author',
              zorder=3)
     ax2.plot(t, dishonest, color=C['accent'], lw=2.0, linestyle='--',
              label='Dishonest author', zorder=3)
@@ -674,10 +696,10 @@ def fig7_confidence_reputation(out):
     debunk_idx = np.argmin(np.abs(t - slash_t))
     ax2.annotate('Debunked', xy=(t[debunk_idx], honest[debunk_idx]),
                  xytext=(t[debunk_idx] - 1.5, honest[debunk_idx] + 2.0),
-                 fontsize=8, color=C['accent'], fontweight='bold',
+                 fontsize=8.8, color=C['accent'], fontweight='bold',
                  arrowprops=dict(arrowstyle='->', color=C['accent'], lw=1.0))
 
-    ax2.legend(fontsize=8, loc='upper left', framealpha=0.9,
+    ax2.legend(fontsize=9, loc='upper left', framealpha=0.9,
                edgecolor=C['edge'], facecolor=C['bg'],
                labelcolor=C['text'])
     ax2.set_xlim(0, 10)
@@ -716,7 +738,7 @@ def fig8_pool_economics(out):
     _box(ax, pcx, pcy, W, H, 'Pool Creator', fs=9)
     _box(ax, chx, chy, W, H, 'Challenger', fs=9)
     _box(ax, cux, cuy, W, H, 'Curators', fs=9)
-    _box(ax, ddrx, ddry, W, H, 'DDR\n(Dispute Resolution)', fs=8)
+    _box(ax, ddrx, ddry, W, H, 'DDR\n(Dispute Resolution)', fs=8.6)
 
     # Pool Creator → Reward Budget (seeds)
     s = _ep(pcx, pcy, W, H, rbx, rby)
@@ -742,7 +764,7 @@ def fig8_pool_economics(out):
     ax.text(ddrx, ddry - H / 2 - 0.45,
             'On debunk: bond to challenger\n'
             'On fail: counter-stake returned',
-            fontsize=7, fontstyle='italic', color=C['text'],
+            fontsize=7.8, fontstyle='italic', color=C['text'],
             ha='center', va='top',
             bbox=dict(boxstyle='round,pad=0.2', fc=C['L2'],
                       ec=C['edge'], lw=0.8))
@@ -751,7 +773,7 @@ def fig8_pool_economics(out):
     ax.text(rbx, rby - 1.0 - 0.6,
             'If budget depletes, rounds pause;\n'
             'canonical record stays challengeable',
-            fontsize=7, fontstyle='italic', color=C['accent'],
+            fontsize=7.8, fontstyle='italic', color=C['accent'],
             ha='center', va='top')
 
     fig.savefig(out, dpi=300, bbox_inches='tight',
@@ -794,9 +816,9 @@ def fig9_rpgf_impact_states(out):
                 xytext=(P['Submitted'][0] - W / 2 - 0.05, P['Submitted'][1] - 0.1),
                 arrowprops=dict(arrowstyle='->', color=C['arrow'],
                                connectionstyle='arc3,rad=1.8',
-                               lw=1.2, mutation_scale=14), zorder=1)
+                               lw=1.35, mutation_scale=15), zorder=1)
     ax.text(P['Submitted'][0] - W / 2 - 0.9, P['Submitted'][1],
-            'author\namends', fontsize=6, color=C['arrow'],
+            'author\namends', fontsize=7.6, color=C['label'],
             ha='right', va='center')
 
     # ── Submitted → Retracted ──
@@ -860,9 +882,12 @@ if __name__ == '__main__':
         (fig8_pool_economics,      'fig-pool-economics.png'),
         (fig9_rpgf_impact_states,  'fig-rpgf-impact-states.png'),
     ]
-    print('Generating diagrams...')
-    for fn, name in figs:
-        path = os.path.join(outdir, name)
-        fn(path)
-        print(f'  {name}')
+    for theme in ('light', 'dark'):
+        set_palette(theme)
+        print(f'Generating {theme} diagrams...')
+        for fn, name in figs:
+            themed_name = name if theme == 'light' else name.replace('.png', '-dark.png')
+            path = os.path.join(outdir, themed_name)
+            fn(path)
+            print(f'  {themed_name}')
     print('Done.')
