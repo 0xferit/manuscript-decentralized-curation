@@ -477,7 +477,7 @@ The suite focuses on four questions:
 | $p_{\text{juror}}$ | 0.80 (swept 0.50--0.90) | Per-juror accuracy in DDR panels | Kleros design estimate | Unvalidated; swept |
 | $p_{\text{detect}}$ | 0.35 anchor (swept 0.05--0.80) | Probability a false claim is discovered and challenged | Illustrative anchor | Unvalidated; swept |
 | $K$ | 1.25 | Coherence-band multiplier ($K\sigma$) | Reference parameter | Unvalidated; fixed |
-| $\sigma_{\text{honest}}$ | 0.10 | Standard deviation of honest curator scores | Assumed moderate noise | Unvalidated; fixed |
+| $\sigma_{\text{honest}}$ | 0.08 | Standard deviation of honest curator scores | Assumed moderate noise | Unvalidated; fixed |
 | $\varphi^*$ | $\approx$ 0.15--0.20 | Collusion fraction at which relevance degrades | Empirical from E2/E2' | Simulation-derived; not a theorem |
 | $\delta$ | 0.01/round | Author reputation decay rate | Assumed | Unvalidated; fixed |
 | $f$ | 0.25 | Non-falsifiable claim prevalence (E3 only) | Assumed | Unvalidated; scenario input |
