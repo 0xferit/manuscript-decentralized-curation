@@ -10,13 +10,13 @@ A color model defined by three primaries; red, green, and blue. The RGB model is
 
 defined by three primaries; red, green, and blue. The RGB model is based on principles of
 
-A color space is a collection all colors within a particular specific set of primaries. Color spaces are specific implimentations of a color model.
+A color space is a collection all colors within a particular specific set of primaries. Color spaces are specific implementations of a color model.
 
 A color model is method of describing color. When this method is implemented with precise math, it becomes a color space.
 
 A color model is method of describing color. When this method is implemented with precise math, it becomes a
 
-A color model based on the perceptual aspects of color vision. When implemented under fixed viewing conditions, a color appearnce model becomes a uniform color space.
+A color model based on the perceptual aspects of color vision. When implemented under fixed viewing conditions, a color appearance model becomes a uniform color space.
 
 (Parameters / channels) Color properties are abstract ways of describing a color. A uniform system of properties is a color model.
 
@@ -40,6 +40,6 @@ An RGB color model supported in most digital displays. sRGB is the most widely u
 
 A wide gamut implementation of the RGB color model used by modern retina displays.
 
-will yeild equally balanced results. This is because RGB color models are based on
+will yield equally balanced results. This is because RGB color models are based on
 
 Gamuts outlined on the visible spectrum for Adobe Pro Photo, Display-P3, sRGB, and CMYK color spaces.
