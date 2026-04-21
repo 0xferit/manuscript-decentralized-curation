@@ -41,7 +41,7 @@ references/
     *.md                              # Ostwald, Helmholtz, Bezold, Ridgway, ISCC-NBS,
                                       # Moses Harris, Amy Sawyer, Lewis/Ladd-Franklin,
                                       # Caravaggio's pigments, Itten critique...
-    pdfs/                             # Source books from Archive.org (gitignored, ~236MB)
+    pdfs/                             # Source books from Archive.org (gitignored)
   contemporary/                       # Modern color science & theory
     *.md                              # OKLAB articles, Briggs lectures, CSA webinars,
                                       # Pixar Color Science, bird tetrachromacy, OLO,
