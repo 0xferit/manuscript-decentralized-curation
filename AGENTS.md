@@ -55,21 +55,21 @@ This project is workspace for my thesis on decentralized curation.
 - Tone: direct, non-poetic, high signal.
 - Avoid fragile stats and news overfitting in early “problem” pieces unless explicitly requested.
 
-### Scientific writing toolkit (claude-scientific-writer plugin)
+### Scientific writing toolkit
 
-The following skills from the `claude-scientific-writer` plugin are relevant to this project. Use them proactively when the task matches.
+Project-local skill wrappers under `.claude/skills/` engrave this project's conventions (source-of-truth file map, writing constraints, design principles, 7-stage peer-review rubric) over the upstream `claude-scientific-writer:*` plugin skills. Wrappers auto-surface when their triggers match and delegate methodology to the upstream plugin while applying this project's invariants. Each wrapper's `SKILL.md` documents its own triggers and inlined rules.
 
-| Skill | When to use |
+| Project wrapper | Wraps upstream plugin skill |
 |---|---|
-| `scientific-writing` | Revising or drafting prose sections of `paper.qmd`. Ensures IMRAD-quality writing, proper paragraph flow, and section structure. |
-| `scientific-critical-thinking` | Evaluating argument strength, checking for overclaims, logical fallacies, or unsupported causal claims in the manuscript. Use before finalizing any rewritten section. |
-| `citation-management` | Validating `references.bib` entries (missing volume/pages/DOI), discovering new relevant papers via Google Scholar or PubMed, generating BibTeX entries. |
-| `research-lookup` / `parallel-web` | Verifying factual claims (e.g., statistics cited in the paper), finding recent related work, checking if cited sources are current. |
-| `peer-review` | Systematic review of the full manuscript or specific sections for methodology gaps, overclaims, and logical issues. |
-| `scientific-schematics` | Generating publication-quality conceptual diagrams (e.g., four-step framework, protocol architecture, flow diagrams). The paper has simulation figures but lacks conceptual visuals. |
-| `scientific-slides` | Building presentations from the paper content (e.g., conference talks, reading group presentations). |
+| `paper-draft` | `claude-scientific-writer:scientific-writing` |
+| `paper-review` | `claude-scientific-writer:peer-review` |
+| `paper-audit-claims` | `claude-scientific-writer:scientific-critical-thinking` |
+| `paper-refs` | `claude-scientific-writer:citation-management` |
+| `paper-fact-check` | `claude-scientific-writer:research-lookup` and `:parallel-web` |
+| `paper-schematic` | `claude-scientific-writer:scientific-schematics` |
+| `paper-slides` | `claude-scientific-writer:scientific-slides` |
 
-Skills NOT relevant to this project: clinical/healthcare skills, market research, DOCX/PPTX/XLSX processing, LaTeX posters, venue-templates, generate-image, infographics, hypothesis-generation.
+Skills NOT relevant to this project: clinical / healthcare, market research, DOCX / PPTX / XLSX processing, LaTeX posters, venue-templates, generate-image, infographics, hypothesis-generation.
 
 ### Design Principles
 

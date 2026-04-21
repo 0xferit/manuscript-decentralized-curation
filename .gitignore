@@ -30,7 +30,10 @@ paper.tex
 /.quarto/
 **/*.quarto_ipynb
 
-.claude/
+# Claude Code: track committed artifacts (skills, project settings);
+# ignore only user-local state.
+.claude/settings.local.json
+.claude/worktrees/
 .idea/
 
 # Generated image dumps
