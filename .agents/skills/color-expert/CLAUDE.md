@@ -24,4 +24,4 @@ There are no commands to run. This project is purely declarative content consume
 - The skill is referenced by name (`color-expert`).
 - SKILL.md should be concise "greatest hits" (~200 lines) — the agent already has broad color knowledge; the skill should correct misconceptions, highlight non-obvious facts, and point to the right tools.
 - Deep content goes in `references/` files, not in SKILL.md.
-- PDFs are gitignored (~236MB); archive.org source links are preserved in every reference file.
+- PDFs are gitignored; archive.org source links are preserved in every reference file.
