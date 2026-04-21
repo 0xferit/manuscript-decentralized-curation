@@ -797,7 +797,7 @@ colours based on the colours it supposedly detects with individual cone cell typ
 identify "real" yellow, meaning the wavelengths of the spectrum we see as pure yellow, and therefore considers the brain to be "lied to" when it sees other combinations of wavelengths as yellow.
 The modern scientific view of colour vision instead explains how the spectrum of colours is a
 creation
-of the eye and brain (see "Summary" below). The brain can not "say" it's receiving some red and some green, becuase no cone cell can "detect" any particular colour band of the spectrum. The yellow colour signal is not a
+of the eye and brain (see "Summary" below). The brain can not "say" it's receiving some red and some green, because no cone cell can "detect" any particular colour band of the spectrum. The yellow colour signal is not a
 guess
 that light is from the narrow band of wavelengths we see as pure yellow, but is the response of the visual system to
 all middle- to long-wavelength light
