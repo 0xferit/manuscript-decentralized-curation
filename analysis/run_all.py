@@ -1637,12 +1637,14 @@ def write_eval_summary() -> None:
     e1_sub = e1[e1["stake_over_bounty"] == 0.25].copy()
     e1_sub["p_delta"] = (e1_sub["p_juror_correct"] - 0.8).abs()
     e1_point = e1_sub.sort_values("p_delta").iloc[0]
-    # Intermediate p_detect samples (0.10, 0.50) are also quoted as prose in
+    # The p_detect samples rendered below are also quoted as prose in
     # paper.qmd Claim 1 and in the paragraph preceding
-    # @fig-e1-detect-sensitivity (which additionally quotes 0.20); keep in
-    # sync with the paper when tuning. Endpoints come from
-    # E1SensitivityParams.p_detect_min/max and the anchor from
-    # representative_p_detect, so those stay aligned automatically.
+    # @fig-e1-detect-sensitivity, which together enumerate
+    # {0.05, 0.10, 0.20, 0.35, 0.50, 0.80}. Endpoints mirror
+    # E1SensitivityParams.p_detect_min/max and the anchor mirrors
+    # representative_p_detect; the rest (0.10, 0.20, 0.50) are
+    # hand-picked. All of these values must be kept in sync across this
+    # file and paper.qmd prose when tuning.
     e1_sensitivity_010 = e1_sensitivity.loc[
         (e1_sensitivity["p_detect"] - 0.10).abs().idxmin()
     ]
