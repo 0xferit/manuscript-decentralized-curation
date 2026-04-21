@@ -14,7 +14,7 @@ Trigger when the user asks to review, critique, evaluate, assess, audit, or peer
 
 ## Project-specific rubric (7 stages)
 
-This rubric is identical to the `Scientific review criteria` section of `.github/copilot-instructions.md` (the canonical thesis-level instructions file that `CLAUDE.md` and `AGENTS.md` symlink through to) so Claude Code and GitHub Copilot reviewers produce comparable output.
+This rubric mirrors the `Scientific review criteria` section of `.github/copilot-instructions.md` (the canonical thesis-level instructions file that `CLAUDE.md` and `AGENTS.md` symlink through to) so Claude Code and GitHub Copilot reviewers produce comparable output.
 
 ### Stage 1: Initial assessment
 Evaluate scope, novelty, and overall contribution quality before diving into details.
