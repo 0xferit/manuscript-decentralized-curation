@@ -966,6 +966,7 @@ def _relevance_core_prime(
     types: np.ndarray,
     colluder_bias: float,
     colluder_noise_factor: float,
+    trojan_delay: int,
 ):
     """E2' core: one seed run of the final relevance mechanism from
     blueprint.md §Flow F.
@@ -995,7 +996,7 @@ def _relevance_core_prime(
     # reset keeps seeds independent.
     ema_sigma = 0.0
 
-    for _ in range(rounds):
+    for round_idx in range(rounds):
         # Blueprint Flow F step 6: cancel before drafting when the eligible
         # curator set (stakes[i] >= L) is below the reveal quorum, so no
         # seats are locked and no non-participation slashes apply.
@@ -1086,10 +1087,13 @@ def _relevance_core_prime(
             elif t == CURATOR_TYPE_NOISY:
                 v = rng.uniform(0.0, 1.0)
             else:  # CURATOR_TYPE_COLLUDER
-                target = r_true + colluder_bias
-                if target > 1.0:
-                    target = 1.0
-                v = target + rng.normal(0.0, noise_sigma * colluder_noise_factor)
+                if round_idx < trojan_delay:
+                    v = r_true + rng.normal(0.0, noise_sigma)
+                else:
+                    target = r_true + colluder_bias
+                    if target > 1.0:
+                        target = 1.0
+                    v = target + rng.normal(0.0, noise_sigma * colluder_noise_factor)
             if v < 0.0:
                 v = 0.0
             elif v > 1.0:
@@ -1246,6 +1250,7 @@ def _e2_prime_single_run(
         types,
         0.0,  # no collusion bias for E2'
         1.0,
+        0,
     )
 
     competent_mask = types == CURATOR_TYPE_COMPETENT
@@ -1428,6 +1433,7 @@ def _e2_prime_adv_single_run(
         types,
         params.colluder_bias,
         params.colluder_noise_factor,
+        0,
     )
 
     colluder_mask = types == CURATOR_TYPE_COLLUDER
@@ -1535,6 +1541,382 @@ def run_e2_prime_adversarial(
 
     plt.tight_layout()
     plt.savefig(FIG_DIR / "e2_prime_adversarial.png", dpi=200)
+    plt.close()
+
+
+# -- E2'-Adv sigma sweep: sensitivity of phi* to honest curator noise ------
+
+
+@dataclass(frozen=True)
+class E2PrimeSigmaSweepParams:
+    """Sweep sigma_honest across collusion fractions to characterize phi* sensitivity."""
+
+    n_curators: int = 200
+    target_seats: int = 15
+    rounds: int = 200
+    noise_sigmas: tuple[float, ...] = (0.05, 0.08, 0.10, 0.12, 0.15, 0.20)
+    seat_size_L: float = E2P_SEAT_SIZE_L
+    epsilon_sigma: float = E2P_EPSILON_SIGMA
+    rho: float = E2P_RHO_REWARD
+    round_reward: float = E2P_ROUND_REWARD
+    ambig_prob: float = E2P_AMBIG_PROB
+    ambig_signal_true: float = E2P_AMBIG_SIGNAL_TRUE
+    ambig_signal_false: float = E2P_AMBIG_SIGNAL_FALSE
+    ambig_signal_noise: float = E2P_AMBIG_SIGNAL_NOISE
+    abstain_signal_threshold: float = E2P_ABSTAIN_SIGNAL_THRESHOLD
+    abstain_cancel_threshold: float = E2P_ABSTAIN_CANCEL_THRESHOLD
+    min_reveal_quorum: int = E2P_MIN_REVEAL_QUORUM
+    sigma_ref_alpha: float = 0.05
+    K: float = 1.25
+    competent_frac: float = 0.6
+    colluding_fracs: tuple[float, ...] = (0.0, 0.05, 0.10, 0.15, 0.20, 0.30)
+    colluder_bias: float = E2P_COLLUDER_BIAS
+    colluder_noise_factor: float = E2P_COLLUDER_NOISE_FACTOR
+    n_seeds: int = 100
+
+
+def _e2_prime_sigma_sweep_single_run(
+    params: E2PrimeSigmaSweepParams,
+    noise_sigma: float,
+    col_frac: float,
+    seed_idx: int,
+) -> dict:
+    seed = int(10_000 * col_frac + 100_000 * int(noise_sigma * 1000) + seed_idx) + 31
+    rng = np.random.default_rng(seed)
+
+    n_comp = int(round(params.n_curators * params.competent_frac))
+    n_collude = int(round(params.n_curators * col_frac))
+    n_honest_comp = max(0, n_comp - n_collude)
+    n_noisy = params.n_curators - n_honest_comp - n_collude
+    types = np.array(
+        [CURATOR_TYPE_COMPETENT] * n_honest_comp
+        + [CURATOR_TYPE_NOISY] * n_noisy
+        + [CURATOR_TYPE_COLLUDER] * n_collude,
+        dtype=np.int64,
+    )
+    rng.shuffle(types)
+
+    (
+        mean_abs_error,
+        cancelled_round_share,
+        ambiguous_cancel_share,
+        selection_counts,
+        stakes,
+    ) = _relevance_core_prime(
+        rng,
+        params.n_curators,
+        params.target_seats,
+        params.rounds,
+        noise_sigma,
+        float(params.K),
+        params.seat_size_L,
+        params.epsilon_sigma,
+        params.rho,
+        params.round_reward,
+        params.ambig_prob,
+        params.ambig_signal_true,
+        params.ambig_signal_false,
+        params.ambig_signal_noise,
+        params.abstain_signal_threshold,
+        params.abstain_cancel_threshold,
+        params.min_reveal_quorum,
+        params.sigma_ref_alpha,
+        types,
+        params.colluder_bias,
+        params.colluder_noise_factor,
+        0,
+    )
+
+    colluder_mask = types == CURATOR_TYPE_COLLUDER
+    total_stake = stakes.sum()
+    total_sel = int(selection_counts.sum())
+    return {
+        "mean_abs_error": float(mean_abs_error),
+        "final_colluder_stake_share": float(
+            stakes[colluder_mask].sum() / total_stake
+        )
+        if colluder_mask.any() and total_stake > 0
+        else 0.0,
+        "colluder_draft_share": float(
+            selection_counts[colluder_mask].sum() / total_sel
+        )
+        if colluder_mask.any() and total_sel > 0
+        else 0.0,
+        "cancelled_round_share": float(cancelled_round_share),
+        "ambiguous_cancel_share": float(ambiguous_cancel_share),
+    }
+
+
+def run_e2_prime_sigma_sweep(
+    params: E2PrimeSigmaSweepParams, executor: ProcessPoolExecutor
+) -> None:
+    rows: list[dict] = []
+    for noise_sigma in params.noise_sigmas:
+        for col_frac in params.colluding_fracs:
+            seed_results = list(
+                executor.map(
+                    functools.partial(
+                        _e2_prime_sigma_sweep_single_run, params, noise_sigma, col_frac
+                    ),
+                    range(params.n_seeds),
+                )
+            )
+            errors = np.array([r["mean_abs_error"] for r in seed_results])
+            stake_shares = np.array(
+                [r["final_colluder_stake_share"] for r in seed_results]
+            )
+            draft_shares = np.array(
+                [r["colluder_draft_share"] for r in seed_results]
+            )
+            cancelled = np.array(
+                [r["cancelled_round_share"] for r in seed_results]
+            )
+            ambig = np.array(
+                [r["ambiguous_cancel_share"] for r in seed_results]
+            )
+
+            rows.append(
+                {
+                    "noise_sigma": float(noise_sigma),
+                    "colluding_frac": float(col_frac),
+                    "n_seeds": params.n_seeds,
+                    "mean_abs_error_mean": float(errors.mean()),
+                    "mean_abs_error_ci95": _ci95(errors),
+                    "final_colluder_stake_share_mean": float(stake_shares.mean()),
+                    "final_colluder_stake_share_ci95": _ci95(stake_shares),
+                    "colluder_draft_share_mean": float(draft_shares.mean()),
+                    "colluder_draft_share_ci95": _ci95(draft_shares),
+                    "cancelled_round_share_mean": float(cancelled.mean()),
+                    "ambiguous_cancel_share_mean": float(ambig.mean()),
+                    "initial_colluder_stake_share": float(col_frac),
+                }
+            )
+
+    df = pd.DataFrame(rows)
+    df.to_csv(OUT_DIR / "e2_prime_sigma_sweep_results.csv", index=False)
+
+    cmap = plt.cm.viridis
+    sigma_vals = sorted(df["noise_sigma"].unique())
+    colors = [cmap(i / max(1, len(sigma_vals) - 1)) for i in range(len(sigma_vals))]
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.0, 4.5))
+    for sigma_val, color in zip(sigma_vals, colors):
+        sub = df[df["noise_sigma"] == sigma_val]
+        x = sub["colluding_frac"]
+        label = f"σ={sigma_val:.2f}"
+        ax1.plot(x, sub["mean_abs_error_mean"], marker="o", color=color, label=label)
+        ax1.fill_between(
+            x,
+            sub["mean_abs_error_mean"] - sub["mean_abs_error_ci95"],
+            sub["mean_abs_error_mean"] + sub["mean_abs_error_ci95"],
+            alpha=0.15,
+            color=color,
+        )
+        ax2.plot(
+            x,
+            sub["final_colluder_stake_share_mean"],
+            marker="o",
+            color=color,
+            label=label,
+        )
+        ax2.fill_between(
+            x,
+            sub["final_colluder_stake_share_mean"]
+            - sub["final_colluder_stake_share_ci95"],
+            sub["final_colluder_stake_share_mean"]
+            + sub["final_colluder_stake_share_ci95"],
+            alpha=0.15,
+            color=color,
+        )
+
+    ax1.set_xlabel("Fraction of colluding curators")
+    ax1.set_ylabel("Mean |μ − r|")
+    ax1.set_title(
+        f"E2'-Adv σ sweep: signal error vs collusion (K={params.K}, N={params.n_seeds} seeds)"
+    )
+    ax1.legend(frameon=False, fontsize=8)
+
+    ax2.set_xlabel("Fraction of colluding curators")
+    ax2.set_ylabel("Colluder stake share")
+    ax2.set_title(
+        f"E2'-Adv σ sweep: colluder stake after 200 rounds (N={params.n_seeds} seeds)"
+    )
+    ax2.set_ylim(0.0, 0.4)
+    ax2.legend(frameon=False, fontsize=8)
+
+    plt.tight_layout()
+    plt.savefig(FIG_DIR / "e2_prime_sigma_sweep.png", dpi=200)
+    plt.close()
+
+
+# -- E2'-Adv Trojan accumulation: delayed-onset collusion ------------------
+
+
+@dataclass(frozen=True)
+class E2PrimeTrojanParams:
+    """Trojan accumulation: colluders behave honestly for T rounds then attack."""
+
+    n_curators: int = 200
+    target_seats: int = 15
+    rounds: int = 200
+    noise_sigma: float = 0.08
+    seat_size_L: float = E2P_SEAT_SIZE_L
+    epsilon_sigma: float = E2P_EPSILON_SIGMA
+    rho: float = E2P_RHO_REWARD
+    round_reward: float = E2P_ROUND_REWARD
+    ambig_prob: float = E2P_AMBIG_PROB
+    ambig_signal_true: float = E2P_AMBIG_SIGNAL_TRUE
+    ambig_signal_false: float = E2P_AMBIG_SIGNAL_FALSE
+    ambig_signal_noise: float = E2P_AMBIG_SIGNAL_NOISE
+    abstain_signal_threshold: float = E2P_ABSTAIN_SIGNAL_THRESHOLD
+    abstain_cancel_threshold: float = E2P_ABSTAIN_CANCEL_THRESHOLD
+    min_reveal_quorum: int = E2P_MIN_REVEAL_QUORUM
+    sigma_ref_alpha: float = 0.05
+    K: float = 1.25
+    competent_frac: float = 0.6
+    colluding_frac: float = 0.15
+    colluder_bias: float = E2P_COLLUDER_BIAS
+    colluder_noise_factor: float = E2P_COLLUDER_NOISE_FACTOR
+    trojan_delays: tuple[int, ...] = (0, 25, 50, 100)
+    n_seeds: int = 100
+
+
+def _e2_prime_trojan_single_run(
+    params: E2PrimeTrojanParams, trojan_delay: int, seed_idx: int
+) -> dict:
+    seed = int(10_000 * params.colluding_frac + 1_000 * trojan_delay + seed_idx) + 43
+    rng = np.random.default_rng(seed)
+
+    n_comp = int(round(params.n_curators * params.competent_frac))
+    n_collude = int(round(params.n_curators * params.colluding_frac))
+    n_honest_comp = max(0, n_comp - n_collude)
+    n_noisy = params.n_curators - n_honest_comp - n_collude
+    types = np.array(
+        [CURATOR_TYPE_COMPETENT] * n_honest_comp
+        + [CURATOR_TYPE_NOISY] * n_noisy
+        + [CURATOR_TYPE_COLLUDER] * n_collude,
+        dtype=np.int64,
+    )
+    rng.shuffle(types)
+
+    (
+        mean_abs_error,
+        cancelled_round_share,
+        ambiguous_cancel_share,
+        selection_counts,
+        stakes,
+    ) = _relevance_core_prime(
+        rng,
+        params.n_curators,
+        params.target_seats,
+        params.rounds,
+        params.noise_sigma,
+        float(params.K),
+        params.seat_size_L,
+        params.epsilon_sigma,
+        params.rho,
+        params.round_reward,
+        params.ambig_prob,
+        params.ambig_signal_true,
+        params.ambig_signal_false,
+        params.ambig_signal_noise,
+        params.abstain_signal_threshold,
+        params.abstain_cancel_threshold,
+        params.min_reveal_quorum,
+        params.sigma_ref_alpha,
+        types,
+        params.colluder_bias,
+        params.colluder_noise_factor,
+        trojan_delay,
+    )
+
+    colluder_mask = types == CURATOR_TYPE_COLLUDER
+    total_stake = stakes.sum()
+    total_sel = int(selection_counts.sum())
+    return {
+        "mean_abs_error": float(mean_abs_error),
+        "final_colluder_stake_share": float(
+            stakes[colluder_mask].sum() / total_stake
+        )
+        if colluder_mask.any() and total_stake > 0
+        else 0.0,
+        "colluder_draft_share": float(
+            selection_counts[colluder_mask].sum() / total_sel
+        )
+        if colluder_mask.any() and total_sel > 0
+        else 0.0,
+        "cancelled_round_share": float(cancelled_round_share),
+        "ambiguous_cancel_share": float(ambiguous_cancel_share),
+    }
+
+
+def run_e2_prime_trojan(
+    params: E2PrimeTrojanParams, executor: ProcessPoolExecutor
+) -> None:
+    rows: list[dict] = []
+    for delay in params.trojan_delays:
+        seed_results = list(
+            executor.map(
+                functools.partial(_e2_prime_trojan_single_run, params, delay),
+                range(params.n_seeds),
+            )
+        )
+        errors = np.array([r["mean_abs_error"] for r in seed_results])
+        stake_shares = np.array(
+            [r["final_colluder_stake_share"] for r in seed_results]
+        )
+        draft_shares = np.array(
+            [r["colluder_draft_share"] for r in seed_results]
+        )
+        cancelled = np.array([r["cancelled_round_share"] for r in seed_results])
+        ambig = np.array([r["ambiguous_cancel_share"] for r in seed_results])
+
+        rows.append(
+            {
+                "trojan_delay": int(delay),
+                "colluding_frac": float(params.colluding_frac),
+                "n_seeds": params.n_seeds,
+                "mean_abs_error_mean": float(errors.mean()),
+                "mean_abs_error_ci95": _ci95(errors),
+                "final_colluder_stake_share_mean": float(stake_shares.mean()),
+                "final_colluder_stake_share_ci95": _ci95(stake_shares),
+                "colluder_draft_share_mean": float(draft_shares.mean()),
+                "colluder_draft_share_ci95": _ci95(draft_shares),
+                "cancelled_round_share_mean": float(cancelled.mean()),
+                "ambiguous_cancel_share_mean": float(ambig.mean()),
+            }
+        )
+
+    df = pd.DataFrame(rows)
+    df.to_csv(OUT_DIR / "e2_prime_trojan_results.csv", index=False)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.0, 4.5))
+    x = np.arange(len(df))
+    labels = [f"T={d}" for d in df["trojan_delay"]]
+
+    ax1.bar(x, df["mean_abs_error_mean"], yerr=df["mean_abs_error_ci95"],
+            capsize=4, color="#4C72B0", alpha=0.85)
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(labels)
+    ax1.set_xlabel("Trojan delay (honest rounds before attack)")
+    ax1.set_ylabel("Mean |μ − r|")
+    ax1.set_title(
+        f"Trojan accumulation: signal error (φ={params.colluding_frac}, N={params.n_seeds} seeds)"
+    )
+
+    ax2.bar(x, df["final_colluder_stake_share_mean"],
+            yerr=df["final_colluder_stake_share_ci95"],
+            capsize=4, color="#C44E52", alpha=0.85)
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(labels)
+    ax2.set_xlabel("Trojan delay (honest rounds before attack)")
+    ax2.set_ylabel("Final colluder stake share")
+    ax2.set_title(
+        f"Trojan accumulation: colluder survival (φ={params.colluding_frac}, N={params.n_seeds} seeds)"
+    )
+
+    plt.tight_layout()
+    plt.savefig(FIG_DIR / "e2_prime_trojan.png", dpi=200)
     plt.close()
 
 
@@ -2337,6 +2719,12 @@ def write_eval_summary() -> None:
     e2p_adv = pd.read_csv(OUT_DIR / "e2_prime_adversarial_results.csv")
     e2p_adv_point = e2p_adv[e2p_adv["colluding_frac"] == 0.15].iloc[0]
     e2p_adv_base = e2p_adv[e2p_adv["colluding_frac"] == 0.0].iloc[0]
+    e2p_sigma = pd.read_csv(OUT_DIR / "e2_prime_sigma_sweep_results.csv")
+    e2p_sigma_low = e2p_sigma[(e2p_sigma["noise_sigma"] == 0.05) & (e2p_sigma["colluding_frac"] == 0.15)].iloc[0]
+    e2p_sigma_high = e2p_sigma[(e2p_sigma["noise_sigma"] == 0.20) & (e2p_sigma["colluding_frac"] == 0.15)].iloc[0]
+    e2p_trojan = pd.read_csv(OUT_DIR / "e2_prime_trojan_results.csv")
+    e2p_trojan_base = e2p_trojan[e2p_trojan["trojan_delay"] == 0].iloc[0]
+    e2p_trojan_100 = e2p_trojan[e2p_trojan["trojan_delay"] == 100].iloc[0]
     e4a_point = e4a.iloc[-1]
     e4b_random = e4b[(e4b["rep_decay"] == 0.01) & (e4b["attacker_model"] == "random")].iloc[0]
     e4b_biased = e4b[(e4b["rep_decay"] == 0.01) & (e4b["attacker_model"] == "bias_0.15")].iloc[0]
@@ -2351,6 +2739,8 @@ def write_eval_summary() -> None:
 - **E1-Adv:** A well-funded adversary submitting {int(e1_adv_point["n_attacks"])} false claims at $p=0.80$ and illustrative anchor $p_\\mathrm{{detect}}={params_e1.p_detect:.2f}$ achieves survival rate **{e1_adv_point["survival_rate_mean"]:.2f} $\\pm$ {e1_adv_point["survival_rate_ci95"]:.2f}** (95% CI, $N={int(e1_adv_point["n_seeds"])}$ seeds) with cumulative balance **{e1_adv_point["adversary_balance_mean"]:.0f} $\\pm$ {e1_adv_point["adversary_balance_ci95"]:.0f}**.
 - **E2-Adv (predecessor mechanism):** A 15% colluding bloc shifts mean relevance error from **{e2_adv_base["mean_abs_error_mean"]:.3f}** to **{e2_adv_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2_adv_point["mean_abs_error_ci95"]:.3f}** and ends with **{e2_adv_point["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2_adv_point["final_colluder_stake_share_ci95"]:.3f}** stake share.
 - **E2'-Adv (final mechanism):** Under draw-and-lock + graduated slashing + ambiguity abstention, a 15% colluding bloc shifts mean relevance error from **{e2p_adv_base["mean_abs_error_mean"]:.3f}** to **{e2p_adv_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_adv_point["mean_abs_error_ci95"]:.3f}** and ends with **{e2p_adv_point["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_adv_point["final_colluder_stake_share_ci95"]:.3f}** stake share.
+- **E2'-Adv $\\sigma$ sweep:** At $\\phi=0.15$, mean relevance error is **{e2p_sigma_low["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_sigma_low["mean_abs_error_ci95"]:.3f}** at $\\sigma_{{\\text{{honest}}}}=0.05$ versus **{e2p_sigma_high["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_sigma_high["mean_abs_error_ci95"]:.3f}** at $\\sigma_{{\\text{{honest}}}}=0.20$ (95% CI, $N=100$ seeds). Higher honest noise makes collusion harder to distinguish from legitimate disagreement.
+- **E2'-Adv Trojan:** At $\\phi=0.15$ with $T=0$ (constant bias), mean error is **{e2p_trojan_base["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_trojan_base["mean_abs_error_ci95"]:.3f}**; with $T=100$ (100 honest rounds then attack), **{e2p_trojan_100["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_trojan_100["mean_abs_error_ci95"]:.3f}** (95% CI, $N=100$ seeds). Colluder stake share at $T=100$: **{e2p_trojan_100["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_trojan_100["final_colluder_stake_share_ci95"]:.3f}** vs **{e2p_trojan_base["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_trojan_base["final_colluder_stake_share_ci95"]:.3f}** at $T=0$.
 - **E4a:** By round {int(e4a_point["round"])}, median honest-author reputation reaches **{e4a_point["honest_median_rep_mean"]:.2f} $\\pm$ {e4a_point["honest_median_rep_ci95"]:.2f}** (95% CI, $N={int(e4a_point["n_seeds"])}$ seeds) while median dishonest-author reputation remains at **{e4a_point["dishonest_median_rep_mean"]:.2f} $\\pm$ {e4a_point["dishonest_median_rep_ci95"]:.2f}**.
 - **E4b:** In a counterfactual reputation-weighted committee with decay $\\delta=0.01$, a random high-reputation attacker stays above median weight for **{e4b_random["above_median_rounds_mean"]:.0f} $\\pm$ {e4b_random["above_median_rounds_ci95"]:.0f}** rounds, while a $+0.15$ strategic-bias attacker lasts **{e4b_biased["above_median_rounds_mean"]:.0f} $\\pm$ {e4b_biased["above_median_rounds_ci95"]:.0f}** rounds and shifts the final signal upward by **{e4b_biased["mean_signal_shift_mean"]:.3f} $\\pm$ {e4b_biased["mean_signal_shift_ci95"]:.3f}**.
 - **E4d:** After building reputation in Pool L, an unscoped attacker enters Pool H with **{e4d_point["imported_rep_at_entry_mean"]:.2f} $\\pm$ {e4d_point["imported_rep_at_entry_ci95"]:.2f}** imported reputation units (95% CI, $N={int(e4d_point["n_seeds"])}$ seeds); over the first 10 attack rounds, mean attacker share of Pool H author reputation is **{e4d_point["mean_attacker_rep_share_unscoped_first10"]:.3f} $\\pm$ {e4d_point["mean_attacker_rep_share_unscoped_first10_ci95"]:.3f}** unscoped versus **{e4d_point["mean_attacker_rep_share_scoped_first10"]:.3f} $\\pm$ {e4d_point["mean_attacker_rep_share_scoped_first10_ci95"]:.3f}** when reputation is pool-scoped, and the imported advantage decays to within {E4dParams().exhaustion_epsilon:.2f} reputation units after **{e4d_point["advantage_exhaustion_round_mean"]:.1f} $\\pm$ {e4d_point["advantage_exhaustion_round_ci95"]:.1f}** attack rounds.
@@ -2450,6 +2840,8 @@ def run_full() -> None:
         run_e2_adversarial(E2AdvParams(), executor)
         run_e2_prime(E2PrimeParams(), executor)
         run_e2_prime_adversarial(E2PrimeAdvParams(), executor)
+        run_e2_prime_sigma_sweep(E2PrimeSigmaSweepParams(), executor)
+        run_e2_prime_trojan(E2PrimeTrojanParams(), executor)
         run_e4b(E4bParams(), executor)
     write_eval_summary()
     write_reading_time()
