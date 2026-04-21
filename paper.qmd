@@ -429,8 +429,11 @@ The protocol assumes adversaries can be rational, coordinated, well-funded, and 
 | Reputation creates unbonded influence | No reputation-weighted curation mechanism exists; author reputation is a separate standing bond only |
 | Low-participation pools fail to bootstrap | Pool creators seed local reward budgets; interfaces can ignore inactive pools |
 | Stale claims linger forever | Confidence only accumulates while bonded; withdrawn claims remain historical rather than active |
+| Permissionless publishing surfaces harmful or illegal content | Protocol is content-neutral; interfaces filter according to local norms and legal requirements |
+| An ideological pool curates biased content under a permissive policy | Accuracy is adjudicated cross-pool by DDR regardless of pool membership; biased relevance is local and subject to competitive exit |
+| Curators converge on conventional wisdom, suppressing nuanced truth | Escalation shifts the focal point to what survives appeal; graduated slashing makes lazy convergence costly rather than free |
 
-Several threats remain partially unresolved: off-chain collusion, legal pressure against visible participants, pool-policy degeneracy, and coordinated capture above a sufficiently large colluding bloc.
+Several threats remain partially unresolved: off-chain collusion, legal pressure against visible participants, pool-policy degeneracy, coordinated capture above a sufficiently large colluding bloc, lazy-consensus convergence when the crowd is systematically wrong, and free-rider extraction of canonical on-chain state by third-party aggregators.
 
 # Evaluation
 
@@ -596,6 +599,8 @@ Permissionless pool creation is the right architectural stance because it keeps 
 The defense against bad policy is competitive selection, not governance. The dynamic is the same as newspapers and online communities: creating a newspaper is permissionless, but if you publish poorly, no one reads it and it falls into irrelevance. Multiple subreddits can exist on the same topic; users gravitate to the best-curated one and the rest are outselected naturally. People vote with their feet. The protocol does not need to prevent bad pools; it needs to make pool creation cheap and switching costs low enough that competitive selection can function. The blueprint identifies residual switching frictions (reputation lock-in, funder coordination, round-cycle capital commitment) that may slow this dynamic in practice. Interfaces still need to decide which pools to feature, warn about, or ignore, and cross-pool aggregation remains an interface concern by design rather than a protocol responsibility.
 
 The same locality applies to policy quality and bootstrap. The coherence game works only when a pool's relevance policy is specific enough to discipline scoring, and new pools still need readers, challengers, curators, and budget. The current design makes these requirements explicit instead of hiding them behind protocol-wide governance, but it does not remove them.
+
+Canonical protocol state is public and on-chain. Third-party aggregators can read verified curation outputs without participating in or funding the protocol. This is a feature, not a bug: the design goal is trustless knowledge production, and restricting read access would contradict that goal. The tradeoff is that pool funding depends entirely on exogenous sponsors and creators, since no protocol mechanism captures value from downstream consumers of the curated signal.
 
 ## Operational deployment constraints
 
