@@ -2,44 +2,33 @@
 
 **Source:** [Color & Contrast](https://colorandcontrast.com/) — A comprehensive guide to color for UI designers
 
-_19 content fragments extracted from SPA bundle_
+This note summarizes the main distinctions relevant to UI and digital color work. It replaces incomplete text fragments with a short curated reference.
 
 ---
 
-A color model defined by three primaries; red, green, and blue. The RGB model is based on principles of trichromatic vision and additive color mixing.
+## Key distinctions
 
-defined by three primaries; red, green, and blue. The RGB model is based on principles of
+- **Color model:** A way to describe color using a set of channels or parameters.
+- **Color space:** A specific mathematical implementation of a color model, with defined primaries, white point, and transfer characteristics.
+- **Color appearance model:** A model that describes perceived color under viewing conditions; when constrained appropriately, it can be used to derive more uniform color spaces.
 
-A color space is a collection all colors within a particular specific set of primaries. Color spaces are specific implementations of a color model.
+In short: a **model** is the conceptual system, while a **space** is a precise implementation of that system.
 
-A color model is method of describing color. When this method is implemented with precise math, it becomes a color space.
+## Common examples
 
-A color model is method of describing color. When this method is implemented with precise math, it becomes a
+- **RGB:** An additive color model based on red, green, and blue primaries. This is the basis for most digital displays.
+- **sRGB:** The most common RGB color space for web content and general-purpose displays.
+- **Display-P3:** A wider-gamut RGB color space used on many modern displays.
+- **CMYK:** A subtractive color model based on cyan, magenta, yellow, and black, commonly used in print workflows.
+- **RYB:** A traditional subtractive model based on red, yellow, and blue; useful historically and pedagogically, but not the standard model for modern digital imaging.
 
-A color model based on the perceptual aspects of color vision. When implemented under fixed viewing conditions, a color appearance model becomes a uniform color space.
+## Practical guidance
 
-(Parameters / channels) Color properties are abstract ways of describing a color. A uniform system of properties is a color model.
+- For **digital interfaces**, think primarily in **RGB-based color spaces** such as **sRGB** and **Display-P3**.
+- For **print**, **CMYK** remains the common subtractive workflow.
+- Do not treat a color model and a color space as interchangeable terms: the distinction matters when discussing gamut, consistency, and implementation.
 
-Subtractive mixing is not supported in digital devices, but many people have a subtractive color mixing
+## Further reading
 
-, including those modeled after subtractive properties of reflected light. Not all browsers support
-
-Most digital color pickers and tools utilize additive color spaces such as
-
-, including those modeled after additive properties of light. Not all browsers support
-
-A color model defined by three primaries; red, yellow, and blue. The RYB model is based on subtractive color mixing.
-
-defined by three primaries; red, yellow, and blue. The RYB model is based on
-
-A color model defined by four primaries; cyan, magenta, yellow, and black. The CMYK model is based on subtractive color mixing.
-
-defined by four primaries; cyan, magenta, yellow, and black. The CMYK model is based on
-
-An RGB color model supported in most digital displays. sRGB is the most widely used color space for web browsers.
-
-A wide gamut implementation of the RGB color model used by modern retina displays.
-
-will yield equally balanced results. This is because RGB color models are based on
-
-Gamuts outlined on the visible spectrum for Adobe Pro Photo, Display-P3, sRGB, and CMYK color spaces.
+- [Color & Contrast](https://colorandcontrast.com/)
+- If you need the original explanations and diagrams, consult the source directly rather than relying on extracted bundle fragments.
