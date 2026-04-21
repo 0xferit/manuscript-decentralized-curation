@@ -14,6 +14,7 @@ format:
   html:
     output-file: index
     embed-resources: true
+    css: fonts.css
     theme:
       light: [flatly, custom-light.scss]
       dark: [darkly, custom-dark.scss]
