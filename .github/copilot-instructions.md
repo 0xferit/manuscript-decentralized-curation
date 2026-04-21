@@ -3,7 +3,7 @@
 This repository is the workspace for a thesis on decentralized curation: a Quarto-based academic manuscript (`paper.qmd`) proposing a decentralized, incentive-compatible protocol for information curation. Supporting infrastructure includes deterministic simulations (`analysis/run_all.py`), a BibTeX citation database (`references.bib`), and CI-driven HTML publishing to Cloudflare Pages.
 
 ### Source of truth
-- Never edit files under context/ 
+- Never edit files under `context/`
 - `paper.qmd` is the **editable master paper source** (make substantive changes here).
 - `projects/truth-post/blueprint.md` is the **canonical Truth Post design doc**.
 - `projects/truth-post/implementation-report.md` is the **Truth Post deployment retrospective**.
