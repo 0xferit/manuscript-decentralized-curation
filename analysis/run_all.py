@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import argparse
 import functools
 import json
 import math
 import os
 import platform
 import re
+from collections.abc import Callable, Sequence
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -2356,6 +2358,16 @@ def write_eval_summary() -> None:
     (OUT_DIR / "eval_summary.md").write_text(summary, encoding="utf-8")
 
 
+def _require_outputs(paths: Sequence[Path], command_name: str) -> None:
+    missing = [path for path in paths if not path.exists()]
+    if missing:
+        missing_paths = ", ".join(str(path.relative_to(ROOT)) for path in missing)
+        raise FileNotFoundError(
+            f"{command_name} requires existing generated outputs. Missing: {missing_paths}. "
+            "Run `python3 analysis/run_all.py full` first."
+        )
+
+
 def _compute_reading_time(source_path: Path, has_yaml_front_matter: bool) -> str:
     raw = source_path.read_text(encoding="utf-8")
 
@@ -2423,7 +2435,7 @@ def write_reading_time() -> None:
         output.write_text(snippet, encoding="utf-8")
 
 
-def main() -> None:
+def run_full() -> None:
     _assert_weighted_sample_deterministic()
     ensure_dirs()
     save_metadata()
@@ -2441,6 +2453,77 @@ def main() -> None:
         run_e4b(E4bParams(), executor)
     write_eval_summary()
     write_reading_time()
+
+
+def run_metadata_only() -> None:
+    ensure_dirs()
+    save_metadata()
+
+
+def run_reading_time_only() -> None:
+    ensure_dirs()
+    write_reading_time()
+
+
+def run_eval_summary_only() -> None:
+    ensure_dirs()
+    _require_outputs(
+        [
+            OUT_DIR / "e1_results.csv",
+            OUT_DIR / "e1_detection_sensitivity.csv",
+            OUT_DIR / "e2_results.csv",
+            OUT_DIR / "e3_results.csv",
+            OUT_DIR / "e1_adversarial_results.csv",
+            OUT_DIR / "e2_adversarial_results.csv",
+            OUT_DIR / "e2_prime_adversarial_results.csv",
+            OUT_DIR / "e4a_author_reputation.csv",
+            OUT_DIR / "e4b_reputation_attack.csv",
+            OUT_DIR / "e4d_cross_domain_scoping_summary.csv",
+        ],
+        "summary",
+    )
+    write_eval_summary()
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Run deterministic simulations and refresh generated thesis snippets."
+        )
+    )
+    subparsers = parser.add_subparsers(dest="command")
+
+    commands: dict[str, tuple[Callable[[], None], str]] = {
+        "full": (
+            run_full,
+            "Regenerate the full analysis bundle (CSV outputs, figures, summary, and reading-time snippets).",
+        ),
+        "metadata": (
+            run_metadata_only,
+            "Refresh analysis/out/metadata.json only.",
+        ),
+        "reading-time": (
+            run_reading_time_only,
+            "Refresh generated reading-time snippets only.",
+        ),
+        "summary": (
+            run_eval_summary_only,
+            "Refresh analysis/out/eval_summary.md from existing CSV outputs.",
+        ),
+    }
+
+    for name, (handler, help_text) in commands.items():
+        subparser = subparsers.add_parser(name, help=help_text, description=help_text)
+        subparser.set_defaults(func=handler)
+
+    parser.set_defaults(command="full", func=run_full)
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> None:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    args.func()
 
 
 if __name__ == "__main__":
