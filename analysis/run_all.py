@@ -117,24 +117,38 @@ def _weighted_sample_es_njit(
 
 
 def _assert_weighted_sample_deterministic() -> None:
-    # Guard against PRNG-stream changes or refactor regressions in
-    # _weighted_sample_es_njit. The expected selected set for this
-    # fixed input was captured once; any drift in the uniform stream
-    # (e.g., a regression that re-seeds inside @njit) will trip the
-    # check on every run. Argpartition tie-breaking drift is NOT
-    # caught here: both sides of the comparison are sorted, matching
-    # the function's set-valued semantics.
-    u = np.array([0.1, 0.9, 0.3, 0.7, 0.5])
-    weights = np.array([1.0, 1.0, 1.0, 1.0, 1.0])
-    out = _weighted_sample_es_njit(u, weights, 2)
-    expected = np.array([1, 3], dtype=np.int64)
-    # Sort before comparing: np.argpartition does not guarantee order
-    # within the first k_eff indices, so the function's semantic output
-    # is the set of selected indices, not a sequence.
+    # Guard the Efraimidis-Spirakis selection semantics for fixed
+    # uniforms. Does not exercise any PRNG stream directly; a regression
+    # that makes _weighted_sample_es_njit ignore ``u`` and draw
+    # internally is caught only probabilistically, so n,k are sized
+    # such that accidental passes are ~1/C(20,5) = ~6.4e-5. Both sides
+    # of each comparison are sorted: np.argpartition does not order
+    # the first k_eff indices, and the function's semantic output is
+    # the selected set, not a sequence. Covers both the positive-weight
+    # (ES key) branch and the total<=0 fallback branch.
+
+    # Positive-weight branch: monotone u with equal weights. Top-k is
+    # the k largest-u indices, i.e. the tail of the array.
+    u = np.linspace(0.05, 0.95, 20)
+    weights = np.ones(20)
+    out = _weighted_sample_es_njit(u, weights, 5)
+    expected = np.array([15, 16, 17, 18, 19], dtype=np.int64)
     if not np.array_equal(np.sort(out), np.sort(expected)):
         raise RuntimeError(
-            f"Determinism guard failed for _weighted_sample_es_njit: "
+            f"Determinism guard failed (positive-weight branch): "
             f"got {out}, expected {expected}"
+        )
+
+    # total<=0 fallback: keys are ``u`` directly. Top-k is the k
+    # largest-u indices in this handcrafted input.
+    zero_u = np.array([0.2, 0.8, 0.1, 0.6, 0.4, 0.7, 0.3, 0.5])
+    zero_weights = np.zeros(8)
+    zero_out = _weighted_sample_es_njit(zero_u, zero_weights, 3)
+    zero_expected = np.array([1, 3, 5], dtype=np.int64)
+    if not np.array_equal(np.sort(zero_out), np.sort(zero_expected)):
+        raise RuntimeError(
+            f"Determinism guard failed (total<=0 fallback branch): "
+            f"got {zero_out}, expected {zero_expected}"
         )
 
 
