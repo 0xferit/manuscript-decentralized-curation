@@ -30,9 +30,6 @@ FIG_DIR = ROOT / "analysis" / "fig"
 # which is why scipy is not a required dependency here.
 Z_CRITICAL_95 = 1.96
 
-# Epsilon for ticket-count division: guards against IEEE-754 round-off where
-# e.g. `1.0 // 0.2` evaluates to 4.0 instead of 5.0. Applied as
-# `floor(stake / L + EPS)` so integer-boundary stakes round up.
 TICKET_COUNT_EPSILON = 1e-9
 
 
@@ -754,7 +751,9 @@ def _e2_adv_single_run(params: E2AdvParams, col_frac: float, seed_idx: int) -> d
     n_honest_comp = max(0, n_comp - n_collude)
     n_noisy = params.n_curators - n_honest_comp - n_collude
     types = np.array(
-        [0] * n_honest_comp + [1] * n_noisy + [2] * n_collude,
+        [CURATOR_TYPE_COMPETENT] * n_honest_comp
+        + [CURATOR_TYPE_NOISY] * n_noisy
+        + [CURATOR_TYPE_COLLUDER] * n_collude,
         dtype=np.int64,
     )
     rng.shuffle(types)
@@ -875,38 +874,6 @@ def run_e2_adversarial(params: E2AdvParams, executor: ProcessPoolExecutor) -> No
     plt.close()
 
 
-# ---------------------------------------------------------------------------
-# E2': Relevance under the final mechanism (draw-and-lock + graduated slashing
-# + ambiguity-driven abstention). Additive to E2, not a refactor: the
-# predecessor E2 and E2-Adv runs above remain unchanged.
-#
-# Modelling decisions (see PR description):
-#   - Seat-ticket draw-and-lock: each curator gets d_i = floor(s_i / L) tickets,
-#     the scheduler draws `target_seats` tickets without replacement weighted
-#     by per-ticket mass (one ticket == L tokens), locking n_i * L per draft.
-#     Round weight w_i = n_i * L. We use draw without replacement by running
-#     _weighted_sample_es_njit over a flattened ticket->curator map so that
-#     multi-ticket curators can be drawn up to d_i times in one round.
-#   - Graduated slashing follows blueprint step 15 exactly: p_i = min(1, max(0,
-#     (|v_i - mu|/sigma - K) / K)). When sigma < epsilon_sigma, distance-based
-#     slashing is skipped (p_i = 0). Non-participation (abstention) is slashed
-#     at p_i = 1 per blueprint step 11.
-#   - Under-specified / ambiguity: blueprint does not define an explicit
-#     third verdict, and paper.qmd line 511 documents that the third verdict
-#     was removed from the design. We model the audit-claim's "abstain on
-#     ambiguity" intent by simulating a hidden per-round is_ambiguous flag
-#     (Bernoulli(ambig_prob)). Each drafted curator draws a noisy ambiguity
-#     signal correlated with the hidden flag and abstains when the signal
-#     exceeds `abstain_signal_threshold`. If the share of abstainers among
-#     distinct drafted curators exceeds `abstain_cancel_threshold` (a
-#     strict-majority cutoff at 0.5 by default; not a supermajority), the
-#     round cancels (no score, no slashing of participants, non-participants
-#     lose locked tokens). Otherwise abstainers are slashed at p_i = 1 and
-#     the remaining reveals produce mu, sigma, and graduated slashing.
-# ---------------------------------------------------------------------------
-
-
-# E2' model-specific constants (named to avoid magic numbers).
 E2P_SEAT_SIZE_L = 0.2
 E2P_EPSILON_SIGMA = 0.02
 E2P_RHO_REWARD = 0.1
@@ -920,6 +887,24 @@ E2P_ABSTAIN_CANCEL_THRESHOLD = 0.5
 E2P_MIN_REVEAL_QUORUM = 5
 E2P_COLLUDER_BIAS = 0.30
 E2P_COLLUDER_NOISE_FACTOR = 0.5
+
+CURATOR_TYPE_COMPETENT = 0
+CURATOR_TYPE_NOISY = 1
+CURATOR_TYPE_COLLUDER = 2
+
+
+@njit(cache=True)
+def _ticket_count_backed_by(stake: float, seat_size_L: float) -> int:
+    """Tickets a stake can back: ``floor(stake / L)`` corrected for the
+    IEEE-754 under-count at integer multiples of ``L`` (e.g. ``1.0 / 0.2``
+    evaluates to ``4.9999...``) and then capped so ``d * L <= stake`` when
+    the stake sits legitimately inside ``[k*L - ~eps*L, k*L)``. That cap
+    keeps the subsequent ``stakes[i] -= d * L`` from going negative.
+    """
+    raw = int(np.floor(stake / seat_size_L + TICKET_COUNT_EPSILON))
+    if raw * seat_size_L > stake:
+        raw -= 1
+    return raw if raw > 0 else 0
 
 
 @njit(cache=True)
@@ -936,18 +921,8 @@ def _draft_seats_njit(
     d = np.empty(n, dtype=np.int64)
     total_tickets = 0
     for i in range(n):
-        raw = int(np.floor(stakes[i] / seat_size_L + TICKET_COUNT_EPSILON))
-        # Cap so the ticket count is backed by the curator's stake. The
-        # epsilon corrects IEEE-754 under-counting at exact integer multiples
-        # of L, but would over-count when stakes[i] is legitimately in the
-        # window [k*L - ~eps*L, k*L); this guard keeps d_i * L <= stakes[i]
-        # so the subsequent lock cannot drive stakes[i] negative.
-        if raw * seat_size_L > stakes[i]:
-            raw -= 1
-        if raw < 0:
-            raw = 0
-        d[i] = raw
-        total_tickets += raw
+        d[i] = _ticket_count_backed_by(stakes[i], seat_size_L)
+        total_tickets += d[i]
     if total_tickets <= 0:
         return np.empty(0, dtype=np.int64)
     ticket_curator = np.empty(total_tickets, dtype=np.int64)
@@ -990,49 +965,59 @@ def _relevance_core_prime(
     colluder_bias: float,
     colluder_noise_factor: float,
 ):
+    """E2' core: one seed run of the final relevance mechanism from
+    blueprint.md §Flow F.
+
+    Per round: (1) draw-and-lock seats with `_draft_seats_njit` so
+    w_i = n_i * L; (2) every drafted curator may abstain based on a
+    hidden ambiguity signal, and a strict-majority cancel threshold
+    ends the round when too many do; (3) graduated slashing at
+    p_i = min(1, max(0, (|v_i - mu|/sigma - K) / K)) applies to
+    revealers (skipped when sigma < epsilon_sigma); (4) abstainer w_i
+    is burned from the per-round accounting per blueprint step 14
+    (sim does not model the cross-round pool reward budget).
+
+    Ambiguity is a sim-only extension (the blueprint has no third
+    verdict): a hidden Bernoulli(ambig_prob) flag drives a noisy
+    per-curator signal; curators with signal > abstain_threshold
+    abstain.
+    """
     stakes = np.ones(n_curators)
     abs_errors = np.empty(rounds)
     n_errors = 0
     cancelled_rounds = 0
     ambiguous_cancelled_rounds = 0
     selection_counts = np.zeros(n_curators, dtype=np.int64)
-    # EMA of round sigma per blueprint step 13: initialized to 0 at seed start
-    # (bootstrap yields sigma_ref = epsilon_sigma). Persists across rounds
-    # within a single seed run; intentionally reset per seed so independent
-    # seeds do not share dispersion state.
+    # Blueprint step 13: sigma_ref = max(epsilon_sigma, ema_sigma); ema seeded
+    # at 0 so sigma_ref bootstraps to epsilon_sigma, then adapts. Per-seed
+    # reset keeps seeds independent.
     ema_sigma = 0.0
 
     for _ in range(rounds):
         drafted = _draft_seats_njit(rng, stakes, seat_size_L, target_seats)
         n_drafted = drafted.shape[0]
-        # Blueprint Flow F step 5 sets n = min(target, sum(d_i)) and the round
-        # proceeds with that many seats. _draft_seats_njit already returns at
-        # most target_seats tickets, so n_drafted equals n here. Only skip the
-        # round when no ticket is available at all; downstream the
-        # min_reveal_quorum and step-6 eligibility checks handle the
-        # underpopulated cases.
+        # Blueprint Flow F step 5: proceed with n = min(target, sum(d_i))
+        # seats. Only skip when no ticket is available; min_reveal_quorum
+        # downstream handles underpopulated committees.
         if n_drafted == 0:
             cancelled_rounds += 1
             continue
         for i in range(n_drafted):
             selection_counts[drafted[i]] += 1
 
-        # Seat locks: each drawn ticket locks L tokens for its curator.
-        # Since drafted may contain a curator multiple times, w_i accumulates L per seat.
+        # w_i from the blueprint: per-curator locked-token weight. A curator
+        # drafted to multiple seats aggregates weight on one vote, not
+        # multiple votes (blueprint Flow F step 9).
         w = np.zeros(n_curators)
         for i in range(n_drafted):
             w[drafted[i]] += seat_size_L
-        # Physically lock the tokens out of stake for this round.
         for i in range(n_curators):
             if w[i] > 0.0:
                 stakes[i] -= w[i]
 
-        # Hidden ambiguity flag for this round.
         is_ambiguous = rng.random() < ambig_prob
         r_true = rng.uniform(0.0, 1.0)
 
-        # One score per distinct drafted curator; multiple seats scale weight, not votes.
-        # Build the distinct-curator committee.
         seen = np.zeros(n_curators, dtype=np.int64)
         committee = np.empty(n_drafted, dtype=np.int64)
         n_committee = 0
@@ -1044,7 +1029,6 @@ def _relevance_core_prime(
                 n_committee += 1
         committee = committee[:n_committee]
 
-        # Draw ambiguity signals; abstain when signal > threshold.
         abstain_mask = np.zeros(n_committee, dtype=np.int64)
         base_signal = ambig_signal_true if is_ambiguous else ambig_signal_false
         for i in range(n_committee):
@@ -1056,8 +1040,6 @@ def _relevance_core_prime(
         for i in range(n_committee):
             n_abstain += abstain_mask[i]
 
-        # Majority abstention cancels the round; participants keep their
-        # lock intact but abstainers are still slashed at p_i = 1.
         abstain_cancel = (
             n_committee > 0 and (n_abstain / n_committee) > abstain_cancel_threshold
         )
@@ -1065,21 +1047,18 @@ def _relevance_core_prime(
         quorum_fail = n_revealers < min_reveal_quorum
 
         if abstain_cancel or quorum_fail:
-            # Non-participants (abstainers) are slashed at p_i = 1.
-            # Revealers' locks are returned (no distance slashing when round cancels).
+            # Cancelled round: abstainers keep their p_i = 1 slash (locks
+            # already removed from stakes); non-abstainers get their locks
+            # back with no distance slashing.
             for i in range(n_committee):
                 idx = committee[i]
-                if abstain_mask[i] == 1:
-                    # full loss of locked tokens (already subtracted from stakes).
-                    pass
-                else:
+                if abstain_mask[i] == 0:
                     stakes[idx] += w[idx]
             cancelled_rounds += 1
             if is_ambiguous and abstain_cancel:
                 ambiguous_cancelled_rounds += 1
             continue
 
-        # Build revealer votes.
         votes = np.empty(n_revealers)
         revealer_idx = np.empty(n_revealers, dtype=np.int64)
         j = 0
@@ -1088,11 +1067,11 @@ def _relevance_core_prime(
                 continue
             cur = committee[i]
             t = types[cur]
-            if t == 0:  # competent
+            if t == CURATOR_TYPE_COMPETENT:
                 v = r_true + rng.normal(0.0, noise_sigma)
-            elif t == 1:  # noisy
+            elif t == CURATOR_TYPE_NOISY:
                 v = rng.uniform(0.0, 1.0)
-            else:  # colluder
+            else:  # CURATOR_TYPE_COLLUDER
                 target = r_true + colluder_bias
                 if target > 1.0:
                     target = 1.0
@@ -1105,12 +1084,10 @@ def _relevance_core_prime(
             revealer_idx[j] = cur
             j += 1
 
-        # Weighted statistics over revealers (weights = locked w_i).
         wsum = 0.0
         for i in range(n_revealers):
             wsum += w[revealer_idx[i]]
         if wsum <= 0.0:
-            # Safety fallback: treat as cancelled.
             for i in range(n_committee):
                 idx = committee[i]
                 if abstain_mask[i] == 0:
@@ -1127,14 +1104,13 @@ def _relevance_core_prime(
             varw += w[revealer_idx[i]] * d * d
         sigma = np.sqrt(varw / wsum)
 
-        # Graduated slashing.
+        # Graduated slashing per blueprint step 15.
         delta_sum = 0.0
         coherent_w_sum = 0.0
         p_i_arr = np.zeros(n_revealers)
         if sigma >= epsilon_sigma:
             for i in range(n_revealers):
                 dist = abs(votes[i] - mu)
-                # p_i per blueprint step 15.
                 raw = (dist / sigma - K) / K
                 if raw < 0.0:
                     p = 0.0
@@ -1144,27 +1120,16 @@ def _relevance_core_prime(
                     p = raw
                 p_i_arr[i] = p
 
-        # Abstainers are slashed at p_i = 1 per blueprint step 14: their
-        # w_i flows to the pool reward budget, NOT to the in-round coherent
-        # reward distribution. Locked tokens were already subtracted from
-        # stakes when seats were drawn, so the tokens are effectively
-        # burned from the per-round accounting (the simulation does not
-        # model a cross-round pool reward budget as a separate bucket).
-
-        # Distance-based delta_i contributes to reward pool; incoherent revealers
-        # lose delta_i, coherent revealers get refund + share of pool + f_reward * R.
-        # sigma_ref per blueprint step 13: max(epsilon_sigma, ema_sigma). At
-        # bootstrap ema_sigma = 0 so sigma_ref collapses to epsilon_sigma, then
-        # the EMA adapts as subsequent rounds reveal dispersion.
+        # Abstainer w_i stays burned from per-round accounting (blueprint
+        # step 14 routes it to the pool reward budget, which this sim does
+        # not model as a separate bucket); it is intentionally NOT added
+        # to delta_sum, which is reserved for the coherent distribution.
         sigma_ref = epsilon_sigma if ema_sigma < epsilon_sigma else ema_sigma
         ratio = sigma / sigma_ref
         if ratio > 1.0:
             ratio = 1.0
         f_reward = rho + (1.0 - rho) * ratio
         round_reward_effective = f_reward * round_reward
-        # Update EMA after using the current sigma_ref so the new value feeds
-        # into the next round; matches blueprint "updated at each round
-        # finalization" semantics.
         ema_sigma = sigma_ref_alpha * sigma + (1.0 - sigma_ref_alpha) * ema_sigma
 
         for i in range(n_revealers):
@@ -1184,7 +1149,6 @@ def _relevance_core_prime(
                 cur = revealer_idx[i]
                 if p_i_arr[i] == 0.0:
                     stakes[cur] += pool * (w[cur] / coherent_w_sum)
-        # If coherent_w_sum == 0, slashed tokens remain off-book (not returned).
 
         abs_errors[n_errors] = abs(mu - r_true)
         n_errors += 1
@@ -1233,7 +1197,11 @@ def _e2_prime_single_run(
         seed_idx * 10_000 + int(1_000 * frac) + int(100 * k) + 7
     )
     n_comp = int(round(params.n_curators * frac))
-    types = np.array([0] * n_comp + [1] * (params.n_curators - n_comp), dtype=np.int64)
+    types = np.array(
+        [CURATOR_TYPE_COMPETENT] * n_comp
+        + [CURATOR_TYPE_NOISY] * (params.n_curators - n_comp),
+        dtype=np.int64,
+    )
     rng.shuffle(types)
 
     (
@@ -1411,7 +1379,9 @@ def _e2_prime_adv_single_run(
     n_honest_comp = max(0, n_comp - n_collude)
     n_noisy = params.n_curators - n_honest_comp - n_collude
     types = np.array(
-        [0] * n_honest_comp + [1] * n_noisy + [2] * n_collude,
+        [CURATOR_TYPE_COMPETENT] * n_honest_comp
+        + [CURATOR_TYPE_NOISY] * n_noisy
+        + [CURATOR_TYPE_COLLUDER] * n_collude,
         dtype=np.int64,
     )
     rng.shuffle(types)
