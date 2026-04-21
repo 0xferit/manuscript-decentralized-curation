@@ -8,12 +8,17 @@
       "WebFetch(domain:api.crossref.org)",
       "WebFetch(domain:pubmed.ncbi.nlm.nih.gov)",
       "WebFetch(domain:api.openalex.org)",
-      "Bash(python3 analysis/run_all.py)",
       "Bash(python3 diagrams/generate_diagrams.py)",
-      "Bash(quarto render)",
-      "Bash(quarto render *)",
-      "Bash(quarto preview)",
-      "Bash(quarto preview *)"
+      "Bash(make analysis)",
+      "Bash(make metadata)",
+      "Bash(make reading-time)",
+      "Bash(make summary)",
+      "Bash(make render-html)",
+      "Bash(make render-pdf)",
+      "Bash(make render)",
+      "Bash(make check-invariants)",
+      "Bash(make verify-fast)",
+      "Bash(make verify-full)"
     ]
   }
 }

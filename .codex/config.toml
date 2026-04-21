@@ -1,7 +1,5 @@
 [tools.shell]
 allowlist = [
-  "^python3 analysis/run_all\\.py$",
-  "^python3 diagrams/generate_diagrams\\.py$",
-  "^quarto render(\\s|$)",
-  "^quarto preview(\\s|$)",
+  "^python3 diagrams/generate_diagrams\\.py(\\s|$)",
+  "^make (analysis|metadata|reading-time|summary|render-html|render-pdf|render|check-invariants|verify-fast|verify-full)$",
 ]
