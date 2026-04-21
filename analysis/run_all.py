@@ -933,16 +933,27 @@ def _draft_seats_njit(
     tickets without replacement with uniform weights (each ticket == L tokens).
     Returns the drafted curator ids (length <= target_seats, may repeat)."""
     n = stakes.shape[0]
+    d = np.empty(n, dtype=np.int64)
     total_tickets = 0
     for i in range(n):
-        total_tickets += int(np.floor(stakes[i] / seat_size_L + TICKET_COUNT_EPSILON))
+        raw = int(np.floor(stakes[i] / seat_size_L + TICKET_COUNT_EPSILON))
+        # Cap so the ticket count is backed by the curator's stake. The
+        # epsilon corrects IEEE-754 under-counting at exact integer multiples
+        # of L, but would over-count when stakes[i] is legitimately in the
+        # window [k*L - ~eps*L, k*L); this guard keeps d_i * L <= stakes[i]
+        # so the subsequent lock cannot drive stakes[i] negative.
+        if raw * seat_size_L > stakes[i]:
+            raw -= 1
+        if raw < 0:
+            raw = 0
+        d[i] = raw
+        total_tickets += raw
     if total_tickets <= 0:
         return np.empty(0, dtype=np.int64)
     ticket_curator = np.empty(total_tickets, dtype=np.int64)
     idx = 0
     for i in range(n):
-        d_i = int(np.floor(stakes[i] / seat_size_L + TICKET_COUNT_EPSILON))
-        for _ in range(d_i):
+        for _ in range(d[i]):
             ticket_curator[idx] = i
             idx += 1
     uniform_weights = np.ones(total_tickets)
