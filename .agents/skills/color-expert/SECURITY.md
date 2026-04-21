@@ -8,13 +8,13 @@ When an agent loads this skill, it reads `SKILL.md` and optionally reads static 
 
 ## Reference Files
 
-The `references/` directory contains curated markdown summaries of color science literature. These files are:
+The `references/` directory contains static markdown reference material about color science literature and practice. The files are maintained in-repo and may include maintainer-edited summaries, transcriptions, excerpts, or extracted source content. These files are:
 
 - **Static** — committed to the repo as plain text, not fetched at runtime
-- **Human-curated** — reviewed and edited by the maintainer, not raw scrapes
+- **Maintainer-reviewed** — checked and kept as reference material, though some files may preserve source extraction artifacts rather than being fully normalized summaries
 - **Read-only** — the agent reads them for context; they contain no instructions, no tool calls, and no prompts
 
-Sources include public domain books (archive.org, Project Gutenberg), academic publications, and educational websites. All sources are cited in each file.
+Sources include public domain books (archive.org, Project Gutenberg), academic publications, and educational websites. Source provenance is documented in each file.
 
 The reference files are a knowledge base, not executable prompts. They contain no instructions to the agent, no tool invocations, and no system-prompt-style directives. An agent reading these files receives factual color science content, the same as reading any textbook or Wikipedia article.
 
