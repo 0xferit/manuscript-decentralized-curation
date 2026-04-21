@@ -2,6 +2,7 @@
 name: paper-draft
 description: "Draft or revise prose in this thesis repo (paper.qmd, projects/*/blueprint.md, projects/*/design.md, projects/*/implementation-report.md). Use when the user asks to draft, write, revise, rewrite, expand, tighten, polish, or edit manuscript or project-design prose. Enforces the thesis writing constraints and source-of-truth file map."
 allowed-tools: [Read, Edit, Write, Grep, Glob, Bash]
+context: inherit
 ---
 
 # paper-draft: drafting for the decentralized-curation manuscript

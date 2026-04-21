@@ -2,6 +2,7 @@
 name: paper-slides
 description: "Build talk slide decks or talk scripts for the thesis. Use when the user asks to create a presentation, build slides, draft a talk, or prepare a deck from manuscript or project content."
 allowed-tools: [Read, Write, Edit, Bash, Agent]
+context: inherit
 ---
 
 # paper-slides: presentations for the decentralized-curation manuscript

@@ -2,6 +2,7 @@
 name: paper-refs
 description: "Validate, add, or fix BibTeX entries in references.bib. Use when the user asks to check references, validate citations, add a new citation, verify DOIs, or check volume/pages/year fields. references.bib is the single citation source of truth for this repo."
 allowed-tools: [Read, Edit, Grep, Glob, WebFetch, Bash]
+context: inherit
 ---
 
 # paper-refs: BibTeX management for the decentralized-curation manuscript

@@ -2,6 +2,7 @@
 name: paper-audit-claims
 description: "Audit claims, causal chains, and conclusions in the manuscript or project design docs for scientific rigor. Use when the user asks to check claims, verify arguments, test causal chains, check for overclaiming, or before finalizing any section that makes empirical or causal assertions."
 allowed-tools: [Read, Grep, Glob, Agent]
+context: inherit
 ---
 
 # paper-audit-claims: claim audit for the decentralized-curation manuscript

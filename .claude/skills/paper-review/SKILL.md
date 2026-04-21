@@ -2,6 +2,7 @@
 name: paper-review
 description: "Systematic peer review of paper.qmd or project design docs using the thesis's 7-stage rubric. Use when the user asks to review, critique, evaluate, assess, or peer-review a manuscript section, or before finalizing substantive prose changes."
 allowed-tools: [Read, Grep, Glob, Bash, Agent]
+context: inherit
 ---
 
 # paper-review: 7-stage peer review for the decentralized-curation manuscript

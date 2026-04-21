@@ -2,6 +2,7 @@
 name: paper-fact-check
 description: "Verify factual claims (statistics, dates, quotes, cited findings) in the manuscript using web research. Use when the user asks to fact-check, verify a statistic, confirm a number, check that a citation is current, or find recent related work."
 allowed-tools: [Read, Grep, Glob, WebFetch, WebSearch, Agent]
+context: inherit
 ---
 
 # paper-fact-check: factual verification for the decentralized-curation manuscript
