@@ -415,7 +415,7 @@ This work sits at the intersection of information quality, dispute systems, and 
 
 # Threat Model
 
-The protocol assumes adversaries can be rational, coordinated, well-funded, and persistent. The important attacks are:
+The protocol assumes adversaries can be rational, coordinated, well-funded, and persistent. The table below summarizes the principal attacks and their design responses; the paragraphs that follow explain why each response works.
 
 | Attack | Design response |
 |---|---|
@@ -432,6 +432,30 @@ The protocol assumes adversaries can be rational, coordinated, well-funded, and 
 | Permissionless publishing surfaces harmful or illegal content | Protocol is content-neutral; interfaces filter according to local norms and legal requirements |
 | An ideological pool curates biased content under a permissive policy | Accuracy is adjudicated cross-pool by DDR regardless of pool membership; biased relevance is local and subject to competitive exit |
 | Curators converge on conventional wisdom, suppressing nuanced truth | Escalation shifts the focal point to what survives appeal; graduated slashing makes lazy convergence costly rather than free |
+
+**False-claim survival.** Bonded publication forces the author to lock capital that a successful challenger captures. Claim 1 derives the bond threshold $B^*$ above which false publication has negative expected value as a function of detection coverage; E1 validates the economics across the parameter range. The deterrence strength scales with detection coverage rather than with a fixed bond multiple.
+
+**Curator collusion.** A colluding bloc that coordinates scores can shift the weighted mean and slash honest reporters who fall outside the coherence band. Commit-reveal prevents real-time vote copying; draw-and-lock randomizes committee composition so attackers cannot pre-commit bribes to specific curators; graduated slashing raises the minimum bribe needed to cover deviation cost. Claim 3 derives the collusion threshold $\phi^*$, and E2-Adv and @sec-e2-prime characterize it empirically at approximately 0.15 to 0.20 for 15-member committees.
+
+**Non-falsifiable claims.** A vague or unfalsifiable claim cannot be debunked via the accuracy layer because no evidence can refute it. Without a dedicated challenge reason, such claims would be forced into binary `Debunking` adjudication, where jurors lack grounds to rule against them. The `NonFalsifiable` reason routes these to adjudication on falsifiability rather than truth, and E3 quantifies the retention-cost reduction as a function of prevalence and adjudication accuracy.
+
+**Off-topic and template-violating claims.** A claim that passes on-chain structural checks (non-empty CIDs, valid version pointers) can still violate the pool's semantic requirements: wrong topic domain or disallowed source classes. `ScopeViolation` and `TemplateViolation` challenge reasons allow post-publication enforcement of these semantic constraints without requiring computationally expensive on-chain content analysis at submission time.
+
+**Bad pools.** Permissionless pool creation means degenerate policies cannot be prevented at the protocol level. The defense is competitive: a pool with a trivial policy produces undifferentiated scores that no one values, while a pool with adversarial templates deters authors from publishing. Users migrate to better-curated alternatives. This defense is market-based and assumes sufficient alternatives and low switching costs; its limitations are discussed in the boundary conditions.
+
+**Frontend recentralization.** Protocol state is canonical and publicly readable on-chain. A biased interface can choose what to surface but cannot falsify protocol outputs. Because any party can build a competing interface against the same canonical state, a dominant frontend that censors or distorts faces competition from transparent alternatives. The barrier to entry is building an interface, not gaining permission.
+
+**Reputation as unbonded influence.** An earlier design allowed accumulated curator reputation to increase curation weight, granting influence not backed by slashable capital. The current design eliminates reputation-weighted curation entirely. Drafting and voting are purely stake-driven: influence requires locking capital at risk, and there is no mechanism through which historical performance translates into unslashable voting power.
+
+**Bootstrap failure.** A new pool needs authors, challengers, curators, and a reward budget simultaneously. Pool creators seed local reward budgets to attract initial curators, and the accuracy layer functions independently of the relevance layer: bonded claims are challengeable even before any relevance round runs. Claim 4 models the participation equilibrium and identifies challenger entry as the most fragile condition, with a cyclical dynamic when the false-claim base rate falls below the search-profitability threshold.
+
+**Stale claims.** Confidence accumulates only while a claim's bond is active. An author who withdraws freezes confidence permanently; an author who leaves an outdated claim bonded risks challenge as new evidence emerges. The incentive to withdraw obsolete claims is direct: capital locked on a stale claim earns no new value and faces growing challenge risk as the claim ages past its relevance window.
+
+**Harmful content.** The protocol does not perform content moderation because it has no content-level semantics: canonical state records bonds, challenges, and scores, not rendered text. Interfaces, which do render content, filter according to their own policies and local legal requirements. This is the same separation that operates in other permissionless systems: the transport layer is neutral, and the application layer applies editorial judgment. The limitation is that the defense depends on interface-level action; a negligent or complicit interface can surface harmful content without violating any protocol rule.
+
+**Ideological echo chambers.** A pool whose policy permits biased curation can produce biased relevance scores, and the coherence game will faithfully enforce that bias as long as curators agree. The accuracy layer operates cross-pool: any bonded claim is challengeable regardless of which pool it appears in, so factually false claims cannot be sheltered by a sympathetic pool policy. Biased relevance, however, is local to the pool; the defense against it is user exit to competing pools with stricter or different policies, not intra-pool correction.
+
+**Lazy-consensus convergence.** The coherence game rewards agreement with the committee mean, which can reward convergence on conventional wisdom even when the crowd is systematically wrong. This is distinct from active collusion: no coordination is required for curators to independently anchor on a lazy prior. Escalation partially compensates because a dissenting minority can appeal to a larger committee where sampling variance is lower and the mean concentrates more tightly around the policy-implied target. Graduated slashing makes lazy convergence costly rather than free by penalizing deviations that scale with distance from the mean. The residual risk is that when the crowd's prior is uniformly biased, escalation produces a larger committee with the same bias; this limitation is discussed in the boundary conditions.
 
 Several threats remain partially unresolved: off-chain collusion, legal pressure against visible participants, pool-policy degeneracy, coordinated capture above a sufficiently large colluding bloc, lazy-consensus convergence when the crowd is systematically wrong, and free-rider extraction of canonical on-chain state by third-party aggregators.
 
