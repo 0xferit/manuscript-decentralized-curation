@@ -31,6 +31,9 @@ jobs:
       - name: Install Python deps
         run: pip install -r requirements.txt
 
+      - name: Check repo invariants
+        run: make check-invariants
+
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         with:
@@ -43,11 +46,10 @@ jobs:
           path: |
             analysis/out
             analysis/fig
-          key: sims-${{ hashFiles('analysis/run_all.py', 'requirements.txt', 'paper.qmd', 'rpgf/design/index.qmd', 'truth-post/blueprint/index.qmd') }}
+          key: sims-${{ hashFiles('analysis/run_all.py', 'requirements.txt', 'paper.qmd', 'projects/rpgf/design.md', 'projects/truth-post/blueprint.md') }}
 
       - name: Run simulations
-        if: steps.sim-cache.outputs.cache-hit != 'true'
-        run: python analysis/run_all.py
+        run: make analysis
 
       - name: Stamp build info and render
         run: |
@@ -56,11 +58,7 @@ jobs:
           echo "**Version:** ${SHORT_SHA} ([commit](${COMMIT_URL}))" > _build-info.md
 
           LISBON_TIME=$(TZ='Europe/Lisbon' date '+%Y-%m-%dT%H:%M:%S')
-          sed -i "s|^date-modified:.*|date-modified: ${LISBON_TIME}|" paper.qmd
-          sed -i "s|^date-modified:.*|date-modified: ${LISBON_TIME}|" rpgf/design/index.qmd
-          sed -i "s|^date-modified:.*|date-modified: ${LISBON_TIME}|" truth-post/blueprint/index.qmd
-
-          quarto render --to html
+          quarto render --to html -M "date-modified:${LISBON_TIME}"
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
