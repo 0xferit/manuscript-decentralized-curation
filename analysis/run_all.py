@@ -897,11 +897,12 @@ def run_e2_adversarial(params: E2AdvParams, executor: ProcessPoolExecutor) -> No
 #     ambiguity" intent by simulating a hidden per-round is_ambiguous flag
 #     (Bernoulli(ambig_prob)). Each drafted curator draws a noisy ambiguity
 #     signal correlated with the hidden flag and abstains when the signal
-#     exceeds `abstain_signal_threshold`. If abstainers exceed
-#     `abstain_supermajority` (super-majority) of drafted seats, the round
-#     cancels (no score, no slashing of participants, non-participants lose
-#     locked tokens). Otherwise abstainers are slashed at p_i = 1 and the
-#     remaining reveals produce mu, sigma, and graduated slashing.
+#     exceeds `abstain_signal_threshold`. If the share of abstainers among
+#     distinct drafted curators exceeds `abstain_cancel_threshold` (a
+#     strict-majority cutoff at 0.5 by default; not a supermajority), the
+#     round cancels (no score, no slashing of participants, non-participants
+#     lose locked tokens). Otherwise abstainers are slashed at p_i = 1 and
+#     the remaining reveals produce mu, sigma, and graduated slashing.
 # ---------------------------------------------------------------------------
 
 
@@ -915,7 +916,7 @@ E2P_AMBIG_SIGNAL_TRUE = 0.8
 E2P_AMBIG_SIGNAL_FALSE = 0.2
 E2P_AMBIG_SIGNAL_NOISE = 0.15
 E2P_ABSTAIN_SIGNAL_THRESHOLD = 0.5
-E2P_ABSTAIN_SUPERMAJORITY = 0.5
+E2P_ABSTAIN_CANCEL_THRESHOLD = 0.5
 E2P_MIN_REVEAL_QUORUM = 5
 E2P_COLLUDER_BIAS = 0.30
 E2P_COLLUDER_NOISE_FACTOR = 0.5
@@ -945,8 +946,9 @@ def _draft_seats_njit(
             ticket_curator[idx] = i
             idx += 1
     uniform_weights = np.ones(total_tickets)
+    uniform_u = rng.random(total_tickets)
     k = target_seats if target_seats < total_tickets else total_tickets
-    drawn_ticket_ix = _weighted_sample_es_njit(rng, uniform_weights, k)
+    drawn_ticket_ix = _weighted_sample_es_njit(uniform_u, uniform_weights, k)
     drafted = np.empty(drawn_ticket_ix.shape[0], dtype=np.int64)
     for i in range(drawn_ticket_ix.shape[0]):
         drafted[i] = ticket_curator[drawn_ticket_ix[i]]
@@ -970,7 +972,7 @@ def _relevance_core_prime(
     ambig_signal_false: float,
     ambig_signal_noise: float,
     abstain_threshold: float,
-    abstain_supermajority: float,
+    abstain_cancel_threshold: float,
     min_reveal_quorum: int,
     sigma_ref_alpha: float,
     types: np.ndarray,
@@ -992,10 +994,13 @@ def _relevance_core_prime(
     for _ in range(rounds):
         drafted = _draft_seats_njit(rng, stakes, seat_size_L, target_seats)
         n_drafted = drafted.shape[0]
-        # Blueprint step 8 "underfunded" cancellation: cancel when fewer than
-        # target_seats backed seats are locked. The strict n_drafted == 0 case
-        # is a subset of this since zero drafted means zero seats locked.
-        if n_drafted < target_seats:
+        # Blueprint Flow F step 5 sets n = min(target, sum(d_i)) and the round
+        # proceeds with that many seats. _draft_seats_njit already returns at
+        # most target_seats tickets, so n_drafted equals n here. Only skip the
+        # round when no ticket is available at all; downstream the
+        # min_reveal_quorum and step-6 eligibility checks handle the
+        # underpopulated cases.
+        if n_drafted == 0:
             cancelled_rounds += 1
             continue
         for i in range(n_drafted):
@@ -1040,10 +1045,10 @@ def _relevance_core_prime(
         for i in range(n_committee):
             n_abstain += abstain_mask[i]
 
-        # Supermajority abstention cancels the round; participants keep their
+        # Majority abstention cancels the round; participants keep their
         # lock intact but abstainers are still slashed at p_i = 1.
         abstain_cancel = (
-            n_committee > 0 and (n_abstain / n_committee) > abstain_supermajority
+            n_committee > 0 and (n_abstain / n_committee) > abstain_cancel_threshold
         )
         n_revealers = n_committee - n_abstain
         quorum_fail = n_revealers < min_reveal_quorum
@@ -1128,12 +1133,12 @@ def _relevance_core_prime(
                     p = raw
                 p_i_arr[i] = p
 
-        # Abstainers: slashed at p_i = 1, delta contributes to coherent reward pool.
-        for i in range(n_committee):
-            if abstain_mask[i] == 1:
-                cur = committee[i]
-                delta_sum += w[cur]
-                # locked tokens already gone (not returned); no further action.
+        # Abstainers are slashed at p_i = 1 per blueprint step 14: their
+        # w_i flows to the pool reward budget, NOT to the in-round coherent
+        # reward distribution. Locked tokens were already subtracted from
+        # stakes when seats were drawn, so the tokens are effectively
+        # burned from the per-round accounting (the simulation does not
+        # model a cross-round pool reward budget as a separate bucket).
 
         # Distance-based delta_i contributes to reward pool; incoherent revealers
         # lose delta_i, coherent revealers get refund + share of pool + f_reward * R.
@@ -1202,7 +1207,7 @@ class E2PrimeParams:
     ambig_signal_false: float = E2P_AMBIG_SIGNAL_FALSE
     ambig_signal_noise: float = E2P_AMBIG_SIGNAL_NOISE
     abstain_signal_threshold: float = E2P_ABSTAIN_SIGNAL_THRESHOLD
-    abstain_supermajority: float = E2P_ABSTAIN_SUPERMAJORITY
+    abstain_cancel_threshold: float = E2P_ABSTAIN_CANCEL_THRESHOLD
     min_reveal_quorum: int = E2P_MIN_REVEAL_QUORUM
     sigma_ref_alpha: float = 0.05
     ks: tuple[float, ...] = (0.8, 1.0, 1.25, 1.5)
@@ -1242,7 +1247,7 @@ def _e2_prime_single_run(
         params.ambig_signal_false,
         params.ambig_signal_noise,
         params.abstain_signal_threshold,
-        params.abstain_supermajority,
+        params.abstain_cancel_threshold,
         params.min_reveal_quorum,
         params.sigma_ref_alpha,
         types,
@@ -1375,7 +1380,7 @@ class E2PrimeAdvParams:
     ambig_signal_false: float = E2P_AMBIG_SIGNAL_FALSE
     ambig_signal_noise: float = E2P_AMBIG_SIGNAL_NOISE
     abstain_signal_threshold: float = E2P_ABSTAIN_SIGNAL_THRESHOLD
-    abstain_supermajority: float = E2P_ABSTAIN_SUPERMAJORITY
+    abstain_cancel_threshold: float = E2P_ABSTAIN_CANCEL_THRESHOLD
     min_reveal_quorum: int = E2P_MIN_REVEAL_QUORUM
     sigma_ref_alpha: float = 0.05
     K: float = 1.25
@@ -1422,7 +1427,7 @@ def _e2_prime_adv_single_run(
         params.ambig_signal_false,
         params.ambig_signal_noise,
         params.abstain_signal_threshold,
-        params.abstain_supermajority,
+        params.abstain_cancel_threshold,
         params.min_reveal_quorum,
         params.sigma_ref_alpha,
         types,
