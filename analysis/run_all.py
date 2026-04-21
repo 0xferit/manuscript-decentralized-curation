@@ -1754,11 +1754,17 @@ def run_e2_prime_sigma_sweep(
 
 @dataclass(frozen=True)
 class E2PrimeTrojanParams:
-    """Trojan accumulation: colluders behave honestly for T rounds then attack."""
+    """Trojan accumulation: colluders behave honestly for T rounds then attack.
+
+    Total rounds = trojan_delay + attack_rounds, so every delay value
+    gets the same number of attack rounds and only the honest lead-in
+    varies. This isolates the accumulation effect from the confound of
+    fewer slashing opportunities.
+    """
 
     n_curators: int = 200
     target_seats: int = 15
-    rounds: int = 200
+    attack_rounds: int = 200
     noise_sigma: float = 0.08
     seat_size_L: float = E2P_SEAT_SIZE_L
     epsilon_sigma: float = E2P_EPSILON_SIGMA
@@ -1799,6 +1805,8 @@ def _e2_prime_trojan_single_run(
     )
     rng.shuffle(types)
 
+    total_rounds = trojan_delay + params.attack_rounds
+
     (
         mean_abs_error,
         cancelled_round_share,
@@ -1809,7 +1817,7 @@ def _e2_prime_trojan_single_run(
         rng,
         params.n_curators,
         params.target_seats,
-        params.rounds,
+        total_rounds,
         params.noise_sigma,
         float(params.K),
         params.seat_size_L,
@@ -2868,6 +2876,8 @@ def run_eval_summary_only() -> None:
             OUT_DIR / "e1_adversarial_results.csv",
             OUT_DIR / "e2_adversarial_results.csv",
             OUT_DIR / "e2_prime_adversarial_results.csv",
+            OUT_DIR / "e2_prime_sigma_sweep_results.csv",
+            OUT_DIR / "e2_prime_trojan_results.csv",
             OUT_DIR / "e4a_author_reputation.csv",
             OUT_DIR / "e4b_reputation_attack.csv",
             OUT_DIR / "e4d_cross_domain_scoping_summary.csv",
