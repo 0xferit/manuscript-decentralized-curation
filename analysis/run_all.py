@@ -994,11 +994,23 @@ def _relevance_core_prime(
     ema_sigma = 0.0
 
     for _ in range(rounds):
+        # Blueprint Flow F step 6: cancel before drafting when the eligible
+        # curator set (stakes[i] >= L) is below the reveal quorum, so no
+        # seats are locked and no non-participation slashes apply.
+        eligible_curators = 0
+        for i in range(n_curators):
+            if stakes[i] >= seat_size_L:
+                eligible_curators += 1
+        if eligible_curators < min_reveal_quorum:
+            cancelled_rounds += 1
+            continue
+
         drafted = _draft_seats_njit(rng, stakes, seat_size_L, target_seats)
         n_drafted = drafted.shape[0]
-        # Blueprint Flow F step 5: proceed with n = min(target, sum(d_i))
-        # seats. Only skip when no ticket is available; min_reveal_quorum
-        # downstream handles underpopulated committees.
+        # Blueprint Flow F step 5: proceed with n = min(target, sum(d_i)).
+        # The step-6 pre-draft guard above handles the underpopulated case,
+        # so zero drafted here only means zero backing tickets (e.g., every
+        # eligible curator is below L after rounding).
         if n_drafted == 0:
             cancelled_rounds += 1
             continue
