@@ -431,7 +431,7 @@ The protocol assumes adversaries can be rational, coordinated, well-funded, and 
 | Stale claims linger forever | Confidence only accumulates while bonded; withdrawn claims remain historical rather than active |
 | Permissionless publishing surfaces harmful or illegal content | Protocol is content-neutral; interfaces filter according to local norms and legal requirements |
 | An ideological pool curates biased content under a permissive policy | Accuracy is adjudicated cross-pool by DDR regardless of pool membership; biased relevance is local and subject to competitive exit |
-| Curators converge on conventional wisdom, suppressing nuanced truth | Escalation shifts the focal point to what survives appeal; graduated slashing makes lazy convergence costly rather than free |
+| Curators converge on conventional wisdom, suppressing nuanced truth | Reduced low-dispersion rewards plus escalation threat; appeal to a larger committee disciplines first-round scoring |
 
 **False-claim survival.** Bonded publication forces the author to lock capital that a successful challenger captures. Claim 1 derives the bond threshold $B^*$ above which false publication has negative expected value as a function of detection coverage; E1 validates the economics across the parameter range. The deterrence strength scales with detection coverage rather than with a fixed bond multiple.
 
@@ -439,7 +439,9 @@ The protocol assumes adversaries can be rational, coordinated, well-funded, and 
 
 **Non-falsifiable claims.** A vague or unfalsifiable claim is harder to catch through binary `Debunking` adjudication because jurors have weaker grounds to rule against a proposition that is not clearly false, only ill-posed. The `NonFalsifiable` challenge reason routes such claims to adjudication on falsifiability rather than truth, where the question is whether the proposition meets the pool's template and evidence-policy requirements. E3 quantifies the retention-cost reduction as a function of prevalence and the adjudication-accuracy gap between dedicated falsifiability review and forced-binary truth adjudication.
 
-**Off-topic and template-violating claims.** A claim that passes on-chain structural checks (non-empty CIDs, valid version pointers) can still violate the pool's semantic requirements: wrong topic domain or disallowed source classes. `ScopeViolation` and `TemplateViolation` challenge reasons allow post-publication enforcement of these semantic constraints without requiring computationally expensive on-chain content analysis at submission time.
+**Off-topic claims.** A claim may be well-formed and factually defensible but belong to the wrong topic domain. The `ScopeViolation` challenge reason lets any participant flag domain mismatch post-publication, routing adjudication to the question of whether the claim falls within the pool's declared scope rather than whether it is true.
+
+**Template-violating claims.** On-chain structural validation at submission enforces minimal field presence (non-empty CIDs, valid version pointers), but a claim can pass those checks while still violating the pool's semantic template requirements: disallowed source classes, missing required evidence fields, or incorrect formatting. The `TemplateViolation` challenge reason enforces these semantic constraints post-publication without requiring computationally expensive on-chain content analysis at submission time.
 
 **Bad pools.** Permissionless pool creation means degenerate policies cannot be prevented at the protocol level. The defense is competitive: a pool with a trivial policy produces undifferentiated scores that no one values, while a pool with adversarial templates deters authors from publishing. Users migrate to better-curated alternatives. This defense is market-based and assumes sufficient alternatives and low switching costs; its limitations are discussed in the boundary conditions.
 
