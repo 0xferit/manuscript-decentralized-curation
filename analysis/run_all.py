@@ -18,10 +18,86 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as _fm
+from matplotlib import colors as mcolors
 import numpy as np
 import pandas as pd
 import numba
 from numba import njit
+from cycler import cycler
+
+# ── Figure palettes ──
+_SANS = next((f for f in ['IBM Plex Sans','Inter','DejaVu Sans'] if f in {x.name for x in _fm.fontManager.ttflist}), 'sans-serif')
+_FIGURE_THEMES = {
+    "light": {
+        "accent": "#0c6e65",
+        "accent_alt": "#b76b37",
+        "muted": "#586676",
+        "tertiary": "#3f6471",
+        "text": "#111827",
+        "border": "#e5e7eb",
+        "bg": "#f9fafb",
+        "surface": "#f9fafb",
+    },
+    "dark": {
+        "accent": "#63ddd1",
+        "accent_alt": "#d6a268",
+        "muted": "#95b0ab",
+        "tertiary": "#8fbac3",
+        "text": "#edf6f4",
+        "border": "#223534",
+        "bg": "#0f1817",
+        "surface": "#0f1817",
+    },
+}
+
+
+def _set_light_figure_theme() -> None:
+    global _AC, _ALT, _MUT, _ALT2, _TX, _BD, _BG
+
+    palette = _FIGURE_THEMES["light"]
+    _AC = palette["accent"]
+    _ALT = palette["accent_alt"]
+    _MUT = palette["muted"]
+    _ALT2 = palette["tertiary"]
+    _TX = palette["text"]
+    _BD = palette["border"]
+    _BG = palette["bg"]
+
+    plt.rcParams.update({
+        'font.family':        _SANS,
+        'figure.facecolor':   _BG,
+        'axes.facecolor':     palette["surface"],
+        'axes.edgecolor':     _BD,
+        'axes.labelcolor':    _TX,
+        'axes.labelsize':     11,
+        'axes.labelpad':      7,
+        'axes.titlesize':     12,
+        'axes.titleweight':   'semibold',
+        'axes.titlecolor':    _TX,
+        'axes.titlepad':      10,
+        'axes.linewidth':     0.9,
+        'axes.spines.top':    False,
+        'axes.spines.right':  False,
+        'axes.prop_cycle':    cycler(color=[_AC, _ALT, _MUT, _ALT2]),
+        'axes.grid':          True,
+        'grid.color':         _BD,
+        'grid.linewidth':     0.9,
+        'xtick.color':        _MUT,
+        'ytick.color':        _MUT,
+        'xtick.labelsize':    10,
+        'ytick.labelsize':    10,
+        'legend.frameon':     False,
+        'legend.fontsize':    10,
+        'lines.linewidth':    2.2,
+        'lines.color':        _AC,
+        'patch.edgecolor':    _AC,
+        'savefig.facecolor':  _BG,
+        'savefig.dpi':        200,
+    })
+
+
+_set_light_figure_theme()
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "analysis" / "out"
@@ -46,6 +122,136 @@ def utc_now_iso() -> str:
 def ensure_dirs() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     FIG_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _dark_variant_path(path: Path) -> Path:
+    return path.with_name(f"{path.stem}-dark{path.suffix}")
+
+
+def _remap_artist_color(value):
+    if value is None:
+        return value
+    if isinstance(value, str) and value.lower() in {"none", "auto"}:
+        return value
+
+    try:
+        rgba = mcolors.to_rgba(value)
+    except (TypeError, ValueError):
+        return value
+
+    dark = _FIGURE_THEMES["dark"]
+    light_lookup = {
+        "accent": mcolors.to_rgb(_FIGURE_THEMES["light"]["accent"]),
+        "accent_alt": mcolors.to_rgb(_FIGURE_THEMES["light"]["accent_alt"]),
+        "muted": mcolors.to_rgb(_FIGURE_THEMES["light"]["muted"]),
+        "tertiary": mcolors.to_rgb(_FIGURE_THEMES["light"]["tertiary"]),
+        "text": mcolors.to_rgb(_FIGURE_THEMES["light"]["text"]),
+        "border": mcolors.to_rgb(_FIGURE_THEMES["light"]["border"]),
+        "bg": mcolors.to_rgb(_FIGURE_THEMES["light"]["bg"]),
+    }
+
+    for key, light_rgb in light_lookup.items():
+        if np.allclose(rgba[:3], light_rgb, atol=5e-3):
+            return (*mcolors.to_rgb(dark[key]), rgba[3])
+    return value
+
+
+def _remap_artist_colors(values):
+    array = np.asarray(values)
+    if array.ndim == 1 and array.size in {3, 4}:
+        return _remap_artist_color(tuple(array.tolist()))
+    if array.ndim == 2 and array.shape[1] in {3, 4}:
+        return np.array(
+            [_remap_artist_color(tuple(row.tolist())) for row in array],
+            dtype=float,
+        )
+    return values
+
+
+def _style_patch_dark(patch) -> None:
+    if hasattr(patch, "get_facecolor") and hasattr(patch, "set_facecolor"):
+        patch.set_facecolor(_remap_artist_color(patch.get_facecolor()))
+    if hasattr(patch, "get_edgecolor") and hasattr(patch, "set_edgecolor"):
+        patch.set_edgecolor(_remap_artist_color(patch.get_edgecolor()))
+
+
+def _style_collection_dark(collection) -> None:
+    if hasattr(collection, "get_facecolor") and hasattr(collection, "set_facecolor"):
+        facecolors = collection.get_facecolor()
+        if len(facecolors):
+            collection.set_facecolor(_remap_artist_colors(facecolors))
+    if hasattr(collection, "get_edgecolor") and hasattr(collection, "set_edgecolor"):
+        edgecolors = collection.get_edgecolor()
+        if len(edgecolors):
+            collection.set_edgecolor(_remap_artist_colors(edgecolors))
+
+
+def _restyle_figure_for_dark(fig: plt.Figure) -> None:
+    dark = _FIGURE_THEMES["dark"]
+    fig.patch.set_facecolor(dark["bg"])
+
+    for text in fig.texts:
+        text.set_color(_remap_artist_color(text.get_color()))
+
+    for ax in fig.axes:
+        ax.set_facecolor(dark["surface"])
+        ax.title.set_color(dark["text"])
+        ax.xaxis.label.set_color(dark["muted"])
+        ax.yaxis.label.set_color(dark["muted"])
+        ax.tick_params(colors=dark["muted"])
+
+        for tick in [*ax.get_xticklabels(), *ax.get_yticklabels()]:
+            tick.set_color(dark["muted"])
+
+        for spine in ax.spines.values():
+            spine.set_color(dark["border"])
+
+        for line in ax.get_lines():
+            line.set_color(_remap_artist_color(line.get_color()))
+            if hasattr(line, "get_markerfacecolor") and hasattr(line, "set_markerfacecolor"):
+                line.set_markerfacecolor(
+                    _remap_artist_color(line.get_markerfacecolor())
+                )
+            if hasattr(line, "get_markeredgecolor") and hasattr(line, "set_markeredgecolor"):
+                line.set_markeredgecolor(
+                    _remap_artist_color(line.get_markeredgecolor())
+                )
+
+        for patch in ax.patches:
+            _style_patch_dark(patch)
+
+        for collection in ax.collections:
+            _style_collection_dark(collection)
+
+        for text in ax.texts:
+            text.set_color(_remap_artist_color(text.get_color()))
+
+        legend = ax.get_legend()
+        if legend is not None:
+            for legend_text in legend.get_texts():
+                legend_text.set_color(dark["text"])
+            if legend.get_title() is not None:
+                legend.get_title().set_color(dark["muted"])
+            frame = legend.get_frame()
+            frame.set_facecolor(dark["bg"])
+            frame.set_edgecolor(dark["border"])
+
+        ax.grid(True, color=dark["border"], linewidth=0.8, alpha=0.32)
+
+
+def _save_figure_variants(fig: plt.Figure, path: Path, **savefig_kwargs) -> None:
+    savefig_kwargs.setdefault("bbox_inches", "tight")
+    savefig_kwargs.setdefault("pad_inches", 0.24)
+
+    light_kwargs = dict(savefig_kwargs)
+    light_kwargs["facecolor"] = fig.get_facecolor()
+    fig.savefig(path, **light_kwargs)
+
+    _restyle_figure_for_dark(fig)
+
+    dark_kwargs = dict(savefig_kwargs)
+    dark_kwargs["facecolor"] = fig.get_facecolor()
+    fig.savefig(_dark_variant_path(path), **dark_kwargs)
 
 
 def save_metadata() -> None:
@@ -263,11 +469,14 @@ def run_e1(params: E1Params) -> None:
     df.to_csv(OUT_DIR / "e1_results.csv", index=False)
 
     plt.figure(figsize=(7.0, 4.0))
-    for s_over_b in params.stake_ratios:
+    stake_colors = [_AC, _ALT, _MUT, _ALT2]
+    for idx, s_over_b in enumerate(params.stake_ratios):
         sub = df[df["stake_over_bounty"] == s_over_b]
+        color = stake_colors[idx % len(stake_colors)]
         plt.plot(
             sub["p_juror_correct"],
             sub["ev_false_mean"] / params.bounty,
+            color=color,
             label=f"S/B={s_over_b:g}",
         )
         plt.fill_between(
@@ -275,8 +484,9 @@ def run_e1(params: E1Params) -> None:
             (sub["ev_false_mean"] - sub["ev_false_ci95"]) / params.bounty,
             (sub["ev_false_mean"] + sub["ev_false_ci95"]) / params.bounty,
             alpha=0.15,
+            color=color,
         )
-    plt.axhline(0.0, color="black", linewidth=0.8)
+    plt.axhline(0.0, color=_TX, linewidth=0.8)
     plt.xlabel("Per-juror correctness p")
     plt.ylabel("Challenger EV on debunking challenge (normalized by bounty)")
     plt.title(
@@ -284,18 +494,19 @@ def run_e1(params: E1Params) -> None:
     )
     plt.legend(frameon=False)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "e1_challenger_ev.png", dpi=200)
+    _save_figure_variants(plt.gcf(), FIG_DIR / "e1_challenger_ev.png", dpi=200)
     plt.close()
 
     plt.figure(figsize=(7.0, 4.0))
     s_over_b = 0.25
     sub = df[df["stake_over_bounty"] == s_over_b]
-    plt.plot(sub["p_juror_correct"], sub["false_survival_mean"])
+    plt.plot(sub["p_juror_correct"], sub["false_survival_mean"], color=_AC)
     plt.fill_between(
         sub["p_juror_correct"],
         sub["false_survival_mean"] - sub["false_survival_ci95"],
         sub["false_survival_mean"] + sub["false_survival_ci95"],
         alpha=0.2,
+        color=_AC,
     )
     plt.xlabel("Per-juror correctness p")
     plt.ylabel("False-claim survival probability")
@@ -304,7 +515,7 @@ def run_e1(params: E1Params) -> None:
     )
     plt.ylim(0.0, 1.0)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "e1_false_survival.png", dpi=200)
+    _save_figure_variants(plt.gcf(), FIG_DIR / "e1_false_survival.png", dpi=200)
     plt.close()
 
 
@@ -332,10 +543,10 @@ def run_e1_detection_sensitivity(params: E1SensitivityParams) -> None:
 
     fig, axes = plt.subplots(1, 2, figsize=(9.0, 4.0), sharex=True)
 
-    axes[0].plot(df["p_detect"], df["false_survival"], color="#1f77b4")
+    axes[0].plot(df["p_detect"], df["false_survival"], color=_AC)
     axes[0].axvline(
         params.representative_p_detect,
-        color="black",
+        color=_TX,
         linestyle="--",
         linewidth=0.8,
     )
@@ -344,10 +555,10 @@ def run_e1_detection_sensitivity(params: E1SensitivityParams) -> None:
     axes[0].set_ylim(0.0, 1.0)
     axes[0].set_title("Single-window survival")
 
-    axes[1].plot(df["p_detect"], df["bond_threshold_multiplier"], color="#d62728")
+    axes[1].plot(df["p_detect"], df["bond_threshold_multiplier"], color=_MUT)
     axes[1].axvline(
         params.representative_p_detect,
-        color="black",
+        color=_TX,
         linestyle="--",
         linewidth=0.8,
     )
@@ -360,7 +571,7 @@ def run_e1_detection_sensitivity(params: E1SensitivityParams) -> None:
         f"E1: Sensitivity to detection coverage at p={params.p_juror_correct:.2f}, N={params.n_jurors}"
     )
     fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.95))
-    fig.savefig(FIG_DIR / "e1_detection_sensitivity.png", dpi=200)
+    _save_figure_variants(fig, FIG_DIR / "e1_detection_sensitivity.png", dpi=200)
     plt.close(fig)
 
 
@@ -463,7 +674,7 @@ def run_e1_adversarial(params: E1AdvParams, executor: ProcessPoolExecutor) -> No
         labels,
         df["survival_rate_mean"],
         yerr=df["survival_rate_ci95"],
-        color="#4C72B0",
+        color=_AC,
         capsize=4,
     )
     ax1.set_ylabel("False-claim survival rate")
@@ -473,14 +684,14 @@ def run_e1_adversarial(params: E1AdvParams, executor: ProcessPoolExecutor) -> No
     ax1.set_ylim(0.0, 1.0)
     ax1.axhline(
         1.0 - params.p_detect,
-        color="gray",
+        color=_MUT,
         linestyle="--",
         linewidth=0.8,
         label="Unchallenged rate",
     )
     ax1.legend(frameon=False, fontsize=9)
 
-    colors = ["#C44E52" if v < 0 else "#55A868" for v in df["adversary_balance_mean"]]
+    colors = [_MUT if v < 0 else _AC for v in df["adversary_balance_mean"]]
     ax2.bar(
         labels,
         df["adversary_balance_mean"],
@@ -492,10 +703,10 @@ def run_e1_adversarial(params: E1AdvParams, executor: ProcessPoolExecutor) -> No
     ax2.set_title(
         f"E1-Adv: Adversary profit/loss ({params.n_attacks} attacks, N={params.n_seeds} seeds, 95% CI)"
     )
-    ax2.axhline(0.0, color="black", linewidth=0.8)
+    ax2.axhline(0.0, color=_TX, linewidth=0.8)
 
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "e1_adversarial.png", dpi=200)
+    _save_figure_variants(plt.gcf(), FIG_DIR / "e1_adversarial.png", dpi=200)
     plt.close()
 
 
@@ -686,12 +897,15 @@ def run_e2(params: E2Params, executor: ProcessPoolExecutor) -> None:
     df.to_csv(OUT_DIR / "e2_results.csv", index=False)
 
     plt.figure(figsize=(7.0, 4.0))
-    for k in params.ks:
+    competence_colors = [_AC, _ALT, _MUT, _ALT2]
+    for idx, k in enumerate(params.ks):
         sub = df[df["K"] == k].sort_values("competent_frac")
+        color = competence_colors[idx % len(competence_colors)]
         plt.plot(
             sub["competent_frac"],
             sub["mean_abs_error_mean"],
             marker="o",
+            color=color,
             label=f"K={k:g}",
         )
         plt.fill_between(
@@ -699,6 +913,7 @@ def run_e2(params: E2Params, executor: ProcessPoolExecutor) -> None:
             sub["mean_abs_error_mean"] - sub["mean_abs_error_ci95"],
             sub["mean_abs_error_mean"] + sub["mean_abs_error_ci95"],
             alpha=0.15,
+            color=color,
         )
     plt.xlabel("Fraction competent curators")
     plt.ylabel("Mean |mu - r|")
@@ -707,13 +922,16 @@ def run_e2(params: E2Params, executor: ProcessPoolExecutor) -> None:
     )
     plt.legend(frameon=False, ncol=2)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "e2_relevance_error.png", dpi=200)
+    _save_figure_variants(plt.gcf(), FIG_DIR / "e2_relevance_error.png", dpi=200)
     plt.close()
 
     plt.figure(figsize=(7.0, 4.0))
     sub = df[df["K"] == 1.25].sort_values("competent_frac")
     plt.plot(
-        sub["competent_frac"], sub["final_competent_stake_share_mean"], marker="o"
+        sub["competent_frac"],
+        sub["final_competent_stake_share_mean"],
+        marker="o",
+        color=_AC,
     )
     plt.fill_between(
         sub["competent_frac"],
@@ -722,6 +940,7 @@ def run_e2(params: E2Params, executor: ProcessPoolExecutor) -> None:
         sub["final_competent_stake_share_mean"]
         + sub["final_competent_stake_share_ci95"],
         alpha=0.2,
+        color=_AC,
     )
     plt.xlabel("Initial fraction competent curators")
     plt.ylabel("Final competent stake share")
@@ -730,7 +949,7 @@ def run_e2(params: E2Params, executor: ProcessPoolExecutor) -> None:
     )
     plt.ylim(0.0, 1.0)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "e2_competence_filter.png", dpi=200)
+    _save_figure_variants(plt.gcf(), FIG_DIR / "e2_competence_filter.png", dpi=200)
     plt.close()
 
 
@@ -831,13 +1050,13 @@ def run_e2_adversarial(params: E2AdvParams, executor: ProcessPoolExecutor) -> No
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.0, 4.5))
     x = df["colluding_frac"]
 
-    ax1.plot(x, df["mean_abs_error_mean"], marker="o", color="#4C72B0")
+    ax1.plot(x, df["mean_abs_error_mean"], marker="o", color=_AC)
     ax1.fill_between(
         x,
         df["mean_abs_error_mean"] - df["mean_abs_error_ci95"],
         df["mean_abs_error_mean"] + df["mean_abs_error_ci95"],
         alpha=0.2,
-        color="#4C72B0",
+        color=_AC,
     )
     ax1.set_xlabel("Fraction of colluding curators")
     ax1.set_ylabel("Mean |mu - r|")
@@ -850,14 +1069,14 @@ def run_e2_adversarial(params: E2AdvParams, executor: ProcessPoolExecutor) -> No
         df["initial_colluder_stake_share"],
         marker="o",
         linestyle="--",
-        color="gray",
+        color=_MUT,
         label="Initial stake share",
     )
     ax2.plot(
         x,
         df["final_colluder_stake_share_mean"],
         marker="o",
-        color="#C44E52",
+        color=_AC,
         label="Final stake share",
     )
     ax2.fill_between(
@@ -865,7 +1084,7 @@ def run_e2_adversarial(params: E2AdvParams, executor: ProcessPoolExecutor) -> No
         df["final_colluder_stake_share_mean"] - df["final_colluder_stake_share_ci95"],
         df["final_colluder_stake_share_mean"] + df["final_colluder_stake_share_ci95"],
         alpha=0.2,
-        color="#C44E52",
+        color=_AC,
     )
     ax2.set_xlabel("Fraction of colluding curators")
     ax2.set_ylabel("Colluder stake share")
@@ -876,7 +1095,7 @@ def run_e2_adversarial(params: E2AdvParams, executor: ProcessPoolExecutor) -> No
     ax2.legend(frameon=False, fontsize=9)
 
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "e2_adversarial.png", dpi=200)
+    _save_figure_variants(plt.gcf(), FIG_DIR / "e2_adversarial.png", dpi=200)
     plt.close()
 
 
@@ -1313,12 +1532,15 @@ def run_e2_prime(params: E2PrimeParams, executor: ProcessPoolExecutor) -> None:
     df.to_csv(OUT_DIR / "e2_prime_results.csv", index=False)
 
     plt.figure(figsize=(7.0, 4.0))
-    for k in params.ks:
+    competence_colors = [_AC, _ALT, _MUT, _ALT2]
+    for idx, k in enumerate(params.ks):
         sub = df[df["K"] == k].sort_values("competent_frac")
+        color = competence_colors[idx % len(competence_colors)]
         plt.plot(
             sub["competent_frac"],
             sub["mean_abs_error_mean"],
             marker="o",
+            color=color,
             label=f"K={k:g}",
         )
         plt.fill_between(
@@ -1326,6 +1548,7 @@ def run_e2_prime(params: E2PrimeParams, executor: ProcessPoolExecutor) -> None:
             sub["mean_abs_error_mean"] - sub["mean_abs_error_ci95"],
             sub["mean_abs_error_mean"] + sub["mean_abs_error_ci95"],
             alpha=0.15,
+            color=color,
         )
     plt.xlabel("Fraction competent curators")
     plt.ylabel("Mean |mu - r|")
@@ -1334,13 +1557,16 @@ def run_e2_prime(params: E2PrimeParams, executor: ProcessPoolExecutor) -> None:
     )
     plt.legend(frameon=False, ncol=2)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "e2_prime_relevance_error.png", dpi=200)
+    _save_figure_variants(plt.gcf(), FIG_DIR / "e2_prime_relevance_error.png", dpi=200)
     plt.close()
 
     plt.figure(figsize=(7.0, 4.0))
     sub = df[df["K"] == 1.25].sort_values("competent_frac")
     plt.plot(
-        sub["competent_frac"], sub["final_competent_stake_share_mean"], marker="o"
+        sub["competent_frac"],
+        sub["final_competent_stake_share_mean"],
+        marker="o",
+        color=_AC,
     )
     plt.fill_between(
         sub["competent_frac"],
@@ -1349,6 +1575,7 @@ def run_e2_prime(params: E2PrimeParams, executor: ProcessPoolExecutor) -> None:
         sub["final_competent_stake_share_mean"]
         + sub["final_competent_stake_share_ci95"],
         alpha=0.2,
+        color=_AC,
     )
     plt.xlabel("Initial fraction competent curators")
     plt.ylabel("Final competent stake share")
@@ -1357,7 +1584,7 @@ def run_e2_prime(params: E2PrimeParams, executor: ProcessPoolExecutor) -> None:
     )
     plt.ylim(0.0, 1.0)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "e2_prime_competence_filter.png", dpi=200)
+    _save_figure_variants(plt.gcf(), FIG_DIR / "e2_prime_competence_filter.png", dpi=200)
     plt.close()
 
 
@@ -1495,13 +1722,13 @@ def run_e2_prime_adversarial(
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.0, 4.5))
     x = df["colluding_frac"]
 
-    ax1.plot(x, df["mean_abs_error_mean"], marker="o", color="#4C72B0")
+    ax1.plot(x, df["mean_abs_error_mean"], marker="o", color=_AC)
     ax1.fill_between(
         x,
         df["mean_abs_error_mean"] - df["mean_abs_error_ci95"],
         df["mean_abs_error_mean"] + df["mean_abs_error_ci95"],
         alpha=0.2,
-        color="#4C72B0",
+        color=_AC,
     )
     ax1.set_xlabel("Fraction of colluding curators")
     ax1.set_ylabel("Mean |mu - r|")
@@ -1514,14 +1741,14 @@ def run_e2_prime_adversarial(
         df["initial_colluder_stake_share"],
         marker="o",
         linestyle="--",
-        color="gray",
+        color=_MUT,
         label="Initial stake share",
     )
     ax2.plot(
         x,
         df["final_colluder_stake_share_mean"],
         marker="o",
-        color="#C44E52",
+        color=_AC,
         label="Final stake share",
     )
     ax2.fill_between(
@@ -1529,7 +1756,7 @@ def run_e2_prime_adversarial(
         df["final_colluder_stake_share_mean"] - df["final_colluder_stake_share_ci95"],
         df["final_colluder_stake_share_mean"] + df["final_colluder_stake_share_ci95"],
         alpha=0.2,
-        color="#C44E52",
+        color=_AC,
     )
     ax2.set_xlabel("Fraction of colluding curators")
     ax2.set_ylabel("Colluder stake share")
@@ -1540,7 +1767,7 @@ def run_e2_prime_adversarial(
     ax2.legend(frameon=False, fontsize=9)
 
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "e2_prime_adversarial.png", dpi=200)
+    _save_figure_variants(plt.gcf(), FIG_DIR / "e2_prime_adversarial.png", dpi=200)
     plt.close()
 
 
@@ -2008,7 +2235,8 @@ def run_e3(params: E3Params) -> None:
         .sort_values("nonfalsifiable_frac")
         .copy()
     )
-    for forced_binary_p in params.forced_binary_juror_correct_scenarios:
+    baseline_colors = [_MUT, _ALT]
+    for idx, forced_binary_p in enumerate(params.forced_binary_juror_correct_scenarios):
         sub = (
             df[df["forced_binary_juror_correct"] == forced_binary_p]
             .sort_values("nonfalsifiable_frac")
@@ -2018,6 +2246,7 @@ def run_e3(params: E3Params) -> None:
             sub["nonfalsifiable_frac"],
             sub["baseline_bad_item_retention"],
             marker="o",
+            color=baseline_colors[idx % len(baseline_colors)],
             label=f"forced binary baseline (p={forced_binary_p:.2f})",
         )
     plt.plot(
@@ -2025,7 +2254,7 @@ def run_e3(params: E3Params) -> None:
         defended["defended_bad_item_retention"],
         marker="o",
         linewidth=2.2,
-        color="black",
+        color=_AC,
         label=f"dedicated reason (p={params.p_nonfalsifiable_reason_juror_correct:.2f})",
     )
     plt.xlabel("Fraction of non-falsifiable bad items")
@@ -2034,7 +2263,7 @@ def run_e3(params: E3Params) -> None:
     plt.legend(frameon=False, fontsize=8)
     plt.ylim(0.0, 1.0)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "e3_nonfalsifiable.png", dpi=200)
+    _save_figure_variants(plt.gcf(), FIG_DIR / "e3_nonfalsifiable.png", dpi=200)
     plt.close()
 
 
@@ -2156,19 +2385,31 @@ def run_e4a(params: E4aParams) -> None:
 
     plt.figure(figsize=(11.0, 4.0))
     ax1 = plt.subplot(1, 2, 1)
-    ax1.plot(df["round"], df["honest_median_rep_mean"], label="honest authors")
+    ax1.plot(
+        df["round"],
+        df["honest_median_rep_mean"],
+        color=_AC,
+        label="honest authors",
+    )
     ax1.fill_between(
         df["round"],
         df["honest_median_rep_mean"] - df["honest_median_rep_ci95"],
         df["honest_median_rep_mean"] + df["honest_median_rep_ci95"],
         alpha=0.2,
+        color=_AC,
     )
-    ax1.plot(df["round"], df["dishonest_median_rep_mean"], label="dishonest authors")
+    ax1.plot(
+        df["round"],
+        df["dishonest_median_rep_mean"],
+        color=_ALT,
+        label="dishonest authors",
+    )
     ax1.fill_between(
         df["round"],
         df["dishonest_median_rep_mean"] - df["dishonest_median_rep_ci95"],
         df["dishonest_median_rep_mean"] + df["dishonest_median_rep_ci95"],
         alpha=0.2,
+        color=_ALT,
     )
     ax1.set_xlabel("Publication rounds")
     ax1.set_ylabel("Median author reputation")
@@ -2179,6 +2420,7 @@ def run_e4a(params: E4aParams) -> None:
     ax2.plot(
         sensitivity["dishonest_challenge_failed_prob"],
         sensitivity["honest_final_median_rep_mean"],
+        color=_AC,
         label="honest authors",
     )
     ax2.fill_between(
@@ -2188,10 +2430,12 @@ def run_e4a(params: E4aParams) -> None:
         sensitivity["honest_final_median_rep_mean"]
         + sensitivity["honest_final_median_rep_ci95"],
         alpha=0.2,
+        color=_AC,
     )
     ax2.plot(
         sensitivity["dishonest_challenge_failed_prob"],
         sensitivity["dishonest_final_median_rep_mean"],
+        color=_ALT,
         label="dishonest authors",
     )
     ax2.fill_between(
@@ -2201,10 +2445,11 @@ def run_e4a(params: E4aParams) -> None:
         sensitivity["dishonest_final_median_rep_mean"]
         + sensitivity["dishonest_final_median_rep_ci95"],
         alpha=0.2,
+        color=_ALT,
     )
     ax2.axvline(
         params.dishonest_challenge_failed_prob,
-        color="0.4",
+        color=_MUT,
         linestyle="--",
         linewidth=1.0,
     )
@@ -2214,7 +2459,7 @@ def run_e4a(params: E4aParams) -> None:
 
     plt.suptitle("E4a: Author reputation as a standing bond", y=1.02)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "e4a_author_reputation.png", dpi=200)
+    _save_figure_variants(plt.gcf(), FIG_DIR / "e4a_author_reputation.png", dpi=200)
     plt.close()
 
 
@@ -2399,7 +2644,7 @@ def run_e4d(params: E4dParams) -> None:
 
     fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.0))
     labels = {"scoped": "scoped (Pool H starts at 0)", "unscoped": "unscoped (imports Pool L rep)"}
-    colors = {"scoped": "#1f77b4", "unscoped": "#d62728"}
+    colors = {"scoped": _AC, "unscoped": _MUT}
 
     for condition in ("scoped", "unscoped"):
         sub = agg[agg["condition"] == condition]
@@ -2442,7 +2687,7 @@ def run_e4d(params: E4dParams) -> None:
 
     fig.suptitle("E4d: Cross-domain author reputation scoping", y=1.02)
     fig.tight_layout()
-    fig.savefig(FIG_DIR / "e4d_cross_domain_scoping.png", dpi=200, bbox_inches="tight")
+    _save_figure_variants(fig, FIG_DIR / "e4d_cross_domain_scoping.png", dpi=200, bbox_inches="tight")
     plt.close(fig)
 @dataclass(frozen=True)
 class E4bParams:
@@ -2619,7 +2864,7 @@ def run_e4b(params: E4bParams, executor: ProcessPoolExecutor) -> None:
 
     labels = ["random", *[f"+{bias:.2f} bias" for bias in params.attacker_biases]]
     attacker_models = ["random", *[f"bias_{bias:.2f}" for bias in params.attacker_biases]]
-    colors = ["#4C72B0", "#DD8452", "#C44E52"]
+    colors = [_AC, _ALT, _MUT]
     x = np.arange(len(params.rep_decays))
     width = 0.24
 
@@ -2661,7 +2906,7 @@ def run_e4b(params: E4bParams, executor: ProcessPoolExecutor) -> None:
     )
     ax1.legend(frameon=False, fontsize=9)
 
-    ax2.axhline(0.0, color="black", linewidth=0.8)
+    ax2.axhline(0.0, color=_TX, linewidth=0.8)
     ax2.set_xticks(x)
     ax2.set_xticklabels(tick_labels)
     ax2.set_xlabel("Reputation decay rate δ")
@@ -2669,7 +2914,7 @@ def run_e4b(params: E4bParams, executor: ProcessPoolExecutor) -> None:
     ax2.set_title("E4b: Directional distortion under biased strategic voting")
 
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "e4b_reputation_attack.png", dpi=200)
+    _save_figure_variants(plt.gcf(), FIG_DIR / "e4b_reputation_attack.png", dpi=200)
     plt.close()
 
 

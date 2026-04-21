@@ -1,0 +1,101 @@
+<script>
+(() => {
+  const FIGURE_PATH = /(?:^|\/)(analysis\/fig|diagrams)\/[^?#]+\.(png|svg)$/i;
+  const SHELL_ID = "paper-shell";
+
+  const variantSrc = (src, theme) => {
+    if (!src || src.startsWith("data:")) {
+      return src;
+    }
+    const [path, query = ""] = src.split("?");
+    const match = path.match(/^(.*?)(-dark)?(\.[^.]+)$/);
+    if (!match) {
+      return src;
+    }
+    const [, base, , ext] = match;
+    const themedPath = theme === "dark" ? `${base}-dark${ext}` : `${base}${ext}`;
+    return query ? `${themedPath}?${query}` : themedPath;
+  };
+
+  const applyFigureTheme = () => {
+    const dark = document.body.classList.contains("quarto-dark");
+    const theme = dark ? "dark" : "light";
+
+    document.querySelectorAll("img").forEach((img) => {
+      const currentSrc = img.getAttribute("src");
+      if (!currentSrc || currentSrc.startsWith("data:")) {
+        return;
+      }
+
+      const parsed = new URL(currentSrc, window.location.href);
+      if (!FIGURE_PATH.test(parsed.pathname)) {
+        return;
+      }
+
+      const lightSrc = img.dataset.lightSrc || variantSrc(currentSrc, "light");
+      const darkSrc = img.dataset.darkSrc || variantSrc(lightSrc, "dark");
+      const desiredSrc = theme === "dark" ? darkSrc : lightSrc;
+
+      img.dataset.lightSrc = lightSrc;
+      img.dataset.darkSrc = darkSrc;
+
+      if (img.getAttribute("src") !== desiredSrc) {
+        img.setAttribute("src", desiredSrc);
+      }
+    });
+  };
+
+  const syncShell = () => {
+    let shell = document.getElementById(SHELL_ID);
+    if (!shell) {
+      shell = document.createElement("div");
+      shell.id = SHELL_ID;
+      shell.innerHTML = `
+        <a id="paper-shell-brand" href="#title-block-header">Decentralized Curation</a>
+        <div id="paper-shell-controls"></div>
+      `;
+      document.body.appendChild(shell);
+    }
+
+    const controls = shell.querySelector("#paper-shell-controls");
+    const toggle = document.querySelector(".quarto-color-scheme-toggle");
+    if (toggle) {
+      toggle.classList.add("paper-theme-toggle");
+      toggle.setAttribute("aria-label", "Toggle color scheme");
+      if (!toggle.dataset.segmentedToggle) {
+        toggle.innerHTML = `
+          <span class="theme-option theme-option-light">Light</span>
+          <span class="theme-option theme-option-dark">Dark</span>
+        `;
+        toggle.dataset.segmentedToggle = "true";
+      }
+      if (toggle.parentElement !== controls) {
+        controls.appendChild(toggle);
+      }
+    }
+
+    const isDark = document.body.classList.contains("quarto-dark");
+    shell.dataset.theme = isDark ? "dark" : "light";
+  };
+
+  const onReady = () => {
+    const refresh = () => {
+      syncShell();
+      applyFigureTheme();
+    };
+
+    refresh();
+    new MutationObserver(refresh).observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+      childList: true,
+    });
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", onReady, { once: true });
+  } else {
+    onReady();
+  }
+})();
+</script>

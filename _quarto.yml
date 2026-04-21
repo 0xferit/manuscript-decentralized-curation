@@ -13,19 +13,23 @@ date-format: "MMMM D, YYYY [at] HH:mm"
 format:
   html:
     output-file: index
-    embed-resources: true
+    embed-resources: false
     css: fonts.css
+    include-after-body: figure-theme-swap.html
     theme:
       light: [flatly, custom-light.scss]
       dark: [darkly, custom-dark.scss]
     respect-user-color-scheme: true
     page-layout: article
     grid:
-      body-width: 820px
-      margin-width: 300px
-      gutter-width: 1.5rem
+      body-width: 780px
+      margin-width: 220px
+      gutter-width: 1.75rem
     toc: true
-    toc-depth: 3
+    toc-location: left
+    toc-title: Contents
+    toc-depth: 2
+    toc-expand: 1
     number-sections: true
     anchor-sections: true
     html-math-method: katex
@@ -36,3 +40,7 @@ format:
     number-sections: true
 
 bibliography: references.bib
+
+resources:
+  - analysis/fig/*-dark.png
+  - diagrams/fig-*-dark.png
