@@ -15,8 +15,8 @@ format:
     output-file: index
     embed-resources: true
     theme:
-      light: [flatly, custom.scss]
-      dark: [darkly, custom.scss]
+      light: [flatly, custom-light.scss]
+      dark: [darkly, custom-dark.scss]
     respect-user-color-scheme: true
     page-layout: article
     grid:
