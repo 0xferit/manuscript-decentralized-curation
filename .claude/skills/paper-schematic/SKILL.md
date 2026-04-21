@@ -2,6 +2,7 @@
 name: paper-schematic
 description: "Generate publication-quality conceptual diagrams for the manuscript (four-step framework, protocol architecture, state-machine flows, actor-interaction diagrams). Use when the user asks to add a diagram, draw a schematic, illustrate a concept, or create a figure that is not a simulation output."
 allowed-tools: [Read, Write, Edit, Bash, Agent]
+context: inherit
 ---
 
 # paper-schematic: conceptual diagrams for the decentralized-curation manuscript
