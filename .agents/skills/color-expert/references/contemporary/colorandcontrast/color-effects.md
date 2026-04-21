@@ -34,6 +34,6 @@ may not experience the same effects from successive contrast.
 
 A teal color appears due to spatial color mixing of white, green and blue.
 
-All colors on digital displays are percieved due to spatial color mixing of pixel-level signals of red, green, and blue.
+All colors on digital displays are perceived due to spatial color mixing of pixel-level signals of red, green, and blue.
 
 > (Purkinje effect) Peak wavelength sensitivity of photoreceptors shift towards blue in dark light during dark adaptation. Reds will appear relatively darker than other colors as light levels decrease.

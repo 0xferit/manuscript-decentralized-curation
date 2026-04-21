@@ -12,7 +12,7 @@ Colors will appear different in dark mode. In some cases, unique color values ma
 
 A comparison of gray color scales following a linear progression vs an approximate power function to produce a more optically balanced progression.
 
-This illusion can effect the experience of dark mode as it relates to simultaneous brightness contrast.
+This illusion can affect the experience of dark mode as it relates to simultaneous brightness contrast.
 
 ,children:'The latest color difference formula is Delta E 2000. The minimum value of 1 stands for a
 
