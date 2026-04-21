@@ -575,11 +575,11 @@ The result is clean. When reputation is pool-scoped, the attacker enters Pool H 
 
 # Boundary Conditions And Open Problems
 
-This paper establishes an end-state protocol architecture, a mechanism decomposition by quality dimension, and a simulation-based evaluation program grounded in a partial historical deployment. What it does not yet establish is live end-state performance at scale. The right reading of the remaining gaps is therefore not that the framework collapses, but that its claims are bounded by explicit empirical and operational conditions.
+This paper establishes an end-state protocol architecture, a mechanism decomposition by quality dimension, and a simulation-based evaluation program grounded in a partial historical deployment. Its claims are bounded by explicit empirical and operational conditions: the evaluation is design-analytic and simulation-based, not a report from live deployment at scale.
 
 ## Empirical boundary
 
-No live deployment yet validates the complete design. Truth Post validated only a partial predecessor. The claims in this paper about incentive alignment, competence filtering, and falsifiability defense are therefore claims about the specified design under the analyzed assumptions, not about field performance already demonstrated at scale.
+No live deployment validates the complete design. Truth Post validated a partial predecessor. The claims about incentive alignment, competence filtering, and falsifiability defense are claims about the specified design under the analyzed assumptions, not about field performance at scale.
 
 ## Inherited dependencies
 
@@ -601,7 +601,7 @@ The same locality applies to policy quality and bootstrap. The coherence game wo
 
 Immutable contracts avoid one class of governance risk, but they require explicit migration discipline. New versions must coexist with old ones, and interfaces must aggregate across versions when continuity matters.
 
-Scalability, structured claim authoring, challenge participation, legal exposure, and interface discoverability are all still practical deployment constraints. Pooled staking and random drafting do not establish immunity from targeted legal action. They do not undercut the conceptual framework, but they do determine whether a specified protocol becomes a robust live system.
+Scalability, structured claim authoring, challenge participation, legal exposure, and interface discoverability are practical deployment constraints. Pooled staking and random drafting do not establish immunity from targeted legal action. They do not undercut the conceptual framework, but they do determine whether a specified protocol becomes a robust live system.
 
 # Conclusion
 
