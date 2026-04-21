@@ -14,7 +14,7 @@ Trigger when the user asks to review, critique, evaluate, assess, audit, or peer
 
 ## Project-specific rubric (7 stages)
 
-This rubric is identical to the one in `.github/copilot-instructions.md:22-56` so Claude Code and GitHub Copilot reviewers produce comparable output.
+This rubric is identical to the `Scientific review criteria` section of `.github/copilot-instructions.md` (the canonical thesis-level instructions file that `CLAUDE.md` and `AGENTS.md` symlink through to) so Claude Code and GitHub Copilot reviewers produce comparable output.
 
 ### Stage 1: Initial assessment
 Evaluate scope, novelty, and overall contribution quality before diving into details.
@@ -49,6 +49,6 @@ Walk through Abstract, Introduction, Methods, Results, Discussion, and Reference
 Organize feedback as: **Summary statement** (1-2 paragraphs with recommendation); **Major comments** (critical issues); **Minor comments** (improvements); **Questions for authors** (clarification requests).
 
 ## Project invariants to check against
-- Writing Constraints (`CLAUDE.md:51-56`).
-- Design Principles (`CLAUDE.md:74-77`): NoNeedForGovernance > Good Governance > Bad Governance > No Governance; do not decompose quality beyond two mechanisms.
+- Writing Constraints (see the `Writing constraints` section of `CLAUDE.md`).
+- Design Principles (see the `Design Principles` section of `CLAUDE.md`): NoNeedForGovernance > Good Governance > Bad Governance > No Governance; do not decompose quality beyond two mechanisms.
 - Red-team log: consult `context/attack-and-defense-log.md` for known attacks/defenses when evaluating robustness claims.
