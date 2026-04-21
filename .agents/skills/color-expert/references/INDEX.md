@@ -2,7 +2,7 @@
 
 Curated transcripts, notes, and source material. Organized for the color-expert skill and for building an online color resource.
 
-**150 files** across 3 categories: `historical/` (pre-digital color science), `contemporary/` (modern color science & theory), `techniques/` (tools, libraries, methods, practical application)
+**146 files** across 3 categories: `historical/` (pre-digital color science), `contemporary/` (modern color science & theory), `techniques/` (tools, libraries, methods, practical application)
 
 ## Historical
 
@@ -265,16 +265,11 @@ Curated transcripts, notes, and source material. Organized for the color-expert 
 
 ### Color & Contrast (colorandcontrast.com)
 
-| File                                                                  | Topics                                                |
-| --------------------------------------------------------------------- | ----------------------------------------------------- |
-| [Color Properties](contemporary/colorandcontrast/color-properties.md) | Hue, chroma, lightness, tone, tint, shade             |
-| [Color Models](contemporary/colorandcontrast/color-models.md)         | RGB, RYB, CMYK, additive, subtractive                 |
-| [Color Spaces](contemporary/colorandcontrast/color-spaces.md)         | sRGB, P3, LMS, XYZ, CIELAB, OKLAB, CAM16              |
-| [Color Vision](contemporary/colorandcontrast/color-vision.md)         | Trichromacy, opponent process, adaptation             |
-| [Color Effects](contemporary/colorandcontrast/color-effects.md)       | Abney, Bezold-Brücke, H-K, Purkinje                   |
-| [Accessibility](contemporary/colorandcontrast/accessibility.md)       | APCA, CVD, confusion lines, luminance                 |
-| [UI & Design](contemporary/colorandcontrast/ui-design.md)             | Scales, themes, dark mode, interpolation              |
-| [Publications](contemporary/colorandcontrast/publications.md)         | Recommended reading (Fairchild, Hunt, Livingstone...) |
+Seven topic files (color properties, models, spaces, vision, effects, accessibility, UI design) were removed: SPA bundle scrape with JS artifacts, truncated sentences, and duplicate fragments. Topics are covered by huevaluechroma/ and dedicated contemporary files above.
+
+| File                                                                            | Topics                                                |
+| ------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| [Publications](contemporary/colorandcontrast-publications.md)                   | Recommended reading (Fairchild, Hunt, Livingstone...) |
 
 ## Source PDFs
 
