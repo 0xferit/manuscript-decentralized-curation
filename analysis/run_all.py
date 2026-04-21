@@ -32,6 +32,10 @@ Z_CRITICAL_95 = 1.96
 
 TICKET_COUNT_EPSILON = 1e-9
 
+CURATOR_TYPE_COMPETENT = 0
+CURATOR_TYPE_NOISY = 1
+CURATOR_TYPE_COLLUDER = 2
+
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
@@ -544,9 +548,9 @@ def _relevance_core(
         votes = np.empty(n_drafted)
         drafted_types = types[drafted]
 
-        comp_mask = drafted_types == 0
-        noisy_mask = drafted_types == 1
-        colluder_mask = drafted_types == 2
+        comp_mask = drafted_types == CURATOR_TYPE_COMPETENT
+        noisy_mask = drafted_types == CURATOR_TYPE_NOISY
+        colluder_mask = drafted_types == CURATOR_TYPE_COLLUDER
 
         comp_count = int(comp_mask.sum())
         if comp_count > 0:
@@ -626,7 +630,7 @@ def _e2_single_run(params: E2Params, frac: float, k: float, seed_idx: int) -> di
         types,
     )
 
-    competent_mask = types == 0
+    competent_mask = types == CURATOR_TYPE_COMPETENT
     return {
         "mean_abs_error": float(mean_abs_error),
         "cancelled_round_share": float(cancelled_round_share),
@@ -771,7 +775,7 @@ def _e2_adv_single_run(params: E2AdvParams, col_frac: float, seed_idx: int) -> d
         types,
     )
 
-    colluder_mask = types == 2
+    colluder_mask = types == CURATOR_TYPE_COLLUDER
     draft_total = int(selection_counts.sum())
     return {
         "mean_abs_error": float(mean_abs_error),
@@ -887,10 +891,6 @@ E2P_ABSTAIN_CANCEL_THRESHOLD = 0.5
 E2P_MIN_REVEAL_QUORUM = 5
 E2P_COLLUDER_BIAS = 0.30
 E2P_COLLUDER_NOISE_FACTOR = 0.5
-
-CURATOR_TYPE_COMPETENT = 0
-CURATOR_TYPE_NOISY = 1
-CURATOR_TYPE_COLLUDER = 2
 
 
 @njit(cache=True)
@@ -1246,7 +1246,7 @@ def _e2_prime_single_run(
         1.0,
     )
 
-    competent_mask = types == 0
+    competent_mask = types == CURATOR_TYPE_COMPETENT
     total_stake = stakes.sum()
     total_sel = int(selection_counts.sum())
     return {
@@ -1428,7 +1428,7 @@ def _e2_prime_adv_single_run(
         params.colluder_noise_factor,
     )
 
-    colluder_mask = types == 2
+    colluder_mask = types == CURATOR_TYPE_COLLUDER
     total_stake = stakes.sum()
     total_sel = int(selection_counts.sum())
     return {
