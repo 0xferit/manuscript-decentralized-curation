@@ -24,4 +24,4 @@ Trigger when the user asks to add, create, draw, illustrate, or generate a **con
 - Embedded in `paper.qmd` via a Quarto fenced chunk or relative image reference so `quarto render` picks it up.
 
 ## Output shape
-Either (a) a patch to `diagrams/generate_diagrams.py` that adds a generator function for the new figure, plus the updated `paper.qmd` reference; or (b) a standalone AI-generated schematic written to `diagrams/fig-<slug>.png` with a note that the user should later convert it to a matplotlib generator for reproducibility.
+The committable deliverable is always a patch to `diagrams/generate_diagrams.py` that adds a named generator function for the new figure, plus the updated `paper.qmd` reference. AI-generated schematics from the upstream skill are draft material only: show them inline in the conversation for design discussion, but do **not** write them to `diagrams/fig-*.png`; that path is reserved for deterministic generator output. Use AI drafts to agree on composition, then hand-port the final design into `generate_diagrams.py`.
