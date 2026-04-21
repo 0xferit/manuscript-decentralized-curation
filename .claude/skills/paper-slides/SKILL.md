@@ -13,7 +13,7 @@ Trigger when the user asks to create, build, draft, or prepare a presentation, s
 `claude-scientific-writer:scientific-slides` for slide design, AI-assisted slide generation, and visual validation.
 
 ## Project file conventions
-- **Presentation materials live under `talks/`.** This directory is **outside** the Quarto render pipeline (see `CLAUDE.md:16`); do not wire decks into `_quarto.yml`.
+- **Presentation materials live under `talks/`.** This directory is **outside** the Quarto render pipeline (see the `Source of truth` section of `CLAUDE.md`); do not wire decks into `_quarto.yml`.
 - Binaries and exports (`talks/*.pdf`, `talks/slides/`, `talks/march10-presentation/`) are gitignored; commit only source files (scripts, Markdown, reveal.js config, and similar).
 
 ## Project invariants
