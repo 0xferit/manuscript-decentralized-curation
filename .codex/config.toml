@@ -1,0 +1,7 @@
+[tools.shell]
+allowlist = [
+  "^python3 analysis/run_all\\.py$",
+  "^python3 diagrams/generate_diagrams\\.py$",
+  "^quarto render(\\s|$)",
+  "^quarto preview(\\s|$)",
+]
