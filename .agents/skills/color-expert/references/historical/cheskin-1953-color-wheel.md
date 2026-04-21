@@ -1,7 +1,7 @@
 # Cheskin Color Wheel (1953) — Color Wheel Wednesday Ep. 3
 
 **Source:** [Color Nerd](https://www.youtube.com/@ColorNerd1) (YouTube Shorts)
-**Date:** 2025
+**Date:** 2025-03-25
 **URL:** https://www.youtube.com/shorts/HNlFFJowKRk
 
 ## Description
