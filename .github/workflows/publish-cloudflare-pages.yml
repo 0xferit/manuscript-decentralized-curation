@@ -49,7 +49,6 @@ jobs:
           key: sims-${{ hashFiles('analysis/run_all.py', 'requirements.txt', 'paper.qmd', 'projects/rpgf/design.md', 'projects/truth-post/blueprint.md') }}
 
       - name: Run simulations
-        if: steps.sim-cache.outputs.cache-hit != 'true'
         run: make analysis
 
       - name: Stamp build info and render
