@@ -463,12 +463,28 @@ Several threats remain partially unresolved: off-chain collusion, legal pressure
 
 # Evaluation
 
-The evaluation suite is designed to test the current protocol architecture rather than older semantics. It focuses on four questions:
+The evaluation suite is a conditional viability analysis: it maps which regions of parameter space sustain each mechanism and which break it, rather than predicting where a live deployment will land. No parameter is empirically calibrated; each is swept across a range wide enough to span optimistic and pessimistic scenarios. The results establish that *if* detection coverage, juror accuracy, and honest-curator noise fall within identified viable ranges, the mechanism's incentive structure holds. They do not establish that any particular deployment will occupy those ranges. Calibrating the parameters requires live-pool data that does not yet exist (challenger activity logs for $p_{\text{detect}}$, Kleros case outcomes for $p_{\text{juror}}$, observed curator score distributions for $\sigma_{\text{honest}}$).
+
+The suite focuses on four questions:
 
 - When is it economically rational to challenge false claims?
 - How robust is drafted-curator relevance curation to noise and collusion?
 - What follows if a dedicated `NonFalsifiable` challenge reason materially improves adjudication accuracy on otherwise non-falsifiable claims?
 - Does author reputation as a standing bond create useful separation between honest and dishonest publishers, and does pool scoping prevent credibility earned in one pool from carrying into another?
+
+| Parameter | Value | Role | Source | Calibration status |
+|---|---|---|---|---|
+| $p_{\text{juror}}$ | 0.80 (swept 0.50--0.90) | Per-juror accuracy in DDR panels | Kleros design estimate | Unvalidated; swept |
+| $p_{\text{detect}}$ | 0.35 anchor (swept 0.05--0.80) | Probability a false claim is discovered and challenged | Illustrative anchor | Unvalidated; swept |
+| $K$ | 1.25 | Coherence-band multiplier ($K\sigma$) | Reference parameter | Unvalidated; fixed |
+| $\sigma_{\text{honest}}$ | 0.10 | Standard deviation of honest curator scores | Assumed moderate noise | Unvalidated; fixed |
+| $\varphi^*$ | $\approx$ 0.15--0.20 | Collusion fraction at which relevance degrades | Empirical from E2/E2' | Simulation-derived; not a theorem |
+| $\delta$ | 0.01/round | Author reputation decay rate | Assumed | Unvalidated; fixed |
+| $f$ | 0.25 | Non-falsifiable claim prevalence (E3 only) | Assumed | Unvalidated; scenario input |
+| $p_{\text{nf}}$ | 0.85 | Juror accuracy on NonFalsifiable challenges (E3 only) | Assumed | Unvalidated; scenario input |
+| $N$ | 5 | Jurors per dispute panel | Kleros default | Partially validated (Kleros operational) |
+
+: Key simulation parameters, their sources, and calibration status. All experiments use $N = 100$ Monte Carlo seeds with 95% confidence intervals except E3, which is a closed-form scenario analysis. {#tbl-param-assumptions}
 
 {{< include analysis/out/eval_summary.md >}}
 
