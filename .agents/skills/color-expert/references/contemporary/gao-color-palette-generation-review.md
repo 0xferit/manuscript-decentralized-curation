@@ -4,7 +4,7 @@
 **Authors:** Yafan Gao, Jinxing Liang, Jie Yang
 **DOI:** https://doi.org/10.1002/col.22975
 **License:** CC BY 4.0 / Wiley open access
-**Local PDF:** [pdfs/Color Research Application - 2024 - Gao - Color Palette Generation From Digital Images A Review.pdf](pdfs/Color Research Application - 2024 - Gao - Color Palette Generation From Digital Images A Review.pdf)
+**Local PDF:** [pdfs/Color Research Application - 2024 - Gao - Color Palette Generation From Digital Images A Review.pdf](pdfs/Color%20Research%20Application%20-%202024%20-%20Gao%20-%20Color%20Palette%20Generation%20From%20Digital%20Images%20A%20Review.pdf)
 
 ## Scope
 

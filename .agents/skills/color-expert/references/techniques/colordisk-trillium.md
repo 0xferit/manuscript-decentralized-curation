@@ -3,7 +3,7 @@
 **Source:** Peter T. Donahue
 **Version:** ColorDisk 6.6: Trillium
 **License:** CC BY-NC 2.0 (as stated in the PDF)
-**Local PDF:** [pdfs/The ColorDisk 6.6.pdf](pdfs/The ColorDisk 6.6.pdf)
+**Local PDF:** [pdfs/The ColorDisk 6.6.pdf](pdfs/The%20ColorDisk%206.6.pdf)
 
 ## What It Is
 

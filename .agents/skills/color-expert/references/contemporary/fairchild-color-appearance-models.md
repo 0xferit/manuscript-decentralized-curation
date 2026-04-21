@@ -2,7 +2,7 @@
 
 **Source:** _Color Appearance Models_ (2nd ed., Wiley, 2005)
 **Author:** Mark D. Fairchild
-**Local PDF:** [pdfs/Fairchild M. Color appearance models (2ed., Wiley, 2005)(ISBN 0470012161)(O)(409s)_CsIp_.pdf](pdfs/Fairchild M. Color appearance models (2ed., Wiley, 2005)(ISBN 0470012161)(O)(409s)_CsIp_.pdf)
+**Local PDF:** [pdfs/Fairchild M. Color appearance models (2ed., Wiley, 2005)(ISBN 0470012161)(O)(409s)_CsIp_.pdf](pdfs/Fairchild%20M.%20Color%20appearance%20models%20%282ed.%2C%20Wiley%2C%202005%29%28ISBN%200470012161%29%28O%29%28409s%29_CsIp_.pdf)
 **Archive.org:** [archive.org/details/colorappearancem0000fair](https://archive.org/details/colorappearancem0000fair)
 
 ## What It Is

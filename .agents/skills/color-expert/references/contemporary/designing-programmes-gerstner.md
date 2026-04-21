@@ -5,7 +5,7 @@
 **Digital edition editor:** Harald Geisler
 **Source:** Designing Programmes digital edition (2022 update)
 **URL:** https://www.designingprogrammes.com
-**Local PDF:** [pdfs/Designing-Programmes-2022-07 (1).pdf](pdfs/Designing-Programmes-2022-07 (1).pdf)
+**Local PDF:** [pdfs/Designing-Programmes-2022-07 (1).pdf](pdfs/Designing-Programmes-2022-07%20%281%29.pdf)
 
 ## Core Idea
 
