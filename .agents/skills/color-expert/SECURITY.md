@@ -20,9 +20,7 @@ The reference files are a knowledge base, not executable prompts. They contain n
 
 ## No Executable Permissions
 
-This repo contains no `settings.json`, `settings.local.json`, or any configuration that grants shell, network, or filesystem permissions. The entire `.claude/` directory is gitignored.
-
-A `settings.local.json` existed briefly in early commits (the maintainer's local dev permissions for downloading PDFs and transcribing videos during curation). It was removed in commit `ea1f821` and the `.claude/` directory was gitignored. It is not present on the current branch and has no effect on skill consumers — `settings.local.json` files are per-machine and never loaded from imported skills. The file contained only the maintainer's local tool permissions (e.g. `curl` to archive.org, `yt-dlp` for transcripts) used during content curation.
+This skill contains no `settings.json`, `settings.local.json`, or any configuration that grants shell, network, or filesystem permissions. In the upstream repo, `.claude/settings.local.json` and `.claude/worktrees/` are gitignored; the `.claude/` directory itself is tracked for skill symlinks.
 
 ## Reported False Positives
 

@@ -18,7 +18,7 @@ This simulation is intended to assist in demonstrating the concept behind the co
 
 Pages 140 of this book literally say color constancy does not exist.
 
-An illusion created of depth or vibration created when certain colors are placed next to one another. Chromosteropsis is generally attributed to chromatic aberration.
+An illusion created of depth or vibration created when certain colors are placed next to one another. Chromostereopsis is generally attributed to chromatic aberration.
 
 Different wavelengths of light refract through a lens at different angles. This causes focal points to be at different depths of the retina resulting in an effect called chromostereopsis.
 
@@ -32,13 +32,13 @@ Chromatic Aberration: Basic Optics, Chapter 6
 
 This adaptation occurs by means of the different sensitivities of cones versus rods, a change in pupil size, cone photopigment concentration, and neural responsiveness.
 
-in the eye has a different wavelength sensitivity than normal. Approximately 6% of males and 0.4% of femails are anomolous trichromats.
+in the eye has a different wavelength sensitivity than normal. Approximately 6% of males and 0.4% of females are anomalous trichromats.
 
 Most simulation tools imply a fixed experience for each vision type. Anomalous trichromats vary in the strength of their color deficiencies. Reliance on these tools (along with subjective decisions) can result in falsely identifying safe colors.
 
-(Photophobia) A condition where bright lights hurt the eyes. Light sensitivity can be caused by migraines, corneal abrasion, conjuctivitis or other conditions.
+(Photophobia) A condition where bright lights hurt the eyes. Light sensitivity can be caused by migraines, corneal abrasion, conjunctivitis or other conditions.
 
-Light sensitivity can be caused by migraines, corneal abrasion, conjuctivitis or other conditions such as
+Light sensitivity can be caused by migraines, corneal abrasion, conjunctivitis or other conditions such as
 
 This illusion is result of improper color identification due to chromatic adaptation, or
 

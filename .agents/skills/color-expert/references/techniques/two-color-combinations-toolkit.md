@@ -3,7 +3,7 @@
 **Author:** Ruxandra Duru
 **Source:** The Startup / Medium
 **Date:** 2020-12-22
-**Local PDF:** [pdfs/Two-Color Combinations_ A Toolkit _ by Ruxandra Duru _ The Startup _ Medium.pdf](pdfs/Two-Color Combinations* A Toolkit * by Ruxandra Duru _ The Startup _ Medium.pdf)
+**Local PDF:** [pdfs/Two-Color Combinations_ A Toolkit _ by Ruxandra Duru _ The Startup _ Medium.pdf](pdfs/Two-Color%20Combinations_%20A%20Toolkit%20_%20by%20Ruxandra%20Duru%20_%20The%20Startup%20_%20Medium.pdf)
 
 ## Core Idea
 

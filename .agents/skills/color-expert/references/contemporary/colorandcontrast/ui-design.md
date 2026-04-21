@@ -28,13 +28,13 @@ Use the slider to see how adjusting color temperature affects an image.
 
 Analogous colors can be used as secondary, supporting colors in a UI color palette for a high degree of harmony and unity.
 
-A color's appearance can be affected by the lightness or darkness of its backround. For dark mode, less saturated tones may appear more appropriate and can be less strain on a users' eyes.
+A color's appearance can be affected by the lightness or darkness of its background. For dark mode, less saturated tones may appear more appropriate and can be less strain on a users' eyes.
 
 A sequence of interrelated colors. Continuous color scales are visualized as a gradient.
 
 Which color scale to use when visualizing data
 
-Complimentary colors can be used as secondary, accent color in a UI color palette for a dynamic appearance.
+Complementary colors can be used as secondary, accent color in a UI color palette for a dynamic appearance.
 
 Color wheels are split into two sub-sections of color: warm and cool colors. Warm and cool colors are related to the measurement of color temperature.
 
@@ -52,7 +52,7 @@ Dark mode can cause adverse effects for certain users (such as eye strain or mig
 
 The chroma of a color can be perceived differently between light and dark modes as a result of the
 
-Split complimentary colors can be used as secondary accent colors in a UI color palette for both a dynamic and harmonious appearance.
+Split complementary colors can be used as secondary accent colors in a UI color palette for both a dynamic and harmonious appearance.
 
 Triadic colors provide a wide range of differentiation of color in a UI color palette for creating a strong visual impact.
 
