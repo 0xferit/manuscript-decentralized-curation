@@ -1,8 +1,8 @@
 ---
 title: "Decentralized Curation: Trustless Transformation of Information into Knowledge"
 author: Ferit Tunçer
-date-modified: 2026-04-19T00:00:00
-status: draft
+date-modified: 2026-04-21T00:00:00
+status: preprint
 bibliography: references.bib
 ---
 
@@ -11,9 +11,6 @@ bibliography: references.bib
 {{< include analysis/out/reading_time.md >}}
 :::
 
-::: {.callout-important appearance="simple"}
-**Working draft.** Under active development. [Feedback welcome.](mailto:ferit@cryptolab.net)
-:::
 
 # Abstract
 
@@ -51,9 +48,9 @@ The progression from data through information to knowledge is a well-established
 
 Historically, some of that mechanism was carried by institutions: newspapers, journals, universities, editors, teachers, peer reviewers. Those institutions were imperfect, but they were legible enough that users could at least understand where the curation happened. Today we have more information than ever and weaker, more opaque transformations from information into knowledge.
 
-Generative AI makes the gap wider. Producing functional software required understanding it; writing a convincing paper required the competence it demonstrated. That requirement functioned as an implicit proof of work: the cost of producing the artifact was inseparable from the knowledge it signaled. AI breaks this coupling by making production possible without understanding. The *form* of quality is now cheap: formatting, fluency, plausible citation patterns, respectable structure. The *substance* of quality remains expensive: correctness, coherence, domain understanding, and judgment. We are entering a regime of **information abundance and knowledge scarcity**.
+Generative AI makes the gap wider. Producing functional software required understanding it; writing a convincing paper required the competence it demonstrated. That requirement functioned as an implicit proof of work: the cost of producing the artifact was inseparable from the knowledge it signaled. AI weakens this coupling by making production possible without understanding. The *form* of quality is now cheap: formatting, fluency, plausible citation patterns, respectable structure. The *substance* of quality remains expensive: correctness, coherence, domain understanding, and judgment. We are entering a regime of **information abundance and knowledge scarcity**.
 
-That is why curation is not a side problem. It is becoming the central bottleneck in collective decision-making.
+That is why curation is not a side problem. Under the hypothesis of this paper, it is becoming a central bottleneck in collective decision-making.
 
 ## Contributions
 
@@ -178,7 +175,7 @@ Truth Post is not a single website. The protocol has four layers (@fig-architect
 
 This split is part of the design, not an implementation detail. A protocol with one fragile frontend is not practically decentralized. The same claim blob CID may be posted to multiple pools as independent claims; each pool instance has independent adjudication, confidence, and relevance.
 
-![Protocol architecture. Three layers separate canonical on-chain state from replaceable interfaces. Architectural commitments and pool economics are listed above.](diagrams/fig-architecture.png){#fig-architecture}
+![Protocol architecture. Four layers separate canonical on-chain state from replaceable interfaces. Architectural commitments and pool economics are listed above.](diagrams/fig-architecture.png){#fig-architecture}
 
 ## Actors
 
@@ -252,7 +249,7 @@ $$
 f_{\mathrm{reward}} = \rho + (1 - \rho) \cdot \min\!\Bigl(1,\;\frac{\sigma}{\sigma_{\mathrm{ref}}}\Bigr)
 $$
 
-At $\sigma = 0$ the reward is $\rho R$ (minimum); at $\sigma \ge \sigma_{\mathrm{ref}}$ the reward is full $R$; between them the transition is linear. This avoids the cliff that a hard threshold would create: a step function that switched from reduced to full rewards at a fixed cutoff would incentivize curators to inject artificial variance (score 0.87 instead of 0.90) to cross the threshold, producing systematic bias. The smooth curve removes that discontinuity, but for $\sigma < \sigma_{\mathrm{ref}}$ rewards still increase monotonically with $\sigma$. The protocol therefore does not rely on the reward curve alone to eliminate variance-padding incentives: lazy convergence and genuine consensus are structurally indistinguishable at the single-round level, so the defense is the lifetime expected value. Low-$\sigma$ rounds pay reduced rewards, and a visibly wrong lazy score can be appealed and overturned (slashing the lazy curators), making mechanically inflated dispersion unattractive over repeated participation. When $\sigma$ is near zero the coherence band collapses and the graduated slashing rule (step 7) is skipped at finalization (the slashing formula divides by $\sigma$); the mean is still accepted as a valid relevance score and the round-specific lock is released back into each curator's deposited balance. That balance remains slashable for this round until the appeal window expires: withdrawals during the appeal window are allowed only to the extent that they do not reduce the deposited balance below the curator's outstanding appeal exposure. If a subsequent appeal succeeds under step 8, the protocol debits the slash from that reserved balance; if no appeal is filed before the window closes, the reserve is removed and the balance becomes fully withdrawable.
+At $\sigma = 0$, the reward is $\rho R$ (minimum); at $\sigma \ge \sigma_{\mathrm{ref}}$, the reward is full $R$; between them the transition is linear. This avoids the cliff that a hard threshold would create: a step function that switched from reduced to full rewards at a fixed cutoff would incentivize curators to inject artificial variance (score 0.87 instead of 0.90) to cross the threshold, producing systematic bias. The smooth curve removes that discontinuity, but for $\sigma < \sigma_{\mathrm{ref}}$ rewards still increase monotonically with $\sigma$. The protocol therefore does not rely on the reward curve alone to eliminate variance-padding incentives: lazy convergence and genuine consensus appear structurally indistinguishable under the observables available to the protocol at the single-round level, so the defense is the lifetime expected value. Low-$\sigma$ rounds pay reduced rewards, and a visibly wrong lazy score can be appealed and overturned (slashing the lazy curators), making mechanically inflated dispersion unattractive over repeated participation. When $\sigma$ is near zero, the coherence band collapses and the graduated slashing rule (step 7) is skipped at finalization (the slashing formula divides by $\sigma$); the mean is still accepted as a valid relevance score and the round-specific lock is released back into each curator's deposited balance. That balance remains slashable for this round until the appeal window expires: withdrawals during the appeal window are allowed only to the extent that they do not reduce the deposited balance below the curator's outstanding appeal exposure. If a subsequent appeal succeeds under step 8, the protocol debits the slash from that reserved balance; if no appeal is filed before the window closes, the reserve is removed and the balance becomes fully withdrawable.
 
 7. If $\sigma \ge \varepsilon_\sigma$ (the same dispersion floor used in $\sigma_{\mathrm{ref}}$), graduated slashing applies. Let $v_i$ denote curator $i$'s revealed score and let $K$ denote the coherence-threshold multiplier ($K > 0$). Curators inside the coherence band ($|v_i - \mu| \le K\sigma$) are not penalized. Curators outside the band lose a fraction of their locked tokens that scales linearly with distance:
 
@@ -260,7 +257,7 @@ $$
 p_i = \min\!\Bigl(1,\;\max\!\bigl(0,\;\frac{|v_i - \mu|/\sigma - K}{K}\bigr)\Bigr)
 $$
 
-At the band boundary the penalty is zero; at twice the boundary distance ($2K\sigma$ from the mean) the penalty is total loss of locked tokens. Since $w_i$ is measured in smallest on-chain units (integers), the slashed amount is rounded down:
+At the band boundary, the penalty is zero; at twice the boundary distance ($2K\sigma$ from the mean), the penalty is total loss of locked tokens. Since $w_i$ is measured in smallest on-chain units (integers), the slashed amount is rounded down:
 
 $$
 \delta_i = \lfloor p_i \cdot w_i \rfloor, \qquad q_i = w_i - \delta_i.
@@ -412,7 +409,7 @@ This work sits at the intersection of information quality, dispute systems, and 
 
 **Falsifiability.** Popper supplies the operational asymmetry between verification and refutation [@popper1959logic]. The mechanism depends on that asymmetry rather than on exhaustive proof.
 
-**Schelling-style coordination and decentralized courts.** Kleros and related systems show how stake, commit-reveal, and appeals can implement decentralized adjudication [@kleros2019shortpaper; @kleros2024yellowpaper]. The complete Truth Post design assumes Kleros v1 as the external DDR provider, with the challenge manager implementing the `IArbitrable` interface. The mechanism is a deliberate Keynesian beauty contest: participants coordinate on expected consensus rather than on truth directly [@bergolla2022kleros; @kleros2021cryptoeconomics]. This structure becomes an information aggregation tool when the focal point is anchored to a substantive standard: in Kleros, jurors coordinate on the legally correct answer because justice is the salient focal point. The coherence game in this paper applies the same pattern, substituting a public curation policy for the legal standard. The beauty contest degenerates only when the focal point is arbitrary or self-referential [@schelling1960strategy; @rojoarjona2021focalpoints; @george2023strategic]. George and Lesaege catalogue concrete $p+\varepsilon$ attack variants on Schelling-game-based systems [@george2021ppsilon]. Draw-and-lock randomizes the target set at round time so attackers cannot pre-commit bribes to specific curators, and graduated slashing raises the minimum bribe needed to cover the deviation cost; both are partial mitigations and do not remove the underlying coordination risk.
+**Schelling-style coordination and decentralized courts.** Kleros and related systems show how stake, commit-reveal, and appeals can implement decentralized adjudication [@kleros2019shortpaper; @kleros2024yellowpaper]. The complete Truth Post design assumes Kleros v1 as the external DDR provider, with the challenge manager implementing the `IArbitrable` interface. The mechanism is a deliberate Keynesian beauty contest: participants coordinate on expected consensus rather than on truth directly [@bergolla2022kleros; @kleros2021cryptoeconomics]. This structure becomes an information aggregation tool when the focal point is anchored to a substantive standard: in Kleros, jurors coordinate on the legally correct answer because justice is the salient focal point. The coherence game in this paper applies the same pattern, substituting a public curation policy for the legal standard. The beauty contest degenerates only when the focal point is arbitrary or self-referential [@schelling1960strategy; @rojoarjona2021focalpoints; @george2023strategic]. George and Lesaege catalogue concrete $p+\varepsilon$ attack variants on Schelling-game-based systems [@george2021ppsilon], and George separately analyzes griefing factors that arise in Schelling-based mechanisms [@george2023griefing]. Ast et al. survey the state of decentralized justice more broadly, cataloguing recurring criticisms and next-generation research directions [@ast2023decentralized]. Draw-and-lock randomizes the target set at round time so attackers cannot pre-commit bribes to specific curators, and graduated slashing raises the minimum bribe needed to cover the deviation cost; both are partial mitigations and do not remove the underlying coordination risk.
 
 **Oracle and dispute prior art.** Reality.eth and UMA demonstrate optimistic, escalation-based dispute flows for on-chain questions [@realityeth2023; @umaOptimisticOracleDocs; @umaWhitepaperRepo]. Their importance here is not that they solve curation, but that they demonstrate dispute resolution patterns the accuracy layer can reuse.
 
@@ -490,7 +487,7 @@ The result is economically punitive. At $p=0.80$, the adversary's cumulative bal
 
 ## E2: Relevance with drafted curators
 
-E2 evaluates the relevance layer under a simplified predecessor model: curators are drafted into committees from a larger pool using purely stake-weighted selection with the per-identity weight cap disabled. The current design replaces weight caps with draw-and-lock seat allocation and graduated slashing; E2 has not yet been updated to reflect these changes. The qualitative dynamics (competence filtering, collusion thresholds) are expected to carry over because the underlying incentive structure (stake-weighted influence, coherence-based penalties) is preserved, but simulation validation of the draw-and-lock model with graduated slashing is future work. Here $\mu$ denotes the weighted mean of committee scores, $\sigma$ denotes the weighted standard deviation, and $K$ denotes the coherence-threshold multiplier used in the slashing rule. In the E2 simulation, degenerate rounds ($\sigma$ below `flat_round_stddev_min`) are treated as cancelled and excluded from scoring; the current design instead accepts the mean as a valid score, skips graduated slashing only when $\sigma < \varepsilon_\sigma$, and computes rewards via $f_{\mathrm{reward}}$ (the $\rho$-offset linear scaling defined in step 6). This is a simulation-vs-design gap: E2 results reflect the cancellation model, not the guarded smooth reward-scaling model.
+E2 evaluates the relevance layer under a simplified predecessor model: curators are drafted into committees from a larger pool using purely stake-weighted selection with the per-identity weight cap disabled. The current design replaces weight caps with draw-and-lock seat allocation and graduated slashing; E2 retains the predecessor model for comparison, and E2' (below) re-runs the same sweeps under the final mechanism. Here $\mu$ denotes the weighted mean of committee scores, $\sigma$ denotes the weighted standard deviation, and $K$ denotes the coherence-threshold multiplier used in the slashing rule. In the E2 simulation, degenerate rounds ($\sigma$ below `flat_round_stddev_min`) are treated as cancelled and excluded from scoring; the current design instead accepts the mean as a valid score, skips graduated slashing only when $\sigma < \varepsilon_\sigma$, and computes rewards via $f_{\mathrm{reward}}$ (the $\rho$-offset linear scaling defined in step 6). This is a simulation-vs-design gap: E2 results reflect the cancellation model, not the guarded smooth reward-scaling model.
 
 ![E2: Mean relevance error versus the initial fraction of competent curators, for four coherence thresholds. Error bands show 95% confidence intervals over 100 seeds.](analysis/fig/e2_relevance_error.png){#fig-e2-error}
 
@@ -550,7 +547,7 @@ That is the correct interpretation of falsifiability in this protocol. E3 does n
 
 ## E4: Author reputation after the redesign
 
-The reputation redesign is one of the biggest differences between the current protocol and earlier drafts. Reputation is no longer a generic quantity that directly adds to curation weight. The current design eliminates curator reputation entirely and retains only author reputation as a standing non-monetary bond.
+The reputation redesign is one of the biggest differences between the current protocol and earlier drafts. Reputation is no longer a generic quantity that directly adds to curation weight. The current design eliminates curator reputation entirely and retains only author reputation as a standing non-monetary bond. (E4c was removed when curator reputation was eliminated; the remaining labels are preserved for cross-reference continuity.)
 
 ### E4a: author reputation as a standing bond
 

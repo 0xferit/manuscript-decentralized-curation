@@ -9,8 +9,5 @@ date-modified: 2026-03-09T22:00:00
 {{< include ../../analysis/out/reading_time_rpgf.md >}}
 :::
 
-::: {.callout-important appearance="simple"}
-**Working draft.** Under active development. [Feedback welcome.](mailto:ferit@cryptolab.net)
-:::
 
 {{< include ../../projects/rpgf/design.md >}}
