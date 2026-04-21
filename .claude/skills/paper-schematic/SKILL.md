@@ -24,4 +24,9 @@ Trigger when the user asks to add, create, draw, illustrate, or generate a **con
 - Embedded in `paper.qmd` via a Quarto fenced chunk or relative image reference so `quarto render` picks it up.
 
 ## Output shape
-The committable deliverable is always a patch to `diagrams/generate_diagrams.py` that adds a named generator function for the new figure, plus the updated `paper.qmd` reference. AI-generated schematics from the upstream skill are draft material only: show them inline in the conversation for design discussion, but do **not** write them to `diagrams/fig-*.png`; that path is reserved for deterministic generator output. Use AI drafts to agree on composition, then hand-port the final design into `generate_diagrams.py`.
+The committable deliverable is three things, shipped together:
+1. A patch to `diagrams/generate_diagrams.py` that adds a named generator function for the new figure.
+2. The regenerated `diagrams/fig-<slug>.png` on disk, committed alongside. CI publishes via `quarto render --to html` only (see `.github/workflows/publish-cloudflare-pages.yml`); it does **not** invoke `generate_diagrams.py`, so the PNG must already exist in the repo for renders to succeed. The existing `diagrams/fig-*.png` files are tracked for this reason.
+3. The updated `paper.qmd` reference pointing to the new PNG.
+
+AI-generated schematics from the upstream skill are draft material only: show them inline in the conversation for design discussion, but do **not** let them land at `diagrams/fig-*.png` directly; that path is reserved for deterministic generator output. Use AI drafts to agree on composition, then hand-port the final design into `generate_diagrams.py` and commit the regenerated PNG.
