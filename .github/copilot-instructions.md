@@ -1,6 +1,6 @@
 # GitHub Copilot code-review instructions
 
-This file is scoped to the GitHub Copilot **code-review** surface, which only reads `.github/copilot-instructions.md` (per [Copilot custom-instructions support](https://docs.github.com/en/copilot/reference/custom-instructions-support)). Repo-wide agent context (source-of-truth file map, workflow expectations, writing constraints, design principles, scientific toolkit) lives in the root `AGENTS.md` and is read by Copilot CLI, the cloud agent, VS Code Chat, and Codex. This file intentionally holds only the PR-review rubric and code-review criteria.
+This file is scoped to the GitHub Copilot **code-review** surface. Per [Copilot custom-instructions support](https://docs.github.com/en/copilot/reference/custom-instructions-support), that surface reads repository-wide instructions from this file, path-specific instructions under `.github/instructions/**/*.instructions.md`, and organization-level instructions — but **not** `AGENTS.md`. Repo-wide agent context (source-of-truth file map, workflow expectations, writing constraints, design principles, scientific toolkit) lives in the root `AGENTS.md` and is read by Copilot CLI, the cloud agent, VS Code Chat, and Codex. This file intentionally holds only the PR-review rubric and code-review criteria that the code-review surface applies.
 
 ## Scientific review criteria (peer-review, 7-stage framework)
 
