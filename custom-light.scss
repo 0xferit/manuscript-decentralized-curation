@@ -116,11 +116,6 @@ h3 {
   letter-spacing: 0.01em;
 }
 
-.header-section-number::before {
-  content: "§";
-  font-weight: 600;
-}
-
 #quarto-sidebar-toc-left .header-section-number::before,
 #quarto-margin-sidebar .header-section-number::before {
   content: none;
