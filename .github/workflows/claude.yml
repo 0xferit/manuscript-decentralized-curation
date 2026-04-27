@@ -36,7 +36,7 @@ jobs:
         # "directory mismatch" regression introduced in v1.0.89.
         # See upstream issues anthropics/claude-code-action#1187,
         # #1205, and #1220. Revisit once a fix ships upstream.
-        uses: anthropics/claude-code-action@1eddb334cfa79fdb21ecbe2180ca1a016e8e7d47 # v1.0.88
+        uses: anthropics/claude-code-action@567fe954a4527e81f132d87d1bdbcc94f7737434 # v1.0.107
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
