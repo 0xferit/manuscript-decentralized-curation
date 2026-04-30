@@ -15,7 +15,7 @@ import type {
   RegistryEntry,
   RelevanceRound,
   ReputationLedger,
-} from "./types";
+} from "../types";
 
 export interface EngineState {
   pool: Pool;

@@ -10,7 +10,7 @@ import {
   NominationTransitionError,
   retractNomination,
   topUpFinalShare,
-} from "../src/engine/nomination";
+} from "../src/engine/lifecycle/state-machine";
 import { makeNominations } from "../src/engine/seed";
 
 function clean() {

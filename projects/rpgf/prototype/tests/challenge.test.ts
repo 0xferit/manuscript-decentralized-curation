@@ -8,7 +8,7 @@ import {
 } from "../src/engine/adjudication/challenge";
 import { resolveChallenge } from "../src/engine/adjudication/ddr";
 import { REFERENCE_POOL_PARAMETERS, makeNominations } from "../src/engine/seed";
-import { markScored } from "../src/engine/nomination";
+import { markScored } from "../src/engine/lifecycle/state-machine";
 
 const params = REFERENCE_POOL_PARAMETERS;
 

@@ -16,7 +16,7 @@ import type {
   ImpactNomination,
   NominationState,
   Token,
-} from "./types";
+} from "../types";
 
 export class NominationTransitionError extends Error {
   constructor(
