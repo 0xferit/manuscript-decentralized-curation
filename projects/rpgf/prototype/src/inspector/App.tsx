@@ -1,14 +1,14 @@
 import { useAppStore } from "./store";
-import { PoolPanel } from "./ui/PoolPanel";
-import { TimelinePanel } from "./ui/TimelinePanel";
-import { RegistryPanel } from "./ui/RegistryPanel";
-import { CuratorsPanel } from "./ui/CuratorsPanel";
-import { NominationsPanel } from "./ui/NominationsPanel";
-import { RoundsPanel } from "./ui/RoundsPanel";
-import { AllocationPanel } from "./ui/AllocationPanel";
-import { ChallengesPanel } from "./ui/ChallengesPanel";
-import { ReputationPanel } from "./ui/ReputationPanel";
-import { LogPanel } from "./ui/LogPanel";
+import { PoolPanel } from "./panels/PoolPanel";
+import { TimelinePanel } from "./panels/TimelinePanel";
+import { RegistryPanel } from "./panels/RegistryPanel";
+import { CuratorsPanel } from "./panels/CuratorsPanel";
+import { NominationsPanel } from "./panels/NominationsPanel";
+import { RoundsPanel } from "./panels/RoundsPanel";
+import { AllocationPanel } from "./panels/AllocationPanel";
+import { ChallengesPanel } from "./panels/ChallengesPanel";
+import { ReputationPanel } from "./panels/ReputationPanel";
+import { LogPanel } from "./panels/LogPanel";
 
 export function App() {
   const { state, actions } = useAppStore();

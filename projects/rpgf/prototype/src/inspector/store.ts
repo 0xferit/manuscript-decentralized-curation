@@ -30,7 +30,7 @@ import {
   type EngineState,
   type LogEvent,
   type PhaseDeps,
-} from "./engine";
+} from "../engine";
 
 export type AppState = EngineState & { log: LogEvent[] };
 

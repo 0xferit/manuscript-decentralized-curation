@@ -17,6 +17,29 @@ import type {
   ReputationLedger,
 } from "../types";
 
+/**
+ * Engine state envelope.
+ *
+ * Slice ownership (enforced by code review + module-import lint rules,
+ * not yet by structural type splits):
+ *
+ * - `bootstrap` (Identity): seeds `pool` (config + ids), `registry`, and
+ *   the identity portion of `curators`. Read-only after init.
+ * - `curation`: writes `pool.emaSigma`, `pool.curationBudget`, `rounds`,
+ *   and the financial portion of `curators` (deposit/locked/rewards/slashed).
+ * - `adjudication`: writes `challenges`. Reads nominations by id.
+ * - `allocation`: writes `pool.fundingBudget` (tax accumulation),
+ *   `pool.budgetRolloverToken`, and `allocation`.
+ * - `reputation`: writes `reputation`.
+ * - `lifecycle`: writes `pool.phase`, `pool.currentRoundId`, `nominations`,
+ *   `fundingRound`, `tick`, `epoch`, `evaluationRan`, `disbursementRan`.
+ *   Composes slice updates from the modules above into a new envelope.
+ *
+ * The flat shape is preserved during the incremental refactor to avoid a
+ * mass UI rewrite. A future step may group slices structurally
+ * (`identity`, `curation`, `adjudication`, `allocation`, `reputation`,
+ * `lifecycle`) once boundary discipline is verified at runtime.
+ */
 export interface EngineState {
   pool: Pool;
   registry: RegistryEntry[];
