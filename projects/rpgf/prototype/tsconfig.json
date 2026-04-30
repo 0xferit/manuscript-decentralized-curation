@@ -18,7 +18,25 @@
     "noImplicitReturns": true,
 
     "skipLibCheck": true,
-    "types": ["vitest/globals", "node"]
+    "types": ["vitest/globals", "node"],
+
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["src/engine/shared/*"],
+      "@bootstrap": ["src/engine/bootstrap/index.ts"],
+      "@bootstrap/*": ["src/engine/bootstrap/*"],
+      "@curation": ["src/engine/curation/index.ts"],
+      "@curation/*": ["src/engine/curation/*"],
+      "@adjudication": ["src/engine/adjudication/index.ts"],
+      "@adjudication/*": ["src/engine/adjudication/*"],
+      "@allocation": ["src/engine/allocation/index.ts"],
+      "@allocation/*": ["src/engine/allocation/*"],
+      "@reputation": ["src/engine/reputation/index.ts"],
+      "@reputation/*": ["src/engine/reputation/*"],
+      "@lifecycle": ["src/engine/lifecycle/index.ts"],
+      "@lifecycle/*": ["src/engine/lifecycle/*"],
+      "@inspector/*": ["src/inspector/*"]
+    }
   },
   "include": ["src", "tests", "vite.config.ts"]
 }
