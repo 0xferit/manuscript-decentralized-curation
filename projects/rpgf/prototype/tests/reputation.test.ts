@@ -5,7 +5,7 @@ import {
   decayEpoch,
   emptyLedger,
   ensureEntry,
-} from "../src/engine/reputation/reputation";
+} from "@reputation";
 
 describe("reputation ledger (immutable)", () => {
   it("does not mutate input ledger", () => {

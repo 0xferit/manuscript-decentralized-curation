@@ -6,20 +6,21 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  emptyLedger,
-  ensureEntry,
   makeCurators,
   makeNominations,
   makePool,
   makeRegistry,
-  manualMockDDRResolver,
   PROTOTYPE_BASE_SEED,
   PROTOTYPE_FUNDING_ROUND_ID,
+} from "@bootstrap";
+import { manualMockDDRResolver } from "@adjudication";
+import { emptyLedger, ensureEntry } from "@reputation";
+import {
   phaseController,
   type ControllerResult,
   type EngineState,
   type PhaseDeps,
-} from "../src/engine";
+} from "@lifecycle";
 
 const DEFAULT_DEPS: PhaseDeps = {
   baseSeed: PROTOTYPE_BASE_SEED,

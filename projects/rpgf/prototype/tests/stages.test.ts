@@ -8,10 +8,10 @@ import {
   reserveRoundReward,
   score,
   settleCurationBudget,
-} from "../src/engine/curation/stages";
-import { REFERENCE_POOL_PARAMETERS, makeCurators } from "../src/engine/seed";
-import { draftSeats } from "../src/engine/curation/drafting";
-import type { CuratorRoundState } from "../src/engine/types";
+} from "@curation/stages";
+import { REFERENCE_POOL_PARAMETERS, makeCurators } from "@bootstrap";
+import { draftSeats } from "@curation/drafting";
+import type { CuratorRoundState } from "@curation";
 
 const params = REFERENCE_POOL_PARAMETERS;
 

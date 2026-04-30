@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildTicketPool, draftSeats } from "../src/engine/curation/drafting";
+import { buildTicketPool, draftSeats } from "@curation/drafting";
 
 const baseCurator = (id: string, deposit: number, locked = 0) => ({
   id,

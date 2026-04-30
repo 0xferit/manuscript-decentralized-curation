@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { runRelevanceRound } from "../src/engine/curation/relevance";
-import { makeCurators, REFERENCE_POOL_PARAMETERS } from "../src/engine/seed";
-import type { Curator } from "../src/engine/types";
+import { runRelevanceRound } from "@curation";
+import { makeCurators, REFERENCE_POOL_PARAMETERS } from "@bootstrap";
+import type { Curator } from "@shared/types";
 
 function curators(overrides?: Partial<Curator>[]): Curator[] {
   const base = makeCurators();

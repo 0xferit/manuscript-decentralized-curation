@@ -3,14 +3,11 @@ import { describe, expect, it } from "vitest";
 import {
   DDRResolutionError,
   manualMockDDRResolver,
-  type DDRResolver,
-} from "../src/engine/adjudication/ddr";
-import {
   fileChallenge,
-  REFERENCE_POOL_PARAMETERS,
-  makeNominations,
-  markScored,
-} from "../src/engine";
+  type DDRResolver,
+} from "@adjudication";
+import { REFERENCE_POOL_PARAMETERS, makeNominations } from "@bootstrap";
+import { markScored } from "@lifecycle";
 
 function pendingChallenge() {
   const base = makeNominations()[0]!;

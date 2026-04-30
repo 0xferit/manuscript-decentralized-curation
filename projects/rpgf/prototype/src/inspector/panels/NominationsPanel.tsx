@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import type { AppActions, AppState } from "../store";
-import type { ImpactNomination } from "../../engine";
+import type { ImpactNomination } from "@shared/types";
 import { fmtNum, fmtToken } from "./shared";
 
 interface Props {

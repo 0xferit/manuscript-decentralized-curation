@@ -10,8 +10,8 @@ import {
   NominationTransitionError,
   retractNomination,
   topUpFinalShare,
-} from "../src/engine/lifecycle/state-machine";
-import { makeNominations } from "../src/engine/seed";
+} from "@lifecycle";
+import { makeNominations } from "@bootstrap";
 
 function clean() {
   return makeNominations()[0]!;

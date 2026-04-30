@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   computeProvisionalAllocation,
   redistributeDebunkedShare,
-} from "../src/engine/allocation/allocation";
-import type { ImpactNomination } from "../src/engine/types";
+} from "@allocation";
+import type { ImpactNomination } from "@shared/types";
 
 function nom(
   id: string,

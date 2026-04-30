@@ -13,24 +13,24 @@
 import { useCallback, useEffect, useState } from "react";
 
 import {
-  emptyLedger,
-  ensureEntry,
   makeCurators,
   makeNominations,
   makePool,
   makeRegistry,
-  manualMockDDRResolver,
   PROTOTYPE_BASE_SEED,
   PROTOTYPE_FUNDING_ROUND_ID,
+} from "@bootstrap";
+import { manualMockDDRResolver } from "@adjudication";
+import type { ChallengeReason, DDROutcome } from "@adjudication";
+import { emptyLedger, ensureEntry } from "@reputation";
+import {
   phaseController,
   type AmendInput,
-  type ChallengeReason,
   type ControllerResult,
-  type DDROutcome,
   type EngineState,
   type LogEvent,
   type PhaseDeps,
-} from "../engine";
+} from "@lifecycle";
 
 export type AppState = EngineState & { log: LogEvent[] };
 
