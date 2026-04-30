@@ -117,7 +117,7 @@ export function resolveDDR(
   jurorNote: string | null = null,
 ): ControllerResult {
   const challenge = state.challenges.find((c) => c.id === challengeId);
-  if (!challenge || challenge.status !== "Pending") {
+  if (challenge?.status !== "Pending") {
     return { state, events: [] };
   }
   const ddr = deps.ddr ?? manualMockDDRResolver;
