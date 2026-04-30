@@ -15,8 +15,22 @@ export type {
   Token,
   PoolParameters,
   Curator,
+  CuratorIdentity,
   CommitRevealBehavior,
 } from "@shared/types";
+
+/**
+ * Financial state of a curator. Owned by Curation: deposit at init from
+ * Bootstrap, then mutated by Curation rounds via slashes and rewards.
+ * Joined to `CuratorIdentity` by `id` at the UI boundary.
+ */
+export interface CuratorFinancialState {
+  id: string;
+  depositedToken: Token;
+  lockedToken: Token;
+  totalRewardsToken: Token;
+  totalSlashedToken: Token;
+}
 
 export type RoundPhase =
   | "PreDraft"

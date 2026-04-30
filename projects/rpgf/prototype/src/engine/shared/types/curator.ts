@@ -5,18 +5,26 @@ export type CuratorArchetype = "Honest" | "Lazy" | "Adversary";
 export type CommitRevealBehavior = "CommitAndReveal" | "CommitOnly" | "NoShow";
 
 /**
- * Single Curator type kept whole for backwards compatibility during the
- * incremental refactor. Step 4 splits this into CuratorIdentity (this file,
- * shared kernel) and CuratorFinancialState (curation/types.ts).
+ * CuratorIdentity holds the immutable, Bootstrap-owned identity fields of
+ * a curator. Once seeded, no module mutates these.
  */
-export interface Curator {
+export interface CuratorIdentity {
   id: string;
   displayName: string;
   archetype: CuratorArchetype;
-  depositedToken: Token;
-  lockedToken: Token;
   commitRevealBehavior: CommitRevealBehavior;
   intendedScore: number;
+}
+
+/**
+ * Backwards-compatible alias used during the incremental refactor. The
+ * legacy `Curator` type is the union of identity + financial state. Once
+ * call sites are migrated, this alias and the financial fields below will
+ * move into `engine/curation/types.ts` as `CuratorFinancialState`.
+ */
+export interface Curator extends CuratorIdentity {
+  depositedToken: Token;
+  lockedToken: Token;
   totalRewardsToken: Token;
   totalSlashedToken: Token;
 }

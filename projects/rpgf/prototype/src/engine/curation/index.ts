@@ -10,6 +10,7 @@ export type {
   RelevanceRound,
   RoundPhase,
   CuratorRoundState,
+  CuratorFinancialState,
 } from "./types";
 
 export type {
