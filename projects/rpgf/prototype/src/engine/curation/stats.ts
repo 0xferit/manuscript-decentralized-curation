@@ -12,8 +12,8 @@ export function weightedMean(weights: number[], values: number[]): number {
   let totalWeight = 0;
   let weightedSum = 0;
   for (let i = 0; i < weights.length; i++) {
-    const w = weights[i] as number;
-    const v = values[i] as number;
+    const w = weights[i];
+    const v = values[i];
     totalWeight += w;
     weightedSum += w * v;
   }
@@ -31,14 +31,14 @@ export function weightedStdDev(
   }
   let totalWeight = 0;
   for (let i = 0; i < weights.length; i++) {
-    totalWeight += weights[i] as number;
+    totalWeight += weights[i];
   }
   if (totalWeight === 0) return 0;
   const mu = mean ?? weightedMean(weights, values);
   let weightedSqSum = 0;
   for (let i = 0; i < weights.length; i++) {
-    const w = weights[i] as number;
-    const v = values[i] as number;
+    const w = weights[i];
+    const v = values[i];
     weightedSqSum += w * (v - mu) * (v - mu);
   }
   return Math.sqrt(weightedSqSum / totalWeight);

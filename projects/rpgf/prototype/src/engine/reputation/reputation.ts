@@ -58,9 +58,7 @@ function applyEvent(
       history: [] as ReputationLedgerEvent[],
     };
   const newValue =
-    evt.newValueOverride !== undefined
-      ? evt.newValueOverride
-      : existing.reputation + evt.delta;
+    evt.newValueOverride ?? existing.reputation + evt.delta;
   const fullEvent: ReputationLedgerEvent = {
     tick: evt.tick,
     delta: evt.delta,

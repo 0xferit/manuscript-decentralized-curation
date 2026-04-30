@@ -44,8 +44,8 @@ export function createPRNG(seed: string): PRNG {
     const copy = items.slice();
     for (let i = copy.length - 1; i > 0; i--) {
       const j = nextInt(i + 1);
-      const tmp = copy[i] as T;
-      copy[i] = copy[j] as T;
+      const tmp = copy[i];
+      copy[i] = copy[j];
       copy[j] = tmp;
     }
     return copy;

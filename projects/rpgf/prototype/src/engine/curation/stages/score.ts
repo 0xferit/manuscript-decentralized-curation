@@ -34,7 +34,7 @@ export function score(input: ScoreInput): ScoreOutcome {
   const { states, parameters, emaSigmaBefore } = input;
   const validIndices: number[] = [];
   for (let i = 0; i < states.length; i++) {
-    const s = states[i] as CuratorRoundState;
+    const s = states[i];
     if (s.revealed && s.revealedScore !== null) validIndices.push(i);
   }
   if (validIndices.length < parameters.minRevealQuorum) {
@@ -44,9 +44,9 @@ export function score(input: ScoreInput): ScoreOutcome {
       minQuorum: parameters.minRevealQuorum,
     };
   }
-  const weights = validIndices.map((i) => (states[i] as CuratorRoundState).weight);
+  const weights = validIndices.map((i) => states[i].weight);
   const values = validIndices.map(
-    (i) => (states[i] as CuratorRoundState).revealedScore as number,
+    (i) => states[i].revealedScore as number,
   );
   const mu = weightedMean(weights, values);
   const sigma = weightedStdDev(weights, values, mu);
