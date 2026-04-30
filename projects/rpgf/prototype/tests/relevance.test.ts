@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { runRelevanceRound } from "../src/engine/relevance";
+import { runRelevanceRound } from "../src/engine/curation/relevance";
 import { makeCurators, REFERENCE_POOL_PARAMETERS } from "../src/engine/seed";
 import type { Curator } from "../src/engine/types";
 

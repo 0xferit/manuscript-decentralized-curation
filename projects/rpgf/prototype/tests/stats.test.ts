@@ -6,7 +6,7 @@ import {
   sigmaRef,
   weightedMean,
   weightedStdDev,
-} from "../src/engine/stats";
+} from "../src/engine/curation/stats";
 
 describe("weightedMean", () => {
   it("matches arithmetic mean when weights are equal", () => {

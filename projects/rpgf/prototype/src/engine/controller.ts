@@ -35,13 +35,13 @@ import {
   topUpFinalShare,
   type AmendInput,
 } from "./nomination";
-import { evaluateNomination } from "./round";
+import { evaluateNomination } from "./curation/round";
 import {
   applyDebunkPenalty,
   awardSurvivingRound,
   decayEpoch,
 } from "./reputation";
-import type { CommitRevealSimulator } from "./stages";
+import type { CommitRevealSimulator } from "./curation/stages";
 import type {
   ChallengeReason,
   DDROutcome,
