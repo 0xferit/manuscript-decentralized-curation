@@ -4,7 +4,7 @@ import {
   DDRResolutionError,
   manualMockDDRResolver,
   type DDRResolver,
-} from "../src/engine/ddr";
+} from "../src/engine/adjudication/ddr";
 import {
   fileChallenge,
   REFERENCE_POOL_PARAMETERS,

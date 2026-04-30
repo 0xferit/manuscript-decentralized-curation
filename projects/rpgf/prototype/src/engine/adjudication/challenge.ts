@@ -14,7 +14,7 @@ import type {
   ImpactNomination,
   PoolParameters,
   Token,
-} from "./types";
+} from "../types";
 
 export interface FileChallengeInput {
   id: string;

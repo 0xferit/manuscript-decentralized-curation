@@ -12,7 +12,7 @@
  * outcome choice. Production deployments swap this for a chain-call adapter.
  */
 
-import type { Challenge, DDROutcome } from "./types";
+import type { Challenge, DDROutcome } from "../types";
 
 export interface DDRResolution {
   challengeId: string;

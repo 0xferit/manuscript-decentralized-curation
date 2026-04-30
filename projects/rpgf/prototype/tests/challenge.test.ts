@@ -5,8 +5,8 @@ import {
   computeChallengeTax,
   computeCounterStake,
   fileChallenge,
-} from "../src/engine/challenge";
-import { resolveChallenge } from "../src/engine/ddr";
+} from "../src/engine/adjudication/challenge";
+import { resolveChallenge } from "../src/engine/adjudication/ddr";
 import { REFERENCE_POOL_PARAMETERS, makeNominations } from "../src/engine/seed";
 import { markScored } from "../src/engine/nomination";
 

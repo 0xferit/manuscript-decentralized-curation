@@ -20,9 +20,9 @@ import {
 import {
   challengePayoutFor,
   fileChallenge as buildChallenge,
-} from "./challenge";
+} from "./adjudication/challenge";
 import type { ControllerResult, EngineState, LogEvent } from "./controllerTypes";
-import { manualMockDDRResolver, type DDRResolver } from "./ddr";
+import { manualMockDDRResolver, type DDRResolver } from "./adjudication/ddr";
 import {
   amendDuringSubmission,
   markChallengeFailed,
