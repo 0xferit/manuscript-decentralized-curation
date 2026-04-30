@@ -1,4 +1,3 @@
-import type { Token } from "./token";
 
 export type NominationState =
   | "Submitted"
@@ -43,7 +42,7 @@ export interface ImpactNomination {
   authorAddress: string;
   state: NominationState;
   adjudicationOutcome: AdjudicationOutcome;
-  bondToken: Token;
+  bondToken: number;
   assertions: Assertion[];
   evidenceItems: EvidenceItem[];
   createdAtPhaseTick: number;
@@ -52,8 +51,8 @@ export interface ImpactNomination {
   doubleCountTagIds: string[];
   relevanceScore: number | null;
   relevanceRoundId: string | null;
-  provisionalShareToken: Token | null;
-  finalShareToken: Token | null;
+  provisionalShareToken: number | null;
+  finalShareToken: number | null;
   graceEndsAtTick: number | null;
   challengeIds: string[];
 }

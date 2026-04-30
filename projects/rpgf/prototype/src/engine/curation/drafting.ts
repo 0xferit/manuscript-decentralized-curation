@@ -12,7 +12,7 @@
  * actual deposits is performed by the relevance round runner.
  */
 
-import type { Curator, Token } from "./types";
+import type { Curator } from "./types";
 import { createPRNG } from "./prng";
 
 export interface DraftedSeat {
@@ -31,7 +31,7 @@ export interface DraftResult {
 
 export interface DraftInput {
   curators: ReadonlyArray<Pick<Curator, "id" | "depositedToken" | "lockedToken">>;
-  seatSizeL: Token;
+  seatSizeL: number;
   targetSeats: number;
   seed: string;
   maxIterMultiplier?: number;
@@ -39,7 +39,7 @@ export interface DraftInput {
 
 export function buildTicketPool(
   curators: DraftInput["curators"],
-  seatSizeL: Token,
+  seatSizeL: number,
 ): Array<{ curatorId: string; ticketIndex: number }> {
   const tickets: Array<{ curatorId: string; ticketIndex: number }> = [];
   for (const c of curators) {

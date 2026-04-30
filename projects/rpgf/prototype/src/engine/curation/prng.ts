@@ -11,7 +11,7 @@ const UINT32_MASK = 0xffffffff;
 export function hashStringToUint32(input: string): number {
   let h = FNV_OFFSET;
   for (let i = 0; i < input.length; i++) {
-    h ^= input.charCodeAt(i);
+    h ^= input.codePointAt(i) ?? 0;
     h = Math.imul(h, FNV_PRIME);
   }
   return h >>> 0;

@@ -1,7 +1,7 @@
 /**
  * Aggregated domain types for the RPGF prototype engine.
  *
- * Cross-module data shapes (Token, PoolMeta, RegistryEntry, CuratorIdentity,
+ * Cross-module data shapes (number, PoolMeta, RegistryEntry, CuratorIdentity,
  * ImpactNomination, etc.) live in `./shared/types/` and are re-exported here
  * for backwards compatibility during the incremental refactor.
  *
@@ -10,11 +10,9 @@
  * refactor plan).
  */
 
-import type { Token } from "./shared/types/token";
 import type { CommitRevealBehavior } from "./shared/types/curator";
 
 export type {
-  Token,
   PoolPhase,
   PoolParameters,
   Pool,
@@ -50,9 +48,9 @@ export interface Challenge {
   challengerId: string;
   reason: ChallengeReason;
   newEvidenceNote: string | null;
-  counterStakeToken: Token;
-  taxToken: Token;
-  ddrFeeToken: Token;
+  counterStakeToken: number;
+  taxToken: number;
+  ddrFeeToken: number;
   status: ChallengeStatus;
   filedAtTick: number;
   resolvedAtTick: number | null;
@@ -74,15 +72,15 @@ export type RoundPhase =
 export interface CuratorRoundState {
   curatorId: string;
   seats: number;
-  weight: Token;
+  weight: number;
   intendedScore: number;
   behavior: CommitRevealBehavior;
   committed: boolean;
   revealed: boolean;
   revealedScore: number | null;
   penaltyFraction: number;
-  slashedToken: Token;
-  rewardToken: Token;
+  slashedToken: number;
+  rewardToken: number;
   withinBand: boolean;
   nonParticipation: boolean;
 }
@@ -102,8 +100,8 @@ export interface RelevanceRound {
   stdDev: number | null;
   sigmaRef: number;
   rewardFactor: number;
-  reservedRewardToken: Token;
-  distributedRewardToken: Token;
+  reservedRewardToken: number;
+  distributedRewardToken: number;
   distanceSlashingSkipped: boolean;
   cancellationReason: "QuorumFailure" | "Underfunded" | null;
   finalizedAtTick: number | null;
@@ -142,16 +140,16 @@ export interface AllocationRow {
   registryEntryId: string;
   relevanceScore: number;
   share: number;
-  provisionalToken: Token;
-  finalToken: Token | null;
+  provisionalToken: number;
+  finalToken: number | null;
   state: import("./shared/types").NominationState;
 }
 
 export interface AllocationResult {
   poolId: string;
   roundId: string;
-  poolFundingBudget: Token;
+  poolFundingBudget: number;
   denominator: number;
-  rolloverToken: Token;
+  rolloverToken: number;
   rows: AllocationRow[];
 }

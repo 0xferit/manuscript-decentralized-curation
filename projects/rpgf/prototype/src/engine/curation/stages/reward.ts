@@ -8,18 +8,18 @@
  * distributed and the slashed pool stays in the pool budget.
  */
 
-import type { CuratorRoundState, Token } from "../types";
+import type { CuratorRoundState } from "../types";
 
 export interface RewardInput {
   states: CuratorRoundState[];
-  totalSlashedFromValid: Token;
+  totalSlashedFromValid: number;
   fReward: number;
-  reservedRewardToken: Token;
+  reservedRewardToken: number;
 }
 
 export interface RewardOutput {
   states: CuratorRoundState[];
-  distributedRewardToken: Token;
+  distributedRewardToken: number;
 }
 
 export function distributeRoundReward(input: RewardInput): RewardOutput {

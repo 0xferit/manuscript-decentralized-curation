@@ -8,11 +8,9 @@
 
 import type {
   CommitRevealBehavior,
-  Token,
 } from "@shared/types";
 
 export type {
-  Token,
   PoolParameters,
   Curator,
   CuratorIdentity,
@@ -26,10 +24,10 @@ export type {
  */
 export interface CuratorFinancialState {
   id: string;
-  depositedToken: Token;
-  lockedToken: Token;
-  totalRewardsToken: Token;
-  totalSlashedToken: Token;
+  depositedToken: number;
+  lockedToken: number;
+  totalRewardsToken: number;
+  totalSlashedToken: number;
 }
 
 export type RoundPhase =
@@ -43,15 +41,15 @@ export type RoundPhase =
 export interface CuratorRoundState {
   curatorId: string;
   seats: number;
-  weight: Token;
+  weight: number;
   intendedScore: number;
   behavior: CommitRevealBehavior;
   committed: boolean;
   revealed: boolean;
   revealedScore: number | null;
   penaltyFraction: number;
-  slashedToken: Token;
-  rewardToken: Token;
+  slashedToken: number;
+  rewardToken: number;
   withinBand: boolean;
   nonParticipation: boolean;
 }
@@ -71,8 +69,8 @@ export interface RelevanceRound {
   stdDev: number | null;
   sigmaRef: number;
   rewardFactor: number;
-  reservedRewardToken: Token;
-  distributedRewardToken: Token;
+  reservedRewardToken: number;
+  distributedRewardToken: number;
   distanceSlashingSkipped: boolean;
   cancellationReason: "QuorumFailure" | "Underfunded" | null;
   finalizedAtTick: number | null;

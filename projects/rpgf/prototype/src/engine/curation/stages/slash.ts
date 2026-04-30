@@ -6,12 +6,12 @@
  * is true (low-dispersion guard); non-participation slashing always applies.
  */
 
-import type { CuratorRoundState, PoolParameters, Token } from "../types";
+import type { CuratorRoundState, PoolParameters } from "../types";
 import { graduatedPenaltyFraction } from "../stats";
 
 const TOKEN_FLOOR_PRECISION = 1e9;
 
-function floorTokens(value: Token): Token {
+function floorTokens(value: number): number {
   return Math.floor(value * TOKEN_FLOOR_PRECISION) / TOKEN_FLOOR_PRECISION;
 }
 
@@ -25,7 +25,7 @@ export interface SlashInput {
 
 export interface SlashOutput {
   states: CuratorRoundState[];
-  totalSlashedFromValid: Token;
+  totalSlashedFromValid: number;
 }
 
 export function applySlashing(input: SlashInput): SlashOutput {

@@ -15,7 +15,6 @@ import type {
   AdjudicationOutcome,
   ImpactNomination,
   NominationState,
-  Token,
 } from "../types";
 
 export class NominationTransitionError extends Error {
@@ -188,7 +187,7 @@ export function markChallengeFailed(
 export function markDisbursed(
   nomination: ImpactNomination,
   tick: number,
-  finalShareToken: Token,
+  finalShareToken: number,
 ): ImpactNomination {
   if (nomination.state !== "Scored") {
     throw new NominationTransitionError(
@@ -209,7 +208,7 @@ export function markDisbursed(
 export function topUpFinalShare(
   nomination: ImpactNomination,
   tick: number,
-  extraToken: Token,
+  extraToken: number,
 ): ImpactNomination {
   if (nomination.state !== "Disbursed") {
     throw new NominationTransitionError(

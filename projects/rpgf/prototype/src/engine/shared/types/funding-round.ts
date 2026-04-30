@@ -1,4 +1,3 @@
-import type { Token } from "./token";
 import type { PoolPhase } from "./pool";
 
 export interface FundingRound {
@@ -9,6 +8,6 @@ export interface FundingRound {
   nominationIds: string[];
   holdbackEndsAtTick: number | null;
   finalizedAtTick: number | null;
-  totalDisbursedToken: Token;
-  rolloverToken: Token;
+  totalDisbursedToken: number;
+  rolloverToken: number;
 }

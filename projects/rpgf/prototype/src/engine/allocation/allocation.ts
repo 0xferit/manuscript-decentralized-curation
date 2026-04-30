@@ -16,13 +16,12 @@ import type {
   AllocationResult,
   AllocationRow,
   ImpactNomination,
-  Token,
 } from "../types";
 
 export interface AllocationInput {
   poolId: string;
   roundId: string;
-  poolFundingBudget: Token;
+  poolFundingBudget: number;
   nominations: ImpactNomination[];
 }
 
@@ -100,7 +99,7 @@ export function computeProvisionalAllocation(
 }
 
 export interface RedistributionInput {
-  freedShareToken: Token;
+  freedShareToken: number;
   survivingDisbursed: ImpactNomination[];
 }
 
@@ -108,9 +107,9 @@ export interface RedistributionResult {
   topUps: Array<{
     nominationId: string;
     registryEntryId: string;
-    extraToken: Token;
+    extraToken: number;
   }>;
-  rolloverToken: Token;
+  rolloverToken: number;
   denominator: number;
 }
 

@@ -1,4 +1,3 @@
-import type { Token } from "./token";
 
 export type PoolPhase =
   | "Submission"
@@ -8,21 +7,21 @@ export type PoolPhase =
   | "Closed";
 
 export interface PoolParameters {
-  poolFundingBudget: Token;
+  poolFundingBudget: number;
   curationBudgetReservePct: number;
-  submissionBond: Token;
-  challengeCounterStakeMin: Token;
+  submissionBond: number;
+  challengeCounterStakeMin: number;
   challengeCounterStakePct: number;
   challengeTaxPct: number;
-  ddrFee: Token;
+  ddrFee: number;
   graceTicks: number;
   draftedSeats: number;
   minRevealQuorum: number;
-  seatSizeL: Token;
+  seatSizeL: number;
   coherenceK: number;
   epsilonSigma: number;
   rho: number;
-  roundRewardFloor: Token;
+  roundRewardFloor: number;
   sigmaRefAlpha: number;
   reputationSurvivingDelta: number;
   reputationDebunkedDelta: number;
@@ -42,10 +41,10 @@ export interface Pool {
   name: string;
   registryId: string;
   parameters: PoolParameters;
-  curationBudget: Token;
-  fundingBudget: Token;
+  curationBudget: number;
+  fundingBudget: number;
   emaSigma: number;
   phase: PoolPhase;
   currentRoundId: string | null;
-  budgetRolloverToken: Token;
+  budgetRolloverToken: number;
 }

@@ -13,7 +13,6 @@ import type {
   DDROutcome,
   ImpactNomination,
   PoolParameters,
-  Token,
 } from "../types";
 
 export interface FileChallengeInput {
@@ -34,18 +33,18 @@ export class ChallengeFilingError extends Error {
 }
 
 export function computeCounterStake(
-  provisionalShareToken: Token,
+  provisionalShareToken: number,
   parameters: PoolParameters,
-): Token {
+): number {
   const proportional =
     parameters.challengeCounterStakePct * provisionalShareToken;
   return Math.max(parameters.challengeCounterStakeMin, proportional);
 }
 
 export function computeChallengeTax(
-  provisionalShareToken: Token,
+  provisionalShareToken: number,
   parameters: PoolParameters,
-): Token {
+): number {
   return parameters.challengeTaxPct * provisionalShareToken;
 }
 
@@ -86,8 +85,8 @@ export function fileChallenge(input: FileChallengeInput): Challenge {
 export interface ChallengePayout {
   authorBondTo: "author" | "challenger";
   counterStakeTo: "author" | "challenger";
-  taxToPool: Token;
-  ddrFeeSunk: Token;
+  taxToPool: number;
+  ddrFeeSunk: number;
 }
 
 export function challengePayoutFor(

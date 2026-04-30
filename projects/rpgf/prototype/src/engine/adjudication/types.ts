@@ -7,7 +7,6 @@ export type {
   ChallengeReason,
   ChallengeStatus,
   DDROutcome,
-  Token,
   PoolParameters,
   ImpactNomination,
 } from "../types";

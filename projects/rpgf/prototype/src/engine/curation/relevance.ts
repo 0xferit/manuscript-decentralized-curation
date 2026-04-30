@@ -27,7 +27,6 @@ import type {
   CuratorRoundState,
   PoolParameters,
   RelevanceRound,
-  Token,
 } from "./types";
 
 export interface RunRelevanceRoundInput {
@@ -40,7 +39,7 @@ export interface RunRelevanceRoundInput {
   curators: Curator[];
   parameters: PoolParameters;
   emaSigmaBefore: number;
-  curationBudgetBefore: Token;
+  curationBudgetBefore: number;
   tick: number;
   commitRevealSimulator?: CommitRevealSimulator;
 }
@@ -57,14 +56,14 @@ export interface RelevanceRoundOutcome {
   round: RelevanceRound;
   curatorUpdates: CuratorRoundDelta[];
   emaSigmaAfter: number;
-  curationBudgetAfter: Token;
+  curationBudgetAfter: number;
   cancelled: boolean;
   cancellationReason: RelevanceRound["cancellationReason"];
 }
 
 function buildBaseRound(args: {
   input: RunRelevanceRoundInput;
-  reservedRewardToken: Token;
+  reservedRewardToken: number;
   sigmaRef: number;
 }): RelevanceRound {
   const { input, reservedRewardToken, sigmaRef } = args;

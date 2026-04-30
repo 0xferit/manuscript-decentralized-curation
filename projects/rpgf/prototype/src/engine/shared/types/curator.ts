@@ -1,4 +1,3 @@
-import type { Token } from "./token";
 
 export type CuratorArchetype = "Honest" | "Lazy" | "Adversary";
 
@@ -23,8 +22,8 @@ export interface CuratorIdentity {
  * move into `engine/curation/types.ts` as `CuratorFinancialState`.
  */
 export interface Curator extends CuratorIdentity {
-  depositedToken: Token;
-  lockedToken: Token;
-  totalRewardsToken: Token;
-  totalSlashedToken: Token;
+  depositedToken: number;
+  lockedToken: number;
+  totalRewardsToken: number;
+  totalSlashedToken: number;
 }

@@ -9,6 +9,10 @@ interface CuratorSpec {
   commitRevealBehavior: CommitRevealBehavior;
 }
 
+// Numeric literals below preserve column alignment for at-a-glance review of
+// the seeded curator set. Trailing zeros (`0.20`, `0.10`) are intentional;
+// Sonar rule typescript:S7748 is suppressed in sonar-project.properties
+// for this file.
 const CURATOR_SPECS: CuratorSpec[] = [
   { id: "cur-anya",   displayName: "Anya",   archetype: "Honest",    depositedToken: 0.20, intendedScore: 0.78, commitRevealBehavior: "CommitAndReveal" },
   { id: "cur-bram",   displayName: "Bram",   archetype: "Honest",    depositedToken: 0.18, intendedScore: 0.74, commitRevealBehavior: "CommitAndReveal" },

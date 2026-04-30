@@ -16,7 +16,6 @@ import type {
   Curator,
   PoolParameters,
   RelevanceRound,
-  Token,
 } from "./types";
 
 export interface EvaluateNominationInput {
@@ -26,7 +25,7 @@ export interface EvaluateNominationInput {
   curators: Curator[];
   parameters: PoolParameters;
   emaSigmaBefore: number;
-  curationBudgetBefore: Token;
+  curationBudgetBefore: number;
   tick: number;
   baseSeed: string;
   commitRevealSimulator?: CommitRevealSimulator;
@@ -42,7 +41,7 @@ export interface EvaluateNominationOutput {
     deltaSlashed: number;
   }>;
   emaSigmaAfter: number;
-  curationBudgetAfter: Token;
+  curationBudgetAfter: number;
   finalRound: RelevanceRound | null;
   resolvedAs: "Scored" | "Unscored" | "Underfunded";
 }

@@ -6,22 +6,22 @@
  * failure when the budget is short. No state mutation; pure transformation.
  */
 
-import type { PoolParameters, Token } from "../types";
+import type { PoolParameters } from "../types";
 
 export type ReserveOutcome =
   | {
       kind: "reserved";
-      reservedRewardToken: Token;
-      curationBudgetAfter: Token;
+      reservedRewardToken: number;
+      curationBudgetAfter: number;
     }
   | {
       kind: "underfunded";
-      requiredToken: Token;
-      curationBudgetBefore: Token;
+      requiredToken: number;
+      curationBudgetBefore: number;
     };
 
 export function reserveRoundReward(input: {
-  curationBudgetBefore: Token;
+  curationBudgetBefore: number;
   parameters: PoolParameters;
 }): ReserveOutcome {
   const { curationBudgetBefore, parameters } = input;
@@ -45,10 +45,10 @@ export function reserveRoundReward(input: {
  * undistributed portion (`(1 - fReward) * R`) returns to the pool budget.
  */
 export function settleCurationBudget(input: {
-  reservedRewardToken: Token;
+  reservedRewardToken: number;
   fReward: number;
-  curationBudgetAfterReserve: Token;
-}): Token {
+  curationBudgetAfterReserve: number;
+}): number {
   const undistributed = input.reservedRewardToken * (1 - input.fReward);
   return input.curationBudgetAfterReserve + undistributed;
 }
