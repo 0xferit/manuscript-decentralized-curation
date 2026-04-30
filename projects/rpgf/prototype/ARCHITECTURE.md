@@ -110,7 +110,7 @@ the rules below pin the allowed import graph. Lint runs on every push.
 | From | Allowed targets |
 |---|---|
 | `shared` | (nothing) |
-| `bootstrap` | shared |
+| `bootstrap` | shared, bootstrap (self) |
 | `curation` | shared, curation (self) |
 | `adjudication` | shared, adjudication (self) |
 | `allocation` | shared, allocation (self) |
@@ -122,7 +122,9 @@ the rules below pin the allowed import graph. Lint runs on every push.
 Cross-module imports MUST go through each module's `index.ts` barrel
 (e.g. `import { evaluateNomination } from "@curation"`). Path aliases
 (`@curation`, `@lifecycle`, etc.) are configured in `tsconfig.json`,
-`vite.config.ts`, and the ESLint resolver.
+`vite.config.ts`, and `eslint.config.js` (via `eslint-plugin-import`'s
+TypeScript resolver) so the boundaries rule actually checks aliased
+edges instead of silently skipping them.
 
 ## Adapter ports (inline in consuming module)
 
@@ -345,13 +347,13 @@ projects/rpgf/prototype/
 │   │   ├── adjudication/   <- challenge + DDR
 │   │   ├── allocation/
 │   │   ├── reputation/
-│   │   ├── lifecycle/
-│   │   │   ├── index.ts
-│   │   │   ├── types.ts    <- EngineState, LogEvent, ControllerResult
-│   │   │   ├── state-machine.ts
-│   │   │   ├── phases/     <- per-stage phase functions
-│   │   │   └── controller.ts
-│   │   └── types.ts        <- transitional re-export shim
+│   │   └── lifecycle/
+│   │       ├── index.ts
+│   │       ├── types.ts        <- EngineState, LogEvent, ControllerResult
+│   │       ├── state-machine.ts
+│   │       ├── state-init.ts   <- makeInitialEngineState, makeDefaultPhaseDeps
+│   │       ├── controller.ts
+│   │       └── phases/         <- per-stage phase functions (holdback is a sub-dir)
 │   └── inspector/
 │       ├── main.tsx
 │       ├── App.tsx
