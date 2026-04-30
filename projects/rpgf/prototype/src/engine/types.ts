@@ -1,150 +1,48 @@
 /**
- * Domain types for the RPGF decentralized curation prototype.
+ * Aggregated domain types for the RPGF prototype engine.
  *
- * All numeric amounts use the `Token` brand: 1 Token represents 1 ETH-
- * equivalent unit in the prototype. The engine never transfers value; ledgers
- * are bookkeeping only.
+ * Cross-module data shapes (Token, PoolMeta, RegistryEntry, CuratorIdentity,
+ * ImpactNomination, etc.) live in `./shared/types/` and are re-exported here
+ * for backwards compatibility during the incremental refactor.
+ *
+ * Module-internal types (RelevanceRound, Challenge, ReputationLedger, etc.)
+ * still live below until each module is promoted (steps 3a-3f of the
+ * refactor plan).
  */
 
-export type Token = number;
+import type { Token } from "./shared/types/token";
+import type { CommitRevealBehavior } from "./shared/types/curator";
 
-export type NominationState =
-  | "Submitted"
-  | "Retracted"
-  | "Scored"
-  | "Disputed"
-  | "Disbursed"
-  | "Debunked"
-  | "Unscored";
+export type {
+  Token,
+  PoolPhase,
+  PoolParameters,
+  Pool,
+  RegistryEntry,
+  CuratorArchetype,
+  CommitRevealBehavior,
+  Curator,
+  NominationState,
+  AdjudicationOutcome,
+  EvidenceClass,
+  EvidenceItem,
+  Assertion,
+  ImpactNomination,
+  FundingRound,
+} from "./shared/types";
 
-export type AdjudicationOutcome = "Unchallenged" | "ChallengeFailed" | "Debunked";
+// ---------------------------------------------------------------------------
+// Adjudication-internal types (will move to engine/adjudication/types.ts)
+// ---------------------------------------------------------------------------
 
-export type ChallengeReason = "Debunking" | "NonFalsifiable" | "TemplateViolation";
+export type ChallengeReason =
+  | "Debunking"
+  | "NonFalsifiable"
+  | "TemplateViolation";
 
 export type DDROutcome = "Debunked" | "ChallengeFailed" | "Timeout";
 
 export type ChallengeStatus = "Pending" | DDROutcome;
-
-export type EvidenceClass =
-  | "DirectArtifact"
-  | "IndependentThirdParty"
-  | "SelfReported";
-
-export type CuratorArchetype = "Honest" | "Lazy" | "Adversary";
-
-export type CommitRevealBehavior = "CommitAndReveal" | "CommitOnly" | "NoShow";
-
-export type RoundPhase =
-  | "PreDraft"
-  | "Drafted"
-  | "Commit"
-  | "Reveal"
-  | "Finalized"
-  | "Cancelled";
-
-export type PoolPhase =
-  | "Submission"
-  | "Evaluation"
-  | "Holdback"
-  | "Settlement"
-  | "Closed";
-
-export interface RegistryEntry {
-  id: string;
-  projectName: string;
-  beneficiaryAddress: string;
-  claimantPolicy: string;
-  eligibilityTags: string[];
-  reputation: number;
-  lastReputationUpdateEpoch: number;
-}
-
-export interface PoolParameters {
-  poolFundingBudget: Token;
-  curationBudgetReservePct: number;
-  submissionBond: Token;
-  challengeCounterStakeMin: Token;
-  challengeCounterStakePct: number;
-  challengeTaxPct: number;
-  ddrFee: Token;
-  graceTicks: number;
-  draftedSeats: number;
-  minRevealQuorum: number;
-  seatSizeL: Token;
-  coherenceK: number;
-  epsilonSigma: number;
-  rho: number;
-  roundRewardFloor: Token;
-  sigmaRefAlpha: number;
-  reputationSurvivingDelta: number;
-  reputationDebunkedDelta: number;
-  reputationDecayPerEpoch: number;
-  minReputationGate: number;
-}
-
-export interface Pool {
-  id: string;
-  name: string;
-  registryId: string;
-  parameters: PoolParameters;
-  curationBudget: Token;
-  fundingBudget: Token;
-  emaSigma: number;
-  phase: PoolPhase;
-  currentRoundId: string | null;
-  budgetRolloverToken: Token;
-}
-
-export interface FundingRound {
-  id: string;
-  poolId: string;
-  index: number;
-  phase: PoolPhase;
-  nominationIds: string[];
-  holdbackEndsAtTick: number | null;
-  finalizedAtTick: number | null;
-  totalDisbursedToken: Token;
-  rolloverToken: Token;
-}
-
-export interface EvidenceItem {
-  id: string;
-  evidenceClass: EvidenceClass;
-  uri: string;
-  caption: string;
-}
-
-export interface Assertion {
-  id: string;
-  text: string;
-  timePeriodStart: string;
-  timePeriodEnd: string;
-  evidenceItemIds: string[];
-  falsifiable: boolean;
-}
-
-export interface ImpactNomination {
-  id: string;
-  poolId: string;
-  roundId: string;
-  registryEntryId: string;
-  authorAddress: string;
-  state: NominationState;
-  adjudicationOutcome: AdjudicationOutcome;
-  bondToken: Token;
-  assertions: Assertion[];
-  evidenceItems: EvidenceItem[];
-  createdAtPhaseTick: number;
-  lastUpdatedPhaseTick: number;
-  templateOk: boolean;
-  doubleCountTagIds: string[];
-  relevanceScore: number | null;
-  relevanceRoundId: string | null;
-  provisionalShareToken: Token | null;
-  finalShareToken: Token | null;
-  graceEndsAtTick: number | null;
-  challengeIds: string[];
-}
 
 export interface Challenge {
   id: string;
@@ -161,17 +59,17 @@ export interface Challenge {
   ruling: DDROutcome | null;
 }
 
-export interface Curator {
-  id: string;
-  displayName: string;
-  archetype: CuratorArchetype;
-  depositedToken: Token;
-  lockedToken: Token;
-  commitRevealBehavior: CommitRevealBehavior;
-  intendedScore: number;
-  totalRewardsToken: Token;
-  totalSlashedToken: Token;
-}
+// ---------------------------------------------------------------------------
+// Curation-internal types (will move to engine/curation/types.ts)
+// ---------------------------------------------------------------------------
+
+export type RoundPhase =
+  | "PreDraft"
+  | "Drafted"
+  | "Commit"
+  | "Reveal"
+  | "Finalized"
+  | "Cancelled";
 
 export interface CuratorRoundState {
   curatorId: string;
@@ -211,6 +109,10 @@ export interface RelevanceRound {
   finalizedAtTick: number | null;
 }
 
+// ---------------------------------------------------------------------------
+// Reputation-internal types (will move to engine/reputation/types.ts)
+// ---------------------------------------------------------------------------
+
 export interface ReputationLedgerEntry {
   registryEntryId: string;
   poolId: string;
@@ -231,6 +133,10 @@ export interface ReputationLedger {
   lastDecayEpoch: number;
 }
 
+// ---------------------------------------------------------------------------
+// Allocation-internal types (will move to engine/allocation/types.ts)
+// ---------------------------------------------------------------------------
+
 export interface AllocationRow {
   nominationId: string;
   registryEntryId: string;
@@ -238,7 +144,7 @@ export interface AllocationRow {
   share: number;
   provisionalToken: Token;
   finalToken: Token | null;
-  state: NominationState;
+  state: import("./shared/types").NominationState;
 }
 
 export interface AllocationResult {
@@ -248,14 +154,4 @@ export interface AllocationResult {
   denominator: number;
   rolloverToken: Token;
   rows: AllocationRow[];
-}
-
-export interface PhaseClock {
-  tick: number;
-  epoch: number;
-  history: Array<{
-    tick: number;
-    label: string;
-    note?: string;
-  }>;
 }
