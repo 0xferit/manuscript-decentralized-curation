@@ -1,19 +1,29 @@
 # Architecture
 
-This document maps the prototype's structure using standard software-modeling
-diagrams: a C4-style **container diagram** for the high-level shape, a
-**component diagram** for the engine internals, a **package diagram** for
-folder grouping, a **sequence diagram** for runtime flow, and **class
-diagrams** for the swap-point interfaces. Every diagram is Mermaid; renders
-in IntelliJ (with the Mermaid plugin), GitHub, and Quarto without extra
-tooling.
+This document describes the prototype's seven top-level modules, their
+public interfaces, the rules that govern how they may import each other,
+and how data flows through the system at runtime. Diagrams use Mermaid;
+they render in IntelliJ (with the Mermaid plugin), GitHub, and Quarto.
 
----
+## Modules (one job each)
 
-## 1. Container diagram (system shape)
+| # | Module | Path | Job |
+|---|---|---|---|
+| 1 | Bootstrap | `src/engine/bootstrap/` | Produce deterministic mock data: pool config, registry, curator identities + initial financial state, seeded nominations. |
+| 2 | Curation | `src/engine/curation/` | Score a nomination via the coherence game (one round, with retry on quorum failure). |
+| 3 | Adjudication | `src/engine/adjudication/` | Resolve disputes: file challenges, run external DDR (via injected resolver), apply payouts. |
+| 4 | Allocation | `src/engine/allocation/` | Compute money flows from relevance scores; redistribute the debunked share to surviving disbursed. |
+| 5 | Reputation | `src/engine/reputation/` | Track per-registry-entry honesty: +1 surviving, -5 debunked, decay 1 per epoch toward zero. |
+| 6 | Lifecycle | `src/engine/lifecycle/` | Drive nominations through the state machine across pool phases; orchestrate Curation/Adjudication/Allocation/Reputation. |
+| 7 | Inspector | `src/inspector/` | Render engine state and dispatch reviewer actions in a browser. |
 
-Shows the deployable units of the prototype and the external systems they
-adapt. Production swaps the two adapters; everything else stays.
+Plus the supporting layer:
+
+- `src/engine/shared/types/` - shared kernel of cross-module data shapes
+  (Token, PoolMeta, RegistryEntry, CuratorIdentity, ImpactNomination, etc.).
+  No logic, only shapes. Every module may import from here.
+
+## Container diagram (system shape)
 
 ```mermaid
 flowchart TB
@@ -21,225 +31,246 @@ flowchart TB
 
   subgraph proto["RPGF Prototype (single-page Vite app)"]
     direction TB
-    ui["UI Layer<br/><i>React panels</i>"]
-    store["State Container<br/><i>store.ts</i>"]
-    engine["Domain Engine<br/><i>pure TypeScript</i>"]
+    inspector["Inspector (UI)<br/><i>src/inspector/</i>"]
+    lifecycle["Lifecycle (orchestrator)<br/><i>src/engine/lifecycle/</i>"]
+    engine["Domain Engine<br/><i>curation, adjudication, allocation,<br/>reputation, bootstrap</i>"]
+    shared["Shared Kernel<br/><i>src/engine/shared/types/</i>"]
   end
 
-  subgraph external["External systems (adapters in v2)"]
+  subgraph external["External adapters (production swap)"]
     direction TB
     ddr["DDR Provider<br/><i>e.g. Kleros v1</i>"]
     cr["On-chain Commit-Reveal<br/><i>EVM contract</i>"]
   end
 
-  user -->|clicks, reads| ui
-  ui -->|actions| store
-  store -->|dispatch| engine
-  engine -.->|DDRResolver iface| ddr
-  engine -.->|CommitRevealSimulator iface| cr
+  user -->|clicks, reads| inspector
+  inspector -->|dispatch| lifecycle
+  lifecycle -->|composes| engine
+  lifecycle --> shared
+  engine --> shared
+  inspector --> shared
+  lifecycle -.->|DDRResolver iface| ddr
+  lifecycle -.->|CommitRevealSimulator iface| cr
 
   classDef ext stroke-dasharray: 5 5,fill:#1f2630,color:#d6dde8
   class ddr,cr ext
 ```
 
-Solid arrows are direct calls inside the prototype. Dashed arrows are
-interface boundaries that today resolve to mock implementations and in
-production resolve to chain adapters.
-
----
-
-## 2. Component diagram (engine internals)
-
-Each component is one or more `.ts` modules with a single responsibility.
-Provided interfaces are shown as dashed boxes; the rest are concrete modules.
+## Component diagram (engine internals)
 
 ```mermaid
 flowchart TB
-  subgraph store_layer["store.ts (React glue)"]
-    store["useAppStore"]
+  subgraph inspector_pkg["src/inspector/"]
+    inspector["panels + store + App + main"]
   end
 
-  subgraph facade["Phase facade"]
-    controller["controller.ts<br/>phaseController"]
-  end
-
-  subgraph atoms["Engine atoms (pure)"]
-    nom["nomination.ts<br/>state machine"]
-    alloc["allocation.ts<br/>alloc + redistribute"]
-    rep["reputation.ts<br/>immutable ledger"]
-    chal["challenge.ts<br/>filing + payout"]
-  end
-
-  subgraph round_layer["Round orchestration"]
-    round["round.ts<br/>retry loop"]
-    relevance["relevance.ts<br/>pipeline composer"]
-  end
-
-  subgraph stages_layer["Stages (per-phase atoms)"]
-    s_reserve["reserve"]
-    s_draft["drafting.ts"]
-    s_cr["commitReveal"]
-    s_score["score"]
-    s_slash["slash"]
-    s_reward["reward"]
-  end
-
-  subgraph prim["Primitives"]
-    stats["stats.ts"]
-    prng["prng.ts"]
-  end
-
-  ddr_iface[/"&laquo;interface&raquo;<br/>DDRResolver"/]
-  cr_iface[/"&laquo;interface&raquo;<br/>CommitRevealSimulator"/]
-  ddr_mock["manualMockDDRResolver"]
-  cr_mock["deterministicCommitRevealSimulator"]
-
-  store --> controller
-  controller --> nom
-  controller --> alloc
-  controller --> rep
-  controller --> chal
-  controller --> round
-  controller -. requires .-> ddr_iface
-  ddr_mock -. provides .-> ddr_iface
-
-  round --> relevance
-  relevance --> s_reserve
-  relevance --> s_draft
-  relevance -. requires .-> cr_iface
-  cr_mock -. provides .-> cr_iface
-  relevance --> s_score
-  relevance --> s_slash
-  relevance --> s_reward
-
-  s_score --> stats
-  s_slash --> stats
-  s_reward --> stats
-  s_draft --> prng
-
-  classDef iface stroke-dasharray: 5 5,fill:#1f2630
-  classDef mock fill:#0e1116,stroke:#56d364
-  class ddr_iface,cr_iface iface
-  class ddr_mock,cr_mock mock
-```
-
-The controller is the only multi-step coordinator. Atoms each own one
-concern. Stages are sequenced by `relevance.ts`; primitives are leaf
-modules with no engine knowledge.
-
----
-
-## 3. Package diagram (folder grouping)
-
-Maps directly to the on-disk layout. Arrows show allowed cross-package
-imports; anything not drawn is forbidden by the dependency layering.
-
-```mermaid
-flowchart LR
-  subgraph src["src/"]
+  subgraph lifecycle_pkg["src/engine/lifecycle/"]
     direction TB
-    ui_pkg["ui/<br/>10 panels + shared.ts"]
-    store_pkg["store.ts"]
-    subgraph engine_pkg["engine/"]
-      direction TB
-      atoms_pkg["atoms<br/>nomination · allocation · reputation · challenge"]
-      facade_pkg["controller<br/>controller.ts · controllerTypes.ts"]
-      round_pkg["round / relevance"]
-      stages_pkg["stages/<br/>reserve · commitReveal · score · slash · reward"]
-      prim_pkg["primitives<br/>stats · prng · drafting · types · seed · ddr"]
-    end
+    controller["controller.ts<br/><i>phaseController barrel</i>"]
+    sm["state-machine.ts"]
+    phases["phases/<br/>submission, evaluation,<br/>holdback, settlement,<br/>reputation-tick"]
+    lifecycle_types["types.ts<br/><i>EngineState, LogEvent,<br/>ControllerResult, PhaseDeps</i>"]
   end
 
-  tests_pkg["tests/<br/>11 spec files"]
+  subgraph atoms["Pure engine atoms"]
+    nom["bootstrap"]
+    cur["curation<br/><i>incl. drafting, stats,<br/>prng, stages</i>"]
+    adj["adjudication<br/><i>incl. DDRResolver port</i>"]
+    alc["allocation"]
+    rep["reputation"]
+  end
 
-  ui_pkg --> store_pkg
-  store_pkg --> facade_pkg
-  facade_pkg --> atoms_pkg
-  facade_pkg --> round_pkg
-  facade_pkg --> prim_pkg
-  round_pkg --> stages_pkg
-  round_pkg --> prim_pkg
-  stages_pkg --> prim_pkg
-  atoms_pkg --> prim_pkg
+  subgraph kernel["src/engine/shared/types/"]
+    sk["token, pool, registry,<br/>curator, nomination,<br/>funding-round"]
+  end
 
-  tests_pkg -. tests .-> engine_pkg
+  inspector --> controller
+  inspector --> sk
+  controller --> phases
+  controller --> sm
+  phases --> sm
+  phases --> cur
+  phases --> adj
+  phases --> alc
+  phases --> rep
+  phases --> nom
+  sm --> sk
+  cur --> sk
+  adj --> sk
+  alc --> sk
+  rep --> sk
+  nom --> sk
 ```
 
-Constraints encoded by the layout:
+## Allowed module-import edges (ESLint enforced)
 
-- `ui/` may import from `store.ts` only. No direct engine import.
-- `store.ts` may import from `engine/` (controller + types only) and
-  `engine/seed.ts` for bootstrap. Never engine internals.
-- `engine/controller.ts` is the engine's only multi-step coordinator.
-- Stages, atoms, and primitives are leaf modules: each may only import
-  from its own package and `primitives`.
-- `tests/` may import from anywhere in `engine/`; not from `ui/`.
+`eslint-plugin-boundaries` declares each directory as a typed element and
+the rules below pin the allowed import graph. Lint runs on every push.
 
----
+| From | Allowed targets |
+|---|---|
+| `shared` | (nothing) |
+| `bootstrap` | shared |
+| `curation` | shared, curation (self) |
+| `adjudication` | shared, adjudication (self) |
+| `allocation` | shared, allocation (self) |
+| `reputation` | shared, reputation (self) |
+| `lifecycle` | shared, lifecycle (self), curation, adjudication, allocation, reputation, bootstrap |
+| `inspector` | shared, lifecycle, bootstrap |
+| `tests` | any module |
 
-## 4. Sequence diagram (runtime: "Run evaluation")
+Cross-module imports MUST go through each module's `index.ts` barrel
+(e.g. `import { evaluateNomination } from "@curation"`). Path aliases
+(`@curation`, `@lifecycle`, etc.) are configured in `tsconfig.json`,
+`vite.config.ts`, and the ESLint resolver.
 
-Shows what happens when the reviewer clicks the "Run evaluation" button on
-the timeline panel. Other actions follow the same shape: UI dispatches to
-store, store calls one controller method, controller composes engine atoms,
-result returns up the stack.
+## Adapter ports (inline in consuming module)
+
+| Port | Owner | Default mock | Production swap |
+|---|---|---|---|
+| `DDRResolver` | adjudication | `manualMockDDRResolver` | drop `KlerosAdapter` in adjudication; pass via `PhaseDeps.ddr` |
+| `CommitRevealSimulator` | curation | `deterministicCommitRevealSimulator` | drop `OnChainCommitRevealAdapter` in curation; pass via `PhaseDeps.commitRevealSimulator` |
+
+Each port lives in its consuming module's barrel. Adapters implement the
+port and are injected through `PhaseDeps` at the controller boundary.
+
+## Slice ownership
+
+`EngineState` is the engine's shared envelope. Each field has exactly one
+writer module:
+
+| Field(s) | Owner |
+|---|---|
+| `pool.id`, `pool.name`, `pool.registryId`, `pool.parameters`, `registry`, identity portion of `curators` | bootstrap (init only) |
+| `pool.emaSigma`, `pool.curationBudget`, `rounds`, financial portion of `curators` | curation |
+| `pool.fundingBudget`, `pool.budgetRolloverToken`, `allocation` | allocation |
+| `challenges` | adjudication |
+| `reputation` | reputation |
+| `pool.phase`, `pool.currentRoundId`, `nominations`, `fundingRound`, `tick`, `epoch`, `evaluationRan`, `disbursementRan` | lifecycle |
+
+The flat `EngineState` shape is preserved during the incremental refactor;
+slice ownership is enforced by the controller composition pattern (each
+phase function reads/writes only the fields owned by its module). A
+future revision may group slices structurally for compile-time
+enforcement.
+
+## Public API per module
+
+### `@bootstrap`
+```ts
+makePool(): Pool
+makeRegistry(): RegistryEntry[]
+makeCurators(): Curator[]            // Curator extends CuratorIdentity
+makeNominations(): ImpactNomination[]
+const REFERENCE_POOL_PARAMETERS: PoolParameters
+const PROTOTYPE_BASE_SEED, PROTOTYPE_POOL_ID, PROTOTYPE_FUNDING_ROUND_ID
+```
+
+### `@curation`
+```ts
+type RelevanceRound, RoundPhase, CuratorRoundState, CuratorFinancialState
+type CommitRevealSimulator, CommitRevealInput
+type EvaluateNominationInput, EvaluateNominationOutput
+const deterministicCommitRevealSimulator: CommitRevealSimulator
+
+evaluateNomination(input): EvaluateNominationOutput
+runRelevanceRound(input): RelevanceRoundOutcome
+```
+
+### `@adjudication`
+```ts
+type Challenge, ChallengeReason, ChallengeStatus, DDROutcome, ChallengePayout
+type DDRResolver, DDRResolveInput, DDRResolveOutput, DDRResolution
+class ChallengeFilingError, DDRResolutionError
+const manualMockDDRResolver: DDRResolver
+
+fileChallenge(input): Challenge
+computeCounterStake(provisionalShare, params): Token
+computeChallengeTax(provisionalShare, params): Token
+challengePayoutFor(outcome, challenge): ChallengePayout
+resolveChallenge(challenge, ruling, tick, jurorNote, resolver?)
+```
+
+### `@allocation`
+```ts
+type AllocationResult, AllocationRow, RedistributionResult
+
+computeProvisionalAllocation(input): AllocationResult
+redistributeDebunkedShare(input): RedistributionResult
+```
+
+### `@reputation`
+```ts
+type ReputationLedger, ReputationLedgerEntry, ReputationLedgerEvent
+
+emptyLedger(): ReputationLedger
+ensureEntry(ledger, registryEntryId, poolId, init): ReputationLedger
+awardSurvivingRound(ledger, ...): ReputationLedger
+applyDebunkPenalty(ledger, ...): ReputationLedger
+decayEpoch(ledger, poolId, decay, tick): { ledger, updatedIds }
+```
+
+### `@lifecycle`
+```ts
+type EngineState, LogEvent, LogCategory, ControllerResult, PhaseDeps
+type FileChallengeArgs, AmendInput
+class NominationTransitionError
+
+// state-machine atoms (pure)
+amendDuringSubmission, retractNomination, markScored, markUnscored,
+markDisputed, markDebunked, markChallengeFailed, markDisbursed,
+topUpFinalShare
+
+// phase actions (composed)
+const phaseController: {
+  amendNomination, retractNomination, closeSubmission,
+  runEvaluation, enterHoldback,
+  fileChallenge, resolveDDR, expireHoldback,
+  releaseGraced, closeRound, decayReputation,
+}
+```
+
+### `@shared/types/*` (kernel)
+```ts
+Token, PoolMeta, PoolParameters, PoolPhase, RegistryEntry,
+CuratorIdentity, CommitRevealBehavior,
+ImpactNomination, NominationState, AdjudicationOutcome,
+Assertion, EvidenceItem, EvidenceClass, FundingRound
+```
+
+## Runtime data flow ("Run evaluation")
 
 ```mermaid
 sequenceDiagram
   autonumber
   actor U as Reviewer
   participant TL as TimelinePanel
-  participant ST as store.ts
+  participant ST as inspector/store
   participant CT as phaseController
-  participant RD as round.ts
-  participant RV as relevance.ts
-  participant SG as stages/*
-  participant NM as nomination.ts
-  participant AL as allocation.ts
+  participant CR as @curation.evaluateNomination
+  participant SG as @curation/stages/*
+  participant SM as @lifecycle/state-machine
+  participant AL as @allocation
 
   U->>TL: click "Run evaluation"
   TL->>ST: actions.runEvaluation()
-  ST->>CT: runEvaluation(state, deps)
+  ST->>CT: phaseController.runEvaluation(state, deps)
   loop for each Submitted nomination
-    CT->>RD: evaluateNomination(...)
+    CT->>CR: evaluateNomination(...)
     loop attempt = 0..1
-      RD->>RV: runRelevanceRound(...)
-      RV->>SG: reserveRoundReward
-      RV->>SG: draftSeats (uses prng)
-      RV->>SG: simulator.simulate
-      RV->>SG: score (uses stats)
-      alt scored
-        RV->>SG: applySlashing
-        RV->>SG: distributeRoundReward
-      else quorumFailure
-        RV->>SG: applyNonParticipationOnlySlashing
-      end
-      RV-->>RD: RelevanceRoundOutcome
+      CR->>SG: reserve, draft, simulate, score, slash, reward
+      SG-->>CR: round outcome
     end
-    RD-->>CT: EvaluateNominationOutput
-    CT->>NM: markScored | markUnscored
+    CR-->>CT: { rounds, deltas, ema, budget, resolvedAs }
+    CT->>SM: markScored | markUnscored
   end
   CT->>AL: computeProvisionalAllocation
   CT-->>ST: ControllerResult { state, events }
-  ST->>ST: setState(prev → merged)
-  ST-->>TL: re-render with new state
+  ST->>ST: setState(prev -> merged)
+  ST-->>TL: re-render
 ```
 
-Key invariants visible in the diagram:
-
-- Every controller call is a single dispatch. The store never coordinates
-  multi-step engine flows directly.
-- The retry loop lives entirely in `round.ts`; the controller never sees
-  individual attempts.
-- Stages run in fixed order inside `relevance.ts`. Adding a stage means
-  editing one orchestrator, not the controller.
-
----
-
-## 5. Class diagrams (swap-point interfaces)
-
-The two contracts that production must implement to replace the
-prototype's mocks.
+## Swap-point interfaces (class diagrams)
 
 ```mermaid
 classDiagram
@@ -248,29 +279,12 @@ classDiagram
     +submit(challenge: Challenge)$ void
     +resolve(input: DDRResolveInput) DDRResolveOutput
   }
-  class manualMockDDRResolver {
-    +resolve(input) DDRResolveOutput
-  }
+  class manualMockDDRResolver
   class KlerosAdapter {
     <<production>>
-    +submit(challenge) void
-    +resolve(input) DDRResolveOutput
   }
   DDRResolver <|.. manualMockDDRResolver
   DDRResolver <|.. KlerosAdapter
-
-  class DDRResolveInput {
-    +challenge: Challenge
-    +ruling: DDROutcome
-    +tick: number
-    +jurorNote: string|null
-  }
-  class DDRResolveOutput {
-    +challenge: Challenge
-    +resolution: DDRResolution
-  }
-  DDRResolver ..> DDRResolveInput
-  DDRResolver ..> DDRResolveOutput
 ```
 
 ```mermaid
@@ -279,79 +293,94 @@ classDiagram
     <<interface>>
     +simulate(input: CommitRevealInput) CuratorRoundState[]
   }
-  class deterministicCommitRevealSimulator {
-    +simulate(input) CuratorRoundState[]
-  }
+  class deterministicCommitRevealSimulator
   class OnChainCommitRevealAdapter {
     <<production>>
-    +simulate(input) CuratorRoundState[]
   }
   CommitRevealSimulator <|.. deterministicCommitRevealSimulator
   CommitRevealSimulator <|.. OnChainCommitRevealAdapter
 ```
 
-```mermaid
-classDiagram
-  class PhaseController {
-    +amendNomination(state, id, patch) ControllerResult
-    +retractNomination(state, id) ControllerResult
-    +closeSubmission(state) ControllerResult
-    +runEvaluation(state, deps) ControllerResult
-    +enterHoldback(state) ControllerResult
-    +fileChallenge(state, args) ControllerResult
-    +resolveDDR(state, id, outcome, deps) ControllerResult
-    +expireHoldback(state) ControllerResult
-    +releaseGraced(state) ControllerResult
-    +closeRound(state) ControllerResult
-    +decayReputation(state) ControllerResult
-  }
-  class EngineState {
-    +pool: Pool
-    +registry: RegistryEntry[]
-    +curators: Curator[]
-    +nominations: ImpactNomination[]
-    +challenges: Challenge[]
-    +rounds: RelevanceRound[]
-    +fundingRound: FundingRound
-    +reputation: ReputationLedger
-    +allocation: AllocationResult|null
-    +tick: number
-    +epoch: number
-    +evaluationRan: boolean
-    +disbursementRan: boolean
-  }
-  class ControllerResult {
-    +state: EngineState
-    +events: LogEvent[]
-  }
-  class PhaseDeps {
-    +baseSeed: string
-    +ddr?: DDRResolver
-    +commitRevealSimulator?: CommitRevealSimulator
-  }
-  PhaseController ..> EngineState
-  PhaseController ..> ControllerResult
-  PhaseController ..> PhaseDeps
+## Test layout
+
+Tests are co-located alongside source by file naming convention:
+`<source>.test.ts` next to the source. The legacy top-level `tests/`
+directory still holds integration tests and module-level tests pending
+migration. `vitest` includes both:
+
+```ts
+include: ["src/**/*.test.ts", "src/**/*.test.tsx", "tests/**/*.test.ts"]
 ```
 
-Every public type listed here corresponds to one exported declaration in
-`src/engine/`. Tests pin each contract: `tests/ddr.test.ts` covers the
-DDR boundary, `tests/stages.test.ts` covers the simulator boundary, and
-`tests/controller.test.ts` covers the controller surface plus its
-immutability invariant.
+86 tests pass after the refactor (no semantic change). The test count
+matches the pre-refactor baseline.
 
----
+## File tree (as of refactor end)
 
-## Diagram choice rationale
+```
+projects/rpgf/prototype/
+├── ARCHITECTURE.md         <- this file
+├── PROTOTYPE_PROFILE.md    <- frozen scope, deviations from spec
+├── README.md               <- run instructions, spec mapping
+├── package.json
+├── tsconfig.json           <- path aliases
+├── vite.config.ts          <- mirrored aliases + vitest include
+├── eslint.config.js        <- module-import boundary rules
+├── index.html
+├── src/
+│   ├── engine/
+│   │   ├── shared/
+│   │   │   └── types/      <- shared kernel (no logic)
+│   │   ├── bootstrap/      <- mock data factories
+│   │   ├── curation/
+│   │   │   ├── index.ts    <- public barrel
+│   │   │   ├── types.ts
+│   │   │   ├── stats.ts    <- private
+│   │   │   ├── prng.ts     <- private
+│   │   │   ├── drafting.ts <- private
+│   │   │   ├── stages/     <- private (reserve, score, slash, reward, commit-reveal)
+│   │   │   ├── relevance.ts
+│   │   │   ├── round.ts
+│   │   │   └── types.ts
+│   │   ├── adjudication/   <- challenge + DDR
+│   │   ├── allocation/
+│   │   ├── reputation/
+│   │   ├── lifecycle/
+│   │   │   ├── index.ts
+│   │   │   ├── types.ts    <- EngineState, LogEvent, ControllerResult
+│   │   │   ├── state-machine.ts
+│   │   │   ├── phases/     <- per-stage phase functions
+│   │   │   └── controller.ts
+│   │   └── types.ts        <- transitional re-export shim
+│   └── inspector/
+│       ├── main.tsx
+│       ├── App.tsx
+│       ├── store.ts        <- thin React wrapper around phaseController
+│       ├── styles.css
+│       └── panels/         <- 10 panels + shared.ts (fmt helpers)
+└── tests/                  <- 11 test files, ~86 assertions
+```
 
-| Diagram | Purpose here | Standard intent |
-|---|---|---|
-| Container | Show the prototype as one deployable unit and its external adapters | C4 level 2: deployable runtime units |
-| Component | Show the modules inside the engine and which interfaces they require/provide | C4 level 3 / UML 2 component diagram |
-| Package | Show folder/namespace grouping and the layering rules | UML 2 package diagram |
-| Sequence | Show one user action's call path through the system | UML 2 interaction diagram |
-| Class | Pin the swap-point interface contracts | UML 2 class diagram |
+## Verification
 
-This set covers structure (packages, components, classes), runtime
-behavior (sequence), and deployment/integration boundaries (container).
-Sufficient for any future work to be planned against a fixed surface.
+```bash
+cd projects/rpgf/prototype
+npm install
+npm run typecheck            # clean
+npm run lint                 # clean (boundary rules active)
+npm test                     # 86/86 pass
+npm run build                # ~199 KB JS, ~5.7 KB CSS
+npm run dev                  # http://localhost:5173
+```
+
+Browser smoke (Playwright-driven during the refactor):
+
+1. Click "Close submission" -> phase = Evaluation.
+2. Click "Run evaluation" -> 5 nominations scored; allocation populates.
+3. Click "Open holdback".
+4. File a Debunking challenge against `nom-modular-vm-bogus-deploy`.
+5. Click "Expire holdback" -> 4 nominations disburse; debunk target stays in escrow.
+6. Click "Debunked" on the open challenge -> 20.42 token redistributed pro-rata; sum of finals = 95.00.
+7. Reputation: 4 entries +1, debunk target -5, others 0.
+
+Console must remain free of errors and warnings.
