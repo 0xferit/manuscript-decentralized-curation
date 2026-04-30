@@ -16,7 +16,7 @@ import type {
   ReputationLedger,
   ReputationLedgerEntry,
   ReputationLedgerEvent,
-} from "../types";
+} from "./types";
 
 export function emptyLedger(): ReputationLedger {
   return { byRegistryEntryId: {}, lastDecayEpoch: 0 };

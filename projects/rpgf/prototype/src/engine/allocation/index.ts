@@ -3,7 +3,7 @@
  * the debunked share pro-rata to already-disbursed surviving nominations.
  */
 
-export type { AllocationResult, AllocationRow } from "../types";
+export type { AllocationResult, AllocationRow } from "./types";
 export type {
   AllocationInput,
   RedistributionInput,

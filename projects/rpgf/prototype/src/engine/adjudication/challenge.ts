@@ -7,13 +7,8 @@
  * fee is sunk regardless of outcome.
  */
 
-import type {
-  Challenge,
-  ChallengeReason,
-  DDROutcome,
-  ImpactNomination,
-  PoolParameters,
-} from "../types";
+import type { ImpactNomination, PoolParameters } from "@shared/types";
+import type { Challenge, ChallengeReason, DDROutcome } from "./types";
 
 export interface FileChallengeInput {
   id: string;

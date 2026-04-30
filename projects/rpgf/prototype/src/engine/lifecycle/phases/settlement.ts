@@ -7,7 +7,7 @@
  *   challenge is still Pending.
  */
 
-import { awardSurvivingRound } from "../../reputation/reputation";
+import { awardSurvivingRound } from "@reputation";
 import { markDisbursed } from "../state-machine";
 import type { ControllerResult, EngineState, LogEvent } from "../types";
 import { advanceTick } from "./_shared";

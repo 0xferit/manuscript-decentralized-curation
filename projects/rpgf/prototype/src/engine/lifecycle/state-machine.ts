@@ -15,7 +15,7 @@ import type {
   AdjudicationOutcome,
   ImpactNomination,
   NominationState,
-} from "../types";
+} from "@shared/types";
 
 export class NominationTransitionError extends Error {
   constructor(

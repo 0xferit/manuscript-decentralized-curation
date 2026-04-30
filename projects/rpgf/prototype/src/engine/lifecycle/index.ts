@@ -39,3 +39,8 @@ export {
 export type { PhaseDeps, FileChallengeArgs } from "./controller";
 export { phaseController } from "./controller";
 export type { PhaseController } from "./controller";
+
+export { makeInitialEngineState, makeDefaultPhaseDeps } from "./state-init";
+
+// Controller-action argument types surfaced for UI dispatch.
+export type { ChallengeReason, DDROutcome } from "@adjudication";

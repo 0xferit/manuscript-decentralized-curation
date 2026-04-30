@@ -13,20 +13,13 @@
 import { useCallback, useEffect, useState } from "react";
 
 import {
-  makeCurators,
-  makeNominations,
-  makePool,
-  makeRegistry,
-  PROTOTYPE_BASE_SEED,
-  PROTOTYPE_FUNDING_ROUND_ID,
-} from "@bootstrap";
-import { manualMockDDRResolver } from "@adjudication";
-import type { ChallengeReason, DDROutcome } from "@adjudication";
-import { emptyLedger, ensureEntry } from "@reputation";
-import {
+  makeDefaultPhaseDeps,
+  makeInitialEngineState,
   phaseController,
   type AmendInput,
+  type ChallengeReason,
   type ControllerResult,
+  type DDROutcome,
   type EngineState,
   type LogEvent,
   type PhaseDeps,
@@ -54,49 +47,10 @@ export interface AppActions {
   reset: () => void;
 }
 
-const DEFAULT_DEPS: PhaseDeps = {
-  baseSeed: PROTOTYPE_BASE_SEED,
-  ddr: manualMockDDRResolver,
-};
-
-function initialEngineState(): EngineState {
-  const pool = makePool();
-  const registry = makeRegistry();
-  const curators = makeCurators();
-  const nominations = makeNominations();
-  let reputation = emptyLedger();
-  for (const entry of registry) {
-    reputation = ensureEntry(reputation, entry.id, pool.id, entry.reputation);
-  }
-  return {
-    pool,
-    registry,
-    curators,
-    nominations,
-    challenges: [],
-    rounds: [],
-    fundingRound: {
-      id: PROTOTYPE_FUNDING_ROUND_ID,
-      poolId: pool.id,
-      index: 1,
-      phase: pool.phase,
-      nominationIds: nominations.map((n) => n.id),
-      holdbackEndsAtTick: null,
-      finalizedAtTick: null,
-      totalDisbursedToken: 0,
-      rolloverToken: 0,
-    },
-    reputation,
-    allocation: null,
-    tick: 0,
-    epoch: 0,
-    evaluationRan: false,
-    disbursementRan: false,
-  };
-}
+const DEFAULT_DEPS: PhaseDeps = makeDefaultPhaseDeps();
 
 function initialAppState(): AppState {
-  const engine = initialEngineState();
+  const engine = makeInitialEngineState();
   return {
     ...engine,
     log: [

@@ -7,8 +7,8 @@
  * phase once evaluation has run.
  */
 
-import { computeProvisionalAllocation } from "../../allocation/allocation";
-import { evaluateNomination } from "../../curation/round";
+import { computeProvisionalAllocation } from "@allocation";
+import { evaluateNomination } from "@curation";
 import {
   markScored,
   markUnscored,

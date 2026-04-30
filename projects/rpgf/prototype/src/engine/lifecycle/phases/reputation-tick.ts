@@ -5,7 +5,7 @@
  * Always increments the engine epoch counter.
  */
 
-import { decayEpoch } from "../../reputation/reputation";
+import { decayEpoch } from "@reputation";
 import type { ControllerResult, EngineState } from "../types";
 import { advanceTick } from "./_shared";
 

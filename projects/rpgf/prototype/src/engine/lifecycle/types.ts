@@ -6,16 +6,16 @@
  */
 
 import type {
-  AllocationResult,
-  Challenge,
   Curator,
   FundingRound,
   ImpactNomination,
   Pool,
   RegistryEntry,
-  RelevanceRound,
-  ReputationLedger,
-} from "../types";
+} from "@shared/types";
+import type { Challenge } from "@adjudication";
+import type { AllocationResult } from "@allocation";
+import type { ReputationLedger } from "@reputation";
+import type { RelevanceRound } from "@curation";
 
 /**
  * Engine state envelope.

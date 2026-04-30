@@ -12,11 +12,8 @@
  * at debunk time, the freed share rolls over.
  */
 
-import type {
-  AllocationResult,
-  AllocationRow,
-  ImpactNomination,
-} from "../types";
+import type { ImpactNomination } from "@shared/types";
+import type { AllocationResult, AllocationRow } from "./types";
 
 export interface AllocationInput {
   poolId: string;

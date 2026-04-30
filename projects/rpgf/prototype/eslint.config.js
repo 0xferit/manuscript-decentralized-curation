@@ -13,14 +13,13 @@ const ELEMENTS = [
   { type: "allocation",   pattern: "src/engine/allocation/**/*",   mode: "file" },
   { type: "reputation",   pattern: "src/engine/reputation/**/*",   mode: "file" },
   { type: "lifecycle",    pattern: "src/engine/lifecycle/**/*",    mode: "file" },
-  { type: "engine-root",  pattern: "src/engine/{types,index,seed}.ts", mode: "file" },
   { type: "inspector",    pattern: "src/inspector/**/*",           mode: "file" },
   { type: "tests",        pattern: "tests/**/*",                   mode: "file" },
 ];
 
 const ALLOWED = [
   { from: "shared",       allow: [] },
-  { from: "bootstrap",    allow: ["shared"] },
+  { from: "bootstrap",    allow: ["shared", "bootstrap"] },
   { from: "curation",     allow: ["shared", "curation"] },
   { from: "adjudication", allow: ["shared", "adjudication"] },
   { from: "allocation",   allow: ["shared", "allocation"] },
@@ -37,22 +36,8 @@ const ALLOWED = [
       "bootstrap",
     ],
   },
-  // engine-root barrel re-exports everything; not a real module.
-  {
-    from: "engine-root",
-    allow: [
-      "shared",
-      "bootstrap",
-      "curation",
-      "adjudication",
-      "allocation",
-      "reputation",
-      "lifecycle",
-      "engine-root",
-    ],
-  },
-  { from: "inspector",    allow: ["shared", "lifecycle", "bootstrap", "engine-root", "inspector"] },
-  { from: "tests",        allow: ["shared", "bootstrap", "curation", "adjudication", "allocation", "reputation", "lifecycle", "inspector", "engine-root", "tests"] },
+  { from: "inspector",    allow: ["shared", "lifecycle", "bootstrap", "inspector"] },
+  { from: "tests",        allow: ["shared", "bootstrap", "curation", "adjudication", "allocation", "reputation", "lifecycle", "inspector", "tests"] },
 ];
 
 export default tseslint.config(
@@ -72,6 +57,13 @@ export default tseslint.config(
     settings: {
       "boundaries/elements": ELEMENTS,
       "boundaries/include": ["src/**/*", "tests/**/*"],
+      "import/resolver": {
+        typescript: {
+          alwaysTryTypes: true,
+          project: "./tsconfig.json",
+        },
+        node: true,
+      },
     },
     rules: {
       ...reactHooks.configs.recommended.rules,

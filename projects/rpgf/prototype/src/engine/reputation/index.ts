@@ -9,7 +9,7 @@ export type {
   ReputationLedger,
   ReputationLedgerEntry,
   ReputationLedgerEvent,
-} from "../types";
+} from "./types";
 
 export {
   emptyLedger,

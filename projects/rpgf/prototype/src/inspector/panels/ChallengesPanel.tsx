@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import type { AppActions, AppState } from "../store";
-import type { ChallengeReason, DDROutcome } from "@adjudication";
+import type { ChallengeReason, DDROutcome } from "@lifecycle";
 import { fmtToken } from "./shared";
 
 interface Props {

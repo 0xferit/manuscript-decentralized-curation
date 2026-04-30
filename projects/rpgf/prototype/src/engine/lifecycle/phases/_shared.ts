@@ -5,9 +5,9 @@
  * helpers below are private to the lifecycle module.
  */
 
-import type { DDRResolver } from "../../adjudication/ddr";
-import type { CommitRevealSimulator } from "../../curation/stages";
-import type { ImpactNomination } from "../../types";
+import type { DDRResolver } from "@adjudication";
+import type { CommitRevealSimulator } from "@curation";
+import type { ImpactNomination } from "@shared/types";
 import type { EngineState } from "../types";
 
 export interface PhaseDeps {
