@@ -5,8 +5,8 @@ import type { ImpactNomination } from "@shared/types";
 import { fmtNum, fmtToken } from "./shared";
 
 interface Props {
-  state: AppState;
-  actions: AppActions;
+  readonly state: AppState;
+  readonly actions: AppActions;
 }
 
 export function NominationsPanel({ state, actions }: Props) {
@@ -25,15 +25,17 @@ export function NominationsPanel({ state, actions }: Props) {
   );
 }
 
+interface NominationCardProps {
+  readonly nomination: ImpactNomination;
+  readonly state: AppState;
+  readonly actions: AppActions;
+}
+
 function NominationCard({
   nomination,
   state,
   actions,
-}: {
-  nomination: ImpactNomination;
-  state: AppState;
-  actions: AppActions;
-}) {
+}: NominationCardProps) {
   const registry = state.registry.find((r) => r.id === nomination.registryEntryId);
   const round = nomination.relevanceRoundId
     ? state.rounds.find((r) => r.id === nomination.relevanceRoundId)

@@ -5,8 +5,8 @@ import type { ChallengeReason, DDROutcome } from "@adjudication";
 import { fmtToken } from "./shared";
 
 interface Props {
-  state: AppState;
-  actions: AppActions;
+  readonly state: AppState;
+  readonly actions: AppActions;
 }
 
 const REASONS: ChallengeReason[] = [
@@ -16,6 +16,12 @@ const REASONS: ChallengeReason[] = [
 ];
 
 const OUTCOMES: DDROutcome[] = ["Debunked", "ChallengeFailed", "Timeout"];
+
+function outcomeButtonClass(outcome: DDROutcome): string {
+  if (outcome === "Debunked") return "danger";
+  if (outcome === "Timeout") return "warning";
+  return "";
+}
 
 export function ChallengesPanel({ state, actions }: Props) {
   const challengable = state.nominations.filter(
@@ -131,13 +137,7 @@ export function ChallengesPanel({ state, actions }: Props) {
                           onClick={() =>
                             actions.resolveDDR(c.id, o, `mock juror chose ${o}`)
                           }
-                          className={
-                            o === "Debunked"
-                              ? "danger"
-                              : o === "Timeout"
-                                ? "warning"
-                                : ""
-                          }
+                          className={outcomeButtonClass(o)}
                         >
                           {o}
                         </button>

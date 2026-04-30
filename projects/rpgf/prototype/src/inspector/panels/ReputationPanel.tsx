@@ -1,6 +1,6 @@
 import type { AppState } from "../store";
 
-interface Props { state: AppState; }
+interface Props { readonly state: AppState; }
 
 export function ReputationPanel({ state }: Props) {
   const entries = Object.values(state.reputation.byRegistryEntryId);

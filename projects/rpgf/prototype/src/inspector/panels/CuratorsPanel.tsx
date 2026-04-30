@@ -1,7 +1,7 @@
 import type { AppState } from "../store";
 import { fmtNum, fmtToken } from "./shared";
 
-interface Props { state: AppState; }
+interface Props { readonly state: AppState; }
 
 export function CuratorsPanel({ state }: Props) {
   const L = state.pool.parameters.seatSizeL;

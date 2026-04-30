@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { AppState } from "../store";
 
-interface Props { state: AppState; }
+interface Props { readonly state: AppState; }
 
 export function LogPanel({ state }: Props) {
   const ref = useRef<HTMLDivElement>(null);

@@ -1,8 +1,8 @@
 import type { AppActions, AppState } from "../store";
 
 interface Props {
-  state: AppState;
-  actions: AppActions;
+  readonly state: AppState;
+  readonly actions: AppActions;
 }
 
 const STAGES = [

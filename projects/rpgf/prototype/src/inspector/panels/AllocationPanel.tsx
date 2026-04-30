@@ -1,7 +1,7 @@
 import type { AppState } from "../store";
 import { fmtNum, fmtPct, fmtToken } from "./shared";
 
-interface Props { state: AppState; }
+interface Props { readonly state: AppState; }
 
 export function AllocationPanel({ state }: Props) {
   const allocation = state.allocation;

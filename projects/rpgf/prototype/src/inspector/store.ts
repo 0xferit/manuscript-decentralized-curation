@@ -123,7 +123,7 @@ export function useAppStore(): { state: AppState; actions: AppActions } {
   const [state, setState] = useState<AppState>(initialAppState);
 
   useEffect(() => {
-    (window as unknown as { __rpgf?: AppState }).__rpgf = state;
+    (globalThis as unknown as { __rpgf?: AppState }).__rpgf = state;
   }, [state]);
 
   const dispatch = useCallback(

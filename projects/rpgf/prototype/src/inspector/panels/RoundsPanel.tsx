@@ -1,7 +1,13 @@
 import type { AppState } from "../store";
 import { fmtNum, fmtToken } from "./shared";
 
-interface Props { state: AppState; }
+interface Props { readonly state: AppState; }
+
+function curatorBandLabel(s: { nonParticipation: boolean; withinBand: boolean }): string {
+  if (s.nonParticipation) return "no-show";
+  if (s.withinBand) return "in";
+  return "out";
+}
 
 export function RoundsPanel({ state }: Props) {
   if (state.rounds.length === 0) {
@@ -64,7 +70,7 @@ export function RoundsPanel({ state }: Props) {
                     <td>{fmtNum(s.penaltyFraction, 3)}</td>
                     <td>{fmtToken(s.slashedToken, 6)}</td>
                     <td>{fmtToken(s.rewardToken, 6)}</td>
-                    <td>{s.nonParticipation ? "no-show" : s.withinBand ? "in" : "out"}</td>
+                    <td>{curatorBandLabel(s)}</td>
                   </tr>
                 ))}
               </tbody>
