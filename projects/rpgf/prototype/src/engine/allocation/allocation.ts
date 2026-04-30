@@ -17,7 +17,7 @@ import type {
   AllocationRow,
   ImpactNomination,
   Token,
-} from "./types";
+} from "../types";
 
 export interface AllocationInput {
   poolId: string;

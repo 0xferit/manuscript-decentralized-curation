@@ -16,7 +16,7 @@
 import {
   computeProvisionalAllocation,
   redistributeDebunkedShare,
-} from "./allocation";
+} from "./allocation/allocation";
 import {
   challengePayoutFor,
   fileChallenge as buildChallenge,
@@ -40,7 +40,7 @@ import {
   applyDebunkPenalty,
   awardSurvivingRound,
   decayEpoch,
-} from "./reputation";
+} from "./reputation/reputation";
 import type { CommitRevealSimulator } from "./curation/stages";
 import type {
   ChallengeReason,

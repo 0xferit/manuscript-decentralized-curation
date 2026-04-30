@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   computeProvisionalAllocation,
   redistributeDebunkedShare,
-} from "../src/engine/allocation";
+} from "../src/engine/allocation/allocation";
 import type { ImpactNomination } from "../src/engine/types";
 
 function nom(
