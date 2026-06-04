@@ -23,9 +23,7 @@ keywords:
   - knowledge aggregation
   - Schelling point
   - dispute resolution
-license:
-  - CC-BY-4.0
-  - MIT
+license: CC-BY-4.0
 preferred-citation:
   type: unpublished
   title: "Decentralized Curation: Trustless Transformation of Information into Knowledge"
