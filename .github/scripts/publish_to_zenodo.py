@@ -105,7 +105,7 @@ def main() -> None:
         f"{bucket}/paper.pdf",
         token=token,
         body=pdf_bytes,
-        content_type="application/pdf",
+        content_type="application/octet-stream",
     )
     print(f"[zenodo] uploaded paper.pdf ({len(pdf_bytes)} bytes)")
 
