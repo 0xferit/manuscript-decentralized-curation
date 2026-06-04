@@ -1,7 +1,6 @@
 # Decentralized Curation
 
-[![Build & Publish](https://github.com/0xferit/manuscript-decentralized-curation/actions/workflows/publish-cloudflare-pages.yml/badge.svg)](https://github.com/0xferit/manuscript-decentralized-curation/actions/workflows/publish-cloudflare-pages.yml)
-[![DOI](https://zenodo.org/badge/1132295542.svg)](https://doi.org/10.5281/zenodo.20543760)
+[![Build & Publish](https://github.com/0xferit/manuscript-decentralized-curation/actions/workflows/publish-cloudflare-pages.yml/badge.svg)](https://github.com/0xferit/manuscript-decentralized-curation/actions/workflows/publish-cloudflare-pages.yml) [![DOI](https://zenodo.org/badge/1132295542.svg)](https://doi.org/10.5281/zenodo.20543760)
 
 A paper-first workspace for a Quarto-based academic manuscript on decentralized curation, plus spinout project documents for Truth Post and RPGF. The thesis remains the primary build and publish surface; project docs live under `projects/`.
 
