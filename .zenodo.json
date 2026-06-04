@@ -1,0 +1,23 @@
+{
+  "upload_type": "publication",
+  "publication_type": "preprint",
+  "title": "Decentralized Curation: Trustless Transformation of Information into Knowledge",
+  "creators": [
+    {
+      "name": "Tunçer, Ferit"
+    }
+  ],
+  "description": "A thesis on decentralized curation: the trustless transformation of raw information into decision-grade knowledge. Proposes a general framework and instantiates it on news via bonded publication, open challenges, external decentralized dispute resolution, and drafted-curator relevance rounds.",
+  "access_right": "open",
+  "license": "CC-BY-4.0",
+  "keywords": [
+    "decentralized curation",
+    "mechanism design",
+    "trustless systems",
+    "blockchain",
+    "information quality",
+    "knowledge aggregation",
+    "Schelling point",
+    "dispute resolution"
+  ]
+}
