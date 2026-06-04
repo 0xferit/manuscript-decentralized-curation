@@ -16,13 +16,21 @@ import os
 import sys
 import urllib.error
 import urllib.request
-from datetime import date, timezone
+from datetime import date
 from pathlib import Path
 
 API = "https://zenodo.org/api"
 CONCEPT_RECID = "20543760"
 PDF_PATH = Path("outputs/paper.pdf")
 META_PATH = Path(".zenodo.json")
+HTTP_TIMEOUT = 60
+
+
+def _require_env(name: str) -> str:
+    value = os.environ.get(name)
+    if not value:
+        sys.exit(f"missing required environment variable: {name}")
+    return value
 
 
 def _req(method: str, url: str, *, token: str, body=None, content_type: str | None = None):
@@ -37,18 +45,20 @@ def _req(method: str, url: str, *, token: str, body=None, content_type: str | No
             headers["Content-Type"] = content_type
     request = urllib.request.Request(url, data=data, method=method, headers=headers)
     try:
-        with urllib.request.urlopen(request) as response:
+        with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
             raw = response.read()
     except urllib.error.HTTPError as exc:
         sys.exit(f"HTTP {exc.code} on {method} {url}: {exc.read().decode('utf-8', errors='replace')}")
+    except urllib.error.URLError as exc:
+        sys.exit(f"network error on {method} {url}: {exc.reason}")
     if not raw:
         return {}
     return json.loads(raw)
 
 
 def main() -> None:
-    token = os.environ["ZENODO_TOKEN"]
-    tag = os.environ["RELEASE_TAG"]
+    token = _require_env("ZENODO_TOKEN")
+    tag = _require_env("RELEASE_TAG")
     version = tag.lstrip("v")
 
     if not PDF_PATH.exists():
@@ -114,5 +124,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    _ = timezone  # quiet unused-import linters if any
     main()
