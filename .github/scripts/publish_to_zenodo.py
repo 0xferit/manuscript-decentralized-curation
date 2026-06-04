@@ -66,7 +66,12 @@ def main() -> None:
 
     if not PDF_PATH.exists():
         sys.exit(f"PDF missing at {PDF_PATH}; render must run before publish step")
-    base_meta = json.loads(META_PATH.read_text(encoding="utf-8"))
+    try:
+        base_meta = json.loads(META_PATH.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        sys.exit(f"missing required metadata file: {META_PATH}")
+    except json.JSONDecodeError as exc:
+        sys.exit(f"invalid JSON in {META_PATH}: {exc.msg} at line {exc.lineno} col {exc.colno}")
 
     search = _req(
         "GET",
