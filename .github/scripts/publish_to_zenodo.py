@@ -53,13 +53,16 @@ def _req(method: str, url: str, *, token: str, body=None, content_type: str | No
         sys.exit(f"network error on {method} {url}: {exc.reason}")
     if not raw:
         return {}
-    return json.loads(raw)
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        sys.exit(f"non-JSON response from {method} {url}: {raw[:200]!r}")
 
 
 def main() -> None:
     token = _require_env("ZENODO_TOKEN")
     tag = _require_env("RELEASE_TAG")
-    version = tag.lstrip("v")
+    version = tag.removeprefix("v")
 
     if not PDF_PATH.exists():
         sys.exit(f"PDF missing at {PDF_PATH}; render must run before publish step")
