@@ -1,0 +1,58 @@
+name: Publish PDF to Zenodo
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zenodo-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python deps
+        run: pip install -r requirements.txt
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: "1.9.37"
+
+      - name: Install TinyTeX
+        run: quarto install tinytex --no-prompt --update-path
+
+      - name: Cache simulation outputs
+        uses: actions/cache@v5
+        with:
+          path: |
+            analysis/out
+            analysis/fig
+          key: sims-${{ hashFiles('analysis/run_all.py', 'requirements.txt', 'paper.qmd', 'projects/rpgf/design.md', 'projects/truth-post/blueprint.md') }}
+
+      - name: Render PDF
+        run: make render-pdf
+
+      - name: Verify PDF
+        run: test -f outputs/paper.pdf && ls -l outputs/paper.pdf
+
+      - name: Publish to Zenodo
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: python3 .github/scripts/publish_to_zenodo.py
