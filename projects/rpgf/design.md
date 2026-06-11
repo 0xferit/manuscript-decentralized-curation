@@ -333,7 +333,7 @@ These policy objects and dependency references are versioned by content hash. No
 | Registry-entry reputation: surviving round reward | +1 per round |
 | Registry-entry reputation: debunking penalty | -5 per debunked nomination |
 | Registry-entry reputation: decay | absolute value reduced by 1 per 30-day epoch (drift toward 0) |
-| Curator exit cooldown | 7 days |
+| Curator exit | No cooldown; tokens not locked in active rounds and not reserved against pending appeal windows are withdrawable at any time (inherited from the paper’s coherence-game stake rules) |
 | DDR timeout | 90 days (funding rounds have deadlines) |
 
 ### Parameter Calibration Status
