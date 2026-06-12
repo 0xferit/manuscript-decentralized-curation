@@ -23,9 +23,11 @@ keywords:
   - knowledge aggregation
   - Schelling point
   - dispute resolution
-license:
-  - CC-BY-4.0
-  - MIT
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.20543760
+    description: Concept DOI (all versions; resolves to latest)
+license: CC-BY-4.0
 preferred-citation:
   type: unpublished
   title: "Decentralized Curation: Trustless Transformation of Information into Knowledge"
@@ -34,5 +36,6 @@ preferred-citation:
       family-names: Tunçer
       email: ferit@cryptolab.net
   year: 2026
+  doi: 10.5281/zenodo.20543760
   url: "https://github.com/0xferit/manuscript-decentralized-curation"
   status: "preprint"

@@ -1,0 +1,40 @@
+# Files and directories listed here are excluded from `git archive`,
+# which is the source tarball GitHub auto-generates for each release
+# and which Zenodo deposits. Keep the paper, references, render config,
+# analysis sources, diagrams, render assets, and CI in the archive;
+# drop dev tooling, internal working notes, agent guidance, and talks.
+
+# Dev / agent tooling and local caches
+.agents/                 export-ignore
+.claude/                 export-ignore
+.codex/                  export-ignore
+.idea/                   export-ignore
+.playwright-mcp/         export-ignore
+.quarto/                 export-ignore
+.venv/                   export-ignore
+.windsurf/               export-ignore
+.DS_Store                export-ignore
+.python-version          export-ignore
+_build-info.md           export-ignore
+audit-manuscript-*.md    export-ignore
+figure-theme-swap.html   export-ignore
+requirements.lock        export-ignore
+skills-lock.json         export-ignore
+outputs/                 export-ignore
+
+# Internal working notes (not paper content)
+context/                 export-ignore
+literature/              export-ignore
+formal-reviews/          export-ignore
+projects/*/prototype/    export-ignore
+
+# Agent instruction files
+CLAUDE.md                export-ignore
+AGENTS.md                export-ignore
+
+# Talk materials
+talks/                   export-ignore
+
+# Repo metadata that has no value inside the deposit
+.gitattributes           export-ignore
+.gitignore               export-ignore
