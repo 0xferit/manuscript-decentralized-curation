@@ -41,7 +41,7 @@ The relevant region on the falsifiability spectrum:
 - **Not falsifiable**: "We improved the developer experience" (no measurable assertion)
 - **Not falsifiable**: "This infrastructure prevented $2M in losses" (counterfactual; no observable test)
 
-The template must reject non-falsifiable assertions and force projects to express impact as falsifiable, measurable claims. Non-falsifiable claims are challengeable as `NonFalsifiable`.
+The template must reject non-falsifiable assertions and force projects to express impact as falsifiable, measurable claims. Nominations that fail to contain testable assertions under the pool's template and evidence policy are challengeable as `NonFalsifiable`.
 
 ### Step 4: Design mechanisms dimension by dimension
 
@@ -383,7 +383,7 @@ The competitive redirection incentive improves challenger participation but crea
 
 ### Counterfactual impact
 
-The framework handles direct output claims ("we built X") but not counterfactual impact claims ("X prevented Y from happening"). Counterfactual claims fail the falsifiability requirement and would be legitimately challengeable as `NonFalsifiable`. This limits the framework to observable, measurable impact, which is a real scope constraint.
+The framework handles direct output claims ("we built X") but not counterfactual impact claims ("X prevented Y from happening"). Counterfactual claims fail the falsifiability requirement and would be legitimately challengeable as `NonFalsifiable`. This limits the accuracy layer to observable, measurable impact, which is a real scope constraint. The relevance layer is unaffected: scoring how much a delivered output matters to a pool does not require the counterfactual to be adjudicable.
 
 ### Scoring order effects
 
@@ -431,7 +431,7 @@ A coherence game rewards participants for independently converging on the same a
 
 ### Why won't this collapse into a Keynesian beauty contest?
 
-A beauty contest arises when participants try to guess what others will guess, rather than what is true. This design prevents that by anchoring convergence on a specific, public, versioned scoring policy applied to structured, falsifiable nominations. Participants are not guessing taste; they are independently applying the same rubric to the same evidence.
+A beauty contest arises when participants try to guess what others will guess, rather than what is true. This design works against that by anchoring convergence on a specific, public, versioned scoring policy applied to structured, falsifiable nominations. Under the three conditions above, participants are not guessing taste; they are independently applying the same rubric to the same evidence. When condition (iii) fails, the beauty-contest dynamic returns.
 
 ### Who controls the scoring rubric?
 

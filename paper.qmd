@@ -70,7 +70,7 @@ The central contribution of this paper is a general four-step framework (@fig-fr
 3. **Falsifiability requirement.** Use challenge-based mechanisms only where falsification is feasible and cheaper than exhaustive verification.
 4. **Mechanism design by dimension.** Design different mechanisms for different quality dimensions instead of forcing all quality into one signal.
 
-The framework is designed to be domain-agnostic: the four steps are not specific to any single domain, and what changes across domains is the quality decomposition and the mechanism mix. This paper fully instantiates one domain (news) and sketches a second (advertising). The architectural pattern is intended to generalize, but demonstrated generality requires additional instantiations beyond those presented here.
+The framework is designed to be domain-agnostic: the four steps are not specific to any single domain, and what changes across domains is the quality decomposition and the mechanism mix. Step 3 constrains that mechanism mix, not the admissibility of a domain. Each mechanism family carries its own precondition: challenge-based accuracy requires that falsification be feasible and cheaper than exhaustive verification, while the coherence game requires a relevance policy specific enough to discipline scoring. A domain can satisfy one and fail the other. Where claims are narrative and not adjudicable, the accuracy layer is unavailable while relevance scoring against a published policy remains intact; where a pool's policy is too vague to discipline scoring, the converse holds. Failing step 3 therefore removes a layer, not the domain. This paper fully instantiates one domain (news) and sketches a second (advertising). The architectural pattern is intended to generalize, but demonstrated generality requires additional instantiations beyond those presented here.
 
 ![Four-step framework for trustless decentralized curation. The steps are domain-independent; what changes across domains is the quality decomposition and mechanism mix.](diagrams/fig-framework.png){#fig-framework}
 
@@ -86,9 +86,9 @@ Information quality is not one thing. Wang and Strong's data-quality work is use
 
 The practical consequence is simple: there is no universal curation mechanism. If a system tries to compress all quality into one score, it usually confuses properties that need different incentives.
 
-## Step 3: require falsifiability
+## Step 3: require falsifiability where challenge is the mechanism
 
-Popper's core point remains operationally useful: a claim is meaningful for scientific inquiry when it exposes itself to potential refutation [@popper1959logic]. The same asymmetry matters here. If a claim is trivially verifiable, a curation mechanism is unnecessary. If a claim is not falsifiable at all, a challenge mechanism has nothing to latch onto.
+Popper's core point remains operationally useful: a claim is meaningful for scientific inquiry when it exposes itself to potential refutation [@popper1959logic]. The same asymmetry bounds the accuracy mechanism, and only that one. If a claim is trivially verifiable, challenge adds nothing, because anyone can check it directly without a bond to make checking worthwhile; the claim may still require relevance curation. If a claim is not falsifiable at all, challenge cannot adjudicate its truth, but the protocol does not discard it: the `NonFalsifiable` reason below makes falsifiability itself the challengeable property. Relevance is scored against a published policy rather than adjudicated as true or false, so neither bound applies to it.
 
 The relevant region is the middle one (@fig-falsifiability):
 
@@ -355,11 +355,11 @@ The free-rider dimension compounds this problem [@groves1977freeriderproblem]. A
 
 ## Curator voting strategy
 
-The coherence game requires curators to independently report relevance scores in $[0, 1]$. Under commit-reveal, curators cannot observe others' votes before committing. Each curator $i$ has a private signal $\theta_i$ about the true relevance $r$ and forms a belief about the distribution of others' signals. Here $r$ denotes the latent relevance value implied by the pool policy, $\theta_i$ denotes curator $i$'s noisy private estimate of that value, $K$ is the coherence-threshold multiplier from the slashing rule, and $\phi^*$ denotes the largest colluding stake fraction under which honest reporting remains stable.
+The coherence game requires curators to independently report relevance scores in $[0, 1]$. Under commit-reveal, curators cannot observe others' votes before committing. Each curator $i$ has a private signal $\theta_i$ about the policy-implied relevance $r$ and forms a belief about the distribution of others' signals. Here $r$ denotes the latent relevance value implied by the pool policy, $\theta_i$ denotes curator $i$'s noisy private estimate of that value, $K$ is the coherence-threshold multiplier from the slashing rule, and $\phi^*$ denotes the largest colluding stake fraction under which honest reporting remains stable.
 
 **Claim 3.** *Under the coherence mechanism with commit-reveal, honest reporting is a Bayesian Nash equilibrium when the following conditions hold simultaneously:*
 
-*(i) The curation policy is specific enough that all competent curators' private signals $\theta_i$ are distributed around the true relevance $r$ with bounded variance.*
+*(i) The curation policy is specific enough that all competent curators' private signals $\theta_i$ are distributed around the policy-implied relevance $r$ with bounded variance.*
 
 *(ii) The coherence threshold $K$ is large enough that honest reports within normal signal noise are not slashed.*
 
@@ -479,7 +479,7 @@ The suite focuses on four questions:
 | $p_{\text{juror}}$ | 0.80 (swept 0.50--0.90) | Per-juror accuracy in DDR panels | Kleros design estimate | Unvalidated; swept |
 | $p_{\text{detect}}$ | 0.35 anchor (swept 0.05--0.80) | Probability a false claim is discovered and challenged | Illustrative anchor | Unvalidated; swept |
 | $K$ | 1.25 | Coherence-band multiplier ($K\sigma$) | Reference parameter | Unvalidated; fixed |
-| $\sigma_{\text{honest}}$ | 0.10 | Standard deviation of honest curator scores | Assumed moderate noise | Unvalidated; fixed |
+| $\sigma_{\text{honest}}$ | 0.08 (swept 0.05--0.20) | Standard deviation of honest curator scores | Assumed moderate noise | Unvalidated; swept |
 | $\varphi^*$ | $\approx$ 0.15--0.20 | Collusion fraction at which relevance degrades | Empirical from E2/E2' | Simulation-derived; not a theorem |
 | $\delta$ | 0.01/round | Author reputation decay rate | Assumed | Unvalidated; fixed |
 | $f$ | 0.25 | Non-falsifiable claim prevalence (E3 only) | Assumed | Unvalidated; scenario input |
@@ -656,7 +656,7 @@ The relevance layer has a parallel boundary. Drafting uncertainty, draw-and-lock
 
 Permissionless pool creation is the right architectural stance because it keeps bad policy local rather than protocol-global. The curation policy functions as the law of a pool: the pool creator defines what "relevant" means, and the coherence game turns curators into enforcers of that definition through slashing and rewards. If the policy is bad, curation will be bad, but that is a policy-level problem, not a protocol flaw, just as a bad law is not a failure of the concept of law enforcement.
 
-The defense against bad policy is competitive selection, not governance. The dynamic is the same as newspapers and online communities: creating a newspaper is permissionless, but if you publish poorly, no one reads it and it falls into irrelevance. Multiple subreddits can exist on the same topic; users gravitate to the best-curated one and the rest are outselected naturally. People vote with their feet. The protocol does not need to prevent bad pools; it needs to make pool creation cheap and switching costs low enough that competitive selection can function. The blueprint identifies residual switching frictions (reputation lock-in, funder coordination, round-cycle capital commitment) that may slow this dynamic in practice. Interfaces still need to decide which pools to feature, warn about, or ignore, and cross-pool aggregation remains an interface concern by design rather than a protocol responsibility.
+The defense against bad policy is competitive selection, not governance. The analogy is to newspapers and online communities, where founding a publication is permissionless and a poorly curated one loses its readers. That analogy carries a precondition this paper has already questioned: the lemons argument above is precisely that quality is not legible before consumption, and selection cannot run on a signal nobody can read. What differs at the pool level is that the protocol publishes the signal. Pool policies, challenge histories, adjudication outcomes, and accumulated confidence are on-chain and comparable across pools, so selection operates on observable protocol state rather than on unaided quality perception. The protocol does not need to prevent bad pools; it needs to make pool creation cheap, switching costs low, and pool behavior legible enough that competitive selection can function. The blueprint identifies residual switching frictions (reputation lock-in, funder coordination, round-cycle capital commitment) that may slow this dynamic in practice. Interfaces still need to decide which pools to feature, warn about, or ignore, and cross-pool aggregation remains an interface concern by design rather than a protocol responsibility.
 
 The same locality applies to policy quality and bootstrap. The coherence game works only when a pool's relevance policy is specific enough to discipline scoring, and new pools still need readers, challengers, curators, and budget. The current design makes these requirements explicit instead of hiding them behind protocol-wide governance, but it does not remove them.
 

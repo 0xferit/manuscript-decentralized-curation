@@ -359,24 +359,35 @@ def fig3_architecture(out):
 # 4. Relevance Round Sequence
 # ══════════════════════════════════════════════════════════
 def fig4_relevance_round(out):
-    fig, ax = plt.subplots(figsize=(8, 10), dpi=300)
+    fig, ax = plt.subplots(figsize=(8, 11.2), dpi=300)
     ax.set_xlim(0, 8)
-    ax.set_ylim(-0.5, 10)
+    ax.set_ylim(-1.0, 10)
     ax.set_aspect('equal')
     ax.axis('off')
 
+    # Steps track the numbered specification in paper.qmd (deposit, seat tickets,
+    # draw-and-lock, commit/reveal, mean and dispersion, graduated slashing, appeal).
+    # The predecessor model (d_i = s_i, per-identity weight caps, binary slashing,
+    # near-flat rounds cancelled) survives only in the E2 simulation.
     steps = [
-        ('1', 'Curators stake into pool'),
+        ('1', 'Curators deposit into the pool contract'),
         ('2', 'Round scheduled for Live item\nat pool-defined cadence'),
-        ('3', r'Stake-weighted draft: $d_i = s_i$'),
-        ('4', 'Drafted curators commit/reveal\nscores in [0, 1]'),
-        ('5', r'Weight capping:'
+        ('3', r'Seat tickets: $d_i = \lfloor s_i / L \rfloor$'
               '\n'
-              r'$w_i = \min(s_i,\; c \cdot \mathrm{total\_stake})$'),
-        ('6', r'Coherence check:'
+              r'(eligible when $s_i \geq L$)'),
+        ('4', r'Draw and lock: each drawn seat locks'
               '\n'
-              r'slash if $|v_i - \mu| > K\sigma$'),
-        ('7', 'Near-flat rounds cancelled\nas degenerate'),
+              r'$L$ tokens, giving round weight $w_i$'),
+        ('5', r'Commit/reveal one score in [0, 1],'
+              '\n'
+              r'weighted by $w_i$'),
+        ('6', r'Weighted mean $\mu$ and dispersion $\sigma$;'
+              '\n'
+              r'cancelled only if no one reveals'),
+        ('7', r'Graduated slashing when $\sigma \geq \varepsilon_\sigma$:'
+              '\n'
+              r'penalty scales with $|v_i - \mu| / \sigma$'),
+        ('8', 'Appeal to a larger committee\nat escalating stakes'),
     ]
 
     cx = 4.3
@@ -462,15 +473,22 @@ def fig5_framework(out):
     ax.text(ncx3, s3y, '3', fontsize=10.5, fontweight='bold',
             color=C['inverse'], ha='center', va='center', zorder=6)
 
-    # "Out of scope" branch from right vertex
-    oos_x = cx + dw + 1.8
-    _arr(ax, cx + dw, s3y, oos_x - 0.1, s3y, fs=7)
-    ax.text(oos_x, s3y, 'Out of scope', fontsize=9.2, fontstyle='italic',
-            color=C['accent'], ha='left', va='center', zorder=4)
-
-    # Arrow from diamond bottom to step 4
+    # Yes: falsification is feasible, so a challenge-based accuracy layer is available.
     s4y = y0 - 3 * gap
     _arr(ax, cx, s3y - dh, cx, s4y + bh / 2)
+    ax.text(cx + 0.42, (s3y - dh + s4y + bh / 2) / 2, 'yes', fontsize=8.8,
+            color=C['accent'], ha='left', va='center', zorder=10)
+
+    # No: the challenge layer is unavailable, but the domain stays in scope. The
+    # relevance mechanism scores against a published policy and does not depend on
+    # falsifiability, so this branch rejoins step 4 instead of terminating.
+    bypass_x = cx + dw + 2.3
+    _arr(ax, cx + dw, s3y, bypass_x, s3y, style='-')
+    _arr(ax, bypass_x, s3y, bypass_x, s4y, style='-')
+    _arr(ax, bypass_x, s4y, cx + bw / 2, s4y)
+    ax.text(bypass_x - 0.8, s3y + 0.28, 'no: skip the challenge layer',
+            fontsize=8.8, fontstyle='italic', color=C['accent'],
+            ha='center', va='bottom', zorder=10)
 
     # ── Step 4 (regular box) ──
     ncx4 = cx - bw / 2 - 0.45
