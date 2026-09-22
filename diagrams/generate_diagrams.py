@@ -365,10 +365,6 @@ def fig4_relevance_round(out):
     ax.set_aspect('equal')
     ax.axis('off')
 
-    # Steps track the numbered specification in paper.qmd (deposit, seat tickets,
-    # draw-and-lock, commit/reveal, mean and dispersion, graduated slashing, appeal).
-    # The predecessor model (d_i = s_i, per-identity weight caps, binary slashing,
-    # near-flat rounds cancelled) survives only in the E2 simulation.
     steps = [
         ('1', 'Curators deposit into the pool contract'),
         ('2', 'Round scheduled for Live item\nat pool-defined cadence'),
@@ -383,10 +379,10 @@ def fig4_relevance_round(out):
               r'weighted by $w_i$'),
         ('6', r'Weighted mean $\mu$ and dispersion $\sigma$;'
               '\n'
-              r'cancelled only if no one reveals'),
-        ('7', r'Graduated slashing when $\sigma \geq \varepsilon_\sigma$:'
+              r'require valid reveal quorum'),
+        ('7', r'Distance-based slashing when $\sigma \geq \varepsilon_\sigma$:'
               '\n'
-              r'penalty scales with $|v_i - \mu| / \sigma$'),
+              r'$p_i = \min(1, \max(0, (|v_i - \mu| / \sigma - K) / K))$'),
         ('8', 'Appeal to a larger committee\nat escalating stakes'),
     ]
 
@@ -461,7 +457,7 @@ def fig5_framework(out):
     diamond = Polygon(diamond_verts, closed=True,
                       fc=C['box'], ec=C['accent'], lw=2.0, zorder=2)
     ax.add_patch(diamond)
-    ax.text(cx, s3y, 'Falsification\nfeasible?', fontsize=9,
+    ax.text(cx, s3y, 'Falsification feasible\nand cheaper than\nexhaustive verification?', fontsize=9,
             fontweight='normal', color=C['text'],
             ha='center', va='center', zorder=4)
 
@@ -473,20 +469,16 @@ def fig5_framework(out):
     ax.text(ncx3, s3y, '3', fontsize=10.5, fontweight='bold',
             color=C['inverse'], ha='center', va='center', zorder=6)
 
-    # Yes: falsification is feasible, so a challenge-based accuracy layer is available.
     s4y = y0 - 3 * gap
     _arr(ax, cx, s3y - dh, cx, s4y + bh / 2)
     ax.text(cx + 0.42, (s3y - dh + s4y + bh / 2) / 2, 'yes', fontsize=8.8,
             color=C['accent'], ha='left', va='center', zorder=10)
 
-    # No: the challenge layer is unavailable, but the domain stays in scope. The
-    # relevance mechanism scores against a published policy and does not depend on
-    # falsifiability, so this branch rejoins step 4 instead of terminating.
     bypass_x = cx + dw + 2.3
     _arr(ax, cx + dw, s3y, bypass_x, s3y, style='-')
     _arr(ax, bypass_x, s3y, bypass_x, s4y, style='-')
     _arr(ax, bypass_x, s4y, cx + bw / 2, s4y)
-    ax.text(bypass_x - 0.8, s3y + 0.28, 'no: skip the challenge layer',
+    ax.text(bypass_x - 0.8, s3y + 0.28, 'no: omit factual-truth\nadjudication',
             fontsize=8.8, fontstyle='italic', color=C['accent'],
             ha='center', va='bottom', zorder=10)
 
