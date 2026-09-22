@@ -56,7 +56,7 @@ First, identify the hidden curation problem. Ask: what looks like a governance p
 
 Second, identify the relevant quality dimensions. Information quality is not one thing. Wang and Strong made this point clearly in their work on multidimensional data quality. Depending on the use case, different dimensions matter: accuracy, relevance, timeliness, interpretability, completeness, and so on.
 
-Third, require falsifiability. If a claim is easily verifiable, then you do not need a curation game around it. You can just verify it directly. If a claim is not falsifiable at all, then the mechanism has nothing to latch onto. The interesting middle is where verification is hard, but falsification is feasible.
+Third, require falsifiability where factual accuracy is handled through challenge. Cheap direct verification may reduce the need for bonded challenge, while relevance curation can still matter. If factual truth cannot be adjudicated, the general framework can use a different mechanism mix. The current Truth Post profile still requires testable claims; it does not implement a relevance-only mode.
 
 Fourth, design mechanisms dimension by dimension. Different information qualities require different mechanisms. There is no single universal curation mechanism that works for all quality dimensions.
 
@@ -82,17 +82,17 @@ This is also where the thesis becomes more than a complaint about media. It beco
 
 ## Falsifiability
 
-Another core requirement of the framework is falsifiability.
+Falsifiability is a prerequisite for challenging factual truth, not a universal requirement for every curation mechanism.
 
-This is where Popper is useful. Popper’s key point was that science advances not by proving universal claims exhaustively, but by making claims that could, in principle, be refuted by evidence. Falsifiability is what makes a claim operationally meaningful.
+This is where Popper is useful. Popper’s key point was that science advances not by proving universal claims exhaustively, but by making claims that could, in principle, be refuted by evidence. This is a criterion of scientific status, not a claim that non-falsifiable statements are meaningless.
 
 My thesis uses that insight in a practical, economic way.
 
 I am interested in claims that are difficult to verify exhaustively, but feasible to falsify. News fits that pattern well. A claim about an event may be difficult to prove conclusively in a universal sense, but a single strong counterexample or contradiction can still falsify it.
 
-That asymmetry is exactly what makes decentralized challenge mechanisms viable.
+That logical asymmetry motivates challenge-based accuracy. Economic viability additionally depends on accessible evidence, discovery costs, rewards, and reliable adjudication.
 
-If a claim is non-falsifiable, the system should not pretend it can process it reliably. If a claim is trivially verifiable, the system is unnecessary. The mechanism is designed for the middle region where truth is expensive to establish but falsehood can still be attacked.
+A non-falsifiable statement cannot have its truth settled by falsification. In the current Truth Post profile, an item can nevertheless be admitted initially and then challenged with NonFalsifiable against the pool's requirements. A successful challenge closes the item and removes it from active feeds while retaining its history. For cheaply verifiable claims, bonded challenge may add little, although incentives for checking and relevance curation can remain useful.
 
 ## Mechanism Design
 
@@ -108,11 +108,11 @@ An important caveat: the mechanism makes falsehood expensive to sustain if chall
 
 Relevance is different. Relevance is not well served by a binary yes-or-no process. Relevance is a ranking problem. It is about what matters more, not just whether something passes a threshold.
 
-So for relevance I use a policy-guided coherence game. Curators stake into a pool, are drafted into rounds, and independently rate how strongly a claim conforms to the pool’s curation policy. Outliers are slashed. Coherent participants are rewarded.
+So for relevance I use a policy-guided coherence game. Curators stake into a pool, are drafted into rounds, and independently rate how strongly a claim conforms to the pool’s curation policy. Reports outside the coherence band can be slashed when dispersion meets the floor. Coherent participants are rewarded.
 
-This mechanism resists small colluding minorities, but at our reference parameters (K=1.25, 15-member committees) it degrades when a coordinated bloc exceeds a colluding fraction of roughly 15 to 20 percent. The threshold depends on the coherence parameter, committee size, and policy specificity; it is not a universal constant. Below that threshold, colluder impact remains limited in our simulations; above it, a coordinating bloc can bend the signal. This is a known constraint, not a solved problem.
+Under the tested reporting strategies, the simulations show increasing relevance distortion as colluding stake grows. They do not establish a safe collusion threshold. The paper also demonstrates a profitable unilateral report that adds artificial dispersion without a colluding coalition. Truthful incentive compatibility remains unresolved.
 
-This is where Schelling-style reasoning becomes important. The mechanism does not ask curators to assert global truth. It asks them to converge on policy-grounded relevance under conditions where their incentives favor disciplined judgment.
+This is where Schelling-style reasoning becomes important. A public policy is intended to make informed relevance assessment a focal point. Whether the full reward and appeal rules make disciplined judgment the best strategy requires further analysis.
 
 The deeper point is this:
 
@@ -213,7 +213,7 @@ If the claim is false, they lose the capital.
 
 That inverts the current cost structure. Honest actors become cheap to accommodate. Dishonest actors become expensive to sustain.
 
-And this is exactly why I include advertising in the thesis. It suggests that the framework is not tied to one political or journalistic niche. It could apply wherever there is an information-to-knowledge bottleneck, public evidence, and feasible falsification, though the advertising sketch is not a full instantiation and does not prove generality.
+And this is exactly why I include advertising in the thesis. It suggests that the framework is not tied to one political or journalistic niche. Its challenge-based accuracy mechanism could apply where there is an information-to-knowledge bottleneck, public evidence, and feasible falsification; other mechanism families have different prerequisites. The advertising sketch is not a full instantiation and does not prove generality.
 
 ## What This Thesis Is Actually Claiming
 
@@ -239,7 +239,7 @@ I am claiming that this problem can be structured rigorously.
 
 I am claiming that the right way to structure it is:
 
-problem definition, use case selection, quality identification, falsifiability, and mechanism design dimension by dimension.
+problem definition, quality identification, falsifiability where factual-truth challenge is the mechanism, and mechanism design dimension by dimension.
 
 And I am claiming that Truth Post is a concrete implementation example of this framework, not because it is finished, but because it already moved from theory into deployment, failure, and redesign.
 

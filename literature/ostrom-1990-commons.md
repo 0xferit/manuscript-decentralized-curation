@@ -17,10 +17,10 @@ Neither privatization nor state regulation is necessary to manage common-pool re
 
 Ostrom provides the governance backdrop for our system design:
 
-- **Pools as self-governing institutions**: our curation pools parallel Ostrom's CPR institutions. Each pool has defined boundaries (topic scope), rules (curation policy, evidence policy), monitoring (validators), graduated sanctions (slashing), and conflict resolution (DDR).
-- **Polycentric structure**: multiple pools with independent policies is a polycentric design. No single pool controls the knowledge layer; competition between pools provides a check.
-- **Graduated sanctions**: Ostrom emphasizes that first-time violators should face mild sanctions, with escalation for repeat offenders. Our reputation mechanism does something similar: initial stake is financial, but accumulated reputation (non-transferable, topic-scoped) creates graduated consequences.
-- **Collective-choice arrangements**: pool governance (parameter updates, policy changes) maps to Ostrom's principle that those affected by rules should participate in modifying them.
+- **Limited institutional analogy**: pools specify topic scope, curation and evidence policies, monitoring by challengers and curators, slashing, and DDR. These resemble some institutional functions in Ostrom's account, but do not establish participant self-government or empirical success.
+- **Multiple local policies**: permissionless pools offer multiple rule sets rather than one protocol-wide curation policy. Competition is a conditional hypothesis: readers must recognize quality differences, funded alternatives must exist, and participants must coordinate migration.
+- **Graduated sanctions**: the current relevance mechanism scales distance-based penalties with deviation beyond its coherence band, subject to a dispersion guard. That is not a repeat-offender schedule. Author reputation is separate and pool-scoped; neither mechanism should be presented as implementing Ostrom's sanction principle without further analysis.
+- **Collective-choice arrangements differ**: the current design uses immutable contracts and immutable pool parameters and policy references, rather than participant voting to amend an existing pool's rules. Different rules require a new pool or deployment as applicable; users may migrate, but exit does not implement Ostrom's collective-choice principle.
 
 ## Key passages worth keeping
 
@@ -31,5 +31,5 @@ Maps to our argument: neither centralized curation (state-like) nor pure market 
 ## Limitations relevant to us
 
 - Ostrom's cases involve small-to-medium communities with face-to-face interaction. Decentralized curation at internet scale does not have this property. Whether Ostrom's design principles transfer to pseudonymous, global communities is an open question.
-- Ostrom's monitoring relies on community members who can observe each other's behavior. Our monitoring is mechanical (on-chain stakes, commit-reveal). The social dynamics are different.
+- Protocol accounting and commit-reveal are mechanical, but challengers, curators, and external jurors still interpret evidence and policies. These arrangements differ from local community monitoring and do not remove dependence on human judgment.
 - The "graduated sanctions" parallel is imperfect: Ostrom's sanctions are social (shaming, exclusion), ours are economic (slashing). Economic sanctions may not create the same normative compliance.

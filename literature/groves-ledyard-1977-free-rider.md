@@ -16,10 +16,10 @@ Proposes a mechanism for optimal public goods allocation that solves the free-ri
 
 We draw a structural parallel between the Groves-Ledyard deviation penalty and our coherence game's slashing mechanism:
 
-- **Coherence game slashing = deviation penalty**: in our coherence game, curators whose ratings deviate from the weighted mean by more than K-sigma lose stake. This is functionally a deviation penalty: the cost of deviation incentivizes honest reporting (or at least reporting consistent with the focal point).
-- **Structural parallel, not direct application**: Groves-Ledyard operates on preference revelation for public goods. Our coherence game operates on relevance assessment for news claims. The mathematical structure (quadratic-ish penalty for deviation from aggregate) is similar, but the domains are different.
+- **Coherence-game deviation penalties**: the protocol penalizes some reports outside its coherence band, subject to the dispersion guard. That is a penalty for disagreement, not a proof of truthful incentives; [Claim 3](../paper.qmd#curator-voting-strategy) gives a profitable deviation below the guard.
+- **Limited structural analogy**: Groves-Ledyard concerns public-goods allocation. The relevance mechanism uses a different reward and penalty rule for news scoring. Sharing a deviation-penalty idea does not transfer an equilibrium result.
 - **Public goods framing**: in the closing section, we frame the allocation problem as optimization over a weight vector summing to 1. The Groves-Ledyard connection reinforces that the information problem (how do you know the right weights?) is upstream of the allocation problem.
 
 ## Key takeaway
 
-The Groves-Ledyard parallel helps position our coherence game in the established mechanism design literature. It is not a new invention but an application of a known incentive structure (deviation penalties) to a new domain (information curation). This strengthens the theoretical grounding.
+The parallel motivates examining deviation penalties. It does not establish incentive compatibility of the coherence game; that requires an analysis of its own utilities, information and payment rules.

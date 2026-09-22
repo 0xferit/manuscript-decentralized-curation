@@ -1959,20 +1959,20 @@ def run_e2_prime_sigma_sweep(
     ax1.set_xlabel("Fraction of colluding curators")
     ax1.set_ylabel("Mean |μ − r|")
     ax1.set_title(
-        f"E2'-Adv σ sweep: signal error vs collusion (K={params.K}, N={params.n_seeds} seeds)"
+        f"E2'-Adv σ sweep: signal error vs collusion\n(K={params.K}, N={params.n_seeds} seeds)"
     )
     ax1.legend(frameon=False, fontsize=8)
 
     ax2.set_xlabel("Fraction of colluding curators")
     ax2.set_ylabel("Colluder stake share")
     ax2.set_title(
-        f"E2'-Adv σ sweep: colluder stake after 200 rounds (N={params.n_seeds} seeds)"
+        f"E2'-Adv σ sweep: colluder stake after {params.rounds} rounds\n(N={params.n_seeds} seeds)"
     )
     ax2.set_ylim(0.0, 0.4)
     ax2.legend(frameon=False, fontsize=8)
 
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "e2_prime_sigma_sweep.png", dpi=200)
+    _save_figure_variants(fig, FIG_DIR / "e2_prime_sigma_sweep.png", dpi=200, bbox_inches=None)
     plt.close()
 
 
@@ -2136,7 +2136,7 @@ def run_e2_prime_trojan(
     ax1.set_xlabel("Trojan delay (honest rounds before attack)")
     ax1.set_ylabel("Mean |μ − r|")
     ax1.set_title(
-        f"Trojan accumulation: signal error (φ={params.colluding_frac}, N={params.n_seeds} seeds)"
+        f"Trojan accumulation: signal error\n(φ={params.colluding_frac}, N={params.n_seeds} seeds)"
     )
 
     ax2.bar(x, df["final_colluder_stake_share_mean"],
@@ -2147,11 +2147,11 @@ def run_e2_prime_trojan(
     ax2.set_xlabel("Trojan delay (honest rounds before attack)")
     ax2.set_ylabel("Final colluder stake share")
     ax2.set_title(
-        f"Trojan accumulation: colluder survival (φ={params.colluding_frac}, N={params.n_seeds} seeds)"
+        f"Trojan accumulation: colluder survival\n(φ={params.colluding_frac}, N={params.n_seeds} seeds)"
     )
 
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "e2_prime_trojan.png", dpi=200)
+    _save_figure_variants(fig, FIG_DIR / "e2_prime_trojan.png", dpi=200, bbox_inches=None)
     plt.close()
 
 

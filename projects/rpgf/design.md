@@ -30,18 +30,18 @@ Two dimensions dominate:
 
 Design principle: do not decompose quality further than your mechanisms can distinguish. Two mechanisms (challenge-based accuracy, coherence-based relevance) mean two dimensions. Additional quality considerations (efficiency, novelty, team quality) belong inside the relevance policy as scoring criteria, not as separate protocol mechanisms.
 
-### Step 3: Require falsifiability
+### Step 3: Require testable nomination assertions
 
-Impact claims must be expressed as falsifiable assertions. This is harder than traditional text claims because impact submissions default to narrative. The **template** does the heavy lifting.
+In this RPGF profile, impact nominations must express their impact claims as testable assertions under the pool's template and evidence policy. This is harder than traditional text claims because impact submissions default to narrative. The **template** does the heavy lifting.
 
 The relevant region on the falsifiability spectrum:
 
 - **Falsifiable**: "Our tool was used by 500 developers in Q1 2026" (verifiable usage data)
 - **Falsifiable**: "We deployed contract X at address Y on date Z" (on-chain evidence)
 - **Not falsifiable**: "We improved the developer experience" (no measurable assertion)
-- **Not falsifiable**: "This infrastructure prevented $2M in losses" (counterfactual; no observable test)
+- **Not falsifiable as stated**: "This infrastructure prevented $2M in losses" (without a specified causal comparison or possible evidentiary test)
 
-The template must reject non-falsifiable assertions and force projects to express impact as falsifiable, measurable claims. Non-falsifiable claims are challengeable as `NonFalsifiable`.
+The template must reject non-falsifiable assertions and force projects to express impact as falsifiable, measurable claims. Nominations that fail to contain testable assertions under the pool's template and evidence policy are challengeable as `NonFalsifiable`.
 
 ### Step 4: Design mechanisms dimension by dimension
 
@@ -176,7 +176,7 @@ Three adjudication outcomes, orthogonal to operational state:
 
 **Scoring failure paths.** Low-dispersion rounds and quorum failure are treated differently:
 
-- *Low-dispersion round* (sigma below the dispersion floor): the round's mean is accepted as a valid relevance score. Coherence slashing is skipped because the band has collapsed, and round rewards are scaled by `f_reward` with floor `rho`, increasing with `sigma` up to `sigma_ref` (see the paper's coherence game definition for the smooth reward formula). This preserves genuine consensus signals (if curators honestly agree, the score stands) while reducing the incentive for undifferentiated scoring. In a batch model, cancelling low-dispersion rounds is counterproductive: if a nomination genuinely deserves a consensus score, every retry will also produce low dispersion, eventually excluding a nomination that curators unanimously evaluated.
+- *Low-dispersion round* (sigma below the dispersion floor): the round's mean is accepted as a valid relevance score. Distance-based slashing is skipped because the band has collapsed; non-participation penalties remain applicable. Round rewards are scaled by `f_reward` with floor `rho`, increasing with `sigma` up to `sigma_ref` (see the paper's coherence game definition for the smooth reward formula). This preserves genuine consensus signals (if curators honestly agree, the score stands) while reducing payments for undifferentiated reports. Reduced payments do not establish truthful incentives: small artificial dispersion can increase rewards (see Open Problems: Reward padding). In a batch model, cancelling low-dispersion rounds is counterproductive: if a nomination genuinely deserves a consensus score, every retry will also produce low dispersion, eventually excluding a nomination that curators unanimously evaluated.
 - *Quorum failure* (reveals < minimum quorum): the round is retried once with a fresh draft. If the retry also fails quorum, the nomination transitions to `Unscored`: excluded from allocation, bond refunded, no reputation change, bypasses holdback. The author is not penalized for curator infrastructure failure. `Unscored` is distinct from a score of 0 (which means "judged irrelevant" under the rubric).
 
 **DDR timeout defaults to author victory.** If DDR does not resolve within the timeout period (90 days), the nomination is treated as if the challenge failed. The author is not guilty unless proven; it is the challenger's burden to win the dispute.
@@ -201,7 +201,7 @@ Instead:
 
 Each impact nomination receives a relevance score through the coherence game. The RPGF relevance mechanism inherits draw-and-lock staking, graduated slashing, smooth reward scaling, and relevance-round escalation (appeals) from the paper's coherence game design. The paper is the canonical specification for these mechanisms; this section summarizes the operational flow without re-specifying the full formalism.
 
-Curators deposit tokens into a pool and receive seat-tickets proportional to their deposited balance. The protocol draws seats via a stake-weighted lottery; each drawn seat locks L tokens from the corresponding curator. Drafted curators commit-reveal relevance scores in [0,1], weighted by their total locked tokens. The protocol computes the weighted mean and standard deviation; curators outside the coherence band are subject to graduated slashing (near-boundary deviations incur small losses; extreme deviations incur total loss). Low-dispersion rounds (sigma below the dispersion floor) keep the round mean as the nomination's relevance score, but slashing is skipped and rewards are reduced. Any curator with a deposited balance may appeal a finalized round, triggering a larger committee at escalating stakes.
+Curators deposit tokens into a pool and receive seat-tickets proportional to their deposited balance. The protocol draws seats via a stake-weighted lottery; each drawn seat locks L tokens from the corresponding curator. Drafted curators commit-reveal relevance scores in [0,1], weighted by their total locked tokens. The protocol computes the weighted mean and standard deviation; curators outside the coherence band are subject to graduated slashing (near-boundary deviations incur small losses; extreme deviations incur total loss). Low-dispersion rounds (sigma below the dispersion floor) keep the round mean as the nomination's relevance score, but distance-based slashing is skipped and rewards are reduced. Non-participation penalties remain applicable. Any curator with a deposited balance may appeal a finalized round, triggering a larger committee at escalating stakes.
 
 Each scheduled relevance round reserves one `roundRewardFloor` from the pool's curation budget. On finalization, the protocol distributes rewards from the reserved amount according to the round's reward scaling. If a round fails quorum and is cancelled, the reserved amount is released back to the curation budget before any retry or later round is scheduled. If a finalized round pays less than the full `roundRewardFloor` (for example, in a low-dispersion round), the undistributed remainder is returned to the curation budget. Curators score nominations one at a time, and the protocol normalizes across all eligible nominations in the pool. Relevance round rewards are funded from the pool's curation budget, which SHOULD be reserved as a percentage of the pool's total funding budget before allocation scoring begins (suggested default: 5% of pool funding budget reserved for curation costs). Under the reference profile, the nomination cap and curation budget are parameterized so each initially scheduled nomination round can reserve exactly one `roundRewardFloor`; this is a consequence of the reserve rule, not a separate allocation rule. Round rewards are distributed among coherent curators (those within the coherence band) proportional to their effective round weight. A curator's stake slice for a given round is the portion of their total staked capital at risk in that round, equal to their effective round weight.
 
@@ -211,7 +211,7 @@ The pool's **relevance policy** defines the scoring question and rubric. Example
 
 **Double-counting and attribution**: when multiple nominations claim credit for the same downstream effect, the relevance layer handles it through scoring. The relevance policy SHOULD instruct curators to consider uniqueness of contribution and discount overlapping claims across nominations in the same round. No protocol enforcement of exclusive attribution. Limitation: the coherence game rewards consensus on scalar scores, not accurate causal attribution. If curators do not notice overlap, multiple nominations may receive overlapping credit for the same downstream effect. This is an accepted limitation.
 
-Broad pools (covering heterogeneous project types) are allowed. The relevance policy rubric is responsible for making comparisons meaningful. If a pool's rubric is bad, curators produce bad scores, users migrate to better pools, and the bad pool loses relevance. The design intent is that bad pools fail locally through exit rather than governance intervention. However, exit is subject to friction from reputation lock-in, funder coordination costs, and round-cycle capital commitment (see Open Problems: Pool migration friction).
+Broad pools (covering heterogeneous project types) are allowed. The relevance policy rubric is responsible for making comparisons meaningful. A poor rubric can produce poor scores. The design hypothesis is that users who recognize persistent quality differences can migrate to funded alternatives with better curation, allowing bad pools to lose participation. Public policies and outcomes make inspection possible but do not establish that users can identify better curation. Exit also faces reputation lock-in, funder coordination costs, and round-cycle capital commitment (see Open Problems: Pool migration friction).
 
 ## Challenge Incentives
 
@@ -304,7 +304,7 @@ Pool creation is permissionless: any address can create a funding pool. The pool
 - **Evidence policy**: admissible evidence classes, freshness rules, sufficiency standards, and tie-break logic for DDR disputes.
 - **Relevance policy**: the scoring question, rubric, and any domain-specific instructions for curators.
 
-These policy objects and dependency references are versioned by content hash. Nominations submitted under one pool version remain bound to that version permanently. Pool parameters are immutable after creation; if a pool's design proves flawed, the correct response is to create a new pool with better parameters, not to upgrade the existing one. Bad pool design fails locally through non-use rather than through a protocol-level governance gate.
+These policy objects and dependency references are versioned by content hash. Nominations submitted under one pool version remain bound to that version permanently. Pool parameters are immutable after creation; if a pool's design proves flawed, the correct response is to create a new pool with better parameters, not to upgrade the existing one. Pool design is not screened by a protocol-level governance gate; whether poor designs lose participation is the conditional exit hypothesis discussed below.
 
 ## Reference RPGF Pool Profile
 
@@ -322,7 +322,7 @@ These policy objects and dependency references are versioned by content hash. No
 | Relevance round cadence | One initial round per nomination during the evaluation period; one retry on quorum failure |
 | Relevance draft committee size | 15 curators |
 | Minimum reveal quorum | 5 curators |
-| Dispersion floor (epsilon_sigma) | 0.02 (below this: mean accepted, rewards reduced via `f_reward`, no slashing) |
+| Dispersion floor (epsilon_sigma) | 0.02 (below this: mean accepted, rewards reduced via `f_reward`, no distance-based slashing) |
 | Seat size (L) | L units of the pool's staking token (draw-and-lock: each drafted seat locks L tokens; suggested default calibrated to approximately 0.01 ETH worth) |
 | Minimum reward fraction (rho) | 0.3 (reward factor floor at sigma = 0; see paper for `f_reward` formula) |
 | Round reward floor | 0.01 ETH equivalent from pool curation budget |
@@ -342,7 +342,7 @@ These defaults are reference-pool starting points, not empirically validated opt
 
 Challenge-cost parameters (counter-stake ratio, challenge tax, author bond) are partially grounded by the challenge incentive analysis above: the worked example shows how they interact to determine break-even success probabilities. But the analysis is local to one parameter configuration and does not identify robust optima across heterogeneous pool sizes, DDR fee regimes, or nomination value distributions.
 
-Relevance-game parameters are inherited from the paper's coherence game design and include new mechanisms not present in earlier versions. Draw-and-lock staking introduces seat size L as a calibration parameter: too small and single-curator weight concentration re-emerges; too large and small curators are excluded. Graduated slashing replaces the former binary slash rate; K now governs both the coherence threshold and the penalty gradient (at the band boundary the penalty is zero; at twice the boundary distance it is total loss of locked tokens). Per-identity weight caps have been removed; weight concentration is instead bounded by the seat-based lottery and the draw-and-lock mechanism. Smooth reward scaling introduces rho (minimum reward fraction for zero-dispersion rounds) and epsilon_sigma (dispersion floor), replacing the former all-or-nothing degenerate-round reward switch. The base coherence-game design also defines a relevance-round escalation layer with appeal-specific parameters (appeal committee size multiplier, appeal-success threshold, maximum escalation depth). Those escalation parameters are inherited from the paper and intentionally omitted from the reference RPGF pool profile table above, which remains the complete implementation checklist for the scoped profile described here. No RPGF-specific equilibrium analysis has been conducted for any of the in-scope relevance-game parameters.
+Relevance-game parameters are inherited from the paper's coherence game design and include new mechanisms not present in earlier versions. Draw-and-lock staking introduces seat size L as a calibration parameter controlling eligibility granularity and capital locked per seat: a high L excludes small curators, but no choice of L alone caps a curator's share of seats. Graduated slashing replaces the former binary slash rate; K now governs both the coherence threshold and the penalty gradient (at the band boundary the penalty is zero; at twice the boundary distance it is total loss of locked tokens). Per-identity weight caps have been removed. Weight concentration depends on the eligible stake distribution and the draft; draw-and-lock bounds each curator's coherence-slashing exposure by their funded seats but does not prevent one curator from holding all drafted seats. Smooth reward scaling introduces rho (minimum reward fraction for zero-dispersion rounds) and epsilon_sigma (dispersion floor), replacing the former all-or-nothing degenerate-round reward switch. The base coherence-game design also defines a relevance-round escalation layer with appeal-specific parameters (appeal committee size multiplier, appeal-success threshold, maximum escalation depth). Those escalation parameters are inherited from the paper and intentionally omitted from the reference RPGF pool profile table above, which remains the complete implementation checklist for the scoped profile described here. No RPGF-specific equilibrium analysis has been conducted for any of the in-scope relevance-game parameters.
 
 Reputation parameters (reward, penalty, decay) are likewise directional: the 5:1 penalty-to-reward ratio and 30-day decay epoch are design choices intended to make debunking costly while allowing recovery. The effective recovery time analysis in the Registry Entry Reputation section provides a first-order check, but interaction with round frequency, pool count, and heterogeneous project quality remains unvalidated.
 
@@ -369,13 +369,17 @@ The following table compares the RPGF instantiation with the thesis's other inst
 
 ## Open Problems
 
+### Reward padding
+
+The main paper's Curator voting strategy section demonstrates a profitable unilateral report deviation that increases dispersion while avoiding distance-based slashing and remaining below the threshold for a successful appeal to the policy-implied score. The reward-scaling incentive also remains at the RPGF reference reward fraction; its exploitability depends on the configured appeal threshold and other round parameters. How should the reward and appeal rules change to remove this incentive while retaining genuine low-dispersion consensus? The current rules remain unchanged pending that analysis, tracked in [issue #141](https://github.com/0xferit/manuscript-decentralized-curation/issues/141).
+
 ### Registry quality and beneficiary mapping
 
 The RPGF mechanism assumes an upstream curated project-beneficiary registry. If that registry misidentifies beneficiaries, allows duplicate or captured entries, or applies weak claimant policy, the funding layer inherits those errors. Duplicate suppression, beneficiary routing, and cross-round reputation are only as strong as the registry's curation quality. This file treats the registry as a prerequisite abstraction rather than specifying its governance or dispute system.
 
 ### Comparability limits
 
-Relevance scoring with normalization may produce unintuitive allocation results across very different project types (a developer tool vs. a research paper vs. core infrastructure). The relevance policy must be specific enough to make these comparisons meaningful. If it is not, curators produce noisy scores and the allocation degrades gracefully rather than catastrophically (the "bad pool fails locally" dynamic).
+Relevance scoring with normalization may produce unintuitive allocation results across very different project types (a developer tool vs. a research paper vs. core infrastructure). The relevance policy must be specific enough to make these comparisons meaningful. If it is not, scores may be noisy or systematically misleading. Pool scoping limits the direct allocation effects to that pool, but does not establish graceful degradation or prompt migration to better pools.
 
 ### Competitive challenge dynamics
 
@@ -383,7 +387,9 @@ The competitive redirection incentive improves challenger participation but crea
 
 ### Counterfactual impact
 
-The framework handles direct output claims ("we built X") but not counterfactual impact claims ("X prevented Y from happening"). Counterfactual claims fail the falsifiability requirement and would be legitimately challengeable as `NonFalsifiable`. This limits the framework to observable, measurable impact, which is a real scope constraint.
+This profile supports documented output claims ("we built X"). A narrative such as "X prevented Y from happening", without a specified causal comparison or evidentiary test, is not testable as stated. A nomination that contains no testable assertions under the template and evidence policy is challengeable as `NonFalsifiable`. Counterfactual quantities can sometimes be identified and estimated from observed data under explicit assumptions. For example, Dahabreh et al. identify population counterfactual outcome means using randomized trials nested in cohorts [@dahabreh2019generalizing]. Identification under assumptions does not establish that those assumptions are empirically testable, or that a particular RPGF claim meets this profile's evidence rules. The profile does not specify standards for adjudicating such causal estimates; absence of supporting evidence alone does not make an assertion unfalsifiable.
+
+Curators can still score the mission relevance of admissible, documented outputs without establishing their counterfactual impact. Nominations must nevertheless satisfy the template and evidence rules. Scoring occurs before holdback challenges; a successful challenge then removes the nomination's provisional allocation. Thus the scoring mechanism can operate without causal adjudication, while the testability requirement still restricts eligible nominations. Relevance scores express policy-conditioned valuation and do not establish incremental causal benefit.
 
 ### Scoring order effects
 
@@ -405,7 +411,7 @@ The "bad pools fail locally" dynamic depends on participants exiting bad pools a
 2. **Funder coordination failure**: a better pool with no funding is useless. Funders must collectively migrate for a new pool to be viable, which is a coordination problem that individual exit does not automatically solve. A critical mass of funders must move roughly simultaneously, and each funder's incentive to move depends on whether others have already moved.
 3. **Round-cycle lock-in**: pool parameters are immutable and rounds last ~60+ days (submission window + holdback). Capital committed to a round cannot move to a competing pool until that round completes. This temporal lock-in means that even if participants recognize a pool is bad, funds already in-flight are irrecoverable for the current round.
 
-These frictions do not invalidate the exit argument (exit is still structurally better than governance capture of a shared mechanism), but they mean "bad pools fail locally" is a design aspiration that depends on short rounds, low minimum viable pool sizes, and sufficient funder coordination. Deployments should monitor pool concentration and exit rates as empirical signals of whether the dynamic functions as hypothesized.
+These frictions leave exit possible but limit the claim that it selects better curation. "Bad pools fail locally" is a design aspiration that depends on recognizable quality differences, short rounds, low minimum viable pool sizes, and sufficient funder coordination. Deployments should monitor pool concentration and exit rates as empirical signals of whether the dynamic functions as hypothesized.
 
 ### DDR dependency
 
@@ -419,7 +425,7 @@ A new RPGF pool requires curators staked and ready before the first evaluation p
 
 ### Why not use Gitcoin or Optimism RPGF directly?
 
-Both systems aggregate individual preferences. This conflates what participants *want* with what is *good for the public*. When private incentives and public benefit diverge, preference aggregation systematically misallocates. This design replaces preference aggregation with merit-based curation where the individually rational strategy is to make accurate, well-grounded judgments.
+Both systems aggregate individual preferences. This conflates what participants *want* with what is *good for the public*. When private incentives and public benefit diverge, preference aggregation systematically misallocates. This design instead rewards agreement under a public relevance rubric, with the aim of encouraging accurate, well-grounded judgments. Whether those judgments are individually optimal under the full reward and appeal rules remains unresolved.
 
 ### Isn't asking voters to judge public benefit paternalistic?
 
@@ -427,27 +433,29 @@ No. Voters are not forbidden from having preferences. The mechanism simply does 
 
 ### What is a coherence game and why does it help?
 
-A coherence game rewards participants for independently converging on the same answer, without trusted communication. By the Schelling principle, when coordination is only possible through shared logic and shared rules, the focal point tends to be the answer best supported by the publicly stated criteria. Under the conditions identified in the main paper (Proposition 3), merit-based judgment is a Bayesian Nash equilibrium: (i) the curation policy must be specific enough that competent curators' signals cluster around the true value, (ii) the coherence threshold K must be large enough that honest reports within normal noise are not slashed, and (iii) the colluding stake fraction must remain below a threshold phi* (empirically ~15-20% at K=1.25 with 15-member committees). When condition (iii) fails, a coordinating bloc can shift the weighted mean and punish honest reporters. In the RPGF context, where fund redirection creates direct financial incentives for collusion, this threshold is the binding constraint on the mechanism's integrity.
+A coherence game rewards agreement among independently committed reports. A specific public rubric can supply a substantive focal point: curators seek to anticipate judgments based on the same criteria. Claim 3 in the main paper demonstrates a profitable unilateral deviation under permitted reward parameters. It therefore supplies a counterexample to a general truthful-reporting guarantee under the current rules. Signal concentration and truthful best responses are distinct questions.
 
-### Why won't this collapse into a Keynesian beauty contest?
+The main paper uses phi* to describe observed degradation under particular simulated collusion configurations. It is not a proven boundary for honest equilibrium and has not been calibrated for RPGF. Here, allocation incentives can create additional reasons to distort scores; an RPGF-specific strategic analysis remains necessary.
 
-A beauty contest arises when participants try to guess what others will guess, rather than what is true. This design prevents that by anchoring convergence on a specific, public, versioned scoring policy applied to structured, falsifiable nominations. Participants are not guessing taste; they are independently applying the same rubric to the same evidence.
+### How does the design address beauty-contest incentives?
+
+The mechanism retains beauty-contest incentives: participants are rewarded for anticipating other curators' judgments, including those of an appeal committee. The public, versioned rubric is intended to make policy-based judgment a focal point and reduce arbitrary coordination. It does not eliminate higher-order beliefs or establish that participants select a policy-faithful equilibrium. Even establishing one truthful equilibrium would not establish its uniqueness or selection; peer-prediction research treats these as separate problems [@kong2016peerprediction]. Strategic reporting and coordination failures therefore remain possible below the degradation thresholds observed in the main paper's simulations.
 
 ### Who controls the scoring rubric?
 
-No one exclusively. Any address can create a pool with its own public relevance policy. Pool parameters are immutable after creation. Bad rubric design fails locally through non-use rather than corrupting the whole protocol. Legitimacy is not granted by governance; it emerges from adoption.
+No one exclusively. Any address can create a pool with its own public relevance policy. Pool parameters are immutable after creation. Pool scoping contains the direct effects of a bad rubric. Whether poor pools lose participation depends on users recognizing quality differences and coordinating migration; adoption alone does not establish rubric quality.
 
 ### Why is permissionless pool creation better than governance?
 
-Governance centralizes value disputes. Every disagreement about what counts as a public good becomes a political fight over control of a shared mechanism. Permissionless pools modularize legitimacy: rubrics are explicit, auditable, and contestable, and users exit bad ones rather than lobbying to fix them. Bad governance corrupts the whole system; a bad pool only fails locally.
+Governance centralizes value disputes. Every disagreement about what counts as a public good becomes a political fight over control of a shared mechanism. Permissionless pools let participants choose among explicit, auditable rubrics without changing a shared policy. A bad pool's direct allocation decisions remain local, and participants can seek alternatives. The further claim that competition selects better curation is a conditional hypothesis: it requires recognizable quality differences, funded alternatives and feasible migration.
 
 ### What prevents the most marketed pool from winning over the best one?
 
-The same risk exists in governance, except there it captures the whole protocol. Here, alternatives remain permanently possible. Pool policies are public and versioned by content hash, so comparison is tractable. This is a better failure mode, not a perfect one.
+The design does not prevent this. Permissionless creation keeps alternatives possible, and public, versioned policies support inspection. Those features do not establish that users can identify higher-quality curation or coordinate migration to a funded alternative. Marketing, network effects and switching costs can still sustain a poorly curated pool.
 
 ### How are nominations kept honest?
 
-Nominations must include falsifiable impact claims with supporting evidence. Any participant can file typed challenges: `Debunking`, `NonFalsifiable`, or `TemplateViolation`. Disputed nominations are escalated to external decentralized dispute resolution (Kleros). This forces nominators into a legible, contestable form before the coherence game begins.
+Nominations must include falsifiable impact claims with supporting evidence. Any participant can file typed challenges: `Debunking`, `NonFalsifiable`, or `TemplateViolation`. Disputed nominations are escalated to external decentralized dispute resolution (Kleros). The template requires a legible, contestable submission for scoring. Challenges are filed during holdback after scoring; successful adjudication can remove a provisional allocation.
 
 ### Is this trustless?
 

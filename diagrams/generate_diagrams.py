@@ -359,24 +359,31 @@ def fig3_architecture(out):
 # 4. Relevance Round Sequence
 # ══════════════════════════════════════════════════════════
 def fig4_relevance_round(out):
-    fig, ax = plt.subplots(figsize=(8, 10), dpi=300)
+    fig, ax = plt.subplots(figsize=(8, 11.2), dpi=300)
     ax.set_xlim(0, 8)
-    ax.set_ylim(-0.5, 10)
+    ax.set_ylim(-1.0, 10)
     ax.set_aspect('equal')
     ax.axis('off')
 
     steps = [
-        ('1', 'Curators stake into pool'),
+        ('1', 'Curators deposit into the pool contract'),
         ('2', 'Round scheduled for Live item\nat pool-defined cadence'),
-        ('3', r'Stake-weighted draft: $d_i = s_i$'),
-        ('4', 'Drafted curators commit/reveal\nscores in [0, 1]'),
-        ('5', r'Weight capping:'
+        ('3', r'Seat tickets: $d_i = \lfloor s_i / L \rfloor$'
               '\n'
-              r'$w_i = \min(s_i,\; c \cdot \mathrm{total\_stake})$'),
-        ('6', r'Coherence check:'
+              r'(eligible when $s_i \geq L$)'),
+        ('4', r'Draw and lock: each drawn seat locks'
               '\n'
-              r'slash if $|v_i - \mu| > K\sigma$'),
-        ('7', 'Near-flat rounds cancelled\nas degenerate'),
+              r'$L$ tokens, giving round weight $w_i$'),
+        ('5', r'Commit/reveal one score in [0, 1],'
+              '\n'
+              r'weighted by $w_i$'),
+        ('6', r'Weighted mean $\mu$ and dispersion $\sigma$;'
+              '\n'
+              r'require valid reveal quorum'),
+        ('7', r'Distance-based slashing when $\sigma \geq \varepsilon_\sigma$:'
+              '\n'
+              r'$p_i = \min(1, \max(0, (|v_i - \mu| / \sigma - K) / K))$'),
+        ('8', 'Appeal to a larger committee\nat escalating stakes'),
     ]
 
     cx = 4.3
@@ -450,7 +457,7 @@ def fig5_framework(out):
     diamond = Polygon(diamond_verts, closed=True,
                       fc=C['box'], ec=C['accent'], lw=2.0, zorder=2)
     ax.add_patch(diamond)
-    ax.text(cx, s3y, 'Falsification\nfeasible?', fontsize=9,
+    ax.text(cx, s3y, 'Falsification feasible\nand cheaper than\nexhaustive verification?', fontsize=9,
             fontweight='normal', color=C['text'],
             ha='center', va='center', zorder=4)
 
@@ -462,15 +469,19 @@ def fig5_framework(out):
     ax.text(ncx3, s3y, '3', fontsize=10.5, fontweight='bold',
             color=C['inverse'], ha='center', va='center', zorder=6)
 
-    # "Out of scope" branch from right vertex
-    oos_x = cx + dw + 1.8
-    _arr(ax, cx + dw, s3y, oos_x - 0.1, s3y, fs=7)
-    ax.text(oos_x, s3y, 'Out of scope', fontsize=9.2, fontstyle='italic',
-            color=C['accent'], ha='left', va='center', zorder=4)
-
-    # Arrow from diamond bottom to step 4
-    s4y = y0 - 3 * gap
+    mechanism_selection_extra_gap = 0.5
+    s4y = y0 - 3 * gap - mechanism_selection_extra_gap
     _arr(ax, cx, s3y - dh, cx, s4y + bh / 2)
+    ax.text(cx + 0.42, (s3y - dh + s4y + bh / 2) / 2, 'yes', fontsize=8.8,
+            color=C['accent'], ha='left', va='center', zorder=10)
+
+    bypass_x = cx + dw + 2.3
+    _arr(ax, cx + dw, s3y, bypass_x, s3y, style='-')
+    _arr(ax, bypass_x, s3y, bypass_x, s4y, style='-')
+    _arr(ax, bypass_x, s4y, cx + bw / 2, s4y)
+    ax.text(bypass_x - 0.8, s3y + 0.28, 'no: omit factual-truth\nadjudication',
+            fontsize=8.8, fontstyle='italic', color=C['accent'],
+            ha='center', va='bottom', zorder=10)
 
     # ── Step 4 (regular box) ──
     ncx4 = cx - bw / 2 - 0.45
