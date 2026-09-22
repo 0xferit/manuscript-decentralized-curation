@@ -10,28 +10,26 @@ For Schelling-style coordination games (peer-to-peer, crowdsourced information s
 
 - **Impossibility theorem**: the central result. For games with >= 3 ranked alternatives and minimal attack resistance properties, truth-telling cannot always be an equilibrium. This bounds what Schelling-based mechanisms can achieve.
 - **Minimal attack resistance**: the properties that any reasonable mechanism should satisfy (e.g., you cannot profit by simply copying someone else's report, the mechanism is not trivially gameable). These are weak conditions, making the impossibility strong.
-- **Ranked alternatives**: the impossibility requires that the alternatives can be ranked (ordered). This is the key technical condition our paper exploits: binary choice and scalar aggregation are not "ranked alternatives" in the required sense.
+- **Ranked alternatives**: applying the theorem to a proposed mechanism requires matching its alternatives, reports and payoffs to the theorem’s assumptions. A scalar reporting space alone does not establish that the mechanism falls outside its scope.
 
 ## Connection to our paper
 
-This is the primary constraint our mechanism design must navigate. We cite it as the reason we cannot claim truthful reporting is always an equilibrium in the general case. Our contribution is identifying **restricted conditions** where the impossibility does not bind:
+We cite this result as a constraint on general truthful-reporting claims. The paper does not establish an escape theorem for its relevance mechanism:
 
 ### Binary accuracy (DDR disputes)
 - The impossibility requires >= 3 ranked alternatives. Binary choice (Valid/Invalid) has only 2 alternatives, so the impossibility does not apply.
-- Under-specified is a structural rejection (claim fails template validation), not a third ranked alternative that jurors compare against Valid/Invalid.
+- `NonFalsifiable` and `TemplateViolation` identify challenge reasons adjudicated against a pool’s requirements. They are not additional truth values ranked alongside Valid/Invalid.
 - This is a clean escape: the impossibility literally does not cover the binary case.
 
 ### Scalar relevance (coherence game)
-- Curators report on [0,1] (continuous scalar), aggregated by weighted mean with K-sigma threshold.
-- George's impossibility applies to **rankings** over discrete alternatives. Scalar aggregation with a coherence band is a different game structure.
-- The escape here is less clean than the binary case: we argue the game structure is sufficiently different that the impossibility does not "directly bind," but we should be careful about overclaiming. The impossibility is about ranked discrete alternatives; our game is about distance from a continuous mean. These are structurally different, but proving they are formally outside the impossibility's scope requires care.
+- Curators report a scalar in [0,1], aggregated by weighted mean with a dispersion-dependent penalty.
+- Direct application of the impossibility result requires a formal mapping between the games. Regardless of that mapping, the paper’s [Claim 3](../paper.qmd#curator-voting-strategy) demonstrates a profitable deviation under permitted relevance-reward parameters.
 
 ## Key takeaways for our paper
 
-1. We cannot claim our mechanisms always produce truth. We should not try. The mechanisms produce signals that are more expensive to fake than to verify honestly.
-2. The binary restriction for accuracy is well-justified and clean.
-3. The scalar restriction for relevance is defensible but less airtight. We should frame it as "the impossibility does not directly bind" rather than "the impossibility does not apply."
-4. This paper is also useful for explaining why simpler approaches (e.g., voting on quality with 3+ categories) would fail: the impossibility directly applies.
+1. We cannot claim our mechanisms always produce truth or that every false report is more expensive than an honest one. The stated reward rule permits profitable dispersion padding.
+2. The ranked-alternative theorem’s assumptions must be checked against each proposed mechanism; changing the reporting space is not a proof of incentive compatibility.
+3. Analyze the actual utilities, information, reward and appeal rules before claiming a truthful equilibrium.
 
 ## Relationship to George (2023b) on griefing
 

@@ -17,11 +17,11 @@ Proposes a mechanism for eliciting honest reports about subjective experiences (
 Peer prediction is cited as related work in the mechanism design landscape:
 
 - **Comparison with our coherence game**: both peer prediction and our coherence game reward consistency among agents. The difference: peer prediction uses pairwise comparison with a random peer; our coherence game aggregates all ratings and uses a K-sigma threshold. Our approach is closer to a Schelling game than to peer prediction.
-- **Why we chose Schelling over peer prediction**: (1) peer prediction requires assumptions about signal correlation structure that may not hold for news relevance; (2) our curation policy provides a focal point that substitutes for the structural assumptions; (3) the Schelling game is simpler for participants (report a single number, not a probabilistic assessment).
+- **Design tradeoff**: the coherence game uses a single scalar report and a public policy as an intended focal point. The policy does not substitute for the assumptions needed by a truthful-elicitation theorem. Its simpler reporting interface comes with unresolved incentive compatibility, including the deviation in [Claim 3](../paper.qmd#curator-voting-strategy).
 - **Potential hybrid**: peer prediction ideas could strengthen our coherence game, e.g., by cross-checking outlier ratings against peers before slashing. This is not explored in the current paper.
 
 ## Limitations
 
 - Assumes agents' signals are conditionally independent given the true state. In information markets, signals may be correlated through common sources, violating this assumption.
 - Requires known prior distributions or sufficient data to estimate them. In cold-start scenarios, priors are unavailable.
-- The mechanism can have equilibria where everyone reports the same (uninformative) answer. Additional structure (like our curation policy focal point) may be needed to select the truthful equilibrium.
+- Equilibrium existence and selection are separate questions. A public policy may supply a focal point, but that alone does not prove selection of a truthful equilibrium in our game.

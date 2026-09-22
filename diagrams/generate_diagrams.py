@@ -469,7 +469,8 @@ def fig5_framework(out):
     ax.text(ncx3, s3y, '3', fontsize=10.5, fontweight='bold',
             color=C['inverse'], ha='center', va='center', zorder=6)
 
-    s4y = y0 - 3 * gap
+    mechanism_selection_extra_gap = 0.5
+    s4y = y0 - 3 * gap - mechanism_selection_extra_gap
     _arr(ax, cx, s3y - dh, cx, s4y + bh / 2)
     ax.text(cx + 0.42, (s3y - dh + s4y + bh / 2) / 2, 'yes', fontsize=8.8,
             color=C['accent'], ha='left', va='center', zorder=10)

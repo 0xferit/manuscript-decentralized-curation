@@ -14,14 +14,13 @@ Provides a formal framework for measuring the cost of attacks on cryptoeconomic 
 
 ## Connection to our paper
 
-We use the griefing factor framework as the formal security metric for our mechanisms:
+The framework supplies a possible metric for future analysis of our mechanisms. The manuscript does not establish a common griefing-factor bound across disputes and relevance attacks.
 
-- **DDR disputes**: for a challenger attacking a true claim with p = 0.80 and S/B = 0.25, GF is approximately 37. The attacker pays 37x what the victim loses. This makes frivolous challenges extremely expensive.
-- **For a legitimate challenger** disputing a false claim, the asymmetry is reversed: the false claim author pays more than the challenger risks. This is the intended incentive alignment.
-- **Coherence game**: the colluding plurality threshold (~20-30% of stake) is the point where GF crosses 1 for coordinated attacks. Below that threshold, colluders lose more than they inflict; above it, they can redefine the coherent band.
+- **DDR disputes**: a griefing calculation must distinguish expected attacker cost from expected victim loss and include the specified fees, payout rules and adjudication error. A cost-to-harm ratio would be the inverse of GF as defined above.
+- **Coherence game**: the paper reports relevance error and stake trajectories under specified collusion strategies. Its observed degradation range is not a measured GF=1 crossing or a security boundary; [Claim 3](../paper.qmd#curator-voting-strategy) also gives a profitable unilateral deviation without a colluding coalition.
 
 ## Key takeaways
 
-1. GF provides a single number to compare mechanism security across designs. Useful for the simulation section.
-2. The GF framework makes attack costs concrete and comparable. Reviewers can evaluate whether the mechanism is "secure enough" without running simulations.
-3. The distinction between GF for legitimate challengers (low, by design) and GF for frivolous challengers (high, by design) is the core of the incentive argument.
+1. GF can compare particular attacks when harm and cost use compatible definitions and assumptions.
+2. Defining the metric does not compute it for this protocol. Attack-specific analysis remains necessary.
+3. Legitimate correction and malicious disruption have different objectives; classify the action before interpreting the ratio.
