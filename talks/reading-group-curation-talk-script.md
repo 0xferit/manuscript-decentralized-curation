@@ -94,7 +94,7 @@ This point matters because if quality is multidimensional, then there is no univ
 
 This is one reason I found the Wang and Strong data-quality framing useful. It gives a vocabulary for saying that different users and different domains care about different aspects of quality, and that mechanism design has to respect that decomposition.
 
-Third, require falsifiability. A challenge-based mechanism only makes sense in the middle region where exhaustive verification is expensive, but falsification is still feasible.
+Third, require falsifiability where factual-truth challenge is the mechanism. The framework looks for cases where falsification is feasible and offers an economic advantage over exhaustive verification. Other curation mechanisms have different prerequisites; the current Truth Post profile still requires testable claims.
 
 Fourth, design mechanisms dimension by dimension. Different qualities require different games. There is no reason to expect one incentive structure to handle everything equally well.
 
@@ -128,11 +128,11 @@ This is the slide I most want to make precise, because a lot of the mechanism de
 
 The system I am describing can make falsehood expensive to sustain if challenged, but it cannot certify truth in any absolute sense. An important nuance: our simulations show the dominant bottleneck is detection coverage, not the dispute mechanism itself. The system does not guarantee that false claims will be found; it creates economic incentives for challenging them once detected, at representative parameters.
 
-That is the Popperian asymmetry.
+Popper's logical asymmetry motivates this approach; the economic conditions are additional assumptions.
 
-Some claims are easy to verify. Those do not need an elaborate curation game.
+Some claims are easy to verify. Bonded challenge may add little to checking them, but relevance curation and incentives to find and publish corrections can remain useful.
 
-Some claims are not falsifiable at all. A challenge-based mechanism cannot safely process those either, because there is nothing operational to contest.
+Some claims are not falsifiable at all, so challenge cannot settle their truth. Truth Post can instead challenge their compliance with the pool's testability requirements through NonFalsifiable. A successful challenge ends active eligibility and preserves a historical record; the current profile does not offer continued relevance-only curation for those closed items.
 
 The interesting region is in the middle: claims that are costly to verify exhaustively, but still falsifiable through later evidence or contradiction.
 
