@@ -73,9 +73,13 @@ Publish wrappers:
 
 ## Release procedure
 
-1. Compute release id: first 8 hex chars of `shasum -a 256 paper.qmd`
-2. Build: `make render`
-3. Freeze artifacts into `releases/<hash>/` (source, outputs, config, analysis script)
+1. Merge the reviewed changes to `main`. Compute the release id from the first eight hexadecimal characters of `shasum -a 256 paper.qmd`.
+2. In a clean checkout of the exact release commit, set `_build-info.md` to `**Version:** vMAJOR.MINOR.PATCH` and run `make verify-full` and `make render-pdf` with the recorded build dependencies. Inspect the rendered PDF, citations and figures.
+3. Freeze the source, build inputs, rendered outputs and analysis into `releases/<hash>/`. Record the build versions and checksums. Attach the reviewed PDF as `paper.pdf` and a `manifest.json` to a draft GitHub release targeting the same commit. The manifest must contain `release_version` (the full tag), `source_commit` (the full commit hash), `manuscript_sha256` and `reviewed_pdf_sha256`.
+4. Run `RELEASE_TAG=vMAJOR.MINOR.PATCH python3 .github/scripts/publish_to_zenodo.py --verify-only` with those two assets in `outputs/`. Publish the GitHub release only after review. The [Zenodo workflow](.github/workflows/publish-zenodo.yml) verifies that the tag belongs to `main`, validates the manifest and uploads the attached PDF without rebuilding it.
+5. Check the completed workflow and download the published Zenodo PDF to confirm its SHA-256 digest matches the reviewed asset. A matching already-published version is a no-op; conflicting content or an existing unpublished Zenodo draft requires inspection before retrying. Do not create or edit a Zenodo draft concurrently with the workflow. The separate Zenodo GitHub-integration webhook must be disabled to avoid a second publisher.
+
+The publication boundary and its assumptions are documented in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## License
 
