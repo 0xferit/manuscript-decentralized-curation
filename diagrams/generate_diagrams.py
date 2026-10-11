@@ -677,7 +677,7 @@ def fig7_confidence_reputation(out):
     # ── Right panel: Author Reputation ──
     ax2.set_title('Author Reputation', fontsize=12,
                   fontweight='bold', color=C['text'], pad=10)
-    ax2.set_xlabel('Publication rounds', fontsize=10, color=C['text'])
+    ax2.set_xlabel('Illustrative adjudication sequence', fontsize=10, color=C['text'])
     ax2.set_ylabel('Reputation', fontsize=10, color=C['text'])
 
     # Honest author: slow rise, one debunk slash at t~4.5, then recovery
@@ -698,10 +698,10 @@ def fig7_confidence_reputation(out):
             if abs(t[i] - sp) < 0.1:
                 dishonest[i] = max(0, dishonest[i] - 2.0)
 
-    ax2.plot(t, honest, color=C['positive'], lw=2.5, label='Honest author',
+    ax2.plot(t, honest, color=C['positive'], lw=2.5, label='Fewer adverse outcomes',
              zorder=3)
     ax2.plot(t, dishonest, color=C['accent'], lw=2.0, linestyle='--',
-             label='Dishonest author', zorder=3)
+             label='Frequent adverse outcomes', zorder=3)
 
     # Mark the debunked event on honest line
     debunk_idx = np.argmin(np.abs(t - slash_t))
