@@ -2397,7 +2397,7 @@ def run_e4a(params: E4aParams) -> None:
         alpha=0.2,
         color=_ALT,
     )
-    ax1.set_xlabel("Publication rounds")
+    ax1.set_xlabel("Event rounds")
     ax1.set_ylabel("Median author reputation")
     ax1.set_title("Baseline trajectories")
     ax1.legend(frameon=False)
@@ -2439,9 +2439,9 @@ def run_e4a(params: E4aParams) -> None:
         linestyle="--",
         linewidth=1.0,
     )
-    ax2.set_xlabel("Dishonest challenge-survival probability")
+    ax2.set_xlabel("Assigned positive-outcome probability (dishonest type)")
     ax2.set_ylabel("Final-round median reputation")
-    ax2.set_title("Sensitivity to harder-to-challenge false claims")
+    ax2.set_title("Sensitivity to assigned adjudication outcomes")
 
     plt.suptitle("E4a: Author reputation as a standing bond", y=1.02)
     plt.tight_layout()
@@ -2669,7 +2669,7 @@ def run_e4d(params: E4dParams) -> None:
     axes[1].set_xlabel("Attack rounds in Pool H")
     axes[1].set_ylabel("Mean attacker share of Pool H author reputation")
     axes[1].set_ylim(0.0, 0.35)
-    axes[1].set_title("Carryover appears as interface-level credibility context")
+    axes[1].set_title("Reputation carryover as a share of the local stock")
 
     fig.suptitle("E4d: Cross-domain author reputation scoping", y=1.02)
     fig.tight_layout()
@@ -2980,9 +2980,9 @@ def write_eval_summary() -> None:
 - **E2'-Adv (selected rules and simulation-only ambiguity):** Under draw-and-lock + graduated slashing + ambiguity abstention, a 15% colluding bloc shifts mean relevance error from **{e2p_adv_base["mean_abs_error_mean"]:.3f}** to **{e2p_adv_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_adv_point["mean_abs_error_ci95"]:.3f}** and ends with **{e2p_adv_point["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_adv_point["final_colluder_stake_share_ci95"]:.3f}** stake share.
 - **E2'-Adv $\\sigma$ sweep:** At $\\phi=0.15$, mean relevance error is **{e2p_sigma_low["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_sigma_low["mean_abs_error_ci95"]:.3f}** at $\\sigma_{{\\text{{honest}}}}=0.05$ versus **{e2p_sigma_high["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_sigma_high["mean_abs_error_ci95"]:.3f}** at $\\sigma_{{\\text{{honest}}}}=0.20$ (95% CI, $N=100$ seeds). Higher honest noise makes collusion harder to distinguish from legitimate disagreement.
 - **E2'-Adv Trojan:** At $\\phi=0.15$, each delay gets 200 attack rounds (total rounds = $T + 200$). Final colluder stake share at $T=0$: **{e2p_trojan_base["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_trojan_base["final_colluder_stake_share_ci95"]:.3f}**; at $T=100$: **{e2p_trojan_100["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_trojan_100["final_colluder_stake_share_ci95"]:.3f}** (95% CI, $N=100$ seeds). Delayed onset leaves colluders with less terminal stake than attacking immediately.
-- **E4a:** By round {int(e4a_point["round"])}, median honest-author reputation reaches **{e4a_point["honest_median_rep_mean"]:.2f} $\\pm$ {e4a_point["honest_median_rep_ci95"]:.2f}** (95% CI, $N={int(e4a_point["n_seeds"])}$ seeds) while median dishonest-author reputation remains at **{e4a_point["dishonest_median_rep_mean"]:.2f} $\\pm$ {e4a_point["dishonest_median_rep_ci95"]:.2f}**.
-- **E4b:** In a counterfactual reputation-weighted committee with decay $\\delta=0.01$, a random high-reputation attacker stays above median weight for **{e4b_random["above_median_rounds_mean"]:.0f} $\\pm$ {e4b_random["above_median_rounds_ci95"]:.0f}** rounds, while a $+0.15$ strategic-bias attacker lasts **{e4b_biased["above_median_rounds_mean"]:.0f} $\\pm$ {e4b_biased["above_median_rounds_ci95"]:.0f}** rounds and shifts the final signal upward by **{e4b_biased["mean_signal_shift_mean"]:.3f} $\\pm$ {e4b_biased["mean_signal_shift_ci95"]:.3f}**.
-- **E4d:** After building reputation in Pool L, an unscoped attacker enters Pool H with **{e4d_point["imported_rep_at_entry_mean"]:.2f} $\\pm$ {e4d_point["imported_rep_at_entry_ci95"]:.2f}** imported reputation units (95% CI, $N={int(e4d_point["n_seeds"])}$ seeds); over the first 10 attack rounds, mean attacker share of Pool H author reputation is **{e4d_point["mean_attacker_rep_share_unscoped_first10"]:.3f} $\\pm$ {e4d_point["mean_attacker_rep_share_unscoped_first10_ci95"]:.3f}** unscoped versus **{e4d_point["mean_attacker_rep_share_scoped_first10"]:.3f} $\\pm$ {e4d_point["mean_attacker_rep_share_scoped_first10_ci95"]:.3f}** when reputation is pool-scoped, and the imported advantage decays to within {E4dParams().exhaustion_epsilon:.2f} reputation units after **{e4d_point["advantage_exhaustion_round_mean"]:.1f} $\\pm$ {e4d_point["advantage_exhaustion_round_ci95"]:.1f}** attack rounds.
+- **E4a (prescribed-outcome reputation model):** By event round {int(e4a_point["round"])}, median honest-author reputation reaches **{e4a_point["honest_median_rep_mean"]:.2f} $\\pm$ {e4a_point["honest_median_rep_ci95"]:.2f}** (95% CI, $N={int(e4a_point["n_seeds"])}$ seeds) while median dishonest-author reputation remains at **{e4a_point["dishonest_median_rep_mean"]:.2f} $\\pm$ {e4a_point["dishonest_median_rep_ci95"]:.2f}**.
+- **E4b:** In a counterfactual reputation-weighted committee with decay $\\delta=0.01$, a random high-reputation attacker has above-median weight in **{e4b_random["above_median_rounds_mean"]:.0f} $\\pm$ {e4b_random["above_median_rounds_ci95"]:.0f}** rounds, while a $+0.15$ strategic-bias attacker has above-median weight in **{e4b_biased["above_median_rounds_mean"]:.0f} $\\pm$ {e4b_biased["above_median_rounds_ci95"]:.0f}** rounds and shifts the signal upward by an across-round mean of **{e4b_biased["mean_signal_shift_mean"]:.3f} $\\pm$ {e4b_biased["mean_signal_shift_ci95"]:.3f}**.
+- **E4d (prescribed-outcome reputation model):** After building reputation in Pool L, an unscoped attacker enters Pool H with **{e4d_point["imported_rep_at_entry_mean"]:.2f} $\\pm$ {e4d_point["imported_rep_at_entry_ci95"]:.2f}** imported reputation units (95% CI, $N={int(e4d_point["n_seeds"])}$ seeds); over the first 10 attack rounds, mean attacker share of Pool H author reputation is **{e4d_point["mean_attacker_rep_share_unscoped_first10"]:.3f} $\\pm$ {e4d_point["mean_attacker_rep_share_unscoped_first10_ci95"]:.3f}** unscoped versus **{e4d_point["mean_attacker_rep_share_scoped_first10"]:.3f} $\\pm$ {e4d_point["mean_attacker_rep_share_scoped_first10_ci95"]:.3f}** when reputation is pool-scoped, and the imported advantage decays to within {E4dParams().exhaustion_epsilon:.2f} reputation units after **{e4d_point["advantage_exhaustion_round_mean"]:.1f} $\\pm$ {e4d_point["advantage_exhaustion_round_ci95"]:.1f}** attack rounds.
 """
     (OUT_DIR / "eval_summary.md").write_text(summary, encoding="utf-8")
 
