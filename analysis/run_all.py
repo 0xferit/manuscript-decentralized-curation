@@ -667,7 +667,7 @@ def run_e1_adversarial(params: E1AdvParams, executor: ProcessPoolExecutor) -> No
     df = pd.DataFrame(rows)
     df.to_csv(OUT_DIR / "e1_adversarial_results.csv", index=False)
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.0, 4.5))
+    fig, ax1 = plt.subplots(figsize=(7.5, 4.5))
     labels = [f"p={p:.2f}" for p in params.p_juror_range]
 
     ax1.bar(
@@ -690,20 +690,6 @@ def run_e1_adversarial(params: E1AdvParams, executor: ProcessPoolExecutor) -> No
         label="Unchallenged rate",
     )
     ax1.legend(frameon=False, fontsize=9)
-
-    colors = [_MUT if v < 0 else _AC for v in df["adversary_balance_mean"]]
-    ax2.bar(
-        labels,
-        df["adversary_balance_mean"],
-        yerr=df["adversary_balance_ci95"],
-        color=colors,
-        capsize=4,
-    )
-    ax2.set_ylabel("Adversary cumulative balance")
-    ax2.set_title(
-        f"E1-Adv: Adversary profit/loss ({params.n_attacks} attacks, N={params.n_seeds} seeds, 95% CI)"
-    )
-    ax2.axhline(0.0, color=_TX, linewidth=0.8)
 
     plt.tight_layout()
     _save_figure_variants(plt.gcf(), FIG_DIR / "e1_adversarial.png", dpi=200)
@@ -2989,9 +2975,9 @@ def write_eval_summary() -> None:
 - **E1 (challenger economics, illustrative anchor $p_\\mathrm{{detect}}={params_e1.p_detect:.2f}$):** At $p=0.80$, $N={params_e1.n_jurors}$, $S/B=0.25$, challenger EV on a debunking challenge is **{e1_point["ev_false_mean"] / params_e1.bounty:.3f} $\\pm$ {e1_point["ev_false_ci95"] / params_e1.bounty:.3f}\\times bounty** (95% CI, $N={int(e1_point["n_seeds"])}$ seeds) after tax and DDR fees, and simulated one-window survival at this anchor is **{e1_point["false_survival_mean"]:.3f} $\\pm$ {e1_point["false_survival_ci95"]:.3f}**.
 - **E2:** At initial competence 0.70 and $K=1.25$, mean relevance error is **{e2_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2_point["mean_abs_error_ci95"]:.3f}** (95% CI, $N={int(e2_point["n_seeds"])}$ seeds), cancelled-round share is **{e2_point["cancelled_round_share_mean"]:.3f} $\\pm$ {e2_point["cancelled_round_share_ci95"]:.3f}**, and final competent stake share is **{e2_point["final_competent_stake_share_mean"]:.2f} $\\pm$ {e2_point["final_competent_stake_share_ci95"]:.2f}**.
 - **E3:** Closed-form scenario analysis only. At non-falsifiable share 0.25, bad-item retention is **{e3_point["baseline_bad_item_retention"]:.2f}** under an illustrative forced-binary assumption of $p=0.55$ versus **{e3_point["defended_bad_item_retention"]:.2f}** when a dedicated `NonFalsifiable` challenge reason raises the assumed per-juror accuracy to $p=0.85$.
-- **E1-Adv:** A well-funded adversary submitting {int(e1_adv_point["n_attacks"])} false claims at $p=0.80$ and illustrative anchor $p_\\mathrm{{detect}}={params_e1.p_detect:.2f}$ achieves survival rate **{e1_adv_point["survival_rate_mean"]:.2f} $\\pm$ {e1_adv_point["survival_rate_ci95"]:.2f}** (95% CI, $N={int(e1_adv_point["n_seeds"])}$ seeds) with cumulative balance **{e1_adv_point["adversary_balance_mean"]:.0f} $\\pm$ {e1_adv_point["adversary_balance_ci95"]:.0f}**.
+- **E1-Adv:** An adversary submitting {int(e1_adv_point["n_attacks"])} false claims at $p=0.80$ and illustrative anchor $p_\\mathrm{{detect}}={params_e1.p_detect:.2f}$ achieves survival rate **{e1_adv_point["survival_rate_mean"]:.2f} $\\pm$ {e1_adv_point["survival_rate_ci95"]:.2f}** (95% CI, $N={int(e1_adv_point["n_seeds"])}$ seeds). Attacker profitability is not estimated.
 - **E2-Adv (predecessor mechanism):** A 15% colluding bloc shifts mean relevance error from **{e2_adv_base["mean_abs_error_mean"]:.3f}** to **{e2_adv_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2_adv_point["mean_abs_error_ci95"]:.3f}** and ends with **{e2_adv_point["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2_adv_point["final_colluder_stake_share_ci95"]:.3f}** stake share.
-- **E2'-Adv (final mechanism):** Under draw-and-lock + graduated slashing + ambiguity abstention, a 15% colluding bloc shifts mean relevance error from **{e2p_adv_base["mean_abs_error_mean"]:.3f}** to **{e2p_adv_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_adv_point["mean_abs_error_ci95"]:.3f}** and ends with **{e2p_adv_point["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_adv_point["final_colluder_stake_share_ci95"]:.3f}** stake share.
+- **E2'-Adv (selected rules and simulation-only ambiguity):** Under draw-and-lock + graduated slashing + ambiguity abstention, a 15% colluding bloc shifts mean relevance error from **{e2p_adv_base["mean_abs_error_mean"]:.3f}** to **{e2p_adv_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_adv_point["mean_abs_error_ci95"]:.3f}** and ends with **{e2p_adv_point["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_adv_point["final_colluder_stake_share_ci95"]:.3f}** stake share.
 - **E2'-Adv $\\sigma$ sweep:** At $\\phi=0.15$, mean relevance error is **{e2p_sigma_low["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_sigma_low["mean_abs_error_ci95"]:.3f}** at $\\sigma_{{\\text{{honest}}}}=0.05$ versus **{e2p_sigma_high["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_sigma_high["mean_abs_error_ci95"]:.3f}** at $\\sigma_{{\\text{{honest}}}}=0.20$ (95% CI, $N=100$ seeds). Higher honest noise makes collusion harder to distinguish from legitimate disagreement.
 - **E2'-Adv Trojan:** At $\\phi=0.15$, each delay gets 200 attack rounds (total rounds = $T + 200$). Final colluder stake share at $T=0$: **{e2p_trojan_base["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_trojan_base["final_colluder_stake_share_ci95"]:.3f}**; at $T=100$: **{e2p_trojan_100["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_trojan_100["final_colluder_stake_share_ci95"]:.3f}** (95% CI, $N=100$ seeds). Delayed onset leaves colluders with less terminal stake than attacking immediately.
 - **E4a:** By round {int(e4a_point["round"])}, median honest-author reputation reaches **{e4a_point["honest_median_rep_mean"]:.2f} $\\pm$ {e4a_point["honest_median_rep_ci95"]:.2f}** (95% CI, $N={int(e4a_point["n_seeds"])}$ seeds) while median dishonest-author reputation remains at **{e4a_point["dishonest_median_rep_mean"]:.2f} $\\pm$ {e4a_point["dishonest_median_rep_ci95"]:.2f}**.
