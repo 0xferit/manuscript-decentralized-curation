@@ -488,7 +488,7 @@ def run_e1(params: E1Params) -> None:
         )
     plt.axhline(0.0, color=_TX, linewidth=0.8)
     plt.xlabel("Per-juror correctness p")
-    plt.ylabel("Challenger EV on debunking challenge (normalized by bounty)")
+    plt.ylabel("Challenger EV on debunking challenge\n(normalized by bounty)")
     plt.title(
         f"E1: Debunking-challenge EV vs juror accuracy ({params.n_seeds} seeds, 95% CI)"
     )
@@ -1047,7 +1047,7 @@ def run_e2_adversarial(params: E2AdvParams, executor: ProcessPoolExecutor) -> No
     ax1.set_xlabel("Fraction of colluding curators")
     ax1.set_ylabel("Mean |mu - r|")
     ax1.set_title(
-        f"E2-Adv: Drafted-curator signal error under collusion (K={params.K}, N={params.n_seeds} seeds)"
+        f"E2-Adv: Drafted-curator signal error\nunder collusion (K={params.K}, N={params.n_seeds} seeds)"
     )
 
     ax2.plot(
@@ -1075,7 +1075,7 @@ def run_e2_adversarial(params: E2AdvParams, executor: ProcessPoolExecutor) -> No
     ax2.set_xlabel("Fraction of colluding curators")
     ax2.set_ylabel("Colluder stake share")
     ax2.set_title(
-        f"E2-Adv: Colluder stake share after repeated rounds (N={params.n_seeds} seeds)"
+        f"E2-Adv: Colluder stake share\nafter repeated rounds (N={params.n_seeds} seeds)"
     )
     ax2.set_ylim(0.0, max(0.4, df["initial_colluder_stake_share"].max() * 1.2))
     ax2.legend(frameon=False, fontsize=9)
@@ -1719,7 +1719,7 @@ def run_e2_prime_adversarial(
     ax1.set_xlabel("Fraction of colluding curators")
     ax1.set_ylabel("Mean |mu - r|")
     ax1.set_title(
-        f"E2'-Adv: Final-mechanism signal error under collusion (K={params.K}, N={params.n_seeds} seeds)"
+        f"E2'-Adv: Final-mechanism signal error\nunder collusion (K={params.K}, N={params.n_seeds} seeds)"
     )
 
     ax2.plot(
@@ -1747,7 +1747,7 @@ def run_e2_prime_adversarial(
     ax2.set_xlabel("Fraction of colluding curators")
     ax2.set_ylabel("Colluder stake share")
     ax2.set_title(
-        f"E2'-Adv: Colluder stake share under final mechanism (N={params.n_seeds} seeds)"
+        f"E2'-Adv: Colluder stake share\nunder final mechanism (N={params.n_seeds} seeds)"
     )
     ax2.set_ylim(0.0, max(0.4, df["initial_colluder_stake_share"].max() * 1.2))
     ax2.legend(frameon=False, fontsize=9)

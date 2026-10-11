@@ -8,12 +8,6 @@ authors:
     email: ferit@cryptolab.net
 repository-code: "https://github.com/0xferit/manuscript-decentralized-curation"
 url: "https://github.com/0xferit/manuscript-decentralized-curation"
-abstract: >-
-  A thesis on decentralized curation: the trustless transformation of
-  raw information into decision-grade knowledge. Proposes a general
-  framework and instantiates it on news via bonded publication, open
-  challenges, external decentralized dispute resolution, and
-  drafted-curator relevance rounds.
 keywords:
   - decentralized curation
   - mechanism design
