@@ -8,51 +8,41 @@ permissions:
   contents: read
 
 concurrency:
-  group: zenodo-${{ github.event.release.tag_name }}
+  group: zenodo-publication
   cancel-in-progress: false
 
 jobs:
   publish:
+    if: ${{ !github.event.release.prerelease }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.11"
-          cache: pip
+      - name: Require a release from main
+        run: git merge-base --is-ancestor HEAD origin/main
 
-      - name: Install Python deps
-        run: pip install -r requirements.txt
+      - name: Download reviewed release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release download "$RELEASE_TAG" --pattern paper.pdf --pattern manifest.json --dir outputs
 
-      - name: Set up Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
-        with:
-          version: "1.9.37"
-
-      - name: Install TinyTeX
-        run: quarto install tinytex --no-prompt --update-path
-
-      - name: Cache simulation outputs
-        uses: actions/cache@v5
-        with:
-          path: |
-            analysis/out
-            analysis/fig
-          key: sims-${{ hashFiles('analysis/run_all.py', 'requirements.txt', 'paper.qmd', 'projects/rpgf/design.md', 'projects/truth-post/blueprint.md') }}
-
-      - name: Render PDF
-        run: make render-pdf
-
-      - name: Verify PDF
-        run: test -f outputs/paper.pdf && ls -l outputs/paper.pdf
+      - name: Verify release binding and publication checks
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          python3 -m unittest discover -s scripts -p test_zenodo_release.py
+          python3 .github/scripts/publish_to_zenodo.py --verify-only
 
       - name: Publish to Zenodo
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_PUBLISHED_AT: ${{ github.event.release.published_at }}
         run: python3 .github/scripts/publish_to_zenodo.py
