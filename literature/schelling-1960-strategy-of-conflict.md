@@ -25,7 +25,7 @@ Schelling's focal point theory is the theoretical foundation for both our mechan
 ### Relevance (coherence game)
 - Curators report policy conformity on [0,1].
 - Honest assessment is the intended focal point. A specific public policy can make that target salient, but participants may coordinate on other reports.
-- Salience does not establish truthful best responses or equilibrium selection. [Claim 3 in the paper](../paper.qmd#curator-voting-strategy) gives a profitable unilateral deviation under permitted reward parameters.
+- Salience does not establish truthful best responses or equilibrium selection. [Claim 3 in the paper](../paper.qmd#curator-voting-strategy) gives a unilateral report that increases the single-round reward under permitted parameters. Its net return after appeal settlement remains unresolved.
 
 ### Why policy specificity matters
 Policy specificity makes policy-faithful assessment easier to define. Vague policies leave competing interpretations, but a precise policy alone does not make honest reporting an equilibrium. The full reward, penalty and appeal rules determine best responses.

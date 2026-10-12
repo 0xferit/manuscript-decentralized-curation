@@ -17,7 +17,7 @@ Provides a formal framework for measuring the cost of attacks on cryptoeconomic 
 The framework supplies a possible metric for future analysis of our mechanisms. The manuscript does not establish a common griefing-factor bound across disputes and relevance attacks.
 
 - **DDR disputes**: a griefing calculation must distinguish expected attacker cost from expected victim loss and include the specified fees, payout rules and adjudication error. A cost-to-harm ratio would be the inverse of GF as defined above.
-- **Coherence game**: the paper reports relevance error and stake trajectories under specified collusion strategies. Its observed degradation range is not a measured GF=1 crossing or a security boundary; [Claim 3](../paper.qmd#curator-voting-strategy) also gives a profitable unilateral deviation without a colluding coalition.
+- **Coherence game**: the paper reports relevance error and stake trajectories under specified collusion strategies. Its observed degradation range is not a measured GF=1 crossing or a security boundary; [Claim 3](../paper.qmd#curator-voting-strategy) also gives a unilateral report that increases the single-round reward without a colluding coalition. Its net return after appeal settlement remains unresolved.
 
 ## Key takeaways
 

@@ -18,7 +18,7 @@ BTS is an alternative approach to truthful elicitation that we considered and im
 
 - **Why not BTS for accuracy?**: our accuracy dimension has ground truth (or at least an evidence standard). BTS is designed for settings without ground truth. Using BTS for factual claims would be over-engineered: binary dispute resolution is simpler and exploits the existence of evidence.
 - **Why not BTS for relevance?**: the coherence game asks for a single policy-conformity score rather than an additional prediction of others’ answers. Its public policy is intended to supply a focal point. This simplifies reporting but does not establish that prediction elicitation is unnecessary for truthful incentives.
-- **Theoretical positioning**: BTS and peer prediction (Miller 2005) provide related approaches to truthful elicitation under their respective assumptions. Our coherence game pursues a similar aim but does not inherit their guarantees; the paper’s [Claim 3](../paper.qmd#curator-voting-strategy) demonstrates a profitable deviation under permitted settings.
+- **Theoretical positioning**: BTS and peer prediction (Miller 2005) provide related approaches to truthful elicitation under their respective assumptions. Our coherence game pursues a similar aim but does not inherit their guarantees; the paper’s [Claim 3](../paper.qmd#curator-voting-strategy) demonstrates a unilateral report that increases the single-round reward under permitted settings. Its net return after appeal settlement remains unresolved.
 
 ## Limitations
 
