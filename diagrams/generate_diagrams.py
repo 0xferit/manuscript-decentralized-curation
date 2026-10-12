@@ -383,7 +383,7 @@ def fig4_relevance_round(out):
         ('7', r'Distance-based slashing when $\sigma \geq \varepsilon_\sigma$:'
               '\n'
               r'$p_i = \min(1, \max(0, (|v_i - \mu| / \sigma - K) / K))$'),
-        ('8', 'Appeal to a larger committee\nat escalating stakes'),
+        ('8', 'Publicly crowdfund an appeal\nUnmatched: win; matched: larger jury'),
     ]
 
     cx = 4.3
@@ -774,7 +774,7 @@ def fig8_pool_economics(out):
     # DDR outcomes: two annotations
     ax.text(ddrx, ddry - H / 2 - 0.45,
             'On debunk: bond to challenger\n'
-            'On fail: counter-stake returned',
+            'On fail: counter-stake to author + pool',
             fontsize=7.8, fontstyle='italic', color=C['text'],
             ha='center', va='top',
             bbox=dict(boxstyle='round,pad=0.2', fc=C['L2'],
@@ -782,7 +782,7 @@ def fig8_pool_economics(out):
 
     # Budget depletion note
     ax.text(rbx, rby - 1.0 - 0.6,
-            'If budget depletes, rounds pause;\n'
+            'If budget depletes, ordinary rounds pause;\n'
             'canonical record stays challengeable',
             fontsize=7.8, fontstyle='italic', color=C['accent'],
             ha='center', va='top')

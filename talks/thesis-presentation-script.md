@@ -110,7 +110,7 @@ Relevance is different. Relevance is not well served by a binary yes-or-no proce
 
 So for relevance I use a policy-guided coherence game. Curators stake into a pool, are drafted into rounds, and independently rate how strongly a claim conforms to the pool’s curation policy. Reports outside the coherence band can be slashed when dispersion meets the floor. Coherent participants are rewarded.
 
-Under the tested reporting strategies, the simulations show increasing relevance distortion as colluding stake grows. They do not establish a safe collusion threshold. The paper also demonstrates a profitable unilateral report that adds artificial dispersion without a colluding coalition. Truthful incentive compatibility remains unresolved.
+Under the tested reporting strategies, the simulations show increasing relevance distortion as colluding stake grows. They do not establish a safe collusion threshold. The paper also demonstrates a unilateral report that increases the single-round reward by adding artificial dispersion without a colluding coalition. Its net return after appeal settlement remains unresolved. Truthful incentive compatibility remains unresolved.
 
 This is where Schelling-style reasoning becomes important. A public policy is intended to make informed relevance assessment a focal point. Whether the full reward and appeal rules make disciplined judgment the best strategy requires further analysis.
 
