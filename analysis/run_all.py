@@ -2888,7 +2888,7 @@ def run_e4b(params: E4bParams, executor: ProcessPoolExecutor) -> None:
     ax1.set_xlabel("Reputation decay rate δ")
     ax1.set_ylabel("Rounds above median committee weight")
     ax1.set_title(
-        f"E4b: Single high-reputation attacker retention ({params.rounds} rounds, N={params.n_seeds} seeds)"
+        f"E4b: Single high-reputation attacker retention\n({params.rounds} rounds, N={params.n_seeds} seeds)"
     )
     ax1.legend(frameon=False, fontsize=9)
 
@@ -2897,7 +2897,7 @@ def run_e4b(params: E4bParams, executor: ProcessPoolExecutor) -> None:
     ax2.set_xticklabels(tick_labels)
     ax2.set_xlabel("Reputation decay rate δ")
     ax2.set_ylabel("Mean signal shift vs honest-only committee")
-    ax2.set_title("E4b: Directional distortion under biased strategic voting")
+    ax2.set_title("E4b: Directional distortion\nunder biased strategic voting")
 
     plt.tight_layout()
     _save_figure_variants(plt.gcf(), FIG_DIR / "e4b_reputation_attack.png", dpi=200)
