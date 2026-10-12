@@ -1,6 +1,8 @@
 ---
 title: "Retroactive Public Good Funding: A Curation Framework Instantiation"
-author: Ferit Tunçer
+author:
+  - name: Ferit Tunçer
+    orcid: "0009-0004-1449-9348"
 date-modified: 2026-03-09T22:00:00
 ---
 

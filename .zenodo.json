@@ -4,7 +4,8 @@
   "title": "Decentralized Curation: Trustless Transformation of Information into Knowledge",
   "creators": [
     {
-      "name": "Tunçer, Ferit"
+      "name": "Tunçer, Ferit",
+      "orcid": "0009-0004-1449-9348"
     }
   ],
   "description": "This preprint investigates whether decentralized curation games can make agents' pursuit of private gain produce public benefit. It proposes a framework for rewarding the production, assessment, and correction of information, instantiated in Truth Post, a news protocol separating challenge-based accuracy assessment from policy-relative relevance scoring. Conditional calculations and simulations examine selected mechanisms under stated assumptions and prescribed strategies. The analysis identifies a unilateral reporting deviation that increases the single-round reward under permitted parameters; its return after appeal settlement remains unresolved, and the analysis does not establish truthful best responses or beneficial public outcomes. A partial 2023 deployment of the accuracy layer informs practical design constraints without validating the integrated protocol. Whether strategically chosen behavior improves individual and collective decisions, and how closely it could approach the best attainable public outcome, remain open questions.",

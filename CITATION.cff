@@ -6,6 +6,7 @@ authors:
   - given-names: Ferit
     family-names: Tunçer
     email: ferit@cryptolab.net
+    orcid: "https://orcid.org/0009-0004-1449-9348"
 repository-code: "https://github.com/0xferit/manuscript-decentralized-curation"
 url: "https://github.com/0xferit/manuscript-decentralized-curation"
 keywords:
@@ -29,6 +30,7 @@ preferred-citation:
     - given-names: Ferit
       family-names: Tunçer
       email: ferit@cryptolab.net
+      orcid: "https://orcid.org/0009-0004-1449-9348"
   year: 2026
   doi: 10.5281/zenodo.20543760
   url: "https://github.com/0xferit/manuscript-decentralized-curation"
