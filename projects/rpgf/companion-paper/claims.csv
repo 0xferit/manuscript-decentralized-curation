@@ -2,7 +2,7 @@ claim_id,section,claim_kind,claim_text_sha256,evidence_ids,verification_status,u
 C048,Abstract,factual,930d48352104345c07c8de764c6600cd978ddafda02a3638d8c9792174f3d8a9,E001;E002;E003,unverified,not_estimated,not_applicable
 C001,1. From a funding decision to a curation problem,factual,32d94b7d2bbea47c2e249043957f7d81db755a290ac18ac1868ed03dc27f9da0,E001,unverified,not_estimated,not_applicable
 C002,1. From a funding decision to a curation problem,factual,206ab5fcc3babbf90abd761fe51e31810ee134332cc02f881e4ef8509ac14742,E003;E005,unverified,not_estimated,not_applicable
-C003,1. From a funding decision to a curation problem,factual,60ce7282c744287d8977d915c48e9f454589821a0f1e34ac56604218baae3e67,E001;E003,unverified,not_estimated,not_applicable
+C003,1. From a funding decision to a curation problem,factual,7b7f53ea90d6f06cf04f99d684da8ee100c3a40ede2ead732b44b66785cc30df,E001;E003,unverified,not_estimated,not_applicable
 C004,1. From a funding decision to a curation problem,factual,61c9005e7733f7a6faf41539e3cb971bdd226a1786ac2d193717e9a699229378,E001;E002;E003;E010,unverified,not_estimated,not_applicable
 C005,2. What the application must configure,factual,b2afe526b6bc75f20cb8ed218245d43e0a79c39f7a139d0e93d1d8fa9e75c254,E001;E003,unverified,not_estimated,not_applicable
 C006,2. What the application must configure,factual,27856e0ecf21454a4d4e877f134af9678519efcda0a8e16ea70c4ce1eb38e545,E001;E002;E003;E005;E010,unverified,not_estimated,not_applicable
@@ -16,14 +16,14 @@ C051,3. Publish contributions as contestable nominations,factual,c6e9c94ab98de28
 C013,3. Publish contributions as contestable nominations,factual,e3dfecd164dcccf25b69e79ecf15212af590d5081d368f8f59df81c539d728ea,E001;E002,unverified,not_estimated,not_applicable
 C014,3. Publish contributions as contestable nominations,factual,70e1589f7edd455564e8d6cf855869c589301f73ecc4462af665fc5bf3173175,E002;E003,unverified,not_estimated,not_applicable
 C015,3. Publish contributions as contestable nominations,factual,3a5e32db6ecc63e2bb31ba0c7c46f35e743a4ceb7c2a86b2e34a3a5a3ca591fe,E001;E003,unverified,not_estimated,not_applicable
-C016,"4. Pay for relevance assessment without confusing honesty, care and competence",factual,4893a163762bc276893b6dc3dc655cb5ee7dd2c0d1931ca943778235856f7ee6,E002,unverified,not_estimated,not_applicable
-C017,"4. Pay for relevance assessment without confusing honesty, care and competence",factual,f0931b7f992b9b6f3abefb583c4dadb038ab82a9f1561dc051476594c2f414e7,E002;E003,unverified,not_estimated,not_applicable
-C018,"4. Pay for relevance assessment without confusing honesty, care and competence",factual,58f7d3b17e4a663ecddb90d818ec4bd704de46a382a355541eb121cda660ea05,E002;E003,unverified,not_estimated,not_applicable
-C046,"4. Pay for relevance assessment without confusing honesty, care and competence",numeric,8f58b9f71c70e0104bedb49feed2ef6613f96cac73ecc927fb2e0657d3c91f8c,E002;E003,unverified,not_estimated,descriptive
-C019,"4. Pay for relevance assessment without confusing honesty, care and competence",interpretive,3a4aab28a35104517349089dde7b2861d3236bb2daf5a9fa6b7f7ddfc44dd3e7,E002;E003,unverified,not_estimated,not_applicable
-C020,"4. Pay for relevance assessment without confusing honesty, care and competence",factual,21c73a868a69e217071be117d4a2bde30c852ea619c1a5af5de2ba7386fee65a,E001;E002;E006,unverified,not_estimated,not_applicable
-C021,"4. Pay for relevance assessment without confusing honesty, care and competence",interpretive,6025e15374843dfc98f39f403828e6e20e3750e185078d1a6bcc7b96885cfe36,E007,unverified,not_estimated,not_applicable
-C022,"4. Pay for relevance assessment without confusing honesty, care and competence",interpretive,049467c6a04b60a95ed4d64bef83fc98b08b8490abd8e5030d4f618b5c64798c,E001;E002;E003,unverified,not_estimated,not_applicable
+C016,"4. Incentives for honesty, care and competence",factual,4893a163762bc276893b6dc3dc655cb5ee7dd2c0d1931ca943778235856f7ee6,E002,unverified,not_estimated,not_applicable
+C017,"4. Incentives for honesty, care and competence",factual,f0931b7f992b9b6f3abefb583c4dadb038ab82a9f1561dc051476594c2f414e7,E002;E003,unverified,not_estimated,not_applicable
+C018,"4. Incentives for honesty, care and competence",factual,58f7d3b17e4a663ecddb90d818ec4bd704de46a382a355541eb121cda660ea05,E002;E003,unverified,not_estimated,not_applicable
+C046,"4. Incentives for honesty, care and competence",numeric,8f58b9f71c70e0104bedb49feed2ef6613f96cac73ecc927fb2e0657d3c91f8c,E002;E003,unverified,not_estimated,descriptive
+C019,"4. Incentives for honesty, care and competence",interpretive,3a4aab28a35104517349089dde7b2861d3236bb2daf5a9fa6b7f7ddfc44dd3e7,E002;E003,unverified,not_estimated,not_applicable
+C020,"4. Incentives for honesty, care and competence",factual,21c73a868a69e217071be117d4a2bde30c852ea619c1a5af5de2ba7386fee65a,E001;E002;E006,unverified,not_estimated,not_applicable
+C021,"4. Incentives for honesty, care and competence",interpretive,6025e15374843dfc98f39f403828e6e20e3750e185078d1a6bcc7b96885cfe36,E007,unverified,not_estimated,not_applicable
+C022,"4. Incentives for honesty, care and competence",interpretive,049467c6a04b60a95ed4d64bef83fc98b08b8490abd8e5030d4f618b5c64798c,E001;E002;E003,unverified,not_estimated,not_applicable
 C023,5. Separate appeals from reassessment,factual,732bdd6dcb9785f89b88317d6ba94f445ec6fdcf881524ef52c33a8e962cd2f0,E002;E003,unverified,not_estimated,not_applicable
 C024,5. Separate appeals from reassessment,factual,4c23aad03886511b309148b65ea86654ffe275a1d6ad71a2d1f42780db0821d4,E002;E003,unverified,not_estimated,not_applicable
 C025,5. Separate appeals from reassessment,factual,ab4b09a5694d5e39718bd7abedfff295cbfb6a4631bc936ca220bfe0385e5b23,E002;E003,unverified,not_estimated,not_applicable
@@ -31,7 +31,7 @@ C026,5. Separate appeals from reassessment,factual,31d8f913304c720bc7d85a483c080
 C027,5. Separate appeals from reassessment,factual,2dfa1fbc9ea2fac58868f937480c945a2742dab87b4367ce6cc08bd367246f18,E002;E003,unverified,not_estimated,not_applicable
 C047,5. Separate appeals from reassessment,factual,db1d451a62ab891028bbc3e3eafc51b74068f94563bfd51875ce1cda70d881c6,E002;E003,unverified,not_estimated,not_applicable
 C028,"6. Turn curated weights into funding, when funding exists",factual,9e4486384cfe0438e966edd7c0321604f0ca5462e436eb39460e8477f5eaca76,E003,unverified,not_estimated,not_applicable
-C049,"6. Turn curated weights into funding, when funding exists",factual,152092e6461d2c02e3f01b51322d0cd62e5a89cba2f1173f06868fc1bc44a774,E003,unverified,not_estimated,not_applicable
+C049,"6. Turn curated weights into funding, when funding exists",factual,cf2f9bf3c960c0bc14e02abb4e516335c96f09739bb9dd888ebe688e99ebef66,E003,unverified,not_estimated,not_applicable
 C029,"6. Turn curated weights into funding, when funding exists",numeric,46689d3a87322c7a736b310e680a5eb5a7fe6923dda5cbe3b64e9f2745366bf6,E002;E003,unverified,not_estimated,descriptive
 C030,"6. Turn curated weights into funding, when funding exists",numeric,b68d6f5f9d74caaa37efb8b19e800c852a168ca21bceab7dbfa4fa8dedbfc009,E002;E003,unverified,not_estimated,descriptive
 C031,"6. Turn curated weights into funding, when funding exists",factual,263dab98496ca9d18d5613b27fe0ccc90dee024ecb59a68f8b5d62020931f016,E003;E010,unverified,not_estimated,not_applicable

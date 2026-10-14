@@ -70,9 +70,9 @@ def _set_light_figure_theme() -> None:
         'axes.facecolor':     palette["surface"],
         'axes.edgecolor':     _BD,
         'axes.labelcolor':    _TX,
-        'axes.labelsize':     11,
+        'axes.labelsize':     13,
         'axes.labelpad':      7,
-        'axes.titlesize':     12,
+        'axes.titlesize':     14,
         'axes.titleweight':   'semibold',
         'axes.titlecolor':    _TX,
         'axes.titlepad':      10,
@@ -85,10 +85,10 @@ def _set_light_figure_theme() -> None:
         'grid.linewidth':     0.9,
         'xtick.color':        _MUT,
         'ytick.color':        _MUT,
-        'xtick.labelsize':    10,
-        'ytick.labelsize':    10,
+        'xtick.labelsize':    12,
+        'ytick.labelsize':    12,
         'legend.frameon':     False,
-        'legend.fontsize':    10,
+        'legend.fontsize':    12,
         'lines.linewidth':    2.2,
         'lines.color':        _AC,
         'patch.edgecolor':    _AC,
@@ -490,7 +490,8 @@ def run_e1(params: E1Params) -> None:
     plt.xlabel("Per-juror correctness p")
     plt.ylabel("Challenger EV on debunking challenge\n(normalized by bounty)")
     plt.title(
-        f"E1: Debunking-challenge EV vs juror accuracy ({params.n_seeds} seeds, 95% CI)"
+        f"E1: Challenger returns ({params.n_seeds} seeds, 95% CI)\n"
+        "S/B below 0.25 is counterfactual"
     )
     plt.legend(frameon=False)
     plt.tight_layout()
@@ -577,6 +578,14 @@ def run_e1_detection_sensitivity(params: E1SensitivityParams) -> None:
 
 @dataclass(frozen=True)
 class E1AdvParams:
+    """Repeated-claim survival scenario with retained historical balance fields.
+
+    The exported adversary_balance fields are not protocol-consistent payoffs:
+    they charge challenger costs to the author, assign the full counter-stake
+    to the author, and omit external benefits. Only survival is reported in
+    the manuscript and figure.
+    """
+
     n_jurors: int = 5
     bounty: float = 100.0
     stake_ratio: float = 0.25
@@ -689,7 +698,7 @@ def run_e1_adversarial(params: E1AdvParams, executor: ProcessPoolExecutor) -> No
         linewidth=0.8,
         label="Unchallenged rate",
     )
-    ax1.legend(frameon=False, fontsize=9)
+    ax1.legend(frameon=False, fontsize=11)
 
     plt.tight_layout()
     _save_figure_variants(plt.gcf(), FIG_DIR / "e1_adversarial.png", dpi=200)
@@ -1078,7 +1087,7 @@ def run_e2_adversarial(params: E2AdvParams, executor: ProcessPoolExecutor) -> No
         f"E2-Adv: Colluder stake share\nafter repeated rounds (N={params.n_seeds} seeds)"
     )
     ax2.set_ylim(0.0, max(0.4, df["initial_colluder_stake_share"].max() * 1.2))
-    ax2.legend(frameon=False, fontsize=9)
+    ax2.legend(frameon=False, fontsize=11)
 
     plt.tight_layout()
     _save_figure_variants(plt.gcf(), FIG_DIR / "e2_adversarial.png", dpi=200)
@@ -1173,8 +1182,7 @@ def _relevance_core_prime(
     colluder_noise_factor: float,
     trojan_delay: int,
 ):
-    """E2' core: one seed run of the final relevance mechanism from
-    blueprint.md §Flow F.
+    """E2' core: one seed run of the historical single-balance scenario.
 
     Per round: (1) draw-and-lock seats with `_draft_seats_njit` so
     w_i = n_i * L; (2) every drafted curator may abstain based on a
@@ -1182,8 +1190,8 @@ def _relevance_core_prime(
     ends the round when too many do; (3) graduated slashing at
     p_i = min(1, max(0, (|v_i - mu|/sigma - K) / K)) applies to
     revealers (skipped when sigma < epsilon_sigma); (4) abstainer w_i
-    is burned from the per-round accounting per blueprint step 14
-    (sim does not model the cross-round pool reward budget).
+    is removed from the modeled curator balances (the simulation does
+    not model a separate pool budget).
 
     Ambiguity is a sim-only extension (the blueprint has no third
     verdict): a hidden Bernoulli(ambig_prob) flag drives a noisy
@@ -1196,15 +1204,9 @@ def _relevance_core_prime(
     cancelled_rounds = 0
     ambiguous_cancelled_rounds = 0
     selection_counts = np.zeros(n_curators, dtype=np.int64)
-    # Blueprint step 13: sigma_ref = max(epsilon_sigma, ema_sigma); ema seeded
-    # at 0 so sigma_ref bootstraps to epsilon_sigma, then adapts. Per-seed
-    # reset keeps seeds independent.
     ema_sigma = 0.0
 
     for round_idx in range(rounds):
-        # Blueprint Flow F step 6: cancel before drafting when the eligible
-        # curator set (stakes[i] >= L) is below the reveal quorum, so no
-        # seats are locked and no non-participation slashes apply.
         eligible_curators = 0
         for i in range(n_curators):
             if stakes[i] >= seat_size_L:
@@ -1215,10 +1217,6 @@ def _relevance_core_prime(
 
         drafted = _draft_seats_njit(rng, stakes, seat_size_L, target_seats)
         n_drafted = drafted.shape[0]
-        # Blueprint Flow F step 5: proceed with n = min(target, sum(d_i)).
-        # The step-6 pre-draft guard above handles the underpopulated case,
-        # so zero drafted here only means zero backing tickets (e.g., every
-        # eligible curator is below L after rounding).
         if n_drafted == 0:
             cancelled_rounds += 1
             continue
@@ -1343,10 +1341,6 @@ def _relevance_core_prime(
                     p = raw
                 p_i_arr[i] = p
 
-        # Abstainer w_i stays burned from per-round accounting (blueprint
-        # step 14 routes it to the pool reward budget, which this sim does
-        # not model as a separate bucket); it is intentionally NOT added
-        # to delta_sum, which is reserved for the coherent distribution.
         sigma_ref = epsilon_sigma if ema_sigma < epsilon_sigma else ema_sigma
         ratio = sigma / sigma_ref
         if ratio > 1.0:
@@ -1390,7 +1384,7 @@ def _relevance_core_prime(
 
 @dataclass(frozen=True)
 class E2PrimeParams:
-    """Final relevance mechanism (draw-and-lock + graduated slashing + ambiguity abstention)."""
+    """Selected rules with historical single-balance rewards and ambiguity abstention."""
 
     n_curators: int = 200
     target_seats: int = 15
@@ -1539,7 +1533,7 @@ def run_e2_prime(params: E2PrimeParams, executor: ProcessPoolExecutor) -> None:
     plt.xlabel("Fraction competent curators")
     plt.ylabel("Mean |mu - r|")
     plt.title(
-        f"E2': Final-mechanism relevance error vs competence and K (N={params.n_seeds} seeds)"
+        f"E2': Relevance error under selected rules (N={params.n_seeds} seeds)"
     )
     plt.legend(frameon=False, ncol=2)
     plt.tight_layout()
@@ -1566,7 +1560,7 @@ def run_e2_prime(params: E2PrimeParams, executor: ProcessPoolExecutor) -> None:
     plt.xlabel("Initial fraction competent curators")
     plt.ylabel("Final competent stake share")
     plt.title(
-        f"E2': Competence filter under final mechanism (K=1.25, N={params.n_seeds} seeds)"
+        f"E2': Stake redistribution under selected rules (K=1.25, N={params.n_seeds} seeds)"
     )
     plt.ylim(0.0, 1.0)
     plt.tight_layout()
@@ -1576,7 +1570,7 @@ def run_e2_prime(params: E2PrimeParams, executor: ProcessPoolExecutor) -> None:
 
 @dataclass(frozen=True)
 class E2PrimeAdvParams:
-    """Adversarial sweep for the final relevance mechanism: characterize phi*."""
+    """Collusion sweep under selected rules; does not establish a safe threshold."""
 
     n_curators: int = 200
     target_seats: int = 15
@@ -1719,7 +1713,7 @@ def run_e2_prime_adversarial(
     ax1.set_xlabel("Fraction of colluding curators")
     ax1.set_ylabel("Mean |mu - r|")
     ax1.set_title(
-        f"E2'-Adv: Final-mechanism signal error\nunder collusion (K={params.K}, N={params.n_seeds} seeds)"
+        f"E2'-Adv: Signal error under selected rules\nwith collusion (K={params.K}, N={params.n_seeds} seeds)"
     )
 
     ax2.plot(
@@ -1747,10 +1741,10 @@ def run_e2_prime_adversarial(
     ax2.set_xlabel("Fraction of colluding curators")
     ax2.set_ylabel("Colluder stake share")
     ax2.set_title(
-        f"E2'-Adv: Colluder stake share\nunder final mechanism (N={params.n_seeds} seeds)"
+        f"E2'-Adv: Colluder stake share\nunder selected rules (N={params.n_seeds} seeds)"
     )
     ax2.set_ylim(0.0, max(0.4, df["initial_colluder_stake_share"].max() * 1.2))
-    ax2.legend(frameon=False, fontsize=9)
+    ax2.legend(frameon=False, fontsize=11)
 
     plt.tight_layout()
     _save_figure_variants(plt.gcf(), FIG_DIR / "e2_prime_adversarial.png", dpi=200)
@@ -1947,7 +1941,7 @@ def run_e2_prime_sigma_sweep(
     ax1.set_title(
         f"E2'-Adv σ sweep: signal error vs collusion\n(K={params.K}, N={params.n_seeds} seeds)"
     )
-    ax1.legend(frameon=False, fontsize=8)
+    ax1.legend(frameon=False, fontsize=11)
 
     ax2.set_xlabel("Fraction of colluding curators")
     ax2.set_ylabel("Colluder stake share")
@@ -1955,7 +1949,7 @@ def run_e2_prime_sigma_sweep(
         f"E2'-Adv σ sweep: colluder stake after {params.rounds} rounds\n(N={params.n_seeds} seeds)"
     )
     ax2.set_ylim(0.0, 0.4)
-    ax2.legend(frameon=False, fontsize=8)
+    ax2.legend(frameon=False, fontsize=11)
 
     plt.tight_layout()
     _save_figure_variants(fig, FIG_DIR / "e2_prime_sigma_sweep.png", dpi=200, bbox_inches=None)
@@ -2246,7 +2240,7 @@ def run_e3(params: E3Params) -> None:
     plt.xlabel("Fraction of non-falsifiable bad items")
     plt.ylabel("Bad-item retention after challenge")
     plt.title("E3: Closed-form scenario analysis for non-falsifiable challenges")
-    plt.legend(frameon=False, fontsize=8)
+    plt.legend(frameon=False, fontsize=11)
     plt.ylim(0.0, 1.0)
     plt.tight_layout()
     _save_figure_variants(plt.gcf(), FIG_DIR / "e3_nonfalsifiable.png", dpi=200)
@@ -2663,13 +2657,13 @@ def run_e4d(params: E4dParams) -> None:
 
     axes[0].set_xlabel("Attack rounds in Pool H")
     axes[0].set_ylabel("Mean attacker reputation in Pool H")
-    axes[0].set_title("Imported reputation persists without scoping")
-    axes[0].legend(frameon=False, fontsize=8)
+    axes[0].set_title("Imported reputation persists\nwithout scoping")
+    axes[0].legend(frameon=False, fontsize=11)
 
     axes[1].set_xlabel("Attack rounds in Pool H")
-    axes[1].set_ylabel("Mean attacker share of Pool H author reputation")
+    axes[1].set_ylabel("Mean attacker share of\nPool H author reputation")
     axes[1].set_ylim(0.0, 0.35)
-    axes[1].set_title("Reputation carryover as a share of the local stock")
+    axes[1].set_title("Reputation carryover as a\nshare of the local stock")
 
     fig.suptitle("E4d: Cross-domain author reputation scoping", y=1.02)
     fig.tight_layout()
@@ -2890,7 +2884,7 @@ def run_e4b(params: E4bParams, executor: ProcessPoolExecutor) -> None:
     ax1.set_title(
         f"E4b: Single high-reputation attacker retention\n({params.rounds} rounds, N={params.n_seeds} seeds)"
     )
-    ax1.legend(frameon=False, fontsize=9)
+    ax1.legend(frameon=False, fontsize=11)
 
     ax2.axhline(0.0, color=_TX, linewidth=0.8)
     ax2.set_xticks(x)
@@ -2969,7 +2963,7 @@ def write_eval_summary() -> None:
     e4b_biased = e4b[(e4b["rep_decay"] == 0.01) & (e4b["attacker_model"] == "bias_0.15")].iloc[0]
     e4d_point = e4d.iloc[0]
     summary = f"""\
-### Evaluation snapshot (representative points)
+## Evaluation snapshot (representative points)
 
 - **E1 (primary result):** Holding $p=0.80$ and $N={params_e1_sensitivity.n_jurors}$ fixed, single-window false-claim survival falls from **{e1_sensitivity_low["false_survival"]:.2f}** at $p_\\mathrm{{detect}}={e1_sensitivity_low["p_detect"]:.2f}$ down to **{e1_sensitivity_high["false_survival"]:.2f}** at $p_\\mathrm{{detect}}={e1_sensitivity_high["p_detect"]:.2f}$, and the deterrence threshold $B^*/V$ falls from **{e1_sensitivity_low["bond_threshold_multiplier"]:.1f}** down to **{e1_sensitivity_high["bond_threshold_multiplier"]:.1f}** over the same sweep. Intermediate points: survival is **{e1_sensitivity_010["false_survival"]:.2f}** at $p_\\mathrm{{detect}}={e1_sensitivity_010["p_detect"]:.2f}$ ($B^*/V={e1_sensitivity_010["bond_threshold_multiplier"]:.1f}$), **{e1_sensitivity_035["false_survival"]:.2f}** at $p_\\mathrm{{detect}}={e1_sensitivity_035["p_detect"]:.2f}$ ($B^*/V={e1_sensitivity_035["bond_threshold_multiplier"]:.1f}$), and **{e1_sensitivity_050["false_survival"]:.2f}** at $p_\\mathrm{{detect}}={e1_sensitivity_050["p_detect"]:.2f}$ ($B^*/V={e1_sensitivity_050["bond_threshold_multiplier"]:.1f}$).
 - **E1 (challenger economics, illustrative anchor $p_\\mathrm{{detect}}={params_e1.p_detect:.2f}$):** At $p=0.80$, $N={params_e1.n_jurors}$, $S/B=0.25$, challenger EV on a debunking challenge is **{e1_point["ev_false_mean"] / params_e1.bounty:.3f} $\\pm$ {e1_point["ev_false_ci95"] / params_e1.bounty:.3f}\\times bounty** (95% CI, $N={int(e1_point["n_seeds"])}$ seeds) after tax and DDR fees, and simulated one-window survival at this anchor is **{e1_point["false_survival_mean"]:.3f} $\\pm$ {e1_point["false_survival_ci95"]:.3f}**.

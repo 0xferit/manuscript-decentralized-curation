@@ -8,9 +8,20 @@ version: 0.1.0
 bibliography: ../../../references.bib
 lang: en
 status: preprint
+papersize: a4
+fontsize: 11pt
+geometry: margin=24mm
+mainfont: Georgia
+colorlinks: true
+linkcolor: black
+urlcolor: blue
+citecolor: black
+header-includes:
+  - '\clubpenalty=10000'
+  - '\widowpenalty=10000'
 ---
 
-> **Preprint, version 0.1.0.** This paper presents a proposed design and evaluation agenda, not a completed experiment or a validated deployment. The published parent paper is cited separately from later design decisions.
+> **Working revision of preprint version 0.1.0.** This source includes unpublished review corrections. It presents a proposed design and evaluation agenda, not a completed experiment or a validated deployment. The published parent paper is cited separately from later design decisions.
 
 ## Abstract
 
@@ -43,7 +54,7 @@ A **pool** is a curation context with a stated purpose, rules, participant balan
 The parent framework supplies the decomposition and candidate mechanisms. The public-goods application must supply the following domain choices. These must be readable before anyone commits capital or effort.
 
 | Configuration | Question the application must answer |
-| --- | --- |
+| ------------------------- | --------------------------------------------------------------------------- |
 | Goal and scope | Which contribution, beneficiaries and time horizon are being assessed? |
 | Nomination template | What work is nominated, which claims are testable and which evidence is required? |
 | Attribution | How are shared work, overlapping nominations and beneficiary identity handled? |
@@ -95,7 +106,7 @@ A factual challenge may begin while the nomination is active, including before i
 
 This design makes correction possible, not inevitable. A nomination that nobody successfully challenges has survived the process so far. That is different from independent confirmation that all its claims are true. <!-- [claim:C015] [evidence:E001,E003] -->
 
-## 4. Pay for relevance assessment without confusing honesty, care and competence
+## 4. Incentives for honesty, care and competence
 
 Accuracy does not settle importance. Two contributions can both be real and still serve a pool's goal differently. Relevance jurors apply the published rubric to the nominated work and evidence. The selected mechanism draws seats from participants who commit a dedicated utility token, locks the capital backing those seats and collects private score commitments before revelation. Several seats held by one participant increase that participant's weight; they do not create several independent minds. <!-- [claim:C016] [evidence:E002] -->
 
@@ -108,7 +119,7 @@ Quorum requires timely valid reveals representing at least 80% of the originally
 ### Three requirements, three different questions
 
 | Requirement | Meaning here | What the mechanism must make worthwhile |
-| --- | --- | --- |
+| -------------------- | ---------------------------------------- | ---------------------------------------- |
 | Honesty | Reporting one's actual assessment rather than deliberately misrepresenting it | Applying the public rubric sincerely instead of coordinating a convenient answer |
 | Care | Exerting the effort needed to examine the available evidence rigorously | Doing useful assessment work rather than collecting fees for a guess |
 | Competence | Having the knowledge and ability to interpret the task and evidence | Entering tasks one can judge well and improving, specializing or leaving when one cannot |
@@ -141,9 +152,7 @@ Nomination closure and appeal settlement are also distinct. A previously funded 
 
 The curation output is a set of policy-relative weights. Producing that output requires resources for nomination, assessment and correction, but it does not require a budget already committed to beneficiaries. Keeping the **curation budget** separate from the **beneficiary budget** allows a funder to inspect an existing assessment or supply money later. It does not make curation costless. <!-- [claim:C028] [evidence:E003] -->
 
-Let \(r_i\) be nomination \(i\)'s adopted relevance score and \(a_i\) its requested relative-weight cap, both on the pool's common scale. The reference ongoing profile computes an effective weight \(w_i=\min(a_i,r_i)\). For the set \(E\) currently eligible for a particular allocation, define
-
-The total is \(W=\sum_{j\in E}w_j\). When \(W>0\), each eligible share is \(p_i=w_i/W\). <!-- [claim:C049] [evidence:E003] -->
+Let \(r_i\) be nomination \(i\)'s adopted relevance score and \(a_i\) its requested relative-weight cap, both on the pool's common scale. The reference ongoing profile computes an effective weight \(w_i=\min(a_i,r_i)\). For the set \(E\) currently eligible for a particular allocation, the total effective weight is \(W=\sum_{j\in E}w_j\). When \(W>0\), each eligible nomination \(i\in E\) receives share \(p_i=w_i/W\). <!-- [claim:C049] [evidence:E003] -->
 
 The shares sum to one. A beneficiary budget \(B\) allocates \(Bp_i\); a flow rate \(F\) implies an earning rate \(Fp_i\), while the eligibility set and weights remain in force. These formulas describe the reference profile rather than a universal requirement of Decentralized Curation. <!-- [claim:C029] [evidence:E002,E003] -->
 
@@ -158,7 +167,7 @@ Already-earned funding remains owed to the nomination's beneficiary, whether pai
 The application should display the following separately:
 
 | Quantity or event | Meaning |
-| --- | --- |
+| ----------------------------------- | ----------------------------------------------------------------- |
 | Adopted weight | The current assessment used when the relevant allocation conditions hold |
 | Prospective earning rate | A rate conditional on available funds, current weights and eligibility |
 | Earned balance | A recorded entitlement belonging to the beneficiary |
@@ -196,7 +205,7 @@ A deployment must bind the decided rules to concrete pool parameters, beneficiar
 The decisive question is not whether participants can submit scores. It is whether the incentives make them obtain and use evidence, report informative judgments and correct mistakes at a sustainable cost. The following agenda is proposed future work; no study results are reported here.
 
 | Failure mode | Why the design remains exposed | Evaluation that would inform the decision |
-| --- | --- | --- |
+| ------------------------- | ----------------------------------- | ---------------------------------------- |
 | Weak factual scrutiny | Investigating a claim may cost more than its expected reward | Measure detection, challenge entry, total costs and adjudication quality across claim types |
 | Shared but mistaken judgment | Coherent reports may reflect the same misconception | Compare reports with independently justified task-specific reference assessments and trace evidence use |
 | Paid guessing | Service fees may exceed expected losses from low-effort reporting | Estimate complete net returns under different effort choices and asset valuations |

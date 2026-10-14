@@ -4,7 +4,7 @@
 
 ## Core thesis
 
-When buyers cannot observe product quality before purchase, sellers of low-quality goods ("lemons") have a cost advantage over sellers of high-quality goods. The market price converges to a weighted average, which is below the value of high-quality goods. High-quality sellers exit because they cannot recover their costs. The market unravels: only lemons remain.
+When buyers cannot observe product quality before purchase, sellers of low-quality goods ("lemons") have a cost advantage over sellers of high-quality goods. The market price converges to a weighted average, which is below the value of high-quality goods. High-quality sellers exit because they cannot recover their costs. Under adverse-selection conditions, higher-quality trade can disappear and the market can shrink or unravel. This is a possible model outcome, not a universal prediction for every market.
 
 ## Key concepts
 
@@ -34,6 +34,6 @@ The "market statistic" is the curation signal. When the signal is pooled (engage
 
 ## Limitations relevant to us
 
-- Akerlof assumes a single quality dimension. Our framework decomposes quality into accuracy and relevance, which behave differently under information asymmetry. Accuracy is binary and globally verifiable; relevance is continuous and locally assessed. The adverse selection dynamic may operate differently on each dimension.
+- Akerlof assumes a single quality dimension. Our framework decomposes quality into accuracy and relevance, which behave differently under information asymmetry. The protocol gives binary procedural outcomes to scoped accuracy challenges and scalar policy-relative relevance assessments; neither is a general proof of truth or utility. The adverse selection dynamic may operate differently on each dimension.
 - Akerlof's solutions (guarantees, licensing) are centralized. He does not consider decentralized verification. Our contribution is precisely this extension.
 - The model assumes rational actors. Behavioral biases (confirmation bias, anchoring) can make consumers prefer low-quality information even when quality is observable, which is outside Akerlof's framework.

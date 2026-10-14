@@ -40,6 +40,23 @@ class PublishedNavigationTests(unittest.TestCase):
             capture_output=True, text=True, check=False,
         )
 
+    def test_ignores_dependency_and_build_documentation(self) -> None:
+        for directory in ('node_modules', 'dist', 'build', '.venv', 'venv'):
+            target = self.root / 'projects' / 'example' / directory / 'README.md'
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text('Maintained by @package-author.', encoding='utf-8')
+        result = self.check('')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('Repo invariants OK', result.stdout)
+
+    def test_keeps_project_document_citations_in_scope(self) -> None:
+        target = self.root / 'projects' / 'example' / 'docs' / 'building.md'
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text('A substantive claim [@missing-source].', encoding='utf-8')
+        result = self.check('')
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn('projects/example/docs/building.md: missing BibTeX entries for missing-source', result.stderr)
+
     def test_rejects_source_navigation_targets(self) -> None:
         for text, line in (
             ('[Blueprint](truth-post/blueprint/index.qmd#open-questions)', 1),
