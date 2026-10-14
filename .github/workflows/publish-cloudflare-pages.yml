@@ -20,10 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
           cache: "pip"
@@ -40,7 +40,7 @@ jobs:
           version: "1.9.37"
 
       - name: Cache simulation outputs
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         id: sim-cache
         with:
           path: |
@@ -61,7 +61,7 @@ jobs:
           quarto render --to html -M "date-modified:${LISBON_TIME}"
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: abfb18f38d5263b5da582e40ba6ae552
