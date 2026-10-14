@@ -1,18 +1,53 @@
 project:
-  type: default
+  type: website
   output-dir: outputs
   render:
     - "paper.qmd"
     - "truth-post/index.qmd"
     - "truth-post/blueprint/index.qmd"
+    - "truth-post/implementation/index.qmd"
     - "rpgf/index.qmd"
+    - "rpgf/companion/index.qmd"
     - "rpgf/design/index.qmd"
+
+website:
+  title: "Decentralized Curation"
+  site-url: https://manuscript-decentralized-curation.pages.dev
+  navbar:
+    search: true
+    right:
+      - icon: github
+        href: https://github.com/0xferit/manuscript-decentralized-curation
+        aria-label: Source repository
+  sidebar:
+    title: Documents
+    style: docked
+    collapse-level: 2
+    contents:
+      - href: paper.qmd
+        text: Foundational paper
+      - section: Public goods
+        href: rpgf/index.qmd
+        contents:
+          - href: rpgf/companion/index.qmd
+            text: Ongoing-funding companion
+          - href: rpgf/design/index.qmd
+            text: Fixed-round proposal
+      - section: Truth Post
+        href: truth-post/index.qmd
+        contents:
+          - href: truth-post/blueprint/index.qmd
+            text: Protocol blueprint
+          - href: truth-post/implementation/index.qmd
+            text: Deployment retrospective
+  page-navigation: true
 
 date-format: "MMMM D, YYYY [at] HH:mm"
 
 format:
   html:
     output-file: index
+    format-links: false
     embed-resources: false
     css: [fonts.css, layout.css]
     include-after-body: figure-theme-swap.html
@@ -26,7 +61,7 @@ format:
       margin-width: 220px
       gutter-width: 1.75rem
     toc: true
-    toc-location: left
+    toc-location: right
     toc-title: Contents
     toc-depth: 2
     toc-expand: 1

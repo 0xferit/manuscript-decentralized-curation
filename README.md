@@ -45,13 +45,17 @@ Every push to `main` triggers a [GitHub Actions workflow](.github/workflows/publ
 
 The workflow requires one GitHub Actions secret: `CLOUDFLARE_API_TOKEN`. The Cloudflare account ID is not sensitive and is hardcoded in the workflow file.
 
-Published routes:
+The shared document sidebar, search and previous/next links are generated from `_quarto.yml`. The article table of contents remains separate. Published routes form this reading tree:
 
-- `/`: thesis paper
-- `/truth-post/`: Truth Post project landing page
-- `/truth-post/blueprint/`: canonical Truth Post project paper
-- `/rpgf/`: RPGF project landing page
-- `/rpgf/design/`: canonical RPGF project paper
+- `/`: foundational paper
+- `/rpgf/`: public-goods overview
+  - `/rpgf/companion/`: ongoing-funding companion, as a working website revision
+  - `/rpgf/design/`: fixed-round reference proposal
+- `/truth-post/`: news-application overview
+  - `/truth-post/blueprint/`: protocol blueprint
+  - `/truth-post/implementation/`: historical deployment retrospective
+
+Website publication does not create a new preprint release. The companion's source and evidence links distinguish its current working text from the frozen published source.
 
 ## Repository layout
 

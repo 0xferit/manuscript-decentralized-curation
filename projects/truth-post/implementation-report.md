@@ -4,7 +4,7 @@
 
 Historical analysis: March 9, 2026. Usage snapshot: April 9, 2026. Source-link and repair verification: October 14, 2026.
 
-This retrospective describes the 2023 partial deployment and later observations of it. It is not the specification of the current proposed protocol. The [blueprint](blueprint.md) describes that proposal; the [foundational paper](../../paper.qmd) owns the shared mechanism rules.
+This retrospective describes the 2023 partial deployment and later observations of it. It is not the specification of the current proposed protocol. The [blueprint](https://manuscript-decentralized-curation.pages.dev/truth-post/blueprint/) describes that proposal; the [foundational paper](https://manuscript-decentralized-curation.pages.dev/) owns the shared mechanism rules.
 
 ## Summary
 
@@ -14,7 +14,7 @@ Truth Post is a partial implementation of the thesis design for decentralized ne
 
 ## Sources Reviewed
 
-- Thesis section on Truth Post in [foundational paper](../../paper.qmd)
+- Thesis section on Truth Post in the [foundational paper](https://manuscript-decentralized-curation.pages.dev/)
 - [Historical contract source](https://github.com/proveuswrong/contracts-tp/tree/9cf886989bad1dfd5df476c5607ef8d9b403a7dd): the last contract-file revision before the April 2026 repair; the observations below are reproducible in this source, without asserting deployed-bytecode identity.
 - [Webapp source](https://github.com/proveuswrong/webapp-tp/tree/38400a5a08a8d7a28aeb15dfcb599d8fef6ed7d9): March 9, 2026 snapshot used for the source permalinks below.
 - Observed site: [landing page](https://truthpost.news/) and [application route](https://truthpost.news/0x1/). Site availability statements below describe the dated observation, not a current uptime check.

@@ -170,9 +170,9 @@
       "pages": 10,
       "all_pages_visually_inspected": true,
       "typesetting": "pass; configuration, incentive, funding and evaluation tables fit without splitting rows; equations and bibliography are legible",
-      "source_sha256": "f2d28aaddde09f655d1b8c8a2089c6cbade2bac50c69c1160d621382a7db0787",
+      "source_sha256": "f0135f2cf63f141d558cde4e3a79d6d34e44249447c0d32e5920d3c229837d87",
       "bibliography_sha256": "0868ae527a57a023ab7a4976b1b60f9d32e8f203847bd6ed013960ebb7e14156",
-      "pdf_sha256": "0c1c04a59370f16878f5972e383cb671a114dbb4afb3797872abaa5b3f929224",
+      "pdf_sha256": "4cbad4c863e5d6c742d8ef7739e8af130a7b696381d06ef25bbcf4552739b443",
       "distinct_external_link_targets": 5,
       "link_checks": "Four targets return HTTP 200; the Miller DOI rejects a direct HEAD request with HTTP 403, while its publisher record is accessible and confirms the DOI",
       "frontmatter_render_matches_reviewed_pages": true
