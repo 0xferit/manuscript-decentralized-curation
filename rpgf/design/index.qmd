@@ -1,5 +1,8 @@
 ---
-title: "Retroactive Public Goods Funding: Fixed-Round Reference Proposal"
+title: "Earlier Public-Goods Design (Superseded)"
+search: false
+page-navigation: false
+sidebar: documents
 author:
   - name: Ferit Tunçer
     orcid: "0009-0004-1449-9348"
