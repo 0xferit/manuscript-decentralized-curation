@@ -1,0 +1,127 @@
+{
+  "date": "2026-10-14",
+  "scope": "Current-design fidelity revision of a working manuscript; no build, deployment, new simulation or empirical study performed",
+  "manuscript_word_count": 5084,
+  "claim_ids": 51,
+  "source_ids": 10,
+  "claim_ids_evidence_ids_and_text_hashes": "pass",
+  "bibliography_keys_and_citation_references": "pass",
+  "relative_document_links": "pass",
+  "exact_fraction_worked_example": "pass; all four stages and share sums checked",
+  "independent_read_only_source_review": "Completed current-decision audit and follow-up; all actionable source-fidelity corrections incorporated",
+  "source_manifest_validation": {
+    "status": "pass",
+    "warnings": [
+      "E009 is a local synthetic calculation and E010 is a conversation decision record; neither has an external identifier"
+    ]
+  },
+  "reference_identifier_check": {
+    "status": "pass",
+    "network_used": false,
+    "warnings": [
+      "E009 and E010 have no external identifiers to check"
+    ]
+  },
+  "full_claim_verification_audit": {
+    "status": "blocked_on_human_verification",
+    "issue_counts": {
+      "CLAIM_NOT_VERIFIED": 51,
+      "UNVERIFIED_CITATION_MARKER": 105,
+      "UNVERIFIED_CLAIM_EVIDENCE": 105
+    },
+    "other_errors": 0
+  },
+  "human_verification": {
+    "completed": false,
+    "verified_by": "",
+    "verified_on": ""
+  },
+  "submission_ready": false,
+  "source_inspection": "Public primary sources and local working sources inspected by agent; not a substitute for human verification",
+  "relocation": {
+    "destination": "projects/rpgf/companion-paper/",
+    "bibliography": "../../../references.bib",
+    "scholarly_citations": "mapped to the shared bibliography; three existing entries reused and the parent preprint added once",
+    "claim_text_hashes": "recomputed after citation-key and bibliography-link updates",
+    "external_source_links": "pinned to inspected workshop-repository commit",
+    "checks": {
+      "manuscript_prose_preserved": true,
+      "relative_links_resolve": 12,
+      "citation_keys_resolve": 4,
+      "claim_hashes_and_evidence_mappings": 50,
+      "worked_example_stages_unchanged_and_recomputed": 4,
+      "source_schema": "pass",
+      "reference_identifiers": "pass with existing synthetic-example warnings",
+      "repository_invariants": {
+        "status": "fail",
+        "exit_code": 2,
+        "unrelated_failures": 241,
+        "reason": "The development-checkout checker scanned bibliography-like strings in untracked dependency documentation."
+      }
+    },
+    "citation_keys": {
+      "E001": "tuncer2026decentralizedcuration",
+      "E006": "kleros2019shortpaper",
+      "E007": "miller2005peerprediction",
+      "E008": "kassis2026scientificagentskills"
+    }
+  },
+  "current_decision_review": {
+    "date": "2026-10-14",
+    "authority": "Explicit current author decisions take precedence over stale project documents; current master supplies shared rules",
+    "changes": [
+      "Removed profile ratification and batch coauthority",
+      "Removed universal materiality and bounded-period requirements",
+      "Stated inherited accuracy counter-stake, pinned-bond tax, payout split and sunk-fee rules",
+      "Made service-fee timing and post-exit continuation explicit",
+      "Preserved immediate claimability and separated pending-dispute new accrual",
+      "Moved settled design out of open questions; E004 is historical-only"
+    ],
+    "source_sha256": {
+      "E002": "d3720ae2611f147a5273f6a9b64e87c60a893621ff99731edba92c428c0c8172",
+      "E003": "ca74354d104da4f1eaff64d23f4efa6a3038f40a9c9a8658f2782c6d731908c8",
+      "E004": "760c73555074770cd17b51ab2b4812ece9f2fbe31256fb6a84d1c962521a5b15",
+      "E005": "18fd821d8d74c7e10ad688f1c006c8176f7a2f1d67257dddd2533a50b03aef6d"
+    },
+    "source_fingerprints_rechecked": "pass; inspected source bytes unchanged",
+    "claim_text_and_evidence_mapping": "pass; 51 claim hashes and 10 source IDs checked; no normative claim relies on E004",
+    "citations_and_relative_links": "pass; four shared bibliography keys resolve; no duplicate keys; all relative links resolve",
+    "worked_example": "pass; all four exact-fraction stages checked; source example file unchanged",
+    "repository_invariants": {
+      "status": "failed_preexisting",
+      "baseline_error_count": 241,
+      "final_error_count": 241,
+      "introduced_errors": 0,
+      "outputs_identical": true,
+      "origin": "Citation scanning of untracked dependency documentation in the development checkout",
+      "enforcement_modified": false
+    },
+    "genuinely_open": [
+      "New accrual eligibility during pending accuracy dispute",
+      "Concrete initial-holdback and admission configuration",
+      "Beneficiary controls and permitted amendment interfaces",
+      "External-arbitrator timeout handling and zero-weight fund storage",
+      "Remaining proof, numerical and transfer interfaces"
+    ],
+    "submission_ready": false
+  },
+  "publication_preparation": {
+    "version": "0.1.0",
+    "author_authorized": true,
+    "date": "2026-10-14",
+    "human_source_verification_completed": false,
+    "correction": "Score-to-weight proportionality applies only while the requested cap does not bind.",
+    "checks": {
+      "clean_staged_checkout_make_verify_full": "pass; repository invariants, deterministic analysis and all five HTML renders",
+      "repository_release_and_invariant_tests": "29 passed",
+      "claim_hashes": 51,
+      "exact_arithmetic_stages": 4,
+      "pdf": "11 A4 pages; every page visually inspected; author and citations checked; 8 links checked",
+      "pdf_sha256": "5aa502e709495445d9fb41951dc0e5e2291e0b7d21e77d13bbc64558564fc173",
+      "archival_source_excerpts": 15,
+      "source_evidence_sha256": "daa8d65d7126472b67e2d6cc17261c7a859117c72ed76e1939f9299f19c6bec7"
+    },
+    "human_publication_approval": "Explicit user request to commit, push and publish the companion paper as a preprint.",
+    "scientific_review_status": "Agent review complete; human source-verification flags remain unmodified."
+  }
+}

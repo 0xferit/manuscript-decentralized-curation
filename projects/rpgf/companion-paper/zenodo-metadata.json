@@ -1,0 +1,31 @@
+{
+  "upload_type": "publication",
+  "publication_type": "preprint",
+  "title": "Decentralized Curation for Public Goods: A blueprint for contestable assessment and funding",
+  "creators": [
+    {
+      "name": "Tunçer, Ferit",
+      "orcid": "0009-0004-1449-9348"
+    }
+  ],
+  "description": "Public-goods funding requires judgments about what was contributed, which claims are credible and how contributions serve a stated goal. Decentralized Curation proposes using private incentives to support useful information production, assessment and correction. This paper develops an application blueprint in which nominators publish bonded nominations, challengers can earn rewards for establishing false claims or other specified violations, and paid jurors assess relevance under a public policy. It separates factual contestability from policy-relative judgment, and both from the later use of assessment in funding. The main profile supports ongoing curation: relative weights can exist before a beneficiary budget arrives, while subsequent funding follows eligible weights and preserves amounts already earned. We distinguish honesty, care and competence, explain the intended role of private reports and coherence incentives, and identify the conditions under which repeated competition could select for informed judgment. A worked example connects nomination, assessment, appeal, reassessment and funding. The contribution is an application architecture and evaluation agenda. Truthful best responses, reliable competence selection, affordable correction and improved public outcomes remain questions for analysis and testing.",
+  "access_right": "open",
+  "license": "CC-BY-4.0",
+  "keywords": [
+    "decentralized curation",
+    "public goods",
+    "mechanism design",
+    "peer prediction",
+    "Schelling point",
+    "public-goods funding"
+  ],
+  "version": "0.1.0",
+  "publication_date": "2026-10-14",
+  "related_identifiers": [
+    {
+      "relation": "cites",
+      "identifier": "10.5281/zenodo.23313625",
+      "scheme": "doi"
+    }
+  ]
+}
