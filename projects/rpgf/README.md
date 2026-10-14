@@ -3,6 +3,7 @@
 RPGF is the retroactive public goods funding instantiation of the decentralized curation framework.
 
 - `design.md`: canonical RPGF mechanism-design document
+- [Public-goods companion paper](companion-paper/manuscript.md): preprint source, evidence records and checked example for the ongoing-funding application.
 
 Relation to the thesis:
 - The thesis frames RPGF as one downstream application of the broader curation methodology.
