@@ -7,6 +7,6 @@ format:
 
 Retroactive public goods funding (RPGF) is one application of the decentralized curation framework. This repository develops two distinct proposed funding lifecycles: an ongoing public-goods companion paper and a fixed-round reference proposal. Both apply the foundational paper's accuracy and relevance distinction to challengeable nominations and funding weights.
 
-- [Read the ongoing public-goods companion and its evidence records](https://github.com/0xferit/manuscript-decentralized-curation/tree/main/projects/rpgf/companion-paper)
+- [Read the ongoing public-goods companion](./companion/)
 - [Read the fixed-round reference proposal](./design/)
 - [Back to the thesis paper](../)

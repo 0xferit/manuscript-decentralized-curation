@@ -32,7 +32,7 @@ This file is the canonical agent-facing guidance for the repository. `CLAUDE.md`
 ### Workflow expectations
 
 - Keep wording unchanged when asked to do “formatting only” (only add Markdown structure/whitespace).
-- Identify companion working corrections as unpublished; preserve its historical source excerpts, publication metadata and verification records.
+- Distinguish companion working website corrections from the deposited preprint; preserve its historical source excerpts, publication metadata and verification records.
 - If you cut a release, follow the “Release procedure (hash-versioned)” in `README.md`.
 - Do not assume “today’s date” inside the manuscript; verify if a claim depends on currentness.
 - Prefer the repo task entrypoints over ad hoc commands: `make render-html`, `make render`, `make verify-full`, and `make check-invariants` encode the required prerequisites and guardrails.
@@ -52,7 +52,7 @@ This file is the canonical agent-facing guidance for the repository. `CLAUDE.md`
 
 - `projects/truth-post/` and `projects/rpgf/` are standalone application document areas. The ongoing public-goods companion and fixed-round RPGF proposal are distinct designs; neither silently overrides the shared rules in `paper.qmd`.
 - They are canonical for their respective project designs.
-- Published project routes are served through root-level Quarto wrappers at `/truth-post/`, `/truth-post/blueprint/`, `/rpgf/`, and `/rpgf/design/`.
+- Published project routes are served through root-level Quarto wrappers, including the companion and historical retrospective. `_quarto.yml` owns their navigation tree; keep route wrappers as includes of canonical project content.
 - Shared diagrams, simulations, and bibliography remain at the repo root unless explicitly reorganized later.
 
 ### Writing constraints (default)

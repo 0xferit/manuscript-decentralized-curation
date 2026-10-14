@@ -1,0 +1,9 @@
+---
+title: ""
+pagetitle: "Truth Post: Deployment Retrospective"
+date-modified: 2026-10-14T00:00:00
+number-sections: false
+format: html
+---
+
+{{< include ../../projects/truth-post/implementation-report.md >}}

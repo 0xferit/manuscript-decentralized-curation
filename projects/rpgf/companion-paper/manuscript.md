@@ -17,11 +17,14 @@ linkcolor: black
 urlcolor: blue
 citecolor: black
 header-includes:
-  - '\clubpenalty=10000'
-  - '\widowpenalty=10000'
+  - |
+    ```{=latex}
+    \clubpenalty=10000
+    \widowpenalty=10000
+    ```
 ---
 
-> **Working revision of preprint version 0.1.0.** This source includes unpublished review corrections. It presents a proposed design and evaluation agenda, not a completed experiment or a validated deployment. The published parent paper is cited separately from later design decisions.
+> **Working revision of preprint version 0.1.0.** This revision includes review corrections not incorporated into a new preprint release. It presents a proposed design and evaluation agenda, not a completed experiment or a validated deployment. The published parent paper is cited separately from later design decisions.
 
 ## Abstract
 
@@ -236,3 +239,6 @@ Scientific Agent Skills informed the drafting and evidence workflow [@kassis2026
 ## References
 
 The published parent paper establishes the framework context [@tuncer2026decentralizedcuration]. Kleros and peer prediction supply related mechanism literature [@kleros2019shortpaper; @miller2005peerprediction]. Working-source identifiers and inspection scope appear in the [source record](https://github.com/0xferit/manuscript-decentralized-curation/blob/public-goods-v0.1.0/projects/rpgf/companion-paper/source-and-open-questions.md). <!-- [claim:C050] [evidence:E001,E006,E007] -->
+
+::: {#refs}
+:::
