@@ -8,6 +8,16 @@
   --bs-navbar-brand-hover-color: var(--bs-link-color);
 }
 
+#title-block-header.quarto-title-block.default .quarto-title-meta-heading,
+.callout.callout-style-simple > div.callout-header,
+.callout.callout-style-default > div.callout-header,
+main.content h3,
+main.content h4,
+main.content h5,
+main.content h6 {
+  opacity: 1;
+}
+
 main.content {
   min-width: 0;
 }

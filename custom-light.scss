@@ -16,7 +16,7 @@ $surface-elevated: #ffffff;
 $border-subtle: #d8e3e0;
 $border-strong: #c3d3cf;
 $text-muted: #5f726e;
-$text-soft: #8da09b;
+$text-soft: $text-muted;
 $quote-bg: #f2f7f6;
 $toc-state-bg: #cfe9e3;
 $toc-hover-bg: $toc-state-bg;
@@ -397,7 +397,6 @@ main.content h3 {
 #quarto-margin-sidebar .nav-link .header-section-number,
 #TOC .nav-link .header-section-number {
   color: inherit;
-  opacity: 0.88;
 }
 
 #quarto-sidebar-toc-left .nav-link.active *,
