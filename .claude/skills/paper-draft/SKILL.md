@@ -12,7 +12,8 @@ Trigger when the user asks to draft, write, revise, rewrite, expand, tighten, po
 - `paper.qmd` (editable master paper source)
 - `projects/truth-post/blueprint.md` (canonical Truth Post design doc)
 - `projects/truth-post/implementation-report.md` (Truth Post deployment retrospective)
-- `projects/rpgf/design.md` (canonical RPGF design doc)
+- `projects/rpgf/companion-paper/manuscript.md` (current public-goods application paper)
+- `projects/rpgf/design.md` (superseded historical design; preserve its scope and status)
 - `literature/*.md` (internal working notes on foundational works)
 
 Do **not** trigger for edits to `truth-post/` or `rpgf/` at the repo root: those are publish-route wrappers, not canonical content sources.

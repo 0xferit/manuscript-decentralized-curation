@@ -1,6 +1,6 @@
 > Licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Copyright (c) 2026 Ferit Tunçer.
 
-Status: reference batch profile for retroactive public goods funding (RPGF). This proposed application covers nomination lifecycle, challenges, relevance scoring, funding distribution, and historical reputation. It is not a deployed system or a complete implementation specification. The [foundational paper](../../) owns shared relevance and appeal rules; the [companion paper](https://github.com/0xferit/manuscript-decentralized-curation/blob/main/projects/rpgf/companion-paper/manuscript.md) develops ongoing funding, which has a different lifecycle from the batch profile here. Neither application is evidence that the full mechanism has been validated.
+> **Superseded historical design.** The [public-goods companion paper](https://manuscript-decentralized-curation.pages.dev/rpgf/companion/) replaces this earlier fixed-round proposal as the current public-goods application. The text below is retained for provenance and may conflict with current rules. Use the companion and the [foundational paper](https://manuscript-decentralized-curation.pages.dev/) for current design work.
 
 ## Problem
 

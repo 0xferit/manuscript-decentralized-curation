@@ -20,6 +20,7 @@ website:
         href: https://github.com/0xferit/manuscript-decentralized-curation
         aria-label: Source repository
   sidebar:
+    id: documents
     title: Documents
     style: docked
     collapse-level: 2
@@ -30,9 +31,7 @@ website:
         href: rpgf/index.qmd
         contents:
           - href: rpgf/companion/index.qmd
-            text: Ongoing-funding companion
-          - href: rpgf/design/index.qmd
-            text: Fixed-round proposal
+            text: Public-goods companion
       - section: Truth Post
         href: truth-post/index.qmd
         contents:

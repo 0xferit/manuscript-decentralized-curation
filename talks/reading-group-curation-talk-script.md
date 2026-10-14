@@ -235,7 +235,7 @@ So even if we set AI aside entirely, I think the thesis still stands.
 
 I also want to connect this directly to public good funding, because I think that is one of the most important extensions.
 
-An important caveat upfront: the foundational paper introduces public goods funding as an application; the companion paper develops an ongoing-funding proposal, and a separate design document explores a batch profile. These proposals have different funding lifecycles. Neither is validated by the news simulations or by a full incentive analysis. They illustrate the framework's intended reach, not demonstrated generality.
+An important caveat upfront: the foundational paper introduces public goods funding as an application; the companion paper develops the current ongoing-funding proposal and supersedes the earlier fixed-round design. The proposal is not validated by the news simulations or by a full incentive analysis. It illustrates the framework's intended reach, not demonstrated generality.
 
 The reason is that funding public goods is also a curation problem.
 

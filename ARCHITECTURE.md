@@ -10,7 +10,7 @@ GitHub release maintainers remain trusted to review and attach the intended arti
 
 ## Manuscripts and application boundaries
 
-`paper.qmd` owns the general Decentralized Curation framework and shared protocol rules. `projects/truth-post/blueprint.md` develops the news application; `projects/truth-post/implementation-report.md` records the partial 2023 deployment. `projects/rpgf/companion-paper/manuscript.md` develops the ongoing public-goods application, while `projects/rpgf/design.md` preserves a distinct fixed-round reference proposal. The fixed-round proposal and workshop demonstrations do not override the current shared rules or establish that an integrated implementation exists.
+`paper.qmd` owns the general Decentralized Curation framework and shared protocol rules. `projects/truth-post/blueprint.md` develops the news application; `projects/truth-post/implementation-report.md` records the partial 2023 deployment. `projects/rpgf/companion-paper/manuscript.md` is the current public-goods application and supersedes `projects/rpgf/design.md`. The earlier fixed-round design is retained for provenance, with no authority over current rules. Historical designs and workshop demonstrations do not establish that an integrated implementation exists.
 
 The companion cites a released foundational preprint for its research context and records the later working decisions it uses separately. Its source excerpts, source digests and publication-preparation results are historical evidence. Published snapshots and editable working sources are separate; local corrections do not change prior publication or human-verification records.
 
@@ -18,7 +18,7 @@ The companion cites a released foundational preprint for its research context an
 
 The foundational paper's Accuracy layer owns optimistic publication, bonded challenges and item closure. Structural transaction checks precede publication; semantic claims remain contestable. Closure affects the bonded item and its future eligibility, without banning its publisher or beneficiary from fresh submissions. Reputation is separate from submission eligibility.
 
-Application funding rules distinguish prospective allocation from amounts already earned. The ongoing public-goods profile preserves earned beneficiary entitlements through disputes, revisions and closure. Neither a later assessment nor payment collection may reinterpret an earlier entitlement. The fixed-round proposal has its own allocation timing and is not an alternative definition of the ongoing profile.
+Application funding rules distinguish prospective allocation from amounts already earned. The ongoing public-goods profile preserves earned beneficiary entitlements through disputes, revisions and closure. Neither a later assessment nor payment collection may reinterpret an earlier entitlement.
 
 ## Relevance accounting and settlement
 
@@ -32,7 +32,7 @@ The paper owns the execution-order rule for fresh service-budget reservations, t
 
 ## Build and generated artifacts
 
-The Makefile owns local build entrypoints. The Quarto website configuration selects the foundational paper and project publication wrappers and owns the shared page tree. Native navigation supplies a responsive document sidebar, search, section breadcrumbs and previous/next links; each article's table of contents is separate on the right. The root remains the foundational paper, with public-goods and Truth Post branches preserving existing routes. The custom figure script only switches figure variants; it does not replace website navigation or theme controls.
+The Makefile owns local build entrypoints. The Quarto website configuration selects the foundational paper and project publication wrappers and owns the shared page tree. Native navigation supplies a responsive document sidebar, search, section breadcrumbs and previous/next links; each article's table of contents is separate on the right. The root remains the foundational paper, with public-goods and Truth Post branches preserving existing routes. The superseded public-goods design retains its legacy URL and shared sidebar for return navigation but is excluded from the active page tree and search index. The custom figure script only switches figure variants; it does not replace website navigation or theme controls.
 
 Wrappers include their canonical project sources rather than maintaining copies. The companion wrapper declares its source directory as a resource path for bibliography resolution and uses the source's mathematical input notation. Its website rendering is a working revision separate from the frozen preprint. Analysis outputs are generated and ignored; tracked conceptual diagrams are regenerated from `diagrams/generate_diagrams.py`. The shared bibliography is `references.bib`. Shared HTML overflow rules live in `layout.css` so tables and equations can scroll within the article in both color themes.
 
