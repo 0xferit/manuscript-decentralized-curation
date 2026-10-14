@@ -39,6 +39,7 @@
   "submission_ready": false,
   "source_inspection": "Public primary sources and local working sources inspected by agent; not a substitute for human verification",
   "relocation": {
+    "scope": "Historical snapshot of the initial relocation, before C051 was added; counts and check outcomes describe that snapshot. See current_decision_review and publication_preparation for later verification.",
     "destination": "projects/rpgf/companion-paper/",
     "bibliography": "../../../references.bib",
     "scholarly_citations": "mapped to the shared bibliography; three existing entries reused and the parent preprint added once",
