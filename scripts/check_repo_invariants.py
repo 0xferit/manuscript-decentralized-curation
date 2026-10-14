@@ -13,15 +13,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 EXPECTED_WRAPPER_INCLUDES = {
     Path("truth-post/blueprint/index.qmd"): "{{< include ../../projects/truth-post/blueprint.md >}}",
-    Path("rpgf/design/index.qmd"): "{{< include ../../projects/rpgf/design.md >}}",
+    Path("truth-post/implementation/index.qmd"): "{{< include ../../projects/truth-post/implementation-report.md >}}",
+    Path("rpgf/companion/index.qmd"): "{{< include ../../projects/rpgf/companion-paper/manuscript.md >}}",
 }
 
 EXPECTED_RENDER_INPUTS = (
     "paper.qmd",
     "truth-post/index.qmd",
     "truth-post/blueprint/index.qmd",
+    "truth-post/implementation/index.qmd",
     "rpgf/index.qmd",
-    "rpgf/design/index.qmd",
+    "rpgf/companion/index.qmd",
 )
 
 NON_BIB_CROSSREF_PREFIXES = (

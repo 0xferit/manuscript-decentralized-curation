@@ -8,7 +8,6 @@ project:
     - "truth-post/implementation/index.qmd"
     - "rpgf/index.qmd"
     - "rpgf/companion/index.qmd"
-    - "rpgf/design/index.qmd"
 
 website:
   title: "Decentralized Curation"
@@ -76,5 +75,6 @@ format:
 bibliography: references.bib
 
 resources:
+  - _redirects
   - analysis/fig/*-dark.png
   - diagrams/fig-*-dark.png

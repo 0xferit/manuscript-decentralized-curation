@@ -54,7 +54,7 @@ The shared document sidebar, search and previous/next links are generated from `
   - `/truth-post/blueprint/`: protocol blueprint
   - `/truth-post/implementation/`: historical deployment retrospective
 
-The companion supersedes the earlier fixed-round design, retained at `/rpgf/design/` as historical material outside the active document tree and search index. Website publication does not create a new preprint release. The companion's source and evidence links distinguish its current working text from the frozen published source.
+The retired `/rpgf/design/` route redirects to the companion. Website publication does not create a new preprint release. The companion's source and evidence links distinguish its current working text from the frozen published source.
 
 ## Repository layout
 
@@ -80,7 +80,6 @@ The companion supersedes the earlier fixed-round design, retained at `/rpgf/desi
 - `projects/truth-post/blueprint.md`: Truth Post application blueprint under the shared rules in `paper.qmd`
 - `projects/truth-post/implementation-report.md`: Truth Post 2023 deployment retrospective
 - `projects/rpgf/companion-paper/manuscript.md`: current public-goods application paper; the website working revision is separate from the deposited preprint
-- `projects/rpgf/design.md`: superseded fixed-round design, retained for provenance
 - `projects/README.md`: index of project documents
 
 Publish wrappers:
@@ -90,7 +89,6 @@ Publish wrappers:
 - `truth-post/implementation/index.qmd`: published deployment retrospective route
 - `rpgf/index.qmd`: published RPGF landing page
 - `rpgf/companion/index.qmd`: published companion route
-- `rpgf/design/index.qmd`: legacy route for the superseded design
 
 Conceptual diagrams are tracked outputs of `diagrams/generate_diagrams.py`; regenerate them after editing that source. Simulation figures and tables under `analysis/` are generated and ignored. Preserve historical source excerpts and published checksums; a new local build does not replace a released artifact.
 

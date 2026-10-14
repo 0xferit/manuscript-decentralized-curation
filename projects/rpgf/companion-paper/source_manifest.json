@@ -84,9 +84,9 @@
         "pmid": "",
         "pmcid": "",
         "isbn": "",
-        "url": "https://github.com/0xferit/manuscript-decentralized-curation/blob/main/projects/rpgf/design.md"
+        "url": ""
       },
-      "locator": "Working source SHA-256 760c73555074770cd17b51ab2b4812ece9f2fbe31256fb6a84d1c962521a5b15; reviewed for documentation drift only; not normative support for the ongoing profile",
+      "locator": "Working source SHA-256 760c73555074770cd17b51ab2b4812ece9f2fbe31256fb6a84d1c962521a5b15; reviewed for documentation drift only; not normative support for the ongoing profile; obsolete source deleted after inspection; uncommitted inspected bytes were not a released source snapshot",
       "confidentiality": "restricted",
       "verification": {
         "status": "unverified",

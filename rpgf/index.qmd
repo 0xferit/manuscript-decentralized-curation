@@ -9,7 +9,3 @@ Retroactive public goods funding (RPGF) is one application of the decentralized 
 
 - [Read the public-goods companion](./companion/)
 - [Back to the thesis paper](../)
-
-## Historical material
-
-The companion supersedes the [earlier fixed-round design](./design/). That document remains available for provenance; its rules do not define the current application.

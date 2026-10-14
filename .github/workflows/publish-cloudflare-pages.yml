@@ -46,7 +46,7 @@ jobs:
           path: |
             analysis/out
             analysis/fig
-          key: sims-${{ hashFiles('analysis/run_all.py', 'requirements.txt', 'paper.qmd', 'projects/rpgf/design.md', 'projects/truth-post/blueprint.md') }}
+          key: sims-${{ hashFiles('analysis/run_all.py', 'requirements.txt', 'paper.qmd', 'projects/truth-post/blueprint.md') }}
 
       - name: Run simulations
         run: make analysis
