@@ -20,14 +20,17 @@ class PublishedNavigationTests(unittest.TestCase):
             'scripts/check_repo_invariants.py',
             '_quarto.yml',
             'truth-post/blueprint/index.qmd',
-            'rpgf/design/index.qmd',
+            'truth-post/implementation/index.qmd',
+            'rpgf/companion/index.qmd',
         ):
             target = self.root / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(REPOSITORY / relative, target)
         for relative in (
             'paper.qmd', 'references.bib', 'truth-post/index.qmd', 'rpgf/index.qmd',
-            'projects/truth-post/blueprint.md', 'projects/rpgf/design.md',
+            'projects/truth-post/blueprint.md',
+            'projects/truth-post/implementation-report.md',
+            'projects/rpgf/companion-paper/manuscript.md',
         ):
             target = self.root / relative
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -39,6 +42,34 @@ class PublishedNavigationTests(unittest.TestCase):
             [sys.executable, str(self.root / 'scripts/check_repo_invariants.py')],
             capture_output=True, text=True, check=False,
         )
+
+    def test_accepts_current_publication_tree_without_retired_design(self) -> None:
+        result = self.check('')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('Repo invariants OK', result.stdout)
+
+    def test_requires_canonical_application_includes(self) -> None:
+        for relative in ('rpgf/companion/index.qmd', 'truth-post/implementation/index.qmd'):
+            with self.subTest(wrapper=relative):
+                wrapper = self.root / relative
+                original = wrapper.read_text(encoding='utf-8')
+                self.addCleanup(wrapper.write_text, original, encoding='utf-8')
+                wrapper.write_text('Unlinked copy', encoding='utf-8')
+                result = self.check('')
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn(f'{relative}: missing canonical include', result.stderr)
+                wrapper.write_text(original, encoding='utf-8')
+
+    def test_requires_current_application_render_entries(self) -> None:
+        config = self.root / '_quarto.yml'
+        original = config.read_text(encoding='utf-8')
+        for relative in ('rpgf/companion/index.qmd', 'truth-post/implementation/index.qmd'):
+            with self.subTest(source=relative):
+                config.write_text(original.replace(f'    - "{relative}"\n', ''), encoding='utf-8')
+                result = self.check('')
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn(f'missing project render entry for `{relative}`', result.stderr)
+        config.write_text(original, encoding='utf-8')
 
     def test_ignores_dependency_and_build_documentation(self) -> None:
         for directory in ('node_modules', 'dist', 'build', '.venv', 'venv'):
@@ -118,9 +149,9 @@ class PublishedNavigationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_checks_canonical_included_content(self) -> None:
-        result = self.check('[Paper](../../paper.qmd)', 'projects/rpgf/design.md')
+        result = self.check('[Paper](../../../paper.qmd)', 'projects/rpgf/companion-paper/manuscript.md')
         self.assertEqual(result.returncode, 1, result.stdout)
-        self.assertIn('projects/rpgf/design.md:1:', result.stderr)
+        self.assertIn('projects/rpgf/companion-paper/manuscript.md:1:', result.stderr)
 
     def test_ignores_unpublished_project_notes(self) -> None:
         result = self.check('[Source](../paper.qmd)', 'projects/README.md')

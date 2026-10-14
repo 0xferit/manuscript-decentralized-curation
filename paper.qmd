@@ -168,7 +168,7 @@ The **adjudication outcome** records the result of accuracy disputes separately:
 
 These states record procedures and their outcomes. `Debunked` can mean a scope or template violation rather than factual falsity; `ChallengeFailed` does not certify truth. **Credible consensus** means judgments grounded in evidence, assessed relative to an explicit policy, with usable correction paths. Agreement alone establishes none of these properties. The protocol makes parts of that process inspectable and contestable; it does not mechanically establish truth, competence, or beneficial outcomes.
 
-The [public-goods companion](https://github.com/0xferit/manuscript-decentralized-curation/blob/main/projects/rpgf/companion-paper/manuscript.md) develops a separate application: ongoing assessment of contributions, followed by funding when a beneficiary budget is available. Its application rules are distinct from Truth Post. It supersedes the earlier fixed-round public-goods design retained in the repository.
+The [public-goods companion](https://github.com/0xferit/manuscript-decentralized-curation/blob/main/projects/rpgf/companion-paper/manuscript.md) develops a separate application: ongoing assessment of contributions, followed by funding when a beneficiary budget is available. Its application rules are distinct from Truth Post.
 
 # Truth Post Protocol Architecture
 

@@ -3050,7 +3050,6 @@ def _compute_reading_time(source_path: Path, has_yaml_front_matter: bool) -> str
 def write_reading_time() -> None:
     documents = [
         (ROOT / "paper.qmd", OUT_DIR / "reading_time.md", True),
-        (ROOT / "projects" / "rpgf" / "design.md", OUT_DIR / "reading_time_rpgf.md", False),
         (ROOT / "projects" / "truth-post" / "blueprint.md", OUT_DIR / "reading_time_blueprint.md", False),
     ]
     for source, output, has_yaml in documents:
