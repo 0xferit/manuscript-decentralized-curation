@@ -25,8 +25,8 @@ The paper draws on Popper in three ways:
 
 ## Key passages / takeaways
 
-- "The criterion of the scientific status of a theory is its falsifiability, or refutability, or testability." (Ch. 1, Section 6)
-- The logical asymmetry between verification and falsification: "no matter how many instances of white swans we may have observed, this does not justify the conclusion that all swans are white." But one black swan refutes it.
+- Falsifiability serves as a demarcation criterion. This is a paraphrase of the argument, not a quotation assigned to a section.
+- The white-swan example illustrates the logical asymmetry: finitely many positive instances do not establish a universal claim, while a valid counterexample contradicts it.
 - Popper's insistence on *degree* of falsifiability maps to the protocol's insistence on claim specificity: the more specific the claim, the more ways it can be tested, and the more informative a surviving verdict is.
 
 ## Limitations for our use

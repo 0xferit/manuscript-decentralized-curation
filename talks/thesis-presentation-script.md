@@ -1,5 +1,7 @@
 # Thesis Presentation Script
 
+Presentation adaptation of the [foundational paper](../paper.qmd); mechanism details and model assumptions follow that source. This script is not an independent protocol specification.
+
 Approximate length: 20 minutes
 
 ## Opening
@@ -108,9 +110,9 @@ An important caveat: the mechanism makes falsehood expensive to sustain if chall
 
 Relevance is different. Relevance is not well served by a binary yes-or-no process. Relevance is a ranking problem. It is about what matters more, not just whether something passes a threshold.
 
-So for relevance I use a policy-guided coherence game. Curators stake into a pool, are drafted into rounds, and independently rate how strongly a claim conforms to the pool’s curation policy. Reports outside the coherence band can be slashed when dispersion meets the floor. Coherent participants are rewarded.
+So for relevance I use a policy-guided coherence game. Curators stake into a pool, are drafted into rounds, and independently rate how strongly a claim conforms to the pool’s curation policy. Reports outside the coherence band can be slashed when dispersion meets the floor. Timely valid reports earn fixed service fees when the round issues a valid ruling. Eligible incoherence penalties are redistributed separately in a utility token; payment does not certify honesty, care or competence.
 
-Under the tested reporting strategies, the simulations show increasing relevance distortion as colluding stake grows. They do not establish a safe collusion threshold. The paper also demonstrates a unilateral report that increases the single-round reward by adding artificial dispersion without a colluding coalition. Its net return after appeal settlement remains unresolved. Truthful incentive compatibility remains unresolved.
+Under the tested reporting strategies, the simulations show increasing relevance distortion as colluding stake grows. They do not establish a safe collusion threshold. The paper also gives a unilateral dispersion-padding example in a single-asset analytical reward model. That gain is absent from the selected fixed service fee for unchanged valid reports and seats. The complete two-asset incentives, including penalties and appeals, still require analysis; truthful incentive compatibility remains unresolved.
 
 This is where Schelling-style reasoning becomes important. A public policy is intended to make informed relevance assessment a focal point. Whether the full reward and appeal rules make disciplined judgment the best strategy requires further analysis.
 
@@ -124,7 +126,7 @@ That sounds obvious once said clearly, but a lot of systems ignore it. They try 
 
 I also argue that this problem is becoming structurally more important, not less.
 
-Recent advances in AI make the curation bottleneck much worse.
+Recent advances in artificial intelligence (AI) increase the burden of curation.
 
 Historically, the cost of producing information acted as a crude quality filter. Writing a convincing paper required understanding the topic. Writing working software required competence. The form of output and the substance behind it were coupled.
 
@@ -150,11 +152,11 @@ In 2023, I launched Truth Post as a partial instantiation of this framework for 
 
 That was not the full system. It was deliberately incomplete. There was no full relevance layer, no standing curator layer, no robust multi-interface architecture, and no complete economic bootstrap.
 
-And it did not sustain participation.
+Recorded use was sparse.
 
 That outcome is important, but its interpretation is ambiguous.
 
-The deployment showed that the core submission-and-challenge flow can run on real infrastructure. But it did not establish why participation collapsed. My working interpretation is that accuracy alone is not enough to bootstrap sustained use: most claims are not interesting enough to challenge, and people do not come to a system just to verify boring truths. But competing explanations exist: the failure may also reflect gas costs, a narrow initial market, UX friction, or insufficient challenger incentives in a low-traffic environment. I cannot cleanly distinguish between these causes from the data available.
+The observed transactions demonstrate bonded publication on real infrastructure. The source also implements challenge routing, but the recorded usage does not establish live end-to-end dispute execution or explain why observed participation was low. My working interpretation is that accuracy alone is not enough to bootstrap sustained use: most claims are not interesting enough to challenge, and people do not come to a system just to verify boring truths. But competing explanations exist: the failure may also reflect gas costs, a narrow initial market, user-experience friction, or insufficient challenger incentives in a low-traffic environment. I cannot cleanly distinguish between these causes from the data available.
 
 Truth Post also illustrated the cold-start challenge, though I cannot confirm cold-start was the primary cause of low participation rather than one of the competing explanations above. Without enough participants, you do not get meaningful signals. And it showed why protocol/interface separation is not optional: a decentralized protocol with a single fragile frontend is not actually robust.
 
@@ -207,11 +209,9 @@ Now imagine a different advertising game.
 
 Instead of paying for attention in a way that rewards volume regardless of truth, advertisers express ads as claims and post a bond behind them.
 
-If the claim is true, their main cost is temporary capital lockup.
+A successful challenge transfers the bond. Even a truthful advertiser bears capital costs and erroneous-ruling risk; a false claim can escape loss if nobody detects and successfully challenges it.
 
-If the claim is false, they lose the capital.
-
-That inverts the current cost structure. Honest actors become cheap to accommodate. Dishonest actors become expensive to sustain.
+The intended incentive is to make false advertising more costly, conditional on discovery, adjudication and the value of deception. Honesty, care in checking a claim, and competence in evaluating evidence remain distinct.
 
 And this is exactly why I include advertising in the thesis. It suggests that the framework is not tied to one political or journalistic niche. Its challenge-based accuracy mechanism could apply where there is an information-to-knowledge bottleneck, public evidence, and feasible falsification; other mechanism families have different prerequisites. The advertising sketch is not a full instantiation and does not prove generality.
 

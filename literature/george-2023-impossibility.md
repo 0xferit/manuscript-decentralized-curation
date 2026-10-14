@@ -23,11 +23,11 @@ We cite this result as a constraint on general truthful-reporting claims. The pa
 
 ### Scalar relevance (coherence game)
 - Curators report a scalar in [0,1], aggregated by weighted mean with a dispersion-dependent penalty.
-- Direct application of the impossibility result requires a formal mapping between the games. Regardless of that mapping, the paper’s [Claim 3](../paper.qmd#curator-voting-strategy) demonstrates a unilateral report that increases the single-round reward under permitted parameters. Its net return after appeal settlement remains unresolved.
+- Direct application of the impossibility result requires a formal mapping between the games. Regardless of that mapping, the paper’s [Claim 3](../paper.qmd#curator-voting-strategy) demonstrates a unilateral report that increases the single-round reward in a single-asset analytical model. The selected fixed per-seat fee removes that particular fee-padding channel, but does not establish truthful incentives.
 
 ## Key takeaways for our paper
 
-1. We cannot claim our mechanisms always produce truth or that every false report is more expensive than an honest one. Dispersion padding can increase the single-round reward under the stated rule; its net return after appeal settlement remains unresolved.
+1. We cannot claim our mechanisms always produce truth or that every false report is more expensive than an honest one. Dispersion padding can increase the single-round reward in the paper's single-asset analytical model; that result does not transfer unchanged to the fixed-fee two-asset proposal.
 2. The ranked-alternative theorem’s assumptions must be checked against each proposed mechanism; changing the reporting space is not a proof of incentive compatibility.
 3. Analyze the actual utilities, information, reward and appeal rules before claiming a truthful equilibrium.
 

@@ -49,3 +49,7 @@ talks/march10-presentation/
 
 # Formal review reports (generated)
 formal-reviews/
+
+# Installed JavaScript dependencies are local build artifacts.
+node_modules/
+.venv/

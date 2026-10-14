@@ -1,6 +1,6 @@
 # Literature Reference Notes
 
-Internal working notes on foundational works that inform the paper. Not referenced from the paper itself; used during refinement to keep key concepts, arguments, and connections accessible.
+Internal working notes on foundational works that inform the paper. These notes are background material, not part of the rendered papers and not evidence that a work is cited by the current manuscript. Use the manuscript for current claims and `references.bib` for its citation metadata. Notes may also discuss sources outside that bibliography.
 
 Each file covers one work or tightly related cluster. Structure per file:
 - **Citation**: full reference

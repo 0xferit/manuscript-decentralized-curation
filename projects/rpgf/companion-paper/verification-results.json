@@ -39,7 +39,6 @@
   "submission_ready": false,
   "source_inspection": "Public primary sources and local working sources inspected by agent; not a substitute for human verification",
   "relocation": {
-    "scope": "Historical snapshot of the initial relocation, before C051 was added; counts and check outcomes describe that snapshot. See current_decision_review and publication_preparation for later verification.",
     "destination": "projects/rpgf/companion-paper/",
     "bibliography": "../../../references.bib",
     "scholarly_citations": "mapped to the shared bibliography; three existing entries reused and the parent preprint added once",
@@ -65,7 +64,8 @@
       "E006": "kleros2019shortpaper",
       "E007": "miller2005peerprediction",
       "E008": "kassis2026scientificagentskills"
-    }
+    },
+    "scope": "Historical snapshot of the initial relocation, before C051 was added; counts and check outcomes describe that snapshot. See current_decision_review and publication_preparation for later verification."
   },
   "current_decision_review": {
     "date": "2026-10-14",
@@ -124,5 +124,60 @@
     },
     "human_publication_approval": "Explicit user request to commit, push and publish the companion paper as a preprint.",
     "scientific_review_status": "Agent review complete; human source-verification flags remain unmodified."
+  },
+  "working_review": {
+    "date": "2026-10-14",
+    "scope": "Unpublished review corrections; no publication or deployment performed",
+    "changes": [
+      "Marked the editable source as an unpublished working revision while preserving publication metadata",
+      "Repaired the effective-weight definition and synchronized its claim hash",
+      "Extended C003 hash coverage from the final bullet to the complete three-operation list",
+      "Adjusted table column proportions and widow/orphan controls; shortened the section 4 heading",
+      "Moved rendering settings into manuscript frontmatter as the single source for the companion build"
+    ],
+    "claim_registry": {
+      "status": "pass",
+      "claims": 51,
+      "unique_ids": true,
+      "complete_paragraph_or_list_hashes": true,
+      "evidence_ids_and_mappings": true,
+      "human_verification_flags_changed": false
+    },
+    "worked_example": {
+      "status": "pass",
+      "exact_fraction_stages": 4,
+      "share_sums": 1,
+      "synthetic_inputs_unchanged": true
+    },
+    "relative_document_links": {
+      "status": "pass",
+      "links_checked": 17
+    },
+    "source_checks": {
+      "published_parent": "Zenodo metadata and released PDF digest match the historical source record",
+      "working_parent": "All 13 archived excerpts match the exact pre-review source identified by the recorded digest",
+      "workshop_sources": "Pinned presentation and policy source digests match; both archived presentation excerpts match",
+      "scholarly_references": "Primary sources confirm all four cited publications; shared bibliography corrects Kleros authors and URL and adds the Miller article DOI. The coauthor-hosted prepublication draft directly supports the agreement-incentive discussion.",
+      "historical_records_rewritten": false
+    },
+    "metadata": {
+      "status": "pass",
+      "title_subtitle_author_and_abstract_match_sources": true,
+      "publication_date_and_version_changed": false,
+      "published_record_changed": false
+    },
+    "pdf": {
+      "pages": 10,
+      "all_pages_visually_inspected": true,
+      "typesetting": "pass; configuration, incentive, funding and evaluation tables fit without splitting rows; equations and bibliography are legible",
+      "source_sha256": "f2d28aaddde09f655d1b8c8a2089c6cbade2bac50c69c1160d621382a7db0787",
+      "bibliography_sha256": "0868ae527a57a023ab7a4976b1b60f9d32e8f203847bd6ed013960ebb7e14156",
+      "pdf_sha256": "0c1c04a59370f16878f5972e383cb671a114dbb4afb3797872abaa5b3f929224",
+      "distinct_external_link_targets": 5,
+      "link_checks": "Four targets return HTTP 200; the Miller DOI rejects a direct HEAD request with HTTP 403, while its publisher record is accessible and confirms the DOI",
+      "frontmatter_render_matches_reviewed_pages": true
+    },
+    "remaining_questions": "The implementation questions in source-and-open-questions.md remain open; no missing rule was inferred",
+    "human_source_verification_completed": false
   }
 }

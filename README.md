@@ -2,16 +2,20 @@
 
 [![Build & Publish](https://github.com/0xferit/manuscript-decentralized-curation/actions/workflows/publish-cloudflare-pages.yml/badge.svg)](https://github.com/0xferit/manuscript-decentralized-curation/actions/workflows/publish-cloudflare-pages.yml) [![DOI](https://zenodo.org/badge/1132295542.svg)](https://doi.org/10.5281/zenodo.20543760)
 
-A paper-first workspace for a Quarto-based academic manuscript on decentralized curation, plus spinout project documents for Truth Post and RPGF. The thesis remains the primary build and publish surface; project docs live under `projects/`.
+A paper-first workspace for a Quarto-based academic manuscript on decentralized curation, plus a public-goods companion paper and application documents for Truth Post and retroactive public goods funding (RPGF). The thesis remains the primary build and publish surface; project docs live under `projects/`.
 
 ## Building locally
 
-Prerequisites: [Quarto](https://quarto.org/docs/get-started/), Python 3.11+, and (for PDF) a LaTeX distribution (`quarto install tinytex`).
+Prerequisites: [Quarto](https://quarto.org/docs/get-started/), Python 3.11+, and (for PDF) a LaTeX distribution (`quarto install tinytex`). The publication workflow uses Quarto 1.9.37. Record the actual Quarto, Python and TeX versions with a reviewed build; different versions can change line and page breaks. The standalone companion also requires Pandoc, XeLaTeX and the font specified in its [render instructions](projects/rpgf/companion-paper/README.md). Put the TeX binaries on `PATH`, or set `PDF_ENGINE` to the intended XeLaTeX executable when invoking `make render-companion`.
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
 make setup
 make render-html            # cold-safe HTML render; regenerates analysis outputs first when needed
-make render-pdf             # cold-safe PDF render
+make render-pdf             # cold-safe PDF render of the Quarto project
+make render-companion       # standalone public-goods companion PDF
+make render-papers          # both paper PDFs, plus Quarto project PDFs
 ```
 
 Useful agent-friendly entrypoints:
@@ -23,6 +27,14 @@ make verify-full            # invariants + deterministic analysis + HTML render
 make analysis               # regenerate the full analysis bundle only
 python3 analysis/run_all.py reading-time
 python3 analysis/run_all.py summary
+```
+
+`make setup` installs the hash-locked binary distributions in `requirements.lock`; it does not re-resolve dependencies or build packages from source. `requirements.txt` declares the direct dependencies; update and review the lock when those declarations change. The lock records its release-age cutoff and resolver command.
+
+For an existing virtual environment, the same lock can also be installed with uv, retaining hash checks, binary-only packages and a 15-day release-age gate:
+
+```bash
+uv pip sync --python .venv/bin/python --require-hashes --only-binary=:all: --exclude-newer "15 days" requirements.lock
 ```
 
 Raw `quarto render` is intentionally not the recommended entrypoint for local or agent-driven work, because the manuscript includes generated snippets from `analysis/out/`.
@@ -47,7 +59,10 @@ Published routes:
 - `truth-post/`, `rpgf/`: thin Quarto route wrappers for published project pages
 - `projects/truth-post/`: Truth Post spinout documents
 - `projects/rpgf/`: RPGF spinout documents
-- `references.bib`: BibTeX citations for the thesis
+- `references.bib`: shared BibTeX citation source for both papers and project documents
+- `projects/rpgf/companion-paper/`: standalone companion source, archival evidence and publication records
+- `requirements.lock`: hashed Python dependency resolution used for local setup
+- `reviews/`: dated verification records, separate from current specifications
 - `analysis/run_all.py`: simulation code (E1-E4, adversarial variants)
 - `Makefile`: canonical task entrypoints for setup, verification, analysis, and render
 - `analysis/fig/`, `analysis/out/`: generated figures and data (gitignored)
@@ -59,9 +74,10 @@ Published routes:
 
 ## Projects
 
-- `projects/truth-post/blueprint.md`: canonical Truth Post protocol blueprint
+- `projects/truth-post/blueprint.md`: Truth Post application blueprint under the shared rules in `paper.qmd`
 - `projects/truth-post/implementation-report.md`: Truth Post 2023 deployment retrospective
-- `projects/rpgf/design.md`: canonical RPGF instantiation design
+- `projects/rpgf/design.md`: fixed-round RPGF reference proposal, distinct from the ongoing companion design
+- `projects/rpgf/companion-paper/manuscript.md`: ongoing public-goods application paper; local corrections remain unpublished until separately released
 - `projects/README.md`: index of project documents
 
 Publish wrappers:
@@ -70,6 +86,8 @@ Publish wrappers:
 - `truth-post/blueprint/index.qmd`: published Truth Post blueprint route
 - `rpgf/index.qmd`: published RPGF landing page
 - `rpgf/design/index.qmd`: published RPGF design route
+
+Conceptual diagrams are tracked outputs of `diagrams/generate_diagrams.py`; regenerate them after editing that source. Simulation figures and tables under `analysis/` are generated and ignored. Preserve historical source excerpts and published checksums; a new local build does not replace a released artifact.
 
 ## Release procedure
 

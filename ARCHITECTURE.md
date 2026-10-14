@@ -7,3 +7,31 @@ Manuscript builds and publication are separate operations. The release maintaine
 The publication job has read-only GitHub access and exposes the Zenodo credential only to the upload step after local validation. Publications are serialized across all tags in this repository. The uploader refuses an existing unpublished draft, a conflicting published version or an upload checksum mismatch. A retry after successful publication checks the existing version and performs no mutation when its PDF and descriptive metadata match.
 
 GitHub release maintainers remain trusted to review and attach the intended artifacts. Manifest checks establish artifact identity, not scientific validity. The Zenodo account must use a single publisher: its separate GitHub integration must be disabled, and a maintainer must not edit drafts concurrently with publication. The legacy Zenodo API cannot atomically reserve a new draft against a concurrent manual edit; failed or uncertain uploads require inspection before retrying.
+
+## Manuscripts and application boundaries
+
+`paper.qmd` owns the general Decentralized Curation framework and shared protocol rules. `projects/truth-post/blueprint.md` develops the news application; `projects/truth-post/implementation-report.md` records the partial 2023 deployment. `projects/rpgf/companion-paper/manuscript.md` develops the ongoing public-goods application, while `projects/rpgf/design.md` preserves a distinct fixed-round reference proposal. The fixed-round proposal and workshop demonstrations do not override the current shared rules or establish that an integrated implementation exists.
+
+The companion cites a released foundational preprint for its research context and records the later working decisions it uses separately. Its source excerpts, source digests and publication-preparation results are historical evidence. Published snapshots and editable working sources are separate; local corrections do not change prior publication or human-verification records.
+
+## Accuracy and eligibility
+
+The foundational paper's Accuracy layer owns optimistic publication, bonded challenges and item closure. Structural transaction checks precede publication; semantic claims remain contestable. Closure affects the bonded item and its future eligibility, without banning its publisher or beneficiary from fresh submissions. Reputation is separate from submission eligibility.
+
+Application funding rules distinguish prospective allocation from amounts already earned. The ongoing public-goods profile preserves earned beneficiary entitlements through disputes, revisions and closure. Neither a later assessment nor payment collection may reinterpret an earlier entitlement. The fixed-round proposal has its own allocation timing and is not an alternative definition of the ongoing profile.
+
+## Relevance accounting and settlement
+
+The foundational paper's Relevance layer owns drafting, quorum, service fees, penalties, rounding and public appeal settlement. Utility-token collateral and redistribution use a ledger separate from ether (ETH) jury-service funds and appeal capital. Reference fee and workload values are defined in the paper; application documents refer to those definitions. Workload assumptions are not proof of effort, and fixed service fees do not establish truthful or competent assessment.
+
+Each pool defines its own relevance rubric and numeric interpretation. A direct proportional funding application uses scores as relative allocation weights, subject to its eligibility and cap rules. The Truth Post feed uses its separate ranking formula. Neither allocation weights nor coherence measure public benefit directly.
+
+Ordinary attempts already drawn before exit and funded contested appeal chains retain the continuation rights specified in the paper. Continuation preserves pinned assessments and financial commitments without restoring the closed item's eligibility. Earned jury fees, contribution refunds, backer payouts and beneficiary earnings remain distinct obligations. Unused reservations return through their original funding paths; assigned but unclaimed entitlements are not reusable funds.
+
+The paper owns the execution-order rule for fresh service-budget reservations, the positive proof-opening window, bounded leak confiscation, exact integer allocation and recipient-controlled receiving addresses. Implementation details explicitly left open there remain open in application documents. In particular, applications must not infer an asset conversion rate or resolve unspecified same-round penalty ordering by combining ledgers or collecting collateral twice.
+
+## Build and generated artifacts
+
+The Makefile owns local build entrypoints. The Quarto configuration selects the foundational paper and project publication wrappers. Wrappers include their canonical project sources rather than maintaining copies. Analysis outputs are generated and ignored; tracked conceptual diagrams are regenerated from `diagrams/generate_diagrams.py`. The shared bibliography is `references.bib`. Shared HTML overflow rules live in `layout.css` so tables and equations can scroll within the article in both color themes.
+
+The companion uses Pandoc with its declared bibliography and explicit mathematical-input extension. Local review outputs under `outputs/` are separate from released preprints, publication records and historical artifact digests. A build verifies document production, not the economic mechanism or the completeness of human source verification.

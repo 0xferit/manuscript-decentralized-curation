@@ -14,10 +14,10 @@ Data quality is not a single dimension. Through empirical research (surveys of d
 
 ## Connection to our paper
 
-Wang and Strong provide the methodological precedent for our quality identification step (Step 3 of the framework):
+Wang and Strong provide the methodological precedent for our quality-identification step:
 
-- **Accuracy vs. relevance decomposition**: our decomposition of news quality into accuracy (global, binary) and relevance (local, non-binary) maps directly to Wang and Strong's intrinsic vs. contextual categories. Accuracy is intrinsic: a claim is valid or invalid regardless of who reads it. Relevance is contextual: importance depends on the reader, the pool's curation policy, and the moment.
-- **"Collapsing into a single metric is the design flaw"**: Wang and Strong's empirical finding that quality is multi-dimensional supports our argument that collapsing accuracy and relevance into a single engagement metric (as platforms do) is a design flaw, not an implementation detail. It is not that platforms failed to optimize a single metric well; it is that a single metric cannot capture multi-dimensional quality.
+- **Accuracy vs. relevance decomposition**: the intrinsic/contextual distinction helps separate accuracy from relevance. The protocol makes binary challenge decisions under stated scope, time and evidence rules; these procedural outcomes are not context-free truth certificates. Relevance depends on the pool's policy and assessment context.
+- **"Collapsing into a single metric is the design flaw"**: Wang and Strong's empirical finding that quality is multi-dimensional supports our argument that collapsing accuracy and relevance into a single engagement metric (as platforms do) is a design flaw, not an implementation detail. Their study motivates preserving distinctions among dimensions; it does not prove that no useful aggregate metric can be constructed for a stated task.
 - **Domain-agnostic methodology**: Wang and Strong's approach (survey consumers, identify dimensions, categorize) is domain-agnostic. Our framework's quality identification step is a version of this: decompose quality for the specific domain, then design mechanisms for each dimension.
 
 ## Limitations relevant to us

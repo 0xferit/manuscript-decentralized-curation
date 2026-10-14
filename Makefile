@@ -1,16 +1,21 @@
 PYTHON ?= python3
 QUARTO ?= quarto
+PANDOC ?= pandoc
+PDF_ENGINE ?= xelatex
+
+COMPANION_DIR := projects/rpgf/companion-paper
+COMPANION_PDF := outputs/companion-paper.pdf
 
 ANALYSIS_STAMP := analysis/out/.analysis-complete
-ANALYSIS_INPUTS := analysis/run_all.py requirements.txt paper.qmd projects/rpgf/design.md projects/truth-post/blueprint.md
+ANALYSIS_INPUTS := analysis/run_all.py requirements.txt requirements.lock paper.qmd projects/rpgf/design.md projects/truth-post/blueprint.md
 ANALYSIS_REQUIRED := analysis/out/eval_summary.md analysis/out/reading_time.md analysis/out/reading_time_blueprint.md analysis/out/reading_time_rpgf.md analysis/out/metadata.json
 ANALYSIS_FIG_REQUIRED := analysis/fig/e1_adversarial.png analysis/fig/e1_challenger_ev.png analysis/fig/e1_detection_sensitivity.png analysis/fig/e1_false_survival.png analysis/fig/e2_adversarial.png analysis/fig/e2_competence_filter.png analysis/fig/e2_prime_adversarial.png analysis/fig/e2_prime_competence_filter.png analysis/fig/e2_prime_relevance_error.png analysis/fig/e2_prime_sigma_sweep.png analysis/fig/e2_prime_trojan.png analysis/fig/e2_relevance_error.png analysis/fig/e3_nonfalsifiable.png analysis/fig/e4a_author_reputation.png analysis/fig/e4b_reputation_attack.png analysis/fig/e4d_cross_domain_scoping.png
 ANALYSIS_ALL_REQUIRED := $(ANALYSIS_REQUIRED) $(ANALYSIS_FIG_REQUIRED)
 
-.PHONY: setup analysis metadata reading-time summary render-html render-pdf render check-invariants verify-fast verify-full clean
+.PHONY: setup analysis metadata reading-time summary render-html render-pdf render-companion render-papers render check-invariants verify-fast verify-full clean
 
 setup:
-	$(PYTHON) -m pip install -r requirements.txt
+	$(PYTHON) -m pip install --only-binary=:all: --require-hashes -r requirements.lock
 
 analysis:
 	@mkdir -p analysis/out
@@ -46,6 +51,12 @@ render-html: analysis
 
 render-pdf: analysis
 	$(QUARTO) render --to pdf
+
+render-companion:
+	@mkdir -p $(dir $(COMPANION_PDF))
+	cd $(COMPANION_DIR) && $(PANDOC) manuscript.md --from=markdown+tex_math_single_backslash --standalone --citeproc --pdf-engine=$(PDF_ENGINE) --output $(abspath $(COMPANION_PDF))
+
+render-papers: render-pdf render-companion
 
 render: analysis
 	$(QUARTO) render

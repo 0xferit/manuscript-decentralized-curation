@@ -1,5 +1,7 @@
 # Reading Group Talk Script
 
+Presentation adaptation of the [foundational paper](../paper.qmd); mechanism details and model assumptions follow that source. This script is not an independent protocol specification.
+
 Approximate length: 20 to 25 minutes
 
 Audience: technical reading group
@@ -52,7 +54,7 @@ Curation was always important, but I think it is becoming structurally more impo
 
 Historically, the cost of producing information acted as a weak quality filter. Producing convincing software, papers, or articles usually required some underlying understanding, so form and substance were at least partly coupled.
 
-AI weakens that coupling.
+Artificial intelligence (AI) weakens that coupling.
 
 The form of quality is now cheap: fluent prose, good formatting, respectable structure, plausible references, working-looking code, polished tone. The substance of quality is still expensive: correctness, coherence, domain understanding, and grounded judgment.
 
@@ -68,7 +70,7 @@ The main example in the thesis is governance, because governance is where the hi
 
 We often say governance is hard because people cannot coordinate. But in many real settings, coordination fails earlier than that. People are not choosing from the same knowledge base.
 
-Imagine a shared asset with one hundred stakeholders. Or an apartment building where many residents need to decide how to allocate resources. Or a DAO deciding whether to fund a proposal. In all of those cases, the voting rule may be fine in a narrow procedural sense, yet the outcome can still be dysfunctional because people disagree about what reality even looks like.
+Imagine a shared asset with one hundred stakeholders. Or an apartment building where many residents need to decide how to allocate resources. Or a decentralized autonomous organization deciding whether to fund a proposal. In all of those cases, the voting rule may be fine in a narrow procedural sense, yet the outcome can still be dysfunctional because people disagree about what reality even looks like.
 
 The news example helps here. People consume a curated picture of the world and then make decisions from it, including political decisions. A democracy assumes that voters are informed in some meaningful sense. But if the curation layer feeding voters is incompetent, captured, or actively manipulative, then the downstream democratic process is forced to operate on corrupted inputs.
 
@@ -181,7 +183,7 @@ Relevance stays inside the pool and is judged by drafted curators under the pool
 
 This is also where I rely on Schelling-style reasoning, but with caution. The system does not assume that people coordinate directly on truth. It assumes they coordinate on expected defensible judgment under explicit rules. That is a weaker claim, but I think it is the more realistic one.
 
-The simulations show increasing relevance distortion as colluding stake grows under the tested reporting strategies. The apparent degradation range is not a safe threshold or a proof that honest reporting pays best below it. The paper also gives an example where one curator increases their reward by adding artificial dispersion, even without a colluding coalition. The current simulations do not search for those strategic best responses.
+The simulations show increasing relevance distortion as colluding stake grows under the tested reporting strategies. The apparent degradation range is not a safe threshold or a proof that honest reporting pays best below it. The paper also gives a single-asset analytical example where one curator increases a dispersion-scaled reward without a coalition. That example cannot increase the selected fixed ether service fee for the same valid reports and seats. It does not validate the two-asset design, whose strategic best responses remain to be analyzed.
 
 The deeper point is that mechanism design begins only after the conceptual decomposition is done. If we start with mechanism design too early, we usually end up solving the wrong problem.
 
@@ -207,7 +209,7 @@ If the challenger loses, the item returns to `Live`.
 
 So accuracy is handled through explicit attackability, not through editorial blessing.
 
-Fifth, while an item is live, the pool can run drafted relevance rounds. Curators who have staked into that pool can be drawn into a committee. They score how relevant the item is for that pool's purpose, then the mechanism rewards coherent judgments and slashes strong outliers.
+Fifth, while an item is live, the pool can run drafted relevance rounds. Curators who have staked into that pool can be drawn into a committee. They score how relevant the item is for that pool's purpose, then valid timely reports earn fixed service fees when the round issues a valid ruling, while the separate utility-token ledger redistributes eligible incoherence penalties. A fee is not proof that the curator worked carefully or judged correctly.
 
 That means the protocol does not ask jurors to decide what is important, and it does not ask curators to decide universal truth. Each group does one job.
 
@@ -233,7 +235,7 @@ So even if we set AI aside entirely, I think the thesis still stands.
 
 I also want to connect this directly to public good funding, because I think that is one of the most important extensions.
 
-An important caveat upfront: the thesis itself does not cover public good funding. What I am describing here is developed in a separate design document and is not covered by the simulations or formal analysis in the paper. I include it because it illustrates the framework's generality, but it should be understood as ongoing work, not a validated result.
+An important caveat upfront: the foundational paper introduces public goods funding as an application; the companion paper develops an ongoing-funding proposal, and a separate design document explores a batch profile. These proposals have different funding lifecycles. Neither is validated by the news simulations or by a full incentive analysis. They illustrate the framework's intended reach, not demonstrated generality.
 
 The reason is that funding public goods is also a curation problem.
 

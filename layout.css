@@ -1,0 +1,26 @@
+main.content {
+  min-width: 0;
+}
+
+main.content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+main.content .math.display {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+main.content :not(pre) > code,
+main.content a {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+main.content pre {
+  max-width: 100%;
+  overflow-x: auto;
+}

@@ -17,6 +17,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Polygon
 import matplotlib.font_manager as fm
+from matplotlib.text import Text
 import numpy as np
 import os
 
@@ -35,7 +36,7 @@ PALETTES = {
         bg='#f9fafb',
         text='#111827', box='#f4f7f7', edge='#c7d1da',
         term='#f0fdf9', term_e='#0c6e65', accent='#0c6e65',
-        arrow='#98a4b2', label='#6f7d8d', L1='#f4f7f6', L2='#eceff0', L3='#e2e9e7',
+        arrow='#788796', label='#435466', L1='#f4f7f6', L2='#eceff0', L3='#e2e9e7',
         muted='#5f6e7d', soft='#70807e', inverse='#ffffff',
         positive='#23867b', warning='#b76b37', warning_fill='#f3e3cf',
         danger_fill='#eadde2',
@@ -51,7 +52,17 @@ PALETTES = {
     ),
 }
 
+DIAGRAM_TEXT_SCALE = 1.5
+
 C = PALETTES['light']
+
+
+def _save_diagram(fig, out):
+    for text in fig.findobj(match=Text):
+        text.set_fontsize(text.get_fontsize() * DIAGRAM_TEXT_SCALE)
+    fig.savefig(out, dpi=300, bbox_inches='tight',
+                facecolor=C['bg'], pad_inches=0.3)
+    plt.close(fig)
 
 
 def set_palette(name):
@@ -144,21 +155,21 @@ def fig1_claim_states(out):
     s = _ep(*P['Live'], W, H, *P['PendingEdit'])
     t = _ep(*P['PendingEdit'], W, H, *P['Live'])
     _arr(ax, *s, *t, 'author amends\n(confidence paused)',
-         rad=-0.15, lo=(-0.3, 0.35), fs=7)
+         rad=-0.15, lo=(-0.9, 0.4), fs=7)
 
     # ── PendingEdit → Live ──
     _arr(ax, *t, *s, 'edit finalized\n(confidence resets)',
-         rad=-0.15, lo=(0.3, -0.35), fs=7)
+         rad=-0.15, lo=(-0.4, -0.15), fs=7)
 
     # ── Live → Challenged ──
     s = _ep(*P['Live'], W, H, *P['Challenged'])
     t = _ep(*P['Challenged'], W, H, *P['Live'])
     _arr(ax, *s, *t, 'challenge filed\n(confidence paused)',
-         rad=0.15, lo=(0.3, 0.35), fs=7)
+         rad=0.15, lo=(0.9, 0.4), fs=7)
 
     # ── Challenged → Live ──
     _arr(ax, *t, *s, 'challenge fails\n(confidence resumes)',
-         rad=0.15, lo=(-0.3, -0.35), fs=7)
+         rad=0.15, lo=(0.4, -0.15), fs=7)
 
     # ── PendingEdit → Challenged ──
     s = _ep(*P['PendingEdit'], W, H, *P['Challenged'])
@@ -203,9 +214,7 @@ def fig1_claim_states(out):
             'queued\nchallenge', fontsize=7.6, color=C['label'],
             ha='left', va='center')
 
-    fig.savefig(out, dpi=300, bbox_inches='tight',
-                facecolor=C['bg'], pad_inches=0.3)
-    plt.close(fig)
+    _save_diagram(fig, out)
 
 
 # ══════════════════════════════════════════════════════════
@@ -244,7 +253,7 @@ def fig2_actor_flow(out):
         ('Pool Creators', 1.1),
     ]
     for name, y in left_actors:
-        _box(ax, 1.5, y, AW, AH, name, fs=10)
+        _box(ax, 0.9, y, AW, AH, name, fs=10)
 
     # Right-side actors
     right_actors = [
@@ -262,7 +271,7 @@ def fig2_actor_flow(out):
         (1.1, 1.3, 'define pool\nconfig'),
     ]
     for ay, py, lbl in left_flows:
-        _arr(ax, 1.5 + AW / 2, ay, pcx - pw / 2, py,
+        _arr(ax, 0.9 + AW / 2, ay, pcx - pw / 2, py,
              lbl, lo=(0, 0.35), fs=7)
 
     # Arrows: protocol ↔ jurors
@@ -277,13 +286,11 @@ def fig2_actor_flow(out):
 
     # Annotation
     ax.text(pcx, pcy - ph / 2 - 0.35,
-            'challenge tax \u2192 pool reward budget',
+            'challenge tax \u2192 pool ETH service budget',
             fontsize=8.8, fontstyle='italic', color=C['accent'],
             ha='center', va='top')
 
-    fig.savefig(out, dpi=300, bbox_inches='tight',
-                facecolor=C['bg'], pad_inches=0.3)
-    plt.close(fig)
+    _save_diagram(fig, out)
 
 
 # ══════════════════════════════════════════════════════════
@@ -292,20 +299,20 @@ def fig2_actor_flow(out):
 def fig3_architecture(out):
     fig, ax = plt.subplots(figsize=(12, 8), dpi=300)
     ax.set_xlim(0, 12)
-    ax.set_ylim(-1.0, 8.5)
+    ax.set_ylim(-1.0, 9.2)
     ax.axis('off')
 
     layers = [
         ('Interfaces (replaceable)',
          5.8, C['L3'],
          'Any frontend: feeds, dashboards,\ndispute history, pool browsers'),
-        ('Content & Indexing\n(off-chain, reconstructible)',
+        ('Content & Indexing (off-chain)',
          3.8, C['L2'],
          'Claim blobs, evidence items,\npolicy documents, indexers'),
-        ('External DDR\n(Kleros v1)',
+        ('External Arbitration (Kleros v1)',
          1.8, C['L2'],
          'Binary challenge adjudication,\ntyped reasons, appeals'),
-        ('Canonical Protocol State\n(on-chain)',
+        ('Canonical Protocol State (on-chain)',
          -0.2, C['L1'],
          'Pools, claim refs, stakes, challenges,\nadjudication links, confidence, payouts'),
     ]
@@ -329,30 +336,28 @@ def fig3_architecture(out):
     _arr(ax, mid_x, 1.8 - lh_box / 2, mid_x, -0.2 + lh_box / 2)
 
     # Architectural commitments (top left)
-    ax.text(1.2, 7.4, 'Architectural commitments', fontsize=10.4,
+    ax.text(1.2, 8.2, 'Architectural commitments', fontsize=10.4,
             fontweight='bold', color=C['accent'])
     for i, c in enumerate([
         'Permissionless pools',
         'Immutable contracts',
         'Minimal governance',
     ]):
-        ax.text(1.5, 7.0 - i * 0.35, '\u2022  ' + c, fontsize=9.5,
+        ax.text(1.5, 7.75 - i * 0.4, '\u2022  ' + c, fontsize=9.5,
                 color=C['text'])
 
     # Pool economics (top right)
-    ax.text(6.5, 7.4, 'Pool economics', fontsize=10.4,
+    ax.text(6.5, 8.2, 'Pool economics', fontsize=10.4,
             fontweight='bold', color=C['accent'])
     for i, c in enumerate([
-        'Local reward budgets',
+        'Separate ETH and utility-token ledgers',
         'Challenge tax \u2192 pool budget',
         'No global treasury',
     ]):
-        ax.text(6.8, 7.0 - i * 0.35, '\u2022  ' + c, fontsize=9.5,
+        ax.text(6.8, 7.75 - i * 0.4, '\u2022  ' + c, fontsize=9.5,
                 color=C['text'])
 
-    fig.savefig(out, dpi=300, bbox_inches='tight',
-                facecolor=C['bg'], pad_inches=0.3)
-    plt.close(fig)
+    _save_diagram(fig, out)
 
 
 # ══════════════════════════════════════════════════════════
@@ -371,7 +376,7 @@ def fig4_relevance_round(out):
         ('3', r'Seat tickets: $d_i = \lfloor s_i / L \rfloor$'
               '\n'
               r'(eligible when $s_i \geq L$)'),
-        ('4', r'Draw and lock: each drawn seat locks'
+        ('4', r'Draw fundable tickets: each drawn seat locks'
               '\n'
               r'$L$ tokens, giving round weight $w_i$'),
         ('5', r'Commit/reveal one score in [0, 1],'
@@ -380,10 +385,10 @@ def fig4_relevance_round(out):
         ('6', r'Weighted mean $\mu$ and dispersion $\sigma$;'
               '\n'
               r'require valid reveal quorum'),
-        ('7', r'Distance-based slashing when $\sigma \geq \varepsilon_\sigma$:'
+        ('7', r'After proof window: slash when $\sigma \geq \varepsilon_\sigma$:'
               '\n'
               r'$p_i = \min(1, \max(0, (|v_i - \mu| / \sigma - K) / K))$'),
-        ('8', 'Publicly crowdfund an appeal\nUnmatched: win; matched: larger jury'),
+        ('8', 'Unopposed funded score: forfeiture\nOpposed: doubled planned jury target'),
     ]
 
     cx = 4.3
@@ -408,9 +413,7 @@ def fig4_relevance_round(out):
         if i < len(steps) - 1:
             _arr(ax, cx, cy - bh / 2, cx, cy - gap + bh / 2)
 
-    fig.savefig(out, dpi=300, bbox_inches='tight',
-                facecolor=C['bg'], pad_inches=0.3)
-    plt.close(fig)
+    _save_diagram(fig, out)
 
 
 # ══════════════════════════════════════════════════════════
@@ -447,7 +450,7 @@ def fig5_framework(out):
 
     # ── Step 3: diamond gate ──
     s3y = y0 - 2 * gap
-    dw, dh = 2.8, 0.8  # half-widths
+    dw, dh = 2.8, 0.95  # half-widths
     diamond_verts = [
         (cx, s3y + dh),       # top
         (cx + dw, s3y),       # right
@@ -457,7 +460,7 @@ def fig5_framework(out):
     diamond = Polygon(diamond_verts, closed=True,
                       fc=C['box'], ec=C['accent'], lw=2.0, zorder=2)
     ax.add_patch(diamond)
-    ax.text(cx, s3y, 'Falsification feasible\nand cheaper than\nexhaustive verification?', fontsize=9,
+    ax.text(cx, s3y, 'Falsification\nfeasible and cheaper\nthan exhaustive\nverification?', fontsize=8.5, linespacing=0.95,
             fontweight='normal', color=C['text'],
             ha='center', va='center', zorder=4)
 
@@ -536,7 +539,7 @@ def fig5_framework(out):
     _arr(ax, left_x, leaf1_y - leaf_bh / 2,
          left_x, leaf2_y + leaf_bh / 2)
     _box(ax, left_x, leaf2_y, leaf_bw, leaf_bh,
-         'Relevance: drafted curator rounds\n+ coherence slashing',
+         'Relevance: drafted scoring\n+ coherence slashing',
          fs=8.8, bold=False, fill=C['L1'], ec=C['accent'])
 
     # --- Advertising column (right, grey border) ---
@@ -557,9 +560,7 @@ def fig5_framework(out):
             fontsize=8.8, fontstyle='italic', color=C['accent'],
             ha='center', va='top')
 
-    fig.savefig(out, dpi=300, bbox_inches='tight',
-                facecolor=C['bg'], pad_inches=0.3)
-    plt.close(fig)
+    _save_diagram(fig, out)
 
 
 # ══════════════════════════════════════════════════════════
@@ -573,11 +574,11 @@ def fig6_falsifiability(out):
     ax.axis('off')
 
     bar_y = 1.8
-    bar_h = 1.0
+    bar_h = 1.4
     seg_w = [3.5, 5.5, 3.5]
     seg_x = [0.5, 4.0, 9.5]
     seg_colors = [C['L3'], C['L1'], C['danger_fill']]
-    seg_labels = ['Trivially\nverifiable', 'Optimally\nfalsifiable', 'Non-\nfalsifiable']
+    seg_labels = ['Trivially\nverifiable', 'Feasible\nfalsification', 'Non-\nfalsifiable']
     seg_examples = ['"2 + 2 = 4"', 'News claims, ad claims,\nhistorical events',
                     'Subjective opinions,\nunfalsifiable predictions']
 
@@ -587,10 +588,10 @@ def fig6_falsifiability(out):
             (x, bar_y - bar_h / 2), w, bar_h,
             boxstyle='round,pad=0.06', fc=color, ec=C['edge'],
             lw=1.5, zorder=2))
-        ax.text(x + w / 2, bar_y + 0.1, label, fontsize=9,
+        ax.text(x + w / 2, bar_y + 0.3, label, fontsize=9,
                 fontweight='bold', color=C['text'],
                 ha='center', va='center', zorder=4)
-        ax.text(x + w / 2, bar_y - 0.3, ex, fontsize=7.8,
+        ax.text(x + w / 2, bar_y - 0.4, ex, fontsize=7.8,
                 fontstyle='italic', color=C['soft'],
                 ha='center', va='center', zorder=4)
 
@@ -602,7 +603,7 @@ def fig6_falsifiability(out):
             [bracket_y, bracket_y + brace_h, bracket_y + brace_h, bracket_y],
             color=C['accent'], lw=1.8, zorder=5)
     ax.text((bx0 + bx1) / 2, bracket_y + brace_h + 0.2,
-            'Challenge mechanisms work here',
+            'Candidate region for challenges',
             fontsize=8.6, fontweight='bold', color=C['accent'],
             ha='center', va='bottom', zorder=5)
 
@@ -616,9 +617,7 @@ def fig6_falsifiability(out):
     ax.text(13, bar_y - bar_h / 2 - 0.5, 'Impossible to falsify',
             fontsize=7.8, color=C['muted'], ha='right', va='top')
 
-    fig.savefig(out, dpi=300, bbox_inches='tight',
-                facecolor=C['bg'], pad_inches=0.3)
-    plt.close(fig)
+    _save_diagram(fig, out)
 
 
 # ══════════════════════════════════════════════════════════
@@ -719,9 +718,7 @@ def fig7_confidence_reputation(out):
     ax2.set_yticks([])
 
     fig.tight_layout(w_pad=3)
-    fig.savefig(out, dpi=300, bbox_inches='tight',
-                facecolor=C['bg'], pad_inches=0.3)
-    plt.close(fig)
+    _save_diagram(fig, out)
 
 
 # ══════════════════════════════════════════════════════════
@@ -737,7 +734,7 @@ def fig8_pool_economics(out):
 
     # Central: Reward Budget
     rbx, rby = 6.0, 4.5
-    _box(ax, rbx, rby, 3.2, 1.0, 'Reward\nBudget',
+    _box(ax, rbx, rby, 3.2, 1.0, 'ETH Service\nBudget',
          fs=11, fill=C['L1'], ec=C['accent'])
 
     # Actors
@@ -749,7 +746,7 @@ def fig8_pool_economics(out):
     _box(ax, pcx, pcy, W, H, 'Pool Creator', fs=9)
     _box(ax, chx, chy, W, H, 'Challenger', fs=9)
     _box(ax, cux, cuy, W, H, 'Curators', fs=9)
-    _box(ax, ddrx, ddry, W, H, 'DDR\n(Dispute Resolution)', fs=8.6)
+    _box(ax, ddrx, ddry, W, H, 'External\narbitrator', fs=8.6)
 
     # Pool Creator → Reward Budget (seeds)
     s = _ep(pcx, pcy, W, H, rbx, rby)
@@ -764,12 +761,12 @@ def fig8_pool_economics(out):
     # Reward Budget → Curators (round rewards)
     s = _ep(rbx, rby, 3.2, 1.0, cux, cuy)
     t = _ep(cux, cuy, W, H, rbx, rby)
-    _arr(ax, *s, *t, 'relevance round\nrewards', lo=(-1.3, -0.1), fs=7)
+    _arr(ax, *s, *t, 'ETH jury fees\n(valid ruling only)', lo=(-1.3, -0.1), fs=7)
 
     # Challenger → DDR (counter-stake)
     s = _ep(chx, chy, W, H, ddrx, ddry)
     t = _ep(ddrx, ddry, W, H, chx, chy)
-    _arr(ax, *s, *t, 'counter-stake', lo=(-1.2, 0), fs=7)
+    _arr(ax, *s, *t, 'arbitration fee', lo=(-1.2, 0), fs=7)
 
     # DDR outcomes: two annotations
     ax.text(ddrx, ddry - H / 2 - 0.45,
@@ -781,15 +778,14 @@ def fig8_pool_economics(out):
                       ec=C['edge'], lw=0.8))
 
     # Budget depletion note
-    ax.text(rbx, rby - 1.0 - 0.6,
+    ax.text(rbx, -0.3,
             'If budget depletes, ordinary rounds pause;\n'
-            'canonical record stays challengeable',
+            'canonical record stays challengeable.\n'
+            'Utility-token penalties and rewards use a separate ledger.',
             fontsize=7.8, fontstyle='italic', color=C['accent'],
             ha='center', va='top')
 
-    fig.savefig(out, dpi=300, bbox_inches='tight',
-                facecolor=C['bg'], pad_inches=0.3)
-    plt.close(fig)
+    _save_diagram(fig, out)
 
 
 # ══════════════════════════════════════════════════════════
@@ -872,9 +868,7 @@ def fig9_rpgf_impact_states(out):
     _arr(ax, *s, *t, 'DDR: Debunked',
          lo=(1.3, 0), fs=7)
 
-    fig.savefig(out, dpi=300, bbox_inches='tight',
-                facecolor=C['bg'], pad_inches=0.3)
-    plt.close(fig)
+    _save_diagram(fig, out)
 
 
 # ══════════════════════════════════════════════════════════

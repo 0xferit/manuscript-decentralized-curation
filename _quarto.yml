@@ -14,7 +14,7 @@ format:
   html:
     output-file: index
     embed-resources: false
-    css: fonts.css
+    css: [fonts.css, layout.css]
     include-after-body: figure-theme-swap.html
     theme:
       light: [flatly, custom-light.scss]
