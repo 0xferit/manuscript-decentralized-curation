@@ -17,8 +17,8 @@ Mass media in democratic societies function as a propaganda system, not through 
 We cite Chomsky/Herman for one specific argument in the "Why this matters" section:
 
 - **Weaponization as a failure mode**: "when one entity controls what becomes 'known,' the distance between curation and propaganda collapses to a question of intent." This is the Chomsky/Herman thesis expressed in our framework.
-- **Incompetence vs. weaponization are indistinguishable**: from the consumer's perspective, you cannot tell whether your feed is poorly curated or deliberately curated against your interests. Chomsky/Herman demonstrate the structural version; we generalize it as an inherent property of centralized curation.
-- **Advertising filter**: their second filter (advertising as primary revenue) maps directly to our advertising instantiation. The current system has advertisers paying platforms regardless of truth; our mechanism makes truthful advertising cheaper than false advertising.
+- **Difficulty attributing bias**: a reader may have difficulty distinguishing error from deliberate influence. The propaganda model is a structural account of particular media institutions, not a theorem that these causes are observationally indistinguishable in every centralized system.
+- **Advertising filter**: their second filter (advertising as primary revenue) maps directly to our advertising instantiation. The current system has advertisers paying platforms regardless of truth; the advertising sketch proposes bonded claims. Relative costs depend on detection, challenge incentives, adjudication error and the value of deception; the sketch establishes no general cost ordering.
 
 ## Limitations relevant to us
 

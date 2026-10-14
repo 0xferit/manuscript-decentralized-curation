@@ -7,7 +7,7 @@
 
 ## Core thesis (Goldin)
 
-Token-curated registries use token-weighted voting to maintain a list of items. Token holders have an incentive to curate well because the token's value depends on the list's quality. The mechanism is: apply to be listed, token holders vote to accept/reject, challengers can dispute listings.
+Token-curated registries use token-weighted voting to maintain a list of items. The proposed incentive is that token holders benefit when the registry is useful and valuable. That link is an assumption to analyze, not a guarantee of informative voting. The mechanism is: apply to be listed, token holders vote to accept/reject, challengers can dispute listings.
 
 ## Core thesis (Asgaonkar & Krishnamachari)
 
@@ -25,17 +25,17 @@ Game-theoretic analysis of TCRs reveals multiple equilibrium problems: (1) chall
 TCRs are the closest prior art and the primary "what not to do" reference:
 
 - **"This is just TCRs" is an anticipated objection**: our Q&A prep addresses this directly. The key differences:
-  1. **Unit of curation**: TCRs answer "is this item in the list?" Our unit is a structured claim with proposition, scope, evidence policy, and resolution policy. This structure is what makes claims adjudicable rather than political.
-  2. **Quality decomposition**: TCRs use one token-weighted vote for everything. We separate accuracy (dispute resolution) from relevance (coherence game). TCRs conflate the two.
-  3. **Evidence standard**: TCRs have no evidence policy. Without one, disputes are semantic games, not fact-finding.
-  4. **Challenge economics**: TCR challenges are rare because challenging is expensive with uncertain returns. Our dispute mechanism (via DDR) has concrete expected-value calculations and the bounty structure makes challenging economically rational when claims are false.
+  1. **Unit of curation**: TCRs answer "is this item in the list?" Our unit is a structured claim with proposition, scope, evidence policy, and resolution policy. This structure supplies explicit grounds for adjudication, without eliminating interpretation or policy choice.
+  2. **Quality decomposition**: The basic registry membership game uses token-weighted acceptance decisions. We separate accuracy (dispute resolution) from relevance (coherence game). TCRs conflate the two.
+  3. **Evidence standard**: A registry needs an application-specific evidence and listing policy. A token-voting mechanism alone does not supply one; this does not mean all registry implementations lack policies.
+  4. **Challenge economics**: TCR challenges are rare because challenging is expensive with uncertain returns. Our dispute mechanism (via DDR) has concrete expected-value calculations and the bounty structure can make a challenge profitable under particular detection, cost and adjudication assumptions.
 
 - **Documented failure modes that informed our design**:
-  - Challenge rarity: addressed by DDR with positive challenger EV
-  - Participation decay: addressed by pooled staking (commit to domains, not individual claims)
-  - Wealth concentration: partially addressed by reputation mechanism (alpha parameter)
+  - Challenge rarity: challenge incentives depend on expected rewards, detection and dispute costs
+  - Participation decay: pooled availability may simplify participation but its retention effect is unvalidated
+  - Wealth concentration: the selected relevance draft uses utility-token stake; publisher reputation does not remove stake concentration
   - No evidence standard: addressed by explicit evidence policies per pool
 
 ## Key takeaway
 
-TCRs demonstrated that token-weighted curation is insufficient. The contribution of our work is not "TCR but better" but a different architecture: structured claims + quality decomposition + separate mechanisms per dimension + explicit evidence standards. The surface similarity (tokens, staking, voting) masks deep structural differences.
+Registry work exposes reasons to analyze token-weighted curation carefully; it does not prove that every such registry must fail. The contribution of our work is not "TCR but better" but a different architecture: structured claims + quality decomposition + separate mechanisms per dimension + explicit evidence standards. The surface similarity (tokens, staking, voting) masks deep structural differences.

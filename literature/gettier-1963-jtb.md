@@ -4,7 +4,7 @@
 
 ## Core thesis
 
-The classical definition of knowledge as "justified true belief" (JTB) is insufficient. Gettier provides counterexamples where a belief is justified, true, but accidentally so: the justification does not actually connect to the truth. Therefore JTB is necessary but not sufficient for knowledge.
+The classical definition of knowledge as "justified true belief" (JTB) is insufficient. Gettier provides counterexamples where a belief is justified, true, but accidentally so: the justification does not actually connect to the truth. The counterexamples challenge sufficiency; they do not prove that each component is necessary for every account of knowledge.
 
 ## The counterexamples (simplified)
 
@@ -16,7 +16,7 @@ The classical definition of knowledge as "justified true belief" (JTB) is insuff
 
 We cite Gettier in the "Operationalizing knowledge" section to acknowledge a known limitation:
 
-- **The protocol does not resolve Gettier cases**: a curated claim can be stake-validated and true by coincidence while the supporting evidence is misleading. Example: an author submits "Company X's revenue exceeded $1B in Q3" with evidence from a leaked draft report. The draft was wrong, but the actual revenue did exceed $1B. The claim is true, the evidence is justified (it was a real document), but the justification is disconnected from the truth.
+- **The protocol does not resolve Gettier cases**: a bonded claim can survive challenge and be true by coincidence while the supporting evidence is misleading. Example: an author submits "Company X's revenue exceeded $1B in Q3" with evidence from a leaked draft report. The draft was wrong, but the actual revenue did exceed $1B. The claim is true, the evidence is justified (it was a real document), but the justification is disconnected from the truth.
 - **Partial corrective**: the dispute mechanism allows a challenger to identify that the stated evidence is disconnected from the claim's truth and force re-evaluation. But this only works if someone notices the disconnect and finds it worth the stake.
 - **Residual risk, not solvable problem**: we frame Gettier cases as a residual risk that the protocol inherits from the epistemological tradition, not as something our mechanism can solve. This is honest and defensible.
 

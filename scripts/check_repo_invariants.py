@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import os
 import re
 import sys
 from html import unescape
@@ -38,6 +39,8 @@ NON_BIB_CROSSREF_PREFIXES = (
     "app-",
 )
 
+GENERATED_SOURCE_DIRECTORIES = frozenset({"node_modules", "dist", "build", ".venv", "venv"})
+
 BIB_ENTRY_PATTERN = re.compile(r"@\w+\{([^,\s]+),")
 CITATION_PATTERN = re.compile(r"(?<![A-Za-z0-9_:-])@([A-Za-z0-9][A-Za-z0-9:_-]*)")
 
@@ -70,9 +73,16 @@ def read_text(path: Path) -> str:
 
 
 def source_paths() -> tuple[Path, ...]:
+    project_sources = []
+    for directory, children, files in os.walk(ROOT / "projects"):
+        children[:] = sorted(set(children) - GENERATED_SOURCE_DIRECTORIES)
+        project_sources.extend(
+            (Path(directory) / name).relative_to(ROOT)
+            for name in files if name.endswith(".md")
+        )
     return (
         Path("paper.qmd"),
-        *sorted(path.relative_to(ROOT) for path in (ROOT / "projects").rglob("*.md")),
+        *sorted(project_sources),
         *sorted(path.relative_to(ROOT) for path in (ROOT / "truth-post").rglob("*.qmd")),
         *sorted(path.relative_to(ROOT) for path in (ROOT / "rpgf").rglob("*.qmd")),
     )

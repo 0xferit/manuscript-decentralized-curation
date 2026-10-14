@@ -4,7 +4,7 @@
 
 ## Core thesis
 
-In games where players benefit from coordination but cannot communicate, they converge on **focal points**: outcomes that are salient, obvious, or culturally prominent. Coordination does not require explicit agreement; shared context is sufficient. The key insight is that the structure of the game and the salience of certain options do the work that communication would otherwise do.
+In games where players benefit from coordination but cannot communicate, they may coordinate on **focal points**: outcomes that are salient, obvious, or culturally prominent. Coordination does not require explicit agreement; shared context can help, without guaranteeing coordination. The key insight is that the structure of the game and the salience of certain options do the work that communication would otherwise do.
 
 ## Key concepts
 
@@ -18,14 +18,14 @@ In games where players benefit from coordination but cannot communicate, they co
 Schelling's focal point theory is the theoretical foundation for both our mechanism designs:
 
 ### Accuracy (DDR disputes)
-- Jurors face a binary choice (Valid/Invalid) and must coordinate without communication (commit-reveal).
+- The current accuracy profile asks whether a challenge succeeds. A commitment phase can hide a vote temporarily; it does not prevent off-chain communication or collusion, and provider voting procedures vary.
 - The focal point is the verdict consistent with the evidence standard and curation policy.
 - Binary choice is the simplest focal point structure: one option is consistent with the evidence, the other is not. Salience is high when the evidence is clear.
 
 ### Relevance (coherence game)
 - Curators report policy conformity on [0,1].
 - Honest assessment is the intended focal point. A specific public policy can make that target salient, but participants may coordinate on other reports.
-- Salience does not establish truthful best responses or equilibrium selection. [Claim 3 in the paper](../paper.qmd#curator-voting-strategy) gives a unilateral report that increases the single-round reward under permitted parameters. Its net return after appeal settlement remains unresolved.
+- Salience does not establish truthful best responses or equilibrium selection. [Claim 3 in the paper](../paper.qmd#curator-voting-strategy) gives a unilateral report that increases the single-round reward in a single-asset analytical model. The selected fixed per-seat fee removes that particular fee-padding channel, but does not establish truthful incentives.
 
 ### Why policy specificity matters
 Policy specificity makes policy-faithful assessment easier to define. Vague policies leave competing interpretations, but a precise policy alone does not make honest reporting an equilibrium. The full reward, penalty and appeal rules determine best responses.
@@ -36,7 +36,7 @@ Policy specificity makes policy-faithful assessment easier to define. Vague poli
 
 This recursive expectation structure is exactly what makes focal points work: not just "I think X" but "I think you think I think X."
 
-> "The coordination problem is not one of guessing what the other will do, but of finding a rule that both can find." (paraphrased from Chapter 3)
+Paraphrase of the coordination idea: participants seek a salient rule they expect others to identify too.
 
 This maps to our design: the curation policy is the "rule that both can find."
 

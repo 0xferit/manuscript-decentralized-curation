@@ -4,7 +4,7 @@
 
 ## Core thesis
 
-Models bounded-depth recursive belief reasoning in coordination games with imperfect information. Shows that limited recursion (humans stop reasoning about "I know that you know that I know..." at shallow depths) leads to systematic overestimation of shared knowledge. This produces an "illusion of shared knowledge" that masks incompatible understanding.
+Studies recursive belief reasoning in an imperfect-information coordination game. The [2020 preprint](https://arxiv.org/abs/2008.08849) reports three experiments with 802 participants, who often attempted coordination despite the distinction between finite-order shared knowledge and common knowledge. The result concerns the studied game and sample, rather than a universal law of human reasoning.
 
 ## Key concepts
 
@@ -17,9 +17,9 @@ Models bounded-depth recursive belief reasoning in coordination games with imper
 We cite this in the "When common knowledge fails" subsection of the Introduction:
 
 - **Extends Aumann formally**: Aumann defines common knowledge; Bolander et al. model what happens when humans approximate it with bounded reasoning. The answer: systematic overestimation.
-- **Motivates the knowledge layer**: if people routinely overestimate shared understanding, then improving the quality of the actual shared knowledge becomes even more important. You cannot fix the overestimation bias (it is cognitive), but you can improve the underlying knowledge so that when people do truncate, the truncated version is closer to correct.
-- **Caveat we include**: the paper notes this is a theoretical model; whether the effect transfers to "field settings with real stakes" is an open empirical question. We should maintain this caveat in our paper.
+- **Motivates the knowledge layer**: if people routinely overestimate shared understanding, then improving the quality of the actual shared knowledge becomes even more important. This motivates examining information and coordination together. The experiments do not establish that the proposed curation protocol reduces the observed errors.
+- **Scope caveat**: the preprint combines a formal model with controlled experiments. Transfer to other institutions or to this protocol is an external-validity question.
 
 ## Limitation
 
-This is an arXiv preprint (cs.GT), not peer-reviewed in a journal. The theoretical contribution is sound, but the empirical status is uncertain. We cite it for the formal model, not for empirical claims.
+The cited version is a preprint with controlled experimental evidence. This note does not establish its current peer-review status or generalization beyond the tested task. It is background reading; consult the current manuscript and bibliography to determine which sources are cited.

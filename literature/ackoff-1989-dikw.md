@@ -4,11 +4,11 @@
 
 ## Core thesis
 
-Ackoff posits a hierarchy of content in the human mind: Data, Information, Knowledge, Wisdom (DIKW). Each level requires transformation from the level below. Data are symbols without meaning; information is processed data that answers who, what, where, when, how many; knowledge is know-how that enables transformation of information into instructions; wisdom adds evaluated understanding and answers "why."
+Ackoff discusses data, information, knowledge, understanding and wisdom. The common data-information-knowledge-wisdom (DIKW) shorthand omits his explicit understanding category. Data are symbols without meaning; information is processed data that answers who, what, where, when, how many; knowledge is know-how that enables transformation of information into instructions; understanding addresses explanatory relationships, while wisdom adds evaluation.
 
 ## Key concepts
 
-- **DIKW hierarchy**: a four-level pyramid describing how raw symbols become actionable understanding. Each transition requires a different kind of processing.
+- **DIKW shorthand**: a common summary of the hierarchy, with understanding explicitly included in Ackoff's account. Each transition requires a different kind of processing.
 - **Transformation gaps**: Ackoff names the levels but does not specify concrete mechanisms for moving between them. The transitions are described functionally (what each level does) rather than procedurally (how to perform the transformation).
 - **Knowledge as procedural**: Ackoff defines knowledge as "know-how," the ability to transform information into instructions. This is a procedural definition, not a propositional one.
 - **Wisdom as evaluative**: wisdom adds value judgment; it is the only level that involves ethical or aesthetic evaluation.
@@ -17,10 +17,10 @@ Ackoff posits a hierarchy of content in the human mind: Data, Information, Knowl
 
 The paper operates on the information-to-knowledge transition in Ackoff's hierarchy, but diverges in two important ways:
 
-- **Propositional vs. procedural knowledge**: Ackoff's "knowledge" is know-how (procedural). The paper's "knowledge" is decision-grade verified claims (propositional). The paper is closer to the epistemological tradition (justified true belief, Gettier problems) than to Ackoff's systems-analysis framing.
-- **Descriptive vs. prescriptive**: DIKW is a descriptive taxonomy: it names the levels and characterizes what each contains. The paper is prescriptive: it designs mechanisms that perform the transformation trustlessly. The paper's framework fills exactly the gap DIKW leaves open: how to move from one level to the next, and how to verify that the transformation was done correctly.
+- **Propositional vs. procedural knowledge**: Ackoff's "knowledge" is know-how (procedural). The paper uses an operational notion of decision-relevant, contestable assessments; survival of a challenge does not verify truth. The paper is closer to the epistemological tradition (justified true belief, Gettier problems) than to Ackoff's systems-analysis framing.
+- **Descriptive vs. prescriptive**: DIKW is a descriptive taxonomy: it names the levels and characterizes what each contains. The paper is prescriptive: it proposes inspectable assessment mechanisms. Whether they produce better decisions remains to be evaluated; the proposal does not establish successful transformation into knowledge.
 
-DIKW is useful as a shared reference point. The information science community recognizes it. Citing it positions the paper within a known landscape and then immediately differentiates: DIKW names the problem, the paper provides mechanisms.
+DIKW is useful as a shared reference point. The information science community recognizes it. Citing it positions the paper within a known landscape and then immediately differentiates: DIKW supplies a vocabulary; the paper proposes mechanisms with separate evidence and incentive requirements.
 
 ## Key passages worth keeping
 
