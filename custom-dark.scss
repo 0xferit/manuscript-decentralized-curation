@@ -23,12 +23,6 @@ $toc-active-bg: rgba(45, 212, 191, 0.12);
 $figure-surface: transparent;
 $figure-border: #28413d;
 $selection-bg: rgba(45, 212, 191, 0.2);
-$shell-bg: rgba(10, 15, 14, 0.9);
-$shell-shadow: rgba(0, 0, 0, 0.18);
-$toggle-track: rgba(15, 24, 23, 0.78);
-$toggle-text: #7f9c97;
-$toggle-active-text: #07100f;
-$toggle-active-bg: #54dccd;
 $section-divider: rgba(45, 212, 191, 0.14);
 $lede-color: #c6d8d4;
 $inline-strong-bg: rgba(45, 212, 191, 0.1);
@@ -481,75 +475,6 @@ hr {
   opacity: 1;
 }
 
-#paper-shell {
-  align-items: center;
-  backdrop-filter: blur(12px);
-  background: $shell-bg;
-  border-bottom: 1px solid $border-subtle;
-  box-shadow: 0 1px 0 $shell-shadow;
-  display: flex;
-  inset: 0 0 auto 0;
-  justify-content: space-between;
-  padding: 0.72rem 1.15rem;
-  position: fixed;
-  z-index: 1100;
-}
-
-#paper-shell-brand {
-  color: $link-color;
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: 0.09em;
-  text-decoration: none;
-  text-transform: uppercase;
-}
-
-#paper-shell-brand:hover,
-#paper-shell-brand:focus {
-  color: $link-color;
-  text-decoration: none;
-}
-
-#paper-shell-controls {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.paper-theme-toggle.quarto-color-scheme-toggle {
-  align-items: center;
-  background: $toggle-track;
-  border: 1px solid $border-subtle;
-  border-radius: 0.58rem;
-  display: inline-flex;
-  gap: 0.15rem;
-  padding: 0.18rem;
-  position: static;
-  text-decoration: none !important;
-}
-
-.paper-theme-toggle .bi {
-  display: none;
-}
-
-.paper-theme-toggle .theme-option {
-  border-radius: 0.42rem;
-  color: $toggle-text;
-  font-size: 0.66rem;
-  font-weight: 600;
-  letter-spacing: 0.11em;
-  line-height: 1;
-  padding: 0.42rem 0.58rem;
-  text-transform: uppercase;
-  transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
-}
-
-.paper-theme-toggle:not(.alternate) .theme-option-light,
-.paper-theme-toggle.alternate .theme-option-dark {
-  background: $toggle-active-bg;
-  box-shadow: 0 0 0 1px rgba(84, 220, 205, 0.16) inset;
-  color: $toggle-active-text;
-}
-
 @media (max-width: 1240px) {
   #quarto-sidebar-toc-left,
   #quarto-margin-sidebar {
@@ -572,9 +497,5 @@ hr {
 
   main.content {
     padding-inline: 1.05rem;
-  }
-
-  #paper-shell {
-    padding-inline: 0.85rem;
   }
 }

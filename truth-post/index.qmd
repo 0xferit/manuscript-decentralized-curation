@@ -8,4 +8,5 @@ format:
 Truth Post is the news-curation project that grows the thesis framework into a concrete protocol design. It separates accuracy from relevance, specifies the end-state architecture, and documents the gap between the current blueprint and the 2023 partial deployment.
 
 - [Read the canonical Truth Post blueprint](./blueprint/)
+- [Read the historical deployment retrospective](./implementation/)
 - [Back to the thesis paper](../)

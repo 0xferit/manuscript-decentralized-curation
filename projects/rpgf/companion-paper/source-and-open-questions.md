@@ -2,7 +2,7 @@
 
 This record accompanies [the working manuscript](manuscript.md). It records agent inspection, not human scientific verification. No source or claim has been marked human-verified. The author authorized publication of version 0.1.0 as a preprint on 14 October 2026. Author identity and identifier are taken from the parent manuscript metadata; no affiliation, funding declaration or consent statement is inferred. Human source-verification flags remain unchanged.
 
-The working manuscript now includes unpublished review corrections. The source identities, excerpts and publication-preparation checks below document version 0.1.0 and remain unchanged as historical evidence. Current checks appear separately under `working_review` in [the verification record](verification-results.json); they do not update the published preprint or certify human verification.
+The website and working manuscript include review corrections not incorporated into a new preprint release. The source identities, excerpts and publication-preparation checks below document version 0.1.0 and remain unchanged as historical evidence. Current checks appear separately under `working_review` in [the verification record](verification-results.json); they do not update the deposited preprint or certify human verification.
 
 ## Authority and scope
 
