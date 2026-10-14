@@ -13,7 +13,6 @@ fontsize: 11pt
 geometry: margin=24mm
 mainfont: Georgia
 colorlinks: true
-linkcolor: black
 urlcolor: blue
 citecolor: black
 header-includes:
@@ -21,6 +20,7 @@ header-includes:
     ```{=latex}
     \clubpenalty=10000
     \widowpenalty=10000
+    \AtBeginDocument{\hypersetup{linkcolor=black}}
     ```
 ---
 
