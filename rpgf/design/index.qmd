@@ -1,9 +1,9 @@
 ---
-title: "Retroactive Public Good Funding: A Curation Framework Instantiation"
+title: "Retroactive Public Goods Funding: Fixed-Round Reference Proposal"
 author:
   - name: Ferit Tunçer
     orcid: "0009-0004-1449-9348"
-date-modified: 2026-03-09T22:00:00
+date-modified: 2026-10-14T00:00:00
 ---
 
 ::: {.callout-note appearance="minimal"}
