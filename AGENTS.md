@@ -25,7 +25,6 @@ This file is the canonical agent-facing guidance for the repository. `CLAUDE.md`
   - `_build-info.md` (overwritten in CI; shows deployed version + build time)
   - `outputs/` (rendered artifacts; gitignored)
   - `.github/workflows/publish-cloudflare-pages.yml` (CI publish: run sims → render HTML → Direct Upload to Cloudflare Pages)
-  - `.github/workflows/copilot-setup-steps.yml` (Copilot coding agent environment: installs Python deps, runs sims, verifies Quarto render)
   - `.github/agents/peer-reviewer.agent.md` (GitHub Copilot agent: 7-stage scientific peer review using Claude Opus)
 
 ### Workflow expectations

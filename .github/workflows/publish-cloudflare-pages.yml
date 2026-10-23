@@ -1,4 +1,4 @@
-name: Publish HTML (Cloudflare Pages)
+name: Site build and deploy
 
 on:
   push:
@@ -16,8 +16,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  publish:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v7
