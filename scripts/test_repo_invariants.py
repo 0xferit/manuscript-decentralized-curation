@@ -22,6 +22,8 @@ class PublishedNavigationTests(unittest.TestCase):
             'truth-post/blueprint/index.qmd',
             'truth-post/implementation/index.qmd',
             'rpgf/companion/index.qmd',
+            'requirements.txt',
+            'requirements.lock',
         ):
             target = self.root / relative
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -177,6 +179,27 @@ Plain paper.qmd and `paper.qmd` are filenames.
         result = self.check(text)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('Repo invariants OK', result.stdout)
+
+
+    def test_requires_direct_pins_to_match_lock(self) -> None:
+        requirements = self.root / 'requirements.txt'
+        original = requirements.read_text(encoding='utf-8')
+        locked_numpy = next(
+            line.split()[0] for line in (self.root / 'requirements.lock').read_text(encoding='utf-8').splitlines()
+            if line.startswith('numpy==')
+        )
+        cases = (
+            ('numpy==0.0.1', f'requirements.txt: numpy==0.0.1 does not match requirements.lock ({locked_numpy})'),
+            ('NumPy==0.0.1', f'requirements.txt: NumPy==0.0.1 does not match requirements.lock ({locked_numpy})'),
+            ('unlocked-package==1.0', 'requirements.txt: unlocked-package==1.0 is missing from requirements.lock'),
+        )
+        for pin, message in cases:
+            with self.subTest(pin=pin):
+                requirements.write_text(f'{original}{pin}\n', encoding='utf-8')
+                result = self.check('')
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn(message, result.stderr)
+        requirements.write_text(original, encoding='utf-8')
 
 
 if __name__ == '__main__':

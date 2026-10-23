@@ -29,7 +29,7 @@ python3 analysis/run_all.py reading-time
 python3 analysis/run_all.py summary
 ```
 
-`make setup` installs the hash-locked binary distributions in `requirements.lock`; it does not re-resolve dependencies or build packages from source. `requirements.txt` declares the direct dependencies; update and review the lock when those declarations change. The lock records its release-age cutoff and resolver command.
+`make setup` installs the hash-locked binary distributions in `requirements.lock`; it does not re-resolve dependencies or build packages from source. `requirements.txt` declares the direct dependencies; update and review the lock when those declarations change. The lock records its release-age cutoff and resolver command. `make check-invariants` fails while any version pinned in `requirements.txt` differs from the lock; Dependabot updates only `requirements.txt`, so its pip pull requests need the lock regenerated with the recorded command before they pass.
 
 For an existing virtual environment, the same lock can also be installed with uv, retaining hash checks, binary-only packages and a 15-day release-age gate:
 
