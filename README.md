@@ -43,7 +43,7 @@ Raw `quarto render` is intentionally not the recommended entrypoint for local or
 
 Every push to `main` triggers a [GitHub Actions workflow](.github/workflows/publish-cloudflare-pages.yml) that runs simulations, renders HTML, and deploys to [manuscript-decentralized-curation.pages.dev](https://manuscript-decentralized-curation.pages.dev) via Cloudflare Pages Direct Upload. Pull requests get a preview URL automatically.
 
-The workflow requires one GitHub Actions secret: `CLOUDFLARE_API_TOKEN`. The Cloudflare account ID is not sensitive and is hardcoded in the workflow file.
+The workflow requires one GitHub Actions secret: `CLOUDFLARE_API_TOKEN`. The Cloudflare account ID is not sensitive and is hardcoded in the workflow file. Merge gates, secret boundaries and dependency pinning are described in [ARCHITECTURE.md](ARCHITECTURE.md#continuous-integration-and-merge-gates).
 
 The shared document sidebar, search and previous/next links are generated from `_quarto.yml`. The article table of contents remains separate. Published routes form this reading tree:
 
