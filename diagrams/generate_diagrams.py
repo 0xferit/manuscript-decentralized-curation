@@ -385,9 +385,9 @@ def fig4_relevance_round(out):
         ('6', r'Weighted mean $\mu$ and dispersion $\sigma$;'
               '\n'
               r'require valid reveal quorum'),
-        ('7', r'After proof window: slash when $\sigma \geq \varepsilon_\sigma$:'
+        ('7', r'At chain finality, vs. terminal jury score $\mu^*$:'
               '\n'
-              r'$p_i = \min(1, \max(0, (|v_i - \mu| / \sigma - K) / K))$'),
+              r'$p_i = \min(1, \max(0, (|v_i - \mu^*| / \tilde\sigma^* - K) / K))$'),
         ('8', 'Unopposed funded score: forfeiture\nOpposed: doubled planned jury target'),
     ]
 
