@@ -6,7 +6,7 @@ A paper-first workspace for a Quarto-based academic manuscript on decentralized 
 
 ## Building locally
 
-Prerequisites: [Quarto](https://quarto.org/docs/get-started/), Python 3.11+, and (for PDF) a LaTeX distribution (`quarto install tinytex`). The publication workflow uses Quarto 1.9.37. Record the actual Quarto, Python and TeX versions with a reviewed build; different versions can change line and page breaks. The standalone companion also requires Pandoc, XeLaTeX and the font specified in its [render instructions](projects/rpgf/companion-paper/README.md). Put the TeX binaries on `PATH`, or set `PDF_ENGINE` to the intended XeLaTeX executable when invoking `make render-companion`.
+Prerequisites: [Quarto](https://quarto.org/docs/get-started/), Python 3.11+, and (for PDF) a LaTeX distribution (`quarto install tinytex`). The publication workflow pins the Quarto version it renders with in [its setup step](.github/workflows/publish-cloudflare-pages.yml). Record the actual Quarto, Python and TeX versions with a reviewed build; different versions can change line and page breaks. The standalone companion also requires Pandoc, XeLaTeX and the font specified in its [render instructions](projects/rpgf/companion-paper/README.md). Put the TeX binaries on `PATH`, or set `PDF_ENGINE` to the intended XeLaTeX executable when invoking `make render-companion`.
 
 ```bash
 python3 -m venv .venv

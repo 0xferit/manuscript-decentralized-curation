@@ -26,11 +26,12 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version-file: .python-version
           cache: "pip"
+          cache-dependency-path: requirements.lock
 
-      - name: Install Python deps
-        run: pip install -r requirements.txt
+      - name: Install locked Python dependencies
+        run: make setup
 
       - name: Check repo invariants
         run: make check-invariants
