@@ -12,17 +12,6 @@ on:
 
 jobs:
   claude-review:
-    # Skip on bot-authored PRs (Copilot, Dependabot). claude-code-action
-    # exchanges the workflow's OIDC token for a GitHub App installation
-    # token; the server-side exchange rejects actors without repo write
-    # access. The action's allowed_bots input would normally fix this,
-    # but v1.0.88 has a client-side bug that crashes on actors without
-    # the "[bot]" suffix (Copilot's login is "Copilot"). Tracked in
-    # anthropics/claude-code-action#1133; fix PRs #1144/#1213 unmerged.
-    # Remove this guard once the pin is lifted and allowed_bots works.
-    if: >-
-      github.event.pull_request.user.login != 'Copilot' &&
-      github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -38,13 +27,10 @@ jobs:
 
       - name: Run Claude Code Review
         id: claude-review
-        # Pinned to v1.0.88 to avoid the ENOENT symlink / tsconfig.json
-        # "directory mismatch" regression introduced in v1.0.89.
-        # See upstream issues anthropics/claude-code-action#1187,
-        # #1205, and #1220. Revisit once a fix ships upstream.
-        uses: anthropics/claude-code-action@1eddb334cfa79fdb21ecbe2180ca1a016e8e7d47 # v1.0.88
+        uses: anthropics/claude-code-action@6fed3ca145920b639991cb756090506e1bcaf515 # v1.0.245
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          allowed_bots: 'Copilot,dependabot[bot]'
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
           prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
