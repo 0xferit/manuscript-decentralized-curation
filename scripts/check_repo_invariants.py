@@ -43,6 +43,10 @@ NON_BIB_CROSSREF_PREFIXES = (
 
 GENERATED_SOURCE_DIRECTORIES = frozenset({"node_modules", "dist", "build", ".venv", "venv"})
 
+PINNED_REQUIREMENT_PATTERN = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._-]*)==(\S+)")
+DIRECT_REQUIREMENTS = Path("requirements.txt")
+REQUIREMENTS_LOCK = Path("requirements.lock")
+
 BIB_ENTRY_PATTERN = re.compile(r"@\w+\{([^,\s]+),")
 CITATION_PATTERN = re.compile(r"(?<![A-Za-z0-9_:-])@([A-Za-z0-9][A-Za-z0-9:_-]*)")
 
@@ -131,6 +135,33 @@ def check_citations(errors: list[str]) -> None:
         if missing:
             errors.append(
                 f"{relative_path}: missing BibTeX entries for {', '.join(missing)}"
+            )
+
+
+def normalized_package_name(name: str) -> str:
+    """Canonical project name per PEP 503 (https://peps.python.org/pep-0503/#normalized-names)."""
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def pinned_requirements(relative_path: Path) -> list[tuple[str, str, str]]:
+    pins = []
+    for line in read_text(relative_path).splitlines():
+        match = PINNED_REQUIREMENT_PATTERN.match(line)
+        if match:
+            name, version = match.groups()
+            pins.append((normalized_package_name(name), version, f"{name}=={version}"))
+    return pins
+
+
+def check_locked_dependencies(errors: list[str]) -> None:
+    locked_versions = {name: version for name, version, _ in pinned_requirements(REQUIREMENTS_LOCK)}
+    for name, version, written in pinned_requirements(DIRECT_REQUIREMENTS):
+        locked_version = locked_versions.get(name)
+        if locked_version is None:
+            errors.append(f"{DIRECT_REQUIREMENTS}: {written} is missing from {REQUIREMENTS_LOCK}")
+        elif locked_version != version:
+            errors.append(
+                f"{DIRECT_REQUIREMENTS}: {written} does not match {REQUIREMENTS_LOCK} ({name}=={locked_version})"
             )
 
 
@@ -242,6 +273,7 @@ def main() -> int:
     check_quarto_render_list(errors)
     check_citations(errors)
     check_published_navigation(errors)
+    check_locked_dependencies(errors)
 
     if errors:
         for error in errors:
