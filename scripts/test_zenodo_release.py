@@ -7,13 +7,16 @@ import io
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 import urllib.error
 from pathlib import Path
 from unittest.mock import patch
 
-SCRIPT = Path(__file__).resolve().parents[1] / '.github/scripts/publish_to_zenodo.py'
+SCRIPTS = Path(__file__).resolve().parents[1] / '.github/scripts'
+sys.path.insert(0, str(SCRIPTS))
+SCRIPT = SCRIPTS / 'publish_to_zenodo.py'
 SPEC = importlib.util.spec_from_file_location('zenodo_release', SCRIPT)
 publisher = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(publisher)
@@ -98,6 +101,12 @@ class ZenodoReleaseTests(unittest.TestCase):
         os.environ.pop('ZENODO_TOKEN')
         publisher.main(verify_only=True)
         self.assertEqual(self.requests, [])
+
+    def test_written_manifest_passes_verification(self):
+        Path('outputs/manifest.json').unlink()
+        publisher.write_manifest()
+        publisher.main(verify_only=True)
+        self.assertEqual(json.loads(Path('outputs/manifest.json').read_text()), self.manifest)
 
     def test_rejects_mismatched_artifact_bindings_before_network(self):
         for key in self.manifest:

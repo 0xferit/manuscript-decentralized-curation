@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Publish the verified GitHub release PDF to the Zenodo concept record.
 
-Runs from .github/workflows/publish-zenodo.yml on release.published. Replaces
+Runs from .github/workflows/publish-zenodo.yml, either on release.published or
+called by .github/workflows/release.yml after a merge to main. Replaces
 Zenodo's default GitHub-integration deposit (which the webhook must be turned
 off for) with a clean PDF-only deposit under the existing concept DOI.
 
 Reads metadata from .zenodo.json and verifies the release manifest before
-any network request. Use --verify-only for the credential-free check.
+any network request. Use --verify-only for the credential-free check and
+--write-manifest to bind a freshly rendered PDF to the checked-out commit.
 """
 
 from __future__ import annotations
@@ -22,6 +24,8 @@ import urllib.error
 import urllib.request
 from datetime import datetime
 from pathlib import Path
+
+from release_version import TAG_PATTERN
 
 API = "https://zenodo.org/api"
 CONCEPT_RECID = "20543760"
@@ -67,9 +71,25 @@ def _req(method: str, url: str, *, token: str, body=None, content_type: str | No
         sys.exit(f"non-JSON response from {method} {url}: {raw[:200]!r}")
 
 
+def release_manifest(tag: str, pdf_bytes: bytes) -> dict[str, str]:
+    return {
+        "release_version": tag,
+        "source_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+        "manuscript_sha256": hashlib.sha256(Path("paper.qmd").read_bytes()).hexdigest(),
+        "reviewed_pdf_sha256": hashlib.sha256(pdf_bytes).hexdigest(),
+    }
+
+
+def write_manifest() -> None:
+    tag = _require_env("RELEASE_TAG")
+    manifest = release_manifest(tag, PDF_PATH.read_bytes())
+    MANIFEST_PATH.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    print(f"[release] wrote {MANIFEST_PATH} for {tag} at {manifest['source_commit']}")
+
+
 def main(*, verify_only: bool = False) -> None:
     tag = _require_env("RELEASE_TAG")
-    if not re.fullmatch(r"v\d+\.\d+\.\d+", tag):
+    if not TAG_PATTERN.fullmatch(tag):
         sys.exit("release tag must have the form vMAJOR.MINOR.PATCH")
     version = tag.removeprefix("v")
     try:
@@ -80,13 +100,8 @@ def main(*, verify_only: bool = False) -> None:
         sys.exit("missing reviewed PDF, release manifest, or .zenodo.json")
     except json.JSONDecodeError as exc:
         sys.exit(f"invalid release JSON: {exc.msg} at line {exc.lineno} col {exc.colno}")
-    commit = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
-    expected = {
-        "release_version": tag,
-        "source_commit": commit,
-        "manuscript_sha256": hashlib.sha256(Path("paper.qmd").read_bytes()).hexdigest(),
-        "reviewed_pdf_sha256": hashlib.sha256(pdf_bytes).hexdigest(),
-    }
+    expected = release_manifest(tag, pdf_bytes)
+    commit = expected["source_commit"]
     for key, value in expected.items():
         if manifest.get(key) != value:
             sys.exit(f"release manifest mismatch: {key}")
@@ -200,5 +215,11 @@ def main(*, verify_only: bool = False) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--verify-only", action="store_true")
-    main(verify_only=parser.parse_args().verify_only)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--verify-only", action="store_true")
+    mode.add_argument("--write-manifest", action="store_true")
+    args = parser.parse_args()
+    if args.write_manifest:
+        write_manifest()
+    else:
+        main(verify_only=args.verify_only)
