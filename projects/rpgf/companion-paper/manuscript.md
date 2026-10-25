@@ -3,8 +3,8 @@ title: "Decentralized Curation for Public Goods"
 subtitle: "A blueprint for contestable assessment and funding"
 author: "Ferit Tunçer"
 orcid: "0009-0004-1449-9348"
-date: 2026-10-14
-version: 0.1.0
+date: 2026-10-25
+version: 0.2.0
 bibliography: ../../../references.bib
 lang: en
 status: preprint
@@ -24,7 +24,7 @@ header-includes:
     ```
 ---
 
-> **Working revision of preprint version 0.1.0.** This revision includes review corrections not incorporated into a new preprint release. It presents a proposed design and evaluation agenda, not a completed experiment or a validated deployment. The published parent paper is cited separately from later design decisions.
+> This preprint presents a proposed design and evaluation agenda, not a completed experiment or a validated deployment.
 
 ## Abstract
 
@@ -48,7 +48,7 @@ The contribution is a blueprint connecting these operations while keeping their 
 
 ### Scope and status
 
-This paper develops the author's current ongoing-funding design. The working parent supplies the shared accuracy, jury and appeal rules, while the published parent establishes the framework's research context. This is a design specification and evaluation agenda, not evidence that historical contracts implement every rule. Detailed provenance and remaining implementation questions are in [the source record](https://github.com/0xferit/manuscript-decentralized-curation/blob/public-goods-v0.1.0/projects/rpgf/companion-paper/source-and-open-questions.md). <!-- [claim:C004] [evidence:E001,E002,E003,E010] -->
+This paper develops the author's current ongoing-funding design. The parent paper, version 1.3.0, establishes the framework's research context and supplies the shared accuracy, jury and appeal rules. This is a design specification and evaluation agenda, not evidence that historical contracts implement every rule. Detailed provenance and remaining implementation questions are in [the source record](https://github.com/0xferit/manuscript-decentralized-curation/blob/public-goods-v0.2.0/projects/rpgf/companion-paper/source-and-open-questions.md). <!-- [claim:C004] [evidence:E001,E002,E003,E010] -->
 
 ## 2. What the application must configure
 
@@ -113,9 +113,9 @@ This design makes correction possible, not inevitable. A nomination that nobody 
 
 Accuracy does not settle importance. Two contributions can both be real and still serve a pool's goal differently. Relevance jurors apply the published rubric to the nominated work and evidence. The selected mechanism draws seats from participants who commit a dedicated utility token, locks the capital backing those seats and collects private score commitments before revelation. Several seats held by one participant increase that participant's weight; they do not create several independent minds. <!-- [claim:C016] [evidence:E002] -->
 
-The working design uses a weighted mean for the relevance score and a dispersion-dependent band for coherence penalties. The band is centered on the last jury score in the appeal chain, so every committee is graded against the chain's final adjudicated outcome, and locked tokens stay locked until that chain is final. A report outside the band can lose part of its locked tokens. Actual distance-based penalties fund utility-token rewards to coherent participants; there is no independent base token reward in this selected rule. A configured dispersion floor keeps the band from collapsing when reports nearly agree, so tiny differences are not penalized. Agreement is penalized only when an appeal moves the final score away from it; without an appeal, the design cannot distinguish informed agreement from coordinated or uninformed agreement. The parent specification owns the exact formulas and rounding rules. <!-- [claim:C017] [evidence:E002,E003] -->
+The parent design uses a weighted mean for the relevance score and a dispersion-dependent band for coherence penalties. The band is centered on the last jury score in the appeal chain, so every committee is graded against the chain's final adjudicated outcome, and locked tokens stay locked until that chain is final. A report outside the band can lose part of its locked tokens. Actual distance-based penalties fund utility-token rewards to coherent participants; there is no independent base token reward in this selected rule. A configured dispersion floor keeps the band from collapsing when reports nearly agree, so tiny differences are not penalized. Agreement is penalized only when an appeal moves the final score away from it; without an appeal, the design cannot distinguish informed agreement from coordinated or uninformed agreement. The parent specification owns the exact formulas and rounding rules. <!-- [claim:C017] [evidence:E002,E003] -->
 
-Service compensation is separate. In the working design, a timely valid reveal generates the configured ether (ETH) service fee per represented seat when a valid ruling issues, independently of coherence. The fee belongs to the juror unless a successful premature-disclosure report redirects it to the reporter. It becomes withdrawable at issuance and is not clawed back when an appeal changes the score. A failed-quorum attempt produces no service fee. The fee pays for service; it does not prove that evidence was examined or that the participant understood it. The ETH ledger and utility-token ledger must remain distinct, and their quantities cannot be added as if they were the same asset. <!-- [claim:C018] [evidence:E002,E003] -->
+Service compensation is separate. In the parent design, a timely valid reveal generates the configured ether (ETH) service fee per represented seat when a valid ruling issues, independently of coherence. The fee belongs to the juror unless a successful premature-disclosure report redirects it to the reporter. It becomes withdrawable at issuance and is not clawed back when an appeal changes the score. A failed-quorum attempt produces no service fee. The fee pays for service; it does not prove that evidence was examined or that the participant understood it. The ETH ledger and utility-token ledger must remain distinct, and their quantities cannot be added as if they were the same asset. <!-- [claim:C018] [evidence:E002,E003] -->
 
 Quorum requires timely valid reveals representing at least 80% of the originally drawn positive weight. An empty draw fails, and there is no minimum number of distinct jurors. One participant controlling sufficient drawn weight can satisfy this coverage rule alone. A drafted attempt also completes a fixed post-reveal period for opening qualifying premature-disclosure proofs before a ruling or quorum-failure settlement. This provides an enforcement opportunity for private reporting, not a guarantee that collusion is detectable. Proof validation and reporting incentives require further evaluation. <!-- [claim:C046] [evidence:E002,E003] -->
 
@@ -141,11 +141,11 @@ Repeated competition supplies a possible competence-selection mechanism. If info
 
 An **appeal** contests an issued relevance ruling about a fixed nomination revision under its policy. A **reassessment** produces a later judgment as reliance, alternatives or evidence change. Reassessment does not imply the earlier ruling was procedurally wrong. An appeal does not by itself update the subject to newly edited content. <!-- [claim:C023] [evidence:E002,E003] -->
 
-The current working appeal design allows public backing of fixed-score positions. Two or more distinct, fully funded positions lead to one shared jury with a larger planned seat count, after admission closes and every admitted funding outcome is known. Reaching two funded positions cannot close admission early. The positions oppose one another; neither must defend the existing ruling. The jury can issue a score different from all proposed positions. Funding comes from the defined combination of available pool service funds and appeal capital; several positions do not create several independent juries or fee bills. Adjudicated backer funds settle against the appeal chain's terminal score under the parent's scalar payout rule. <!-- [claim:C024] [evidence:E002,E003] -->
+The parent's appeal design allows public backing of fixed-score positions. Two or more distinct, fully funded positions lead to one shared jury with a larger planned seat count, after admission closes and every admitted funding outcome is known. Reaching two funded positions cannot close admission early. The positions oppose one another; neither must defend the existing ruling. The jury can issue a score different from all proposed positions. Funding comes from the defined combination of available pool service funds and appeal capital; several positions do not create several independent juries or fee bills. Adjudicated backer funds settle against the appeal chain's terminal score under the parent's scalar payout rule. <!-- [claim:C024] [evidence:E002,E003] -->
 
 Bounded admission and funding windows have different outcomes. If no position funds, the issued score becomes final under the specified timing rule. If exactly one position fully funds, its score can become final by forfeiture without a jury. That is a procedural outcome, not evidence of consensus. Multiple funded positions require adjudication; a valid appeal ruling can itself be appealed with fresh funds. Failed-quorum retries and repeated appeals create a real risk of prolonged capital commitment. A larger planned jury helps only if it brings useful additional information and sufficiently dispersed control. <!-- [claim:C025] [evidence:E002,E003] -->
 
-Routine reassessment should occur at a published cadence, with funding and eligibility requirements. The working rules prevent it from bypassing an active same-item appeal hold. The next ordinary assessment becomes eligible one full configured cadence after the last applicable hold ends, rather than replaying missed assessments as a backlog; actual execution still requires funding and eligibility. Public interfaces should distinguish a currently adopted score, an appealed ruling, a later pending assessment and a nomination with no score. Missing assessment is not equivalent to a relevance score of zero. <!-- [claim:C026] [evidence:E002,E003] -->
+Routine reassessment should occur at a published cadence, with funding and eligibility requirements. The parent's rules prevent it from bypassing an active same-item appeal hold. The next ordinary assessment becomes eligible one full configured cadence after the last applicable hold ends, rather than replaying missed assessments as a backlog; actual execution still requires funding and eligibility. Public interfaces should distinguish a currently adopted score, an appealed ruling, a later pending assessment and a nomination with no score. Missing assessment is not equivalent to a relevance score of zero. <!-- [claim:C026] [evidence:E002,E003] -->
 
 Revision identity is important for both procedures. A later edit cannot change what an earlier jury judged or erase its capital commitments. Each assessment and appeal refers to its pinned content; a new revision needs its own assessment before that score can support new score-dependent funding. The scope and timing of permitted edits must be made explicit by the application. <!-- [claim:C027] [evidence:E002,E003] -->
 
@@ -197,7 +197,7 @@ The example holds the other eligibility and funding conditions fixed and does no
 
 ## 8. Governance and operational boundaries
 
-The mechanism does not eliminate judgment by moving arithmetic into a contract. The goal, eligible evidence, scoring rubric, arbitrator and beneficiary mapping remain consequential choices. The working parent favors published rules, permissionless pool creation and explicit protocol boundaries. A public-goods application must also make the authority and duration of any exceptional intervention visible; an interface cannot safely imply that an intervention is impossible merely because ordinary execution is automatic. <!-- [claim:C040] [evidence:E001,E002,E003] -->
+The mechanism does not eliminate judgment by moving arithmetic into a contract. The goal, eligible evidence, scoring rubric, arbitrator and beneficiary mapping remain consequential choices. The parent favors published rules, permissionless pool creation and explicit protocol boundaries. A public-goods application must also make the authority and duration of any exceptional intervention visible; an interface cannot safely imply that an intervention is impossible merely because ordinary execution is automatic. <!-- [claim:C040] [evidence:E001,E002,E003] -->
 
 Competition among pools is a possible discipline on poor choices only when users can recognize a better alternative, that alternative has resources, and migration is feasible. Public access to rules does not establish those conditions. Nor does permissionless entry make influence equal: stake-based selection explicitly gives more draw weight to more committed capital. <!-- [claim:C041] [evidence:E001,E002] -->
 
@@ -238,7 +238,7 @@ Scientific Agent Skills informed the drafting and evidence workflow [@kassis2026
 
 ## References
 
-The published parent paper establishes the framework context [@tuncer2026decentralizedcuration]. Kleros and peer prediction supply related mechanism literature [@kleros2019shortpaper; @miller2005peerprediction]. Working-source identifiers and inspection scope appear in the [source record](https://github.com/0xferit/manuscript-decentralized-curation/blob/public-goods-v0.1.0/projects/rpgf/companion-paper/source-and-open-questions.md). <!-- [claim:C050] [evidence:E001,E006,E007] -->
+The parent paper establishes the framework context [@tuncer2026decentralizedcuration]. Kleros and peer prediction supply related mechanism literature [@kleros2019shortpaper; @miller2005peerprediction]. Source identifiers and inspection scope appear in the [source record](https://github.com/0xferit/manuscript-decentralized-curation/blob/public-goods-v0.2.0/projects/rpgf/companion-paper/source-and-open-questions.md). <!-- [claim:C050] [evidence:E001,E006,E007] -->
 
 ::: {#refs}
 :::

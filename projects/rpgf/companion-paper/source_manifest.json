@@ -10,13 +10,13 @@
       ],
       "year": 2026,
       "identifiers": {
-        "doi": "10.5281/zenodo.23313625",
+        "doi": "10.5281/zenodo.23636842",
         "pmid": "",
         "pmcid": "",
         "isbn": "",
-        "url": "https://doi.org/10.5281/zenodo.23313625"
+        "url": "https://doi.org/10.5281/zenodo.23636842"
       },
-      "locator": "Version 1.2.0; released PDF sections 1, 3, 5, 6, 7, 9 and 10; Zenodo publication metadata",
+      "locator": "Version 1.3.0; released PDF sections 1, 3, 5, 6, 7, 9 and 10; Zenodo publication metadata",
       "confidentiality": "public",
       "verification": {
         "status": "unverified",
@@ -28,20 +28,20 @@
     {
       "evidence_id": "E002",
       "source_type": "other",
-      "title": "Decentralized Curation: Trustless Transformation of Information into Knowledge (unpublished working source)",
+      "title": "Decentralized Curation: Trustless Transformation of Information into Knowledge (published version 1.3.0 source)",
       "authors": [
         "Ferit Tunçer"
       ],
-      "year": null,
+      "year": 2026,
       "identifiers": {
         "doi": "",
         "pmid": "",
         "pmcid": "",
         "isbn": "",
-        "url": "https://github.com/0xferit/manuscript-decentralized-curation"
+        "url": "https://github.com/0xferit/manuscript-decentralized-curation/blob/8dafde2cd6407cfb4631d70677a3fa22801a9c69/paper.qmd"
       },
-      "locator": "Working source SHA-256 d3720ae2611f147a5273f6a9b64e87c60a893621ff99731edba92c428c0c8172; current shared Accuracy layer, Relevance layer and Public appeal funding rules; re-inspected for this revision; relevant passages archived in source-evidence.md",
-      "confidentiality": "restricted",
+      "locator": "paper.qmd at published source revision 8dafde2cd6407cfb4631d70677a3fa22801a9c69, SHA-256 9cb527b355bad111e6cd5956be38fa4f6a42aff849e19e5c3bc48889b7e15e6f; Accuracy layer, Relevance layer and Public appeal funding rules; relevant passages archived in source-evidence.md",
+      "confidentiality": "public",
       "verification": {
         "status": "unverified",
         "source_opened": false,
