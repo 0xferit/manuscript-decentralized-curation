@@ -3,7 +3,7 @@ description: Install the locked Python dependencies and the pinned Quarto releas
 
 inputs:
   tinytex:
-    description: Also install TinyTeX for PDF rendering.
+    description: Also install the pinned TinyTeX bundle and TeX packages for PDF rendering.
     required: false
     default: "false"
 
@@ -25,4 +25,29 @@ runs:
       uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b # v2.2.0
       with:
         version: "1.9.37"
-        tinytex: ${{ inputs.tinytex }}
+
+    - name: Install pinned TinyTeX
+      if: inputs.tinytex == 'true'
+      shell: bash
+      working-directory: ${{ runner.temp }}
+      env:
+        TINYTEX_RELEASE: v2026.10
+        TINYTEX_SHA256: 54fec1c79ab437d2d52e2f918bdb738c85779d654a93e62cc44f022e227692b5
+        TEX_PACKAGE_SHA256S: |
+          1a497d3bd314884a07f4eb60d22d4c3d3496233f6d8e1e89da16fb3ffb86cb65  luatexbase.tar.xz
+          acf569fb4652f87c01068d6cc29f7d57989a3e00afe0bc1d1f641bd50599713d  ctablestack.tar.xz
+      run: |
+        set -euo pipefail
+        archive="TinyTeX-linux-x86_64-${TINYTEX_RELEASE}.tar.xz"
+        curl -fsSL --retry 3 -o "$archive" "https://github.com/rstudio/tinytex-releases/releases/download/${TINYTEX_RELEASE}/${archive}"
+        echo "${TINYTEX_SHA256}  ${archive}" | sha256sum --check --strict
+        tar -xJf "$archive" -C "$HOME"
+        packages=()
+        while read -r _ file; do
+          curl -fsSL --retry 3 -o "$file" "https://mirror.ctan.org/systems/texlive/tlnet/archive/${file}"
+          packages+=("$PWD/$file")
+        done < <(printf '%s' "$TEX_PACKAGE_SHA256S")
+        printf '%s' "$TEX_PACKAGE_SHA256S" | sha256sum --check --strict
+        bin="$HOME/.TinyTeX/bin/x86_64-linux"
+        "$bin/tlmgr" install --file "${packages[@]}"
+        echo "$bin" >> "$GITHUB_PATH"

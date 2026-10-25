@@ -57,7 +57,7 @@ jobs:
       - name: Render PDF
         run: |
           printf '**Version:** %s\n' "$RELEASE_TAG" > _build-info.md
-          make render-pdf
+          make render-pdf QUARTO_PDF_FLAGS="-M latex-auto-install:false"
           python3 .github/scripts/publish_to_zenodo.py --write-manifest
 
       - name: Upload release assets
