@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import hashlib
+import http.client
 import importlib.util
 import io
 import json
@@ -86,14 +87,16 @@ class ZenodoReleaseTests(unittest.TestCase):
             'files': files if files is not None else [],
         }]}}
 
-    def publication_queue(self, checksum=None):
+    def publication_queue(self, checksum=None, deletion=({},), draft_files=('paper.pdf',)):
         return [
             self.latest(), [],
             {'links': {'latest_draft': publisher.API + '/deposit/depositions/43'}},
             {'id': 43, 'conceptrecid': publisher.CONCEPT_RECID, 'submitted': False,
              'links': {'bucket': publisher.API + '/files/bucket'},
              'files': [{'filename': 'old.pdf', 'links': {'self': publisher.API + '/old-file'}}]},
-            {}, {'checksum': checksum or 'md5:' + hashlib.md5(self.pdf).hexdigest(), 'size': len(self.pdf)},
+            *deletion,
+            {'checksum': checksum or 'md5:' + hashlib.md5(self.pdf).hexdigest(), 'size': len(self.pdf)},
+            {'files': [{'filename': name} for name in draft_files]},
             {}, {'doi': '10.5281/zenodo.43', 'links': {'html': 'https://zenodo.org/records/43'},
                  'submitted': True, 'conceptrecid': publisher.CONCEPT_RECID,
                  'metadata': {'version': '1.1.0'}},
@@ -230,23 +233,33 @@ class ZenodoReleaseTests(unittest.TestCase):
         self.assertEqual(len(self.sleeps), 1)
         self.assertTrue(self.requests[-1].full_url.endswith('/actions/publish'))
 
+    def not_found(self):
+        return urllib.error.HTTPError(publisher.API, 404, 'Not Found', {}, io.BytesIO(b''))
+
     def test_carryover_file_gone_on_retry_counts_as_removed(self):
-        queue = self.publication_queue()
-        delete_response = queue.index({}, 4)
-        queue[delete_response:delete_response + 1] = [
-            self.server_error(), urllib.error.HTTPError(publisher.API, 404, 'Not Found', {}, io.BytesIO(b''))]
-        self.queue = queue
+        self.queue = self.publication_queue(deletion=(self.server_error(), self.not_found()))
         publisher.main()
         self.assertEqual([r.method for r in self.requests].count('DELETE'), 2)
         self.assertTrue(self.requests[-1].full_url.endswith('/actions/publish'))
 
     def test_missing_file_on_first_delete_is_not_assumed_removed(self):
-        queue = self.publication_queue()
-        delete_response = queue.index({}, 4)
-        queue[delete_response] = urllib.error.HTTPError(publisher.API, 404, 'Not Found', {}, io.BytesIO(b''))
-        self.queue = queue
+        self.queue = self.publication_queue(deletion=(self.not_found(),))
         with self.assertRaisesRegex(SystemExit, 'HTTP 404'):
             publisher.main()
+
+    def test_dropped_connection_on_a_repeatable_request_is_retried(self):
+        for dropped in (ConnectionResetError('reset by peer'), http.client.IncompleteRead(b'')):
+            with self.subTest(dropped=type(dropped).__name__):
+                self.requests.clear()
+                self.queue = [dropped, *self.publication_queue()]
+                publisher.main()
+                self.assertTrue(self.requests[-1].full_url.endswith('/actions/publish'))
+
+    def test_draft_holding_another_file_is_never_published(self):
+        self.queue = self.publication_queue(draft_files=('old.pdf', 'paper.pdf'))
+        with self.assertRaisesRegex(SystemExit, 'old.pdf'):
+            publisher.main()
+        self.assertFalse(any(r.full_url.endswith('/actions/publish') for r in self.requests))
 
     def test_publish_request_is_never_retried(self):
         queue = self.publication_queue()

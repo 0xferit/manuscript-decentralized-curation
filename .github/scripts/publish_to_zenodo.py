@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import http.client
 import json
 import os
 import re
@@ -75,8 +76,8 @@ def _req(method: str, url: str, *, token: str, body=None, content_type: str | No
                 return {}
             failure = f"HTTP {exc.code} on {method} {url}: {detail}"
             transient = exc.code in TRANSIENT_HTTP_STATUSES
-        except (urllib.error.URLError, TimeoutError) as exc:
-            failure = f"network error on {method} {url}: {getattr(exc, 'reason', exc)}"
+        except (OSError, http.client.HTTPException) as exc:
+            failure = f"network error on {method} {url}: {getattr(exc, 'reason', exc)!r}"
             transient = True
         if not transient or attempt == len(retry_delays):
             sys.exit(failure)
@@ -153,7 +154,7 @@ def main(*, verify_only: bool = False) -> None:
     print(f"[zenodo] latest published version: id={latest_id} version={latest_version}")
     if latest_version == version:
         files = latest.get("files", [])
-        same_file = len(files) == 1 and files[0].get("key") == "paper.pdf" and files[0].get("checksum") == pdf_checksum
+        same_file = len(files) == 1 and files[0].get("key") == PDF_PATH.name and files[0].get("checksum") == pdf_checksum
         same_metadata = all(latest["metadata"].get(key) == base_meta[key]
                             for key in ("title", "description", "keywords"))
         same_authors = [author.get("name") for author in latest["metadata"].get("creators", [])] == [
@@ -200,14 +201,17 @@ def main(*, verify_only: bool = False) -> None:
 
     uploaded = _req(
         "PUT",
-        f"{bucket}/paper.pdf",
+        f"{bucket}/{PDF_PATH.name}",
         token=token,
         body=pdf_bytes,
         content_type="application/octet-stream",
     )
     if uploaded.get("checksum") != pdf_checksum or uploaded.get("size") != len(pdf_bytes):
         sys.exit("uploaded PDF checksum or size mismatch; draft left unpublished for inspection")
-    print(f"[zenodo] uploaded paper.pdf ({len(pdf_bytes)} bytes)")
+    print(f"[zenodo] uploaded {PDF_PATH.name} ({len(pdf_bytes)} bytes)")
+    draft_files = [entry.get("filename") for entry in _req("GET", draft_url, token=token).get("files") or []]
+    if draft_files != [PDF_PATH.name]:
+        sys.exit(f"draft holds {draft_files}, not only {PDF_PATH.name}; draft left unpublished for inspection")
 
     metadata = {
         "upload_type": base_meta.get("upload_type", "publication"),
