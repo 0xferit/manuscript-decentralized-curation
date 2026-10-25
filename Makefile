@@ -50,7 +50,7 @@ render-html: analysis
 	$(QUARTO) render --to html
 
 render-pdf: analysis
-	$(QUARTO) render --to pdf
+	$(QUARTO) render paper.qmd --to pdf
 
 render-companion:
 	@mkdir -p $(dir $(COMPANION_PDF))
