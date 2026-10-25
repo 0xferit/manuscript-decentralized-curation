@@ -94,11 +94,18 @@ Conceptual diagrams are tracked outputs of `diagrams/generate_diagrams.py`; rege
 
 ## Release procedure
 
-1. Merge the reviewed changes to `main`. Compute the release id from the first eight hexadecimal characters of `shasum -a 256 paper.qmd`.
-2. In a clean checkout of the exact release commit, set `_build-info.md` to `**Version:** vMAJOR.MINOR.PATCH` and run `make verify-full` and `make render-pdf` with the recorded build dependencies. Inspect the rendered PDF, citations and figures.
-3. Freeze the source, build inputs, rendered outputs and analysis into `releases/<hash>/`. Record the build versions and checksums. Attach the reviewed PDF as `paper.pdf` and a `manifest.json` to a draft GitHub release targeting the same commit. The manifest must contain `release_version` (the full tag), `source_commit` (the full commit hash), `manuscript_sha256` and `reviewed_pdf_sha256`.
-4. Run `RELEASE_TAG=vMAJOR.MINOR.PATCH python3 .github/scripts/publish_to_zenodo.py --verify-only` with those two assets in `outputs/`. Publish the GitHub release only after review. The [Zenodo workflow](.github/workflows/publish-zenodo.yml) verifies that the tag belongs to `main`, validates the manifest and uploads the attached PDF without rebuilding it.
-5. Check the completed workflow and download the published Zenodo PDF to confirm its SHA-256 digest matches the reviewed asset. A matching already-published version is a no-op; conflicting content or an existing unpublished Zenodo draft requires inspection before retrying. Do not create or edit a Zenodo draft concurrently with the workflow. The separate Zenodo GitHub-integration webhook must be disabled to avoid a second publisher.
+Merging to `main` publishes the paper. Each pull request carries exactly one release label, which sets the next `vMAJOR.MINOR.PATCH` version:
+
+| Label | Use when | Example |
+|---|---|---|
+| `release:major` | A stated claim, conclusion or protocol rule changes, so a citation of the previous version no longer matches the paper. | A settlement rule changes. |
+| `release:minor` | New content that leaves the existing claims standing. | A new section or simulation. |
+| `release:patch` | Wording, typesetting or reference corrections. | A typo or a broken citation. |
+| `release:none` | The published paper is unchanged. | CI, tooling or companion-only changes. |
+
+The [release workflow](.github/workflows/release.yml) checks the label on every pull request and, unless it is `release:none`, renders the PDF the merge would publish as a downloadable artifact: review that PDF before merging. After the merge it releases the highest bump among the pull requests merged since the latest tag, renders the PDF from the merged commit, attaches it with a `manifest.json` (release tag, source commit, manuscript and PDF digests) to a GitHub release, and deposits the same bytes as a new version under the Zenodo concept DOI. The tag and its release assets are the frozen snapshot of each version.
+
+A merged pull request without a release label fails the release run; add the label and re-run the workflow. If the Zenodo deposit fails after the GitHub release exists, re-run the failed job: the uploader treats an already-published matching version as a no-op, and refuses conflicting content or an existing unpublished Zenodo draft until inspected. Do not edit Zenodo drafts while a release is running, and keep Zenodo's own GitHub integration disabled so it does not publish a second deposit. Publishing a release manually on GitHub still triggers the [Zenodo workflow](.github/workflows/publish-zenodo.yml) directly.
 
 The publication boundary and its assumptions are documented in [ARCHITECTURE.md](ARCHITECTURE.md).
 
