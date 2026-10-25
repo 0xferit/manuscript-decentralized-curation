@@ -44,7 +44,7 @@ runs:
         tar -xJf "$archive" -C "$HOME"
         packages=()
         while read -r _ file; do
-          curl -fsSL --retry 3 -o "$file" "https://mirror.ctan.org/systems/texlive/tlnet/archive/${file}"
+          curl -fsSL --retry 3 -o "$file" "https://tlnet.yihui.org/archive/${file}"
           packages+=("$PWD/$file")
         done < <(printf '%s' "$TEX_PACKAGE_SHA256S")
         printf '%s' "$TEX_PACKAGE_SHA256S" | sha256sum --check --strict
