@@ -1,0 +1,28 @@
+name: Set up manuscript build
+description: Install the locked Python dependencies and the pinned Quarto release that every published render uses.
+
+inputs:
+  tinytex:
+    description: Also install TinyTeX for PDF rendering.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+      with:
+        python-version-file: .python-version
+        cache: "pip"
+        cache-dependency-path: requirements.lock
+
+    - name: Install locked Python dependencies
+      shell: bash
+      run: make setup
+
+    - name: Set up Quarto
+      uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b # v2.2.0
+      with:
+        version: "1.9.37"
+        tinytex: ${{ inputs.tinytex }}
