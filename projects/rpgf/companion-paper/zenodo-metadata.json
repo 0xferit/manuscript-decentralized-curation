@@ -19,12 +19,12 @@
     "Schelling point",
     "public-goods funding"
   ],
-  "version": "0.1.0",
-  "publication_date": "2026-10-14",
+  "version": "0.2.0",
+  "publication_date": "2026-10-25",
   "related_identifiers": [
     {
       "relation": "cites",
-      "identifier": "10.5281/zenodo.23313625",
+      "identifier": "10.5281/zenodo.23636842",
       "scheme": "doi"
     }
   ]
