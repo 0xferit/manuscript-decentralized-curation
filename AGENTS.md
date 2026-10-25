@@ -25,6 +25,7 @@ This file is the canonical agent-facing guidance for the repository. `CLAUDE.md`
   - `_build-info.md` (overwritten in CI; shows deployed version + build time)
   - `outputs/` (rendered artifacts; gitignored)
   - `.github/workflows/publish-cloudflare-pages.yml` (CI publish: run sims → render HTML → Direct Upload to Cloudflare Pages)
+  - `.github/workflows/release.yml` (CI release: the pull request's `release:*` label sets the version; merges render the PDF, create the GitHub release and deposit it on Zenodo via `publish-zenodo.yml`)
   - `.github/agents/peer-reviewer.agent.md` (GitHub Copilot agent: 7-stage scientific peer review using Claude Opus)
 
 ### Workflow expectations
@@ -36,6 +37,7 @@ This file is the canonical agent-facing guidance for the repository. `CLAUDE.md`
 - Prefer the repo task entrypoints over ad hoc commands: `make render-html`, `make render`, `make verify-full`, and `make check-invariants` encode the required prerequisites and guardrails.
 - Raw `quarto render` is not a cold-safe local entrypoint because the manuscript includes generated snippets from `analysis/out/`; if you must call Quarto directly, regenerate prerequisites first.
 - Publishing: commits to `main` trigger HTML publish to Cloudflare Pages via Direct Upload (see `README.md`).
+- Every pull request needs exactly one `release:*` label; a merge labelled major, minor or patch publishes a permanent Zenodo version (see "Release procedure" in `README.md`).
 - Treat the repo root as the thesis/shared-assets layer. Standalone project docs belong under `projects/`, not at the root.
 - Route wrapper files at the repo root exist only to publish stable URLs for project papers. Edit project prose under `projects/`, not in those wrappers.
 

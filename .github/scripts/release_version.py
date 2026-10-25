@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
 """Plan the next manuscript release from pull-request release labels.
 
-Every pull request carries exactly one label naming its effect on the paper:
-
-  release:major  a stated claim, conclusion or protocol rule changes, so a
-                 citation of the previous version no longer matches the paper
-  release:minor  new content that leaves the existing claims standing
-  release:patch  wording, typesetting or reference corrections
-  release:none   no change to the published paper
-
-A push to main releases the highest bump among the pull requests merged since
+Every pull request carries exactly one of release:major, release:minor,
+release:patch or release:none; README.md ("Release procedure") defines when
+each applies. A push to main releases the highest bump among the pull requests merged since
 the latest vMAJOR.MINOR.PATCH tag; a pull request plans the tag it would
 receive if merged next. Runs from .github/workflows/release.yml and writes
 `tag` (empty when nothing is released) and `tagged` (HEAD already carries

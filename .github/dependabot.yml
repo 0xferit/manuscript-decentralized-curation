@@ -16,6 +16,7 @@ updates:
     labels:
       - "dependencies"
       - "python"
+      - "release:none"
     commit-message:
       prefix: "chore(deps)"
       include: "scope"
@@ -27,7 +28,9 @@ updates:
 
   # GitHub Actions workflows (.github/workflows)
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directories:
+      - "/"
+      - "/.github/actions/*"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -39,6 +42,7 @@ updates:
     labels:
       - "dependencies"
       - "github-actions"
+      - "release:none"
     commit-message:
       prefix: "chore(ci)"
       include: "scope"

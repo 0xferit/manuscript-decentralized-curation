@@ -3,47 +3,54 @@ name: Publish PDF to Zenodo
 on:
   release:
     types: [published]
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag whose attached PDF and manifest to deposit.
+        required: true
+        type: string
+    secrets:
+      ZENODO_TOKEN:
+        required: true
 
 permissions:
   contents: read
 
-concurrency:
-  group: zenodo-publication
-  cancel-in-progress: false
-
 jobs:
   deposit-pdf:
-    if: ${{ !github.event.release.prerelease }}
+    if: ${{ github.event_name != 'release' || !github.event.release.prerelease }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    concurrency:
+      group: zenodo-publication
+      cancel-in-progress: false
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: Require a release from main
         run: git merge-base --is-ancestor HEAD origin/main
 
-      - name: Download reviewed release assets
+      - name: Download release assets
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-        run: gh release download "$RELEASE_TAG" --pattern paper.pdf --pattern manifest.json --dir outputs
+        run: |
+          gh release download "$RELEASE_TAG" --pattern paper.pdf --pattern manifest.json --dir outputs
+          echo "RELEASE_PUBLISHED_AT=$(gh release view "$RELEASE_TAG" --json publishedAt --jq .publishedAt)" >> "$GITHUB_ENV"
 
       - name: Verify release binding and publication checks
-        env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          python3 -m unittest discover -s scripts -p test_zenodo_release.py
+          python3 -m unittest discover -s scripts -p 'test_*release*.py'
           python3 .github/scripts/publish_to_zenodo.py --verify-only
 
       - name: Publish to Zenodo
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-          RELEASE_PUBLISHED_AT: ${{ github.event.release.published_at }}
         run: python3 .github/scripts/publish_to_zenodo.py
