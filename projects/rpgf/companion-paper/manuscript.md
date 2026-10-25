@@ -40,7 +40,7 @@ This paper concentrates on openly usable contributions with diffuse beneficiarie
 
 The proposed application separates three operations:
 
-- **Contest factual claims.** A bonded nomination states testable claims and supplies evidence. A successful challenge has a financial consequence for the nominator.
+- **Contest a nomination's claims.** A bonded nomination states testable claims and supplies evidence. A successful challenge establishes a false claim or another specified violation and carries a financial consequence for the nominator.
 - **Assess relevance.** Jurors judge the contribution against a public goal and rubric. Their reports enter a competitive scoring mechanism.
 - **Use the assessment.** A specified allocation rule maps eligible weights to a budget or funding flow. This step need not occur when the weights are first produced. <!-- [claim:C003] [evidence:E001,E003] -->
 
@@ -105,7 +105,7 @@ The inherited accuracy rules require the challenger to post the greater of the p
 
 The expected return still depends on detection, admissible evidence, adjudication, fees and investigation cost. A bounty can be too small to justify scrutiny; a profitable successful case can still have an unattractive expected return before investigation. Defined cashflows create an opportunity for fact-checking, not a guarantee that enough scrutiny will occur. <!-- [claim:C013] [evidence:E001,E002] -->
 
-A factual challenge may begin while the nomination is active, including before its first relevance assessment and during a relevance appeal. An external arbitrator decides the challenge; the relevance jury does not decide whether a factual assertion is false. The shared grounds cover factual falsification, lack of testability, violation of the declared topic scope and semantic template violations. A successful ruling closes the nomination rather than banning the person or project. A new nomination requires its own identity and deposit and does not reopen the closed nomination's entitlements. <!-- [claim:C014] [evidence:E002,E003] -->
+An accuracy challenge may begin while the nomination is active, including before its first relevance assessment and during a relevance appeal. An external arbitrator decides the challenge; the relevance jury does not decide whether a factual assertion is false. The shared grounds cover factual falsification, lack of testability, violation of the declared topic scope and semantic template violations. A successful ruling closes the nomination rather than banning the person or project. A new nomination requires its own identity and deposit and does not reopen the closed nomination's entitlements. <!-- [claim:C014] [evidence:E002,E003] -->
 
 This design makes correction possible, not inevitable. A nomination that nobody successfully challenges has survived the process so far. That is different from independent confirmation that all its claims are true. <!-- [claim:C015] [evidence:E001,E003] -->
 
@@ -177,7 +177,7 @@ The application should display the following separately:
 | Claim or payment | Collection or transfer that satisfies an earned entitlement |
 | Nomination closure | An end to future participation under that nomination |
 
-Claiming earnings and withdrawing a nomination are different operations. Under the intended ongoing rules, a nomination-withdrawal request made after a factual dispute waits behind it; debunking closes the nomination and cancels that now-unnecessary request. The existence of an accuracy dispute does not freeze collection of amounts already earned. Appeal backers' capital, by contrast, follows its own refund and chain-finality rules. <!-- [claim:C033] [evidence:E003] -->
+Claiming earnings and withdrawing a nomination are different operations. Under the intended ongoing rules, a nomination-withdrawal request made after an accuracy dispute waits behind it; debunking closes the nomination and cancels that now-unnecessary request. The existence of an accuracy dispute does not freeze collection of amounts already earned. Appeal backers' capital, by contrast, follows its own refund and chain-finality rules. <!-- [claim:C033] [evidence:E003] -->
 
 This separation is a substantive design choice. It trades the possibility of later recovery of incorrectly awarded money for stability of earned entitlements. Initial holdback and continuing scrutiny must therefore be evaluated against the cost of errors that are discovered only after earnings have accumulated. No claim that the chosen balance is optimal follows from deterministic accounting. <!-- [claim:C034] [evidence:E003] -->
 
@@ -191,7 +191,7 @@ Suppose a funded relevance appeal revises A's adopted score to 0.4. Once adopted
 
 Suppose a later routine reassessment lowers B's adopted score to 0.2 because its role under the policy has changed. With A at 0.4 and C at 0.1, weights now total 0.7. Shares become \(4/7\), \(2/7\) and \(1/7\). That change concerns present relevance and creates no retrospective liability for earlier earnings. <!-- [claim:C038] [evidence:E003,E009] -->
 
-Now suppose a factual challenge establishes a false claim in C's nomination. C closes and its deposit goes to the successful challenger under the selected accuracy rule. Among the remaining eligible weights, A receives \(2/3\) and B receives \(1/3\). Any amount C earned before closure remains owed to C's beneficiary. This final branch is accuracy adjudication, distinct from both the appeal and reassessment. <!-- [claim:C039] [evidence:E003,E009] -->
+Now suppose an accuracy challenge establishes a false claim in C's nomination. C closes and its deposit goes to the successful challenger under the selected accuracy rule. Among the remaining eligible weights, A receives \(2/3\) and B receives \(1/3\). Any amount C earned before closure remains owed to C's beneficiary. This final branch is accuracy adjudication, distinct from both the appeal and reassessment. <!-- [claim:C039] [evidence:E003,E009] -->
 
 The example holds the other eligibility and funding conditions fixed and does not compute fee transfers or elapsed-time balances. Its purpose is to show how different events affect different outputs: a score, a future share, a deposit or an existing entitlement. It does not assume that funds already earned become unavailable during a dispute.
 
