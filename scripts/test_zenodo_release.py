@@ -61,6 +61,8 @@ class ZenodoReleaseTests(unittest.TestCase):
         self.requests = []
         self.queue = []
         self.enterContext(patch('urllib.request.urlopen', side_effect=self.http))
+        self.sleeps = []
+        self.enterContext(patch('time.sleep', side_effect=self.sleeps.append))
         self.enterContext(contextlib.redirect_stdout(io.StringIO()))
 
     def write_manifest(self):
@@ -217,6 +219,50 @@ class ZenodoReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, 'HTTP 401'):
             publisher.main()
         self.assertEqual(len(self.requests), 1)
+
+    def server_error(self, code=500):
+        return urllib.error.HTTPError(publisher.API, code, 'Server Error', {}, io.BytesIO(b'busy'))
+
+    def test_transient_error_on_a_repeatable_request_is_retried(self):
+        self.queue = [self.server_error(503), *self.publication_queue()]
+        publisher.main()
+        self.assertEqual([r.method for r in self.requests[:2]], ['GET', 'GET'])
+        self.assertEqual(len(self.sleeps), 1)
+        self.assertTrue(self.requests[-1].full_url.endswith('/actions/publish'))
+
+    def test_carryover_file_gone_on_retry_counts_as_removed(self):
+        queue = self.publication_queue()
+        delete_response = queue.index({}, 4)
+        queue[delete_response:delete_response + 1] = [
+            self.server_error(), urllib.error.HTTPError(publisher.API, 404, 'Not Found', {}, io.BytesIO(b''))]
+        self.queue = queue
+        publisher.main()
+        self.assertEqual([r.method for r in self.requests].count('DELETE'), 2)
+        self.assertTrue(self.requests[-1].full_url.endswith('/actions/publish'))
+
+    def test_missing_file_on_first_delete_is_not_assumed_removed(self):
+        queue = self.publication_queue()
+        delete_response = queue.index({}, 4)
+        queue[delete_response] = urllib.error.HTTPError(publisher.API, 404, 'Not Found', {}, io.BytesIO(b''))
+        self.queue = queue
+        with self.assertRaisesRegex(SystemExit, 'HTTP 404'):
+            publisher.main()
+
+    def test_publish_request_is_never_retried(self):
+        queue = self.publication_queue()
+        queue[-1] = self.server_error()
+        self.queue = queue
+        with self.assertRaisesRegex(SystemExit, 'HTTP 500'):
+            publisher.main()
+        self.assertEqual(sum(r.full_url.endswith('/actions/publish') for r in self.requests), 1)
+        self.assertEqual(self.sleeps, [])
+
+    def test_persistent_server_error_gives_up_after_bounded_retries(self):
+        self.queue = [self.server_error() for _ in range(len(publisher.RETRY_DELAYS_SECONDS) + 1)]
+        with self.assertRaisesRegex(SystemExit, 'HTTP 500'):
+            publisher.main()
+        self.assertEqual(len(self.requests), len(publisher.RETRY_DELAYS_SECONDS) + 1)
+        self.assertEqual(self.sleeps, list(publisher.RETRY_DELAYS_SECONDS))
 
 
 if __name__ == '__main__':

@@ -20,9 +20,11 @@ import os
 import re
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 from datetime import datetime
+from http import HTTPStatus
 from pathlib import Path
 
 from release_version import TAG_PATTERN
@@ -34,6 +36,12 @@ META_PATH = Path(".zenodo.json")
 MANIFEST_PATH = Path("outputs/manifest.json")
 HTTP_TIMEOUT = 60
 DEPOSITION_PAGE_SIZE = 100
+REPEATABLE_METHODS = frozenset({"GET", "PUT", "DELETE"})
+TRANSIENT_HTTP_STATUSES = frozenset({
+    HTTPStatus.TOO_MANY_REQUESTS, HTTPStatus.INTERNAL_SERVER_ERROR, HTTPStatus.BAD_GATEWAY,
+    HTTPStatus.SERVICE_UNAVAILABLE, HTTPStatus.GATEWAY_TIMEOUT,
+})
+RETRY_DELAYS_SECONDS = (10, 30, 60)
 
 
 def _require_env(name: str) -> str:
@@ -54,15 +62,29 @@ def _req(method: str, url: str, *, token: str, body=None, content_type: str | No
             data = body
             headers["Content-Type"] = content_type
     request = urllib.request.Request(url, data=data, method=method, headers=headers)
-    try:
-        with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
-            raw = response.read()
-    except urllib.error.HTTPError as exc:
-        with exc:
-            detail = exc.read().decode('utf-8', errors='replace')
-        sys.exit(f"HTTP {exc.code} on {method} {url}: {detail}")
-    except urllib.error.URLError as exc:
-        sys.exit(f"network error on {method} {url}: {exc.reason}")
+    retry_delays = RETRY_DELAYS_SECONDS if method in REPEATABLE_METHODS else ()
+    for attempt in range(len(retry_delays) + 1):
+        try:
+            with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
+                return _decode(method, url, response.read())
+        except urllib.error.HTTPError as exc:
+            with exc:
+                detail = exc.read().decode('utf-8', errors='replace')
+            removed_by_earlier_attempt = method == "DELETE" and exc.code == HTTPStatus.NOT_FOUND and attempt > 0
+            if removed_by_earlier_attempt:
+                return {}
+            failure = f"HTTP {exc.code} on {method} {url}: {detail}"
+            transient = exc.code in TRANSIENT_HTTP_STATUSES
+        except (urllib.error.URLError, TimeoutError) as exc:
+            failure = f"network error on {method} {url}: {getattr(exc, 'reason', exc)}"
+            transient = True
+        if not transient or attempt == len(retry_delays):
+            sys.exit(failure)
+        print(f"[zenodo] {failure}; retrying in {retry_delays[attempt]} s")
+        time.sleep(retry_delays[attempt])
+
+
+def _decode(method: str, url: str, raw: bytes):
     if not raw:
         return {}
     try:
