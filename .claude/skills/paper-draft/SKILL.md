@@ -18,7 +18,7 @@ Trigger when the user asks to draft, write, revise, rewrite, expand, tighten, po
 Do **not** trigger for edits to `truth-post/` or `rpgf/` at the repo root: those are publish-route wrappers, not canonical content sources.
 
 ## Delegate methodology to
-`claude-scientific-writer:scientific-writing` for IMRAD structure, paragraph-flow discipline, and the two-stage (outline then prose) process.
+`scientific-writing` for IMRAD structure, paragraph-flow discipline, and the two-stage (outline then prose) process.
 
 ## Project invariants (non-negotiable)
 - **Audience:** CS academics and engineers. Write with precise definitions and causal chains.

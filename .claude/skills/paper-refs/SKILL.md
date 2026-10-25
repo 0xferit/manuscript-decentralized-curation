@@ -11,7 +11,7 @@ context: inherit
 Trigger when the user asks to validate references, check a BibTeX entry, find a citation, add a paper to the bibliography, verify a DOI, or fix missing volume / pages / year fields.
 
 ## Delegate methodology to
-`claude-scientific-writer:citation-management` for BibTeX generation, metadata lookup via Google Scholar / PubMed / DOI resolvers, and entry validation.
+`citation-management` for BibTeX generation, metadata lookup via Google Scholar / PubMed / DOI resolvers, and entry validation.
 
 ## Project invariants
 - **`references.bib` is the single source of truth** for citations. Every `@cite` key used in `paper.qmd` or any `projects/*/*.md` must resolve here.

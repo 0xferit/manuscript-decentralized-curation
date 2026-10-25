@@ -11,10 +11,10 @@ context: inherit
 Trigger when the user asks to fact-check, verify a statistic, confirm a number or quote, check whether a cited finding is current, or find recent related work that may have superseded an existing citation.
 
 ## Delegate methodology to
-- `claude-scientific-writer:research-lookup` for routing to Parallel Chat (general) or Perplexity sonar-pro-search (academic paper searches).
-- `claude-scientific-writer:parallel-web` for web search, URL extraction, and deep research via the Parallel APIs.
+- `research-lookup` for routing to Parallel Chat (general) or Perplexity sonar-pro-search (academic paper searches).
+- `parallel-web` for web search, URL extraction, and deep research via the Parallel APIs.
 
-Pick the upstream skill based on query type; do not re-implement search logic locally.
+Pick the upstream skill based on query type; do not re-implement search logic locally. Both need `parallel-cli` and API credentials; where they are unavailable, as in the CI paper review, open the primary source directly with WebFetch and find it with WebSearch.
 
 ## Project invariants
 - **Avoid fragile stats and news-cycle overfitting** in early "problem" pieces (e.g., the manuscript's framing sections) unless the user explicitly requests them.
