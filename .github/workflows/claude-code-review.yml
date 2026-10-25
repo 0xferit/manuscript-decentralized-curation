@@ -17,6 +17,8 @@ jobs:
       pull-requests: write
       issues: read
       id-token: write
+    env:
+      CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: '1'
 
     steps:
       - name: Checkout repository
