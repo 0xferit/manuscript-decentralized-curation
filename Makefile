@@ -2,6 +2,7 @@ PYTHON ?= python3
 QUARTO ?= quarto
 PANDOC ?= pandoc
 PDF_ENGINE ?= xelatex
+QUARTO_PDF_FLAGS ?=
 
 COMPANION_DIR := projects/rpgf/companion-paper
 COMPANION_PDF := outputs/companion-paper.pdf
@@ -50,7 +51,7 @@ render-html: analysis
 	$(QUARTO) render --to html
 
 render-pdf: analysis
-	$(QUARTO) render paper.qmd --to pdf
+	$(QUARTO) render paper.qmd --to pdf $(QUARTO_PDF_FLAGS)
 
 render-companion:
 	@mkdir -p $(dir $(COMPANION_PDF))
