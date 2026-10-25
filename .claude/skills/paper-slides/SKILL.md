@@ -11,7 +11,7 @@ context: inherit
 Trigger when the user asks to create, build, draft, or prepare a presentation, slide deck, or talk script derived from `paper.qmd`, `projects/*/blueprint.md`, or `projects/*/design.md`.
 
 ## Delegate methodology to
-`claude-scientific-writer:scientific-slides` for slide design, AI-assisted slide generation, and visual validation.
+`scientific-slides` for slide design, AI-assisted slide generation, and visual validation.
 
 ## Project file conventions
 - **Presentation materials live under `talks/`.** This directory is **outside** the Quarto render pipeline (see the `Source of truth` section of `CLAUDE.md`); do not wire decks into `_quarto.yml`.
