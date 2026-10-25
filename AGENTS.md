@@ -13,7 +13,6 @@ This file is the canonical agent-facing guidance for the repository. `CLAUDE.md`
 - `truth-post/` and `rpgf/` at the repo root are **publish-route wrappers only**, not canonical content sources.
 - `context/attack-and-defense-log.md` tracks red-team attacks/defenses integrated into the manuscript.
 - `projects/README.md` indexes the spinout project documents.
-- `releases/` (when present) contains frozen hash-versioned releases (snapshot + rendered outputs).
 - `diagrams/generate_diagrams.py` generates conceptual figures (claim states, actor flow, architecture, etc.) into `diagrams/fig-*.png`. Uses matplotlib; run directly with `python3 diagrams/generate_diagrams.py`.
 - `talks/` contains presentation materials (slide decks, talk scripts). Not part of the Quarto render pipeline.
 - Quarto project files:
@@ -32,7 +31,6 @@ This file is the canonical agent-facing guidance for the repository. `CLAUDE.md`
 
 - Keep wording unchanged when asked to do “formatting only” (only add Markdown structure/whitespace).
 - Distinguish companion working website corrections from the deposited preprint; preserve its historical source excerpts, publication metadata and verification records.
-- If you cut a release, follow the “Release procedure (hash-versioned)” in `README.md`.
 - Do not assume “today’s date” inside the manuscript; verify if a claim depends on currentness.
 - Prefer the repo task entrypoints over ad hoc commands: `make render-html`, `make render`, `make verify-full`, and `make check-invariants` encode the required prerequisites and guardrails.
 - Raw `quarto render` is not a cold-safe local entrypoint because the manuscript includes generated snippets from `analysis/out/`; if you must call Quarto directly, regenerate prerequisites first.
