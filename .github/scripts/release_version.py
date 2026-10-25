@@ -83,24 +83,27 @@ def _git(*args: str) -> list[str]:
     return subprocess.check_output(["git", *args], text=True).split()
 
 
-def _merged_pull_labels(repository: str, commit: str) -> list[str] | None:
+def _merged_pull(repository: str, commit: str) -> dict | None:
     pulls = json.loads(subprocess.check_output(
         ["gh", "api", f"repos/{repository}/commits/{commit}/pulls"], text=True))
     merged = [pull for pull in pulls if pull.get("merged_at") and pull["base"]["ref"] == MAIN_BRANCH]
-    if not merged:
-        return None
-    return [label["name"] for label in merged[0]["labels"]]
+    return merged[0] if merged else None
 
 
 def _push_bump(repository: str, since: str) -> Bump:
-    label_sets = []
+    pulls = {}
     for commit in _git("rev-list", f"{since}..HEAD"):
-        labels = _merged_pull_labels(repository, commit)
-        if labels is None:
+        pull = _merged_pull(repository, commit)
+        if pull is None:
             print(f"::warning::{commit} reached {MAIN_BRANCH} without a pull request; it does not affect the version")
             continue
-        label_sets.append(labels)
-    return bump_for_pulls(label_sets)
+        pulls[pull["number"]] = [label["name"] for label in pull["labels"]]
+    for number, labels in pulls.items():
+        try:
+            bump_from_labels(labels)
+        except ReleaseLabelError as exc:
+            raise ReleaseLabelError(f"pull request #{number}: {exc}; label it and re-run") from exc
+    return bump_for_pulls(pulls.values())
 
 
 def plan() -> dict[str, str]:
