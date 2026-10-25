@@ -49,6 +49,12 @@ class InstallReviewSkillsTests(unittest.TestCase):
         self.assertEqual(self.installed('peer-review'), f'---\n{frontmatter}---\n{BODY}')
         self.assertTrue((self.destination / 'peer-review' / 'references' / 'rules.md').is_file())
 
+    def test_unterminated_frontmatter_is_refused_by_name(self):
+        source = self.skill('unterminated', '')
+        (source / 'SKILL.md').write_text('---\nname: unterminated\nbody\n', encoding='utf-8')
+        with self.assertRaisesRegex(SystemExit, 'unterminated.*frontmatter'):
+            installer.install([source], self.destination)
+
     def test_license_is_copied_into_each_installed_skill(self):
         license_file = self.sources / 'LICENSE.md'
         sources = [self.skill('one', 'name: one\n'), self.skill('two', 'name: two\n')]
