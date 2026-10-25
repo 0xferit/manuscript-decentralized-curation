@@ -67,6 +67,7 @@ Project-local skill wrappers under `.claude/skills/` engrave this project's conv
 |---|---|
 | `paper-draft` | `scientific-writing` |
 | `paper-review` | `peer-review` |
+| `paper-pr-review` | `peer-review`, `scientific-critical-thinking` and `citation-management`, through the wrappers below, for a pull request's changes |
 | `paper-audit-claims` | `scientific-critical-thinking` |
 | `paper-refs` | `citation-management` |
 | `paper-fact-check` | `research-lookup` and `parallel-web` |
