@@ -1,16 +1,16 @@
 # Archival source evidence for the public-goods companion paper
 
-This supplement preserves selected source passages underpinning *Decentralized Curation for Public Goods: A blueprint for contestable assessment and funding*. It records the source text inspected on 14 October 2026. It is archival evidence, not a second authoritative design or evidence of a validated deployment.
+This supplement preserves selected source passages underpinning *Decentralized Curation for Public Goods: A blueprint for contestable assessment and funding*. It records the source text inspected on 25 October 2026. It is archival evidence, not a second authoritative design or evidence of a validated deployment.
 
-The published parent is Ferit Tunçer's *Decentralized Curation: Trustless Transformation of Information into Knowledge*, version 1.2.0, [Zenodo Digital Object Identifier (DOI) 10.5281/zenodo.23313625](https://doi.org/10.5281/zenodo.23313625). Its published source revision is `1b1805d66dc46b7b90f2a28c635cd28d0f6794c1`. **The working-source excerpts below are distinct from that publication.** Later selected rules must not be attributed to the published version merely because it is the companion paper's framework citation.
+The parent is Ferit Tunçer's *Decentralized Curation: Trustless Transformation of Information into Knowledge*, version 1.3.0, [Zenodo Digital Object Identifier (DOI) 10.5281/zenodo.23636842](https://doi.org/10.5281/zenodo.23636842). Its published source revision is `8dafde2cd6407cfb4631d70677a3fa22801a9c69`. The P excerpts below quote that published source.
 
 ## Source identity and scope
 
-The 256-bit Secure Hash Algorithm (SHA-256) identifies the exact complete source bytes from which each excerpt was taken. Source line numbers are one-based and inclusive. They refer to these snapshots, not to future working copies.
+The 256-bit Secure Hash Algorithm (SHA-256) identifies the exact complete source bytes from which each excerpt was taken. Source line numbers are one-based and inclusive. They refer to these snapshots, not to later revisions.
 
 | Source | Role | Complete-source SHA-256 |
 | --- | --- | --- |
-| P: current parent working manuscript | Shared accuracy, jury, fee and appeal rules. The manuscript was a modified working copy based on repository commit `ba7eb4ec37eda970dc7d7051a066ec5ad67dc573`. | `d3720ae2611f147a5273f6a9b64e87c60a893621ff99731edba92c428c0c8172` |
+| P: published parent manuscript, version 1.3.0 | Shared accuracy, jury, fee and appeal rules. `paper.qmd` at the published source revision `8dafde2cd6407cfb4631d70677a3fa22801a9c69`. | `9cb527b355bad111e6cd5956be38fa4f6a42aff849e19e5c3bc48889b7e15e6f` |
 | R: current presentation evidence register | Author clarifications about the ongoing public-goods application, including immediate collection of earned funds. Captured from repository commit `73000c9e696ee08c91681e729d0d0927630c11de`. | `ca74354d104da4f1eaff64d23f4efa6a3038f40a9c9a8658f2782c6d731908c8` |
 
 The companion follows the author's current application decisions. The parent's generic preservation of existing payout conditions does not itself decide those conditions; the ongoing profile's immediate-claimability rule is supplied by source R. Its distinct treatment of new accrual during a pending dispute is not inferred from the right to collect already-earned funds. The earlier fixed-round application document is not a source for the ongoing profile's adopted rules.
@@ -23,7 +23,7 @@ Quoted terminology includes decentralized dispute resolution (DDR), ether (ETH),
 
 ## P01. Accuracy: publication, pinned costs, outcomes and challenge grounds
 
-Source P, lines 210–224.
+Source P, lines 218–232.
 
 Raw-excerpt SHA-256: `51b45322c62e2e480d5610e360f77ddd3c839746bffe2c97fa6269d7fea25145`.
 
@@ -47,7 +47,7 @@ Displayed-excerpt SHA-256: `51b45322c62e2e480d5610e360f77ddd3c839746bffe2c97fa62
 
 ## P02. Relevance: policy-relative weights and evidence readiness
 
-Source P, lines 232–236.
+Source P, lines 240–244.
 
 Raw-excerpt SHA-256: `ee5cb4da3cb64d0228a437fec34343843543136bd2795e1eaee3009e74c647de`.
 
@@ -61,11 +61,11 @@ Displayed-excerpt SHA-256: `ee5cb4da3cb64d0228a437fec34343843543136bd2795e1eaee3
 
 ## P03. Jury: deposits, drafting, private reports, quorum and dispersion
 
-Source P, lines 238–262.
+Source P, lines 246–272.
 
-Raw-excerpt SHA-256: `37feabe78fa5aa84f1dc333f67623bd8ddaa29c9ea35689f6901efb7ba8d3785`.
+Raw-excerpt SHA-256: `b7ea8708a74a93e6cfc185d83d47c45b3651f28ece93dfe53d8bd684c9067cb9`.
 
-Displayed-excerpt SHA-256: `50470f544e12afc9140daf7dd77913d416d38443e76edef7dcd4bd6cadce5ec6`.
+Displayed-excerpt SHA-256: `a73be87ba57dd76247464b5e0f66ddbfb279e63dbff3e4c6e4b369be6ffa1799`.
 
 > 1. Curators deposit a dedicated utility token into a pool contract to signal availability for drafting. Let $s_i$ denote curator $i$'s deposited utility-token balance, with both $s_i$ and the seat size $L$ measured in that token's smallest on-chain unit. Ordinary-round rules allow withdrawal of utility tokens outside active-round locks, subject to separately specified penalties. Jury service fees, appeal contributions and other payment flows use ether (ETH), accounted in wei, with the explicit utility-token transfer to successful leak reporters specified below. ETH appeal contributions have their own locks under Public appeal funding; they are not part of $s_i$ and do not reduce utility-token draft availability. Earlier jury service alone does not lock additional ETH. A successful leak reporter receives the confiscated utility tokens and the violator's ETH service fee for that round under the rule below.
 > 2. Ordinary relevance rounds are scheduled for `Live` items at a pool-defined cadence, subject to the per-item filing-window and appeal hold in Public appeal funding. For each item in a pool, at most one ordinary relevance round may be unfinished at a time, across all content revisions. The single-round check, round creation and ordinary jury-budget reservation are atomic when scheduling succeeds. A competing scheduling attempt must defer without creating another round or reserving a second budget. Exclusivity covers scheduled preparation, drafting, commitments, reveals, the proof-opening window and scoring until a valid ruling is issued or the attempt is cancelled. Valid issuance opens its appeal hold in the same transition that completes the ordinary round, leaving no gap for another ordinary round. Cancellation releases ordinary-round exclusivity under the existing cancellation rules; a permitted replacement or retry must acquire it anew and satisfy the applicable cadence, funding and eligibility conditions. Reaching a later scheduled due time, publishing a new revision or using another scheduler does not bypass the guard. Other items and pools remain independent, and appeal juries retain their own shared-group and retry rules.
@@ -81,21 +81,23 @@ Displayed-excerpt SHA-256: `50470f544e12afc9140daf7dd77913d416d38443e76edef7dcd4
 > w_i = n_i \cdot L
 > $$
 >
-> Locked tokens are simultaneously the curator's influence on the weighted mean and their maximum loss from ordinary coherence and non-participation penalties. The unlocked remainder ($s_i - n_i \cdot L$) stays in the pool contract and is not exposed to those penalties. ETH voluntarily committed to an appeal is independently unavailable for withdrawal or reuse under Public appeal funding. Such a contribution does not encumber utility tokens; utility-token balances remain subject to separately specified staking penalties.
+> Ticket eligibility alone does not guarantee that a ticket can be backed. The reference draft separately checks the curator's available deposit, excluding pre-existing locks for other rounds, and skips tickets it cannot fund. Existing collateral cannot back a second round; the blueprint specifies the bounded draft and its cancellation conditions.
+>
+> Locked tokens are simultaneously the curator's influence on the weighted mean and their maximum loss from ordinary coherence and non-participation penalties. The remainder ($s_i - n_i \cdot L$) stays in the pool contract and is not exposed to this round's coherence or non-participation penalties; other active-round locks and separately specified penalties still apply. A round lock remains active until it is released, including while it awaits appeal-chain finality under step 7. ETH voluntarily committed to an appeal is independently unavailable for withdrawal or reuse under Public appeal funding. Such a contribution does not encumber utility tokens; utility-token balances remain subject to separately specified staking penalties.
 >
 > 5. Each drafted curator commits and reveals a single relevance score in $[0,1]$, weighted by $w_i$. Multiple seats increase the curator's weight on that single score, not the number of independent votes.
 >
-> 6. A relevance round requires valid, timely reveals covering at least 80% of its originally drawn seat weight. Let $W_{\mathrm{draw}}$ be the sum of all curators' original round weights fixed when a nonempty draft succeeds, before any penalties, and let $W$ be the sum of those original weights belonging to valid revealers. Quorum holds exactly when $W_{\mathrm{draw}}>0$ and $5W\ge4W_{\mathrm{draw}}$. Since each drawn seat has the same fixed weight, a draft of $N>0$ seats requires at least $\lceil4N/5\rceil$ seats represented by valid reveals. This fixed rule applies to initial and appeal rounds, with no minimum number of distinct curators. One curator can meet quorum if its valid reveal represents at least 80% of the drawn weight. Later penalties or balance changes cannot reduce the denominator, and a fresh retry uses its own completed draw. This is a participation requirement, not a guarantee of independent or truthful judgments. A drafted round failing quorum completes the proof-opening window below before cancellation: no new score or curator reward is produced, and any previous relevance score for the same pinned revision remains in force; it cannot substitute for an assessment of a newer revision. Drafted curators who fail to commit or reveal lose their locked tokens as non-participants; valid participants recover their round locks. This also applies when nobody reveals; an empty draft cannot satisfy quorum. Otherwise, the protocol computes the weighted mean $\mu$ and weighted standard deviation $\sigma$ over valid reveals only, with total weight $W>0$:
+> 6. A relevance round requires valid, timely reveals covering at least 80% of its originally drawn seat weight. Let $W_{\mathrm{draw}}$ be the sum of all curators' original round weights fixed when a nonempty draft succeeds, before any penalties, and let $W$ be the sum of those original weights belonging to valid revealers. Quorum holds exactly when $W_{\mathrm{draw}}>0$ and $5W\ge4W_{\mathrm{draw}}$. Since each drawn seat has the same fixed weight, a draft of $N>0$ seats requires at least $\lceil4N/5\rceil$ seats represented by valid reveals. This fixed rule applies to initial and appeal rounds, with no minimum number of distinct curators. One curator can meet quorum if its valid reveal represents at least 80% of the drawn weight. Later penalties or balance changes cannot reduce the denominator, and a fresh retry uses its own completed draw. This is a participation requirement, not a guarantee of independent or truthful judgments. A drafted round failing quorum completes the proof-opening window below before cancellation: no new score or coherence reward is produced, and any previous relevance score for the same pinned revision remains in force; it cannot substitute for an assessment of a newer revision. Drafted curators who fail to commit or reveal lose their locked tokens as non-participants; valid participants recover their remaining round locks after any applicable leak penalties. A successful leak reporter can still receive confiscated utility tokens under the rule below. This also applies when nobody reveals; an empty draft cannot satisfy quorum. Otherwise, the protocol computes the weighted mean $\mu$ and weighted standard deviation $\sigma$ over valid reveals only, with total weight $W>0$:
 >
 > $$
 > \mu = \frac{1}{W}\sum_i w_i \, v_i, \qquad \sigma = \sqrt{\frac{\sum_i w_i (v_i - \mu)^2}{W}}.
 > $$
 >
-> Let $\varepsilon_\sigma>0$ be the pool-configured dispersion floor. When $\sigma<\varepsilon_\sigma$, distance-based graduated slashing for valid revealers is skipped; non-participation penalties still apply. The mean is accepted as a relevance score and valid revealers' round locks are released back into their utility-token deposits. This guard protects near-identical reports from a vanishing coherence band, but does not distinguish informed agreement from lazy convergence.
+> Let $\varepsilon_\sigma>0$ be the pool-configured dispersion floor. The mean is accepted as the round's relevance score whatever its dispersion. Step 7 floors the dispersion that scales its coherence band at $\varepsilon_\sigma$, so near-identical reports in the adjudicating round never face a vanishing band. The floor does not distinguish informed agreement from lazy convergence: a low-dispersion committee is penalized only when its reports lie outside the band around a different terminal adjudicated score.
 
 ## P04. Jury service fees and their earning boundary
 
-Source P, lines 264–273.
+Source P, lines 274–283.
 
 Raw-excerpt SHA-256: `af2e5677cbcca7c610f57f4079f6bf075566e4bdc4e2174c8eff87da05a1d849`.
 
@@ -114,29 +116,31 @@ Displayed-excerpt SHA-256: `43a9ba6184a341508fa675a06bf8dabd4e76b0ee544775c2a30f
 
 ## P05. Utility-token penalties, redistribution and rounding
 
-Source P, lines 277–309.
+Source P, lines 287–321.
 
-Raw-excerpt SHA-256: `8d55a1aca135dbb9f74f13fbe7da6cd792d6a4ffc14f7ee4aa1731b3b04063b7`.
+Raw-excerpt SHA-256: `b607c68a10f93333b45cb1323bb62ce43c07b782c04b5e097b9fc6071558fa66`.
 
-Displayed-excerpt SHA-256: `2c8b290203e4157b2b58d967880cfdc1e13ad93ee4507b49727557fdc6e4fef8`.
+Displayed-excerpt SHA-256: `bab7e8c45e491dee32d0a33e818e19edd6814c51fd053af17d02565b23491129`.
 
 > Utility-token coherence rewards consist solely of redistributed distance-based incoherence penalties under step 7. There is no minted reward or separately funded base token reward. If no such tokens are slashed, the additional utility-token reward is zero, while the valid ruling can still earn its separately accounted ETH service fee. Claim 3 analyzes a single-asset reward model, not an established payoff of this two-asset design.
 >
-> 7. If $\sigma \ge \varepsilon_\sigma$ (the dispersion floor defined above), graduated slashing applies. Let $v_i$ denote curator $i$'s revealed score and let $K$ denote the coherence-threshold multiplier ($K > 0$). Curators inside the coherence band ($|v_i - \mu| \le K\sigma$) are not penalized. Curators outside the band lose a fraction of their locked tokens that scales linearly with distance:
+> 7. Coherence is graded against the outcome of the round's appeal chain, not the round alone. An ordinary ruling starts a chain, and each appeal ruling joins the chain of the ruling it references (Public appeal funding). Once the chain is final, its **terminal adjudicated ruling** is its last valid jury ruling. A score set by forfeiture can fix the terminal score for backer settlement, but it is a procedural funding outcome rather than a jury finding, so it never serves as the coherence reference; the terminal adjudicated ruling is then the last jury ruling before the forfeiture. Let $\mu^*$ and $\sigma^*$ be that ruling's weighted mean and dispersion, and let $\tilde\sigma^*=\max(\sigma^*,\varepsilon_\sigma)$. Let $v_i$ denote curator $i$'s revealed score and let $K$ denote the coherence-threshold multiplier ($K > 0$). Every committee in the chain, including the terminal one, is graded against this same reference. Curators inside the coherence band ($|v_i - \mu^*| \le K\tilde\sigma^*$) are not penalized. Curators outside the band lose a fraction of their locked tokens that scales linearly with distance:
 >
 > $$
-> p_i = \min\!\Bigl(1,\;\max\!\bigl(0,\;\frac{|v_i - \mu|/\sigma - K}{K}\bigr)\Bigr)
+> p_i = \min\!\Bigl(1,\;\max\!\bigl(0,\;\frac{|v_i - \mu^*|/\tilde\sigma^* - K}{K}\bigr)\Bigr)
 > $$
 >
-> At the band boundary, the penalty is zero; at twice the boundary distance ($2K\sigma$ from the mean), the penalty is total loss of locked tokens. Since $w_i$ is measured in smallest on-chain units (integers), the slashed amount is rounded down:
+> At the band boundary, the penalty is zero; at twice the boundary distance ($2K\tilde\sigma^*$ from $\mu^*$), the penalty is total loss of locked tokens. Since $w_i$ is measured in smallest on-chain units (integers), the slashed amount is rounded down:
 >
 > $$
 > \delta_i = \lfloor p_i \cdot w_i \rfloor, \qquad q_i = w_i - \delta_i.
 > $$
 >
-> The protocol slashes $\delta_i$ utility-token units and returns the remainder $q_i$. This graduated slashing replaces binary slashing: near-boundary deviations incur small losses, while extreme deviations incur total loss. If $\sigma < \varepsilon_\sigma$, distance-based slashing is skipped for valid revealers: their $p_i = 0$ and $\delta_i = 0$, and their round locks are released. Voluntary appeal contributions retain their separate lock under Public appeal funding. Failed commit or reveal participation remains subject to loss of the non-participant's locked tokens.
+> The protocol slashes $\delta_i$ utility-token units and returns the remainder $q_i$. This graduated slashing replaces binary slashing: near-boundary deviations incur small losses, while extreme deviations incur total loss. Low dispersion grants no exemption: the floor keeps the band at least $K\varepsilon_\sigma$ wide around $\mu^*$, and reports outside it are penalized. Voluntary appeal contributions retain their separate lock under Public appeal funding. Failed commit or reveal participation remains subject to loss of the non-participant's locked tokens.
 >
-> Let $V$ be the valid revealers and $H=\{i\in V:p_i=0\}$ the coherent recipients. Only the actual integer distance-based penalties $S=\sum_{j\in V}\delta_j$ fund coherence rewards. For nonempty $H$, let $W_H=\sum_{j\in H}w_j$. The ideal additional utility-token entitlement is
+> Valid revealers' round locks stay locked until the chain reaches finality under Public appeal funding, and this step runs once for every committee in the chain at that event. Without an admitted appeal, a ruling becomes final when its admission window closes, so every valid round lock waits at least $\Delta_{\mathrm{admit}}$ after issuance. An appealed chain keeps the locks of all its committees until its last level settles, with no fixed bound because appeal depth is unlimited. A terminal exit that cancels the initial appeal process fixes the referenced ruling as the terminal adjudicated ruling at that cancellation. Locked collateral cannot back another round, so this hold reduces the stake a curator can offer to other drafts while the chain is open. Non-participation and leak penalties keep their own timing. An appeal ruling that moves the score therefore changes the settlement of earlier committees: a report coherent with its own round's mean is penalized when it lies outside the band around $\mu^*$, and a report its own round's band would have penalized is returned in full when it lies inside.
+>
+> For each committee in the chain, let $V$ be its valid revealers and $H=\{i\in V:p_i=0\}$ its coherent recipients. Only the actual integer distance-based penalties $S=\sum_{j\in V}\delta_j$ fund coherence rewards. For nonempty $H$, let $W_H=\sum_{j\in H}w_j$. The ideal additional utility-token entitlement is
 >
 > $$
 > T_i^*=S\frac{w_i}{W_H}\quad(i\in H),\qquad T_i^*=0\quad(i\notin H).
@@ -150,13 +154,13 @@ Displayed-excerpt SHA-256: `2c8b290203e4157b2b58d967880cfdc1e13ad93ee4507b497275
 > d_{\mathrm{token}}=S-\sum_{i\in H}T_i.
 > $$
 >
-> When the valid round's utility rewards are allocated under the existing settlement rule, credit $d_{\mathrm{token}}$ exactly once to that same pool's separate utility-token balance. No new wait until appeal-chain finality is introduced. The conservation identity is $S=\sum_{i\in H}T_i+d_{\mathrm{token}}$, with $0\le d_{\mathrm{token}}\le |H|-1$ when $H$ is nonempty. Evaluate the product and division with exact floor semantics; intermediate overflow or truncation must not add further losses. Unlike the appeal-position bound, this bound depends on the number of coherent curators, not the proposal-grid size. A positive ideal reward may round to zero, and the pool may retain all of a sufficiently small $S$. For example, five smallest token units shared by two equally weighted coherent curators pay two units to each and leave one in the pool; three units shared by four equally weighted coherent curators pay zero to each and leave all three in the pool.
+> When the committee's utility rewards are allocated at chain finality, credit $d_{\mathrm{token}}$ exactly once to that same pool's separate utility-token balance. A committee's penalties fund only that committee's coherent curators; no utility tokens move between levels. The conservation identity is $S=\sum_{i\in H}T_i+d_{\mathrm{token}}$, with $0\le d_{\mathrm{token}}\le |H|-1$ when $H$ is nonempty. Evaluate the product and division with exact floor semantics; intermediate overflow or truncation must not add further losses. Unlike the appeal-position bound, this bound depends on the number of coherent curators, not the proposal-grid size. A positive ideal reward may round to zero, and the pool may retain all of a sufficiently small $S$. For example, five smallest token units shared by two equally weighted coherent curators pay two units to each and leave one in the pool; three units shared by four equally weighted coherent curators pay zero to each and leave all three in the pool.
 >
 > These rewards are additional to returned stake $q_i$ and only redistribute tokens already confiscated. The retained balance does not enter the ETH service budget, convert to ETH or create a base subsidy for future coherence rewards. Allocated but unclaimed integer rewards remain assigned to their recipients and cannot be swept into the retained balance. If $S=0$, every $T_i=0$ and there is no remainder. If $H$ is empty, no denominator is evaluated and all of $S$ goes to the pool's distinct utility-token balance rather than its ETH service budget; the nonempty-set remainder bound does not apply. Non-participation penalties retain their separate pool destination and do not enter $S$. Leak penalties also do not enter $S$. A successful leak reporter receives all utility tokens actually confiscated through the violator's leak penalty, plus the entire normal gross ETH service fee associated with that violator in the affected round. This is an explicit exception to the general ETH payment rule: confiscated utility tokens are transferred directly, without sale or conversion. The reward is funded by punishment of the leaker, with no independent pool subsidy. The ETH component redirects the existing fee rather than creating a second payment. Multiple represented seats redirect their full combined fee. If the violator has no normal fee, including in a quorum-failed round or following a missing, late or invalid reveal, the ETH component is zero; the applicable utility-token penalty and reward remain separate.
 
 ## P06. Premature-disclosure proof period and collateral limits
 
-Source P, lines 311–321.
+Source P, lines 323–333.
 
 Raw-excerpt SHA-256: `c9adfd6d42a6bef673c1feae5b32ce90ef3c4e604fecd35e8a1090c9c1e9bbd2`.
 
@@ -176,17 +180,17 @@ Displayed-excerpt SHA-256: `c9adfd6d42a6bef673c1feae5b32ce90ef3c4e604fecd35e8a10
 
 ## P07. Issued rulings, pinned revisions and revision-attributed balances
 
-Source P, lines 332–340.
+Source P, lines 344–352.
 
-Raw-excerpt SHA-256: `6719c29f55169c3b5e80ffcc6a7fa8adac0b76e0570196347db3e1ab3ccedafd`.
+Raw-excerpt SHA-256: `45b696f4e290be0c1ed6cf3b829867b24da457389818e0b198308869bf9f9a7b`.
 
-Displayed-excerpt SHA-256: `6719c29f55169c3b5e80ffcc6a7fa8adac0b76e0570196347db3e1ab3ccedafd`.
+Displayed-excerpt SHA-256: `45b696f4e290be0c1ed6cf3b829867b24da457389818e0b198308869bf9f9a7b`.
 
-> A ruling is **issued** when a jury completes a valid relevance round. Issuance opens the appeal filing window and makes the earned ETH jury fees immediately withdrawable under the Relevance layer's fee rule; it does not make the ruling final. Technical round finalization means this completion and issuance event. Ruling finality, which governs appeal backer payouts, is separate. The effective relevance score follows the adoption rules below while a challenge remains possible.
+> A ruling is **issued** when a jury completes a valid relevance round. Issuance opens the appeal filing window and makes the earned ETH jury fees immediately withdrawable under the Relevance layer's fee rule; it does not make the ruling final. Technical round finalization means this completion and issuance event. Ruling finality, which governs appeal backer payouts and the curator coherence settlement in step 7, is separate. The effective relevance score follows the adoption rules below while a challenge remains possible.
 >
 > Every relevance ruling identifies the item and the content revision it assesses. The initial ordinary round pins that revision and its immutable manifest, body and bundled-evidence references when the round starts, before any curator can submit a report. It also identifies the applicable pool policy versions. An appeal inherits the referenced ruling's target, and every later appeal level and quorum retry keeps that same target. Following the item's current-content pointer must not retarget a running round or an appeal chain. Additional evidence may be admitted under the applicable evidence rules without changing which publication is being assessed. Pinning identifiers does not by itself guarantee that the referenced content remains available.
 >
-> Where the application permits amendments, an author may publish revision B while a relevance appeal concerning revision A is pending. The appeal continues against A. The edit does not cancel or retarget it, reset its deadlines, change its funded positions or fee terms, refund contributions, release adjudicated capital, or make A's score a judgment of B. A's jury rulings, forfeiture outcomes and zero-funded finality remain attached to A, and A's chain alone determines the associated backer settlement. Revision and ruling history keep the subject of the funded contest fixed: the appellant and opposing score backers committed capital to positions about A, so publishing B cannot change what those positions contest. Settlement allocates the backers' funds according to A's chain-final score. Authorship alone does not make the author a party to that contest or place the author bond at stake; an author who backs a position participates under the same rules as any other backer. The separate accuracy-challenge rules are unchanged. Existing amendment restrictions during accuracy challenges and the batch profile's submission freeze still apply.
+> Where the application permits amendments, an author may publish revision B while a relevance appeal concerning revision A is pending. The appeal continues against A. The edit does not cancel or retarget it, reset its deadlines, change its funded positions or fee terms, refund contributions, release adjudicated capital, or make A's score a judgment of B. A's jury rulings, forfeiture outcomes and zero-funded finality remain attached to A, and A's chain alone determines the associated backer settlement. Revision and ruling history keep the subject of the funded contest fixed: the appellant and opposing score backers committed capital to positions about A, so publishing B cannot change what those positions contest. Settlement allocates the backers' funds according to A's chain-final score. Authorship alone does not make the author a party to that contest or place the author bond at stake; an author who backs a position participates under the same rules as any other backer. The separate accuracy-challenge rules are unchanged. Existing amendment restrictions during accuracy challenges still apply.
 >
 > Revision B awaits its own revision-bound assessment under the existing ordinary-round hold and resumption rules. A result produced for A after B is published must be recorded in A's history rather than overwrite B's own assessment. Until B receives its own result, it has no adopted relevance score for that revision. B must not inherit any earlier revision's score, even as a labeled provisional proxy. Until B has its own adopted relevance score, it is ineligible for score-dependent ranking and new score-dependent funding; it remains accessible through direct links and pending views. An absent score is not a synthetic score of zero: an assigned 0.00 is a valid assessment outcome. Once a score is adopted for B under the existing rules, ordinary eligibility, funding and any applicable holdback conditions still apply; this rule adds no separate chain-finality wait. This change governs eligibility after the edit; A's appeal settlement remains separate.
 >
@@ -194,7 +198,7 @@ Displayed-excerpt SHA-256: `6719c29f55169c3b5e80ffcc6a7fa8adac0b76e0570196347db3
 
 ## P08. Appeal positions, participation, chain settlement and admission timing
 
-Source P, lines 342–361.
+Source P, lines 354–373.
 
 Raw-excerpt SHA-256: `6c28ec2f3362a983d66074c6ba428bb27e707a0bb0f837e66a79dcf57c096dff`.
 
@@ -223,7 +227,7 @@ Displayed-excerpt SHA-256: `6c28ec2f3362a983d66074c6ba428bb27e707a0bb0f837e66a79
 
 ## P09. Funding targets, contribution locks and funding outcomes
 
-Source P, lines 365–379.
+Source P, lines 377–391.
 
 Raw-excerpt SHA-256: `12b7f57119770c96ec06aa0164b969656ffa61baebd8ae336e5277861916a769`.
 
@@ -247,11 +251,11 @@ Displayed-excerpt SHA-256: `12b7f57119770c96ec06aa0164b969656ffa61baebd8ae336e52
 
 ## P10. Post-exit continuation, cancellation, reassessment and retries
 
-Source P, lines 381–403.
+Source P, lines 393–415.
 
-Raw-excerpt SHA-256: `5596bfe1954d7b5f593c9ec3b1a1ae7dee7f39eff9c90291d2869b9a7296b30a`.
+Raw-excerpt SHA-256: `97f12ce726f02c5c5d02376b0434e6015512af444a0ac15e3d3cbbd261f54493`.
 
-Displayed-excerpt SHA-256: `5596bfe1954d7b5f593c9ec3b1a1ae7dee7f39eff9c90291d2869b9a7296b30a`.
+Displayed-excerpt SHA-256: `97f12ce726f02c5c5d02376b0434e6015512af444a0ac15e3d3cbbd261f54493`.
 
 > If a nonempty ordinary jury draw completed before final accuracy closure or completion of an otherwise permitted voluntary author withdrawal, that already-drawn attempt continues against its pinned revision and policy. The exit does not discard votes, shorten commitment, reveal or proof-opening deadlines, release its active collateral or jury-fee reservation, or waive ordinary participation and coherence rules. Protocol execution order determines whether the completed draw preceded the exit; scheduled preparation, an incomplete draw or an empty draw does not qualify for this continuation permission.
 >
@@ -273,13 +277,13 @@ Displayed-excerpt SHA-256: `5596bfe1954d7b5f593c9ec3b1a1ae7dee7f39eff9c90291d286
 >
 > Only unused reservations belonging to the cancelled appeal process are unwound. Return any unused pool reservation to that pool; keep accepted contributions reserved for their backers' refunds rather than crediting them to the pool or releasing them twice. Other groups' reserves remain untouched. The cancellation does not reclaim or repay already-earned jury fees, including unpaid fees still assigned to their recipients. No earlier contested pot exists in this branch. An author who also backs a position remains subject to these same backer rules; returning the author bond does not by itself release separately committed appeal funds. For example, with a target of 100 per position, contributions of 100 and 90 before either event become refunds of 100 and 90. If both positions reached 100 before the event, the funded-chain continuation rule applies instead.
 >
-> For pools with recurring ordinary reassessment, let $t_{\mathrm{clear}}$ be the protocol timestamp at which the last applicable admission window or active appeal stops holding the item, and let $\Delta_{\mathrm{ordinary}}$ be the pool's ordinary cadence. The next ordinary round becomes eligible at $t_{\mathrm{clear}}+\Delta_{\mathrm{ordinary}}$, after one full cadence. For example, if a weekly round was due on day 7 but the last hold ends on day 10, its next eligibility is day 17. The old calendar phase and missed occurrences do not create a catch-up backlog; a previously due but unstarted round cannot begin before the new eligibility time. Eligibility still requires the ordinary item, funding and scheduling conditions and does not guarantee execution at that timestamp. If another applicable hold begins before the round starts, it blocks that start; the next eligibility is recomputed from the end of the last such hold. Ending one group while another hold remains does not start the interval. The anchor is the protocol's hold-end time, not when a scheduler notices it or someone records closure or collects a refund or payout. This timing rule does not cancel an already-started ordinary round, permit overlapping ordinary rounds, delay an appeal jury or change failed-appeal retry timing. Later ordinary rounds do not reopen completed appeal settlements. This recurring-scheduling rule does not add recurring evaluation to a batch profile that specifies only an initial round and its retry.
+> For pools with recurring ordinary reassessment, let $t_{\mathrm{clear}}$ be the protocol timestamp at which the last applicable admission window or active appeal stops holding the item, and let $\Delta_{\mathrm{ordinary}}$ be the pool's ordinary cadence. The next ordinary round becomes eligible at $t_{\mathrm{clear}}+\Delta_{\mathrm{ordinary}}$, after one full cadence. For example, if a weekly round was due on day 7 but the last hold ends on day 10, its next eligibility is day 17. The old calendar phase and missed occurrences do not create a catch-up backlog; a previously due but unstarted round cannot begin before the new eligibility time. Eligibility still requires the ordinary item, funding and scheduling conditions and does not guarantee execution at that timestamp. If another applicable hold begins before the round starts, it blocks that start; the next eligibility is recomputed from the end of the last such hold. Ending one group while another hold remains does not start the interval. The anchor is the protocol's hold-end time, not when a scheduler notices it or someone records closure or collects a refund or payout. This timing rule does not cancel an already-started ordinary round, permit overlapping ordinary rounds, delay an appeal jury or change failed-appeal retry timing. Later ordinary rounds do not reopen completed appeal settlements.
 >
 > A shared-jury attempt that fails the 80% reveal-weight quorum is cancelled without a new score, jury fee or curator reward subsidy. The contested level remains active and retries at the existing cadence without a retry-count limit or elapsed-time cancellation. Each retry uses its own completed draw for quorum coverage but retains the level's recorded positions, contribution target, planned jury size, pay rate, fee ceiling and funding reservations. It neither reopens funding nor requires top-ups. Existing non-participation penalties, leak-report transfers and release of valid participants' round locks still apply. Accepted contributions and fee reserves stay unavailable for reuse; failed quorum neither spends nor releases them. The previous effective score and ordinary-round hold persist.
 
 ## P11. Common-pot fee reservations and charging
 
-Source P, lines 407–421.
+Source P, lines 419–433.
 
 Raw-excerpt SHA-256: `fa3011d504448c9fbeb670826a56f27c5b3a83516558783a2f326cd2bba933f4`.
 
@@ -303,7 +307,7 @@ Displayed-excerpt SHA-256: `fa3011d504448c9fbeb670826a56f27c5b3a83516558783a2f32
 
 ## P12. Scalar backer payouts and integer allocation
 
-Source P, lines 425–445.
+Source P, lines 437–457.
 
 Raw-excerpt SHA-256: `52adcb77493fc94bc678f6b9d73c08fcfdae8857cb0c9f5e9222a4536eef2dfb`.
 
@@ -333,13 +337,13 @@ Displayed-excerpt SHA-256: `52adcb77493fc94bc678f6b9d73c08fcfdae8857cb0c9f5e9222
 
 ## P13. Limits of appeal and coordination arguments
 
-Source P, lines 326–326.
+Source P, lines 338–338.
 
-Raw-excerpt SHA-256: `49ef7707965c3dbcb59a0d897f23bcb0e6ae03cd5a31d97e63a26ff98e5ec4c7`.
+Raw-excerpt SHA-256: `9852fd59ee087ca13d52d282bc24f0730cb384fc82c7fdaf6ce189711d1bd520`.
 
-Displayed-excerpt SHA-256: `49ef7707965c3dbcb59a0d897f23bcb0e6ae03cd5a31d97e63a26ff98e5ec4c7`.
+Displayed-excerpt SHA-256: `9852fd59ee087ca13d52d282bc24f0730cb384fc82c7fdaf6ce189711d1bd520`.
 
-> Escalation is intended to discipline initial reports through the threat of appeal. Curators must anticipate both the initial committee and a possible appeal committee; whether this makes policy-faithful reporting a best response depends on the full reward and penalty rules, as discussed in Claim 3. Under a continuous-signal model with unbiased independent signals of uniformly bounded variance, the weighted mean concentrates around the policy-implied target as the normalized voting weights become sufficiently dispersed; a sufficient condition is that the sum of their squares tends to zero. Dependence requires additional control of covariance, and finite variance of each signal alone is insufficient. In the seat-based draft model, increasing seats alone is not sufficient: multiple seats held by one curator still map to a single revealed score. A larger appeal committee can improve precision when it adds independent signals of comparable quality and sufficiently disperses voting weight. A minority can seek correction by appealing. For an adjudicated correction, the appeal must be funded, bring additional information, and satisfy the specified outcome and settlement rules; neither successful correction nor a truthful equilibrium is guaranteed. A win by forfeiture records a procedural funding outcome; it is neither a jury finding nor evidence of consensus.
+> Escalation is intended to discipline initial reports through the threat of appeal. Because step 7 grades every committee against the chain's terminal adjudicated score, an appeal ruling that moves the score exposes earlier reports far from it to distance-based penalties. Curators must anticipate both the initial committee and a possible appeal committee; whether this makes policy-faithful reporting a best response depends on the full reward and penalty rules, as discussed in Claim 3. Under a continuous-signal model with unbiased independent signals of uniformly bounded variance, the weighted mean concentrates around the policy-implied target as the normalized voting weights become sufficiently dispersed; a sufficient condition is that the sum of their squares tends to zero. Dependence requires additional control of covariance, and finite variance of each signal alone is insufficient. In the seat-based draft model, increasing seats alone is not sufficient: multiple seats held by one curator still map to a single revealed score. A larger appeal committee can improve precision when it adds independent signals of comparable quality and sufficiently disperses voting weight. A minority can seek correction by appealing. For an adjudicated correction, the appeal must be funded, bring additional information, and satisfy the specified outcome and settlement rules; neither successful correction nor a truthful equilibrium is guaranteed. A win by forfeiture records a procedural funding outcome; it is neither a jury finding nor evidence of consensus.
 
 ## R01. Active-nomination challenges and ongoing-funding entitlement rules
 
