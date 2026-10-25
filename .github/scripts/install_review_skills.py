@@ -37,8 +37,8 @@ def without_tool_grant(frontmatter: list[str]) -> list[str]:
 
 def manifest_without_tool_grant(skill: Path) -> str:
     lines = (skill / MANIFEST).read_text(encoding='utf-8').splitlines(keepends=True)
-    if not lines or lines[0] != FRONTMATTER_DELIMITER:
-        sys.exit(f'{skill / MANIFEST}: does not start with YAML frontmatter')
+    if lines[:1] != [FRONTMATTER_DELIMITER] or FRONTMATTER_DELIMITER not in lines[1:]:
+        sys.exit(f"{skill / MANIFEST}: YAML frontmatter must open and close with a '---' line")
     end = lines.index(FRONTMATTER_DELIMITER, 1)
     frontmatter = without_tool_grant(lines[1:end])
     if any(TOOL_GRANT_KEY in line for line in frontmatter):
