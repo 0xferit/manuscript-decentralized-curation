@@ -15,14 +15,17 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import http.client
 import json
 import os
 import re
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 from datetime import datetime
+from http import HTTPStatus
 from pathlib import Path
 
 from release_version import TAG_PATTERN
@@ -34,6 +37,12 @@ META_PATH = Path(".zenodo.json")
 MANIFEST_PATH = Path("outputs/manifest.json")
 HTTP_TIMEOUT = 60
 DEPOSITION_PAGE_SIZE = 100
+REPEATABLE_METHODS = frozenset({"GET", "PUT", "DELETE"})
+TRANSIENT_HTTP_STATUSES = frozenset({
+    HTTPStatus.TOO_MANY_REQUESTS, HTTPStatus.INTERNAL_SERVER_ERROR, HTTPStatus.BAD_GATEWAY,
+    HTTPStatus.SERVICE_UNAVAILABLE, HTTPStatus.GATEWAY_TIMEOUT,
+})
+RETRY_DELAYS_SECONDS = (10, 30, 60)
 
 
 def _require_env(name: str) -> str:
@@ -54,15 +63,29 @@ def _req(method: str, url: str, *, token: str, body=None, content_type: str | No
             data = body
             headers["Content-Type"] = content_type
     request = urllib.request.Request(url, data=data, method=method, headers=headers)
-    try:
-        with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
-            raw = response.read()
-    except urllib.error.HTTPError as exc:
-        with exc:
-            detail = exc.read().decode('utf-8', errors='replace')
-        sys.exit(f"HTTP {exc.code} on {method} {url}: {detail}")
-    except urllib.error.URLError as exc:
-        sys.exit(f"network error on {method} {url}: {exc.reason}")
+    retry_delays = RETRY_DELAYS_SECONDS if method in REPEATABLE_METHODS else ()
+    for attempt in range(len(retry_delays) + 1):
+        try:
+            with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
+                return _decode(method, url, response.read())
+        except urllib.error.HTTPError as exc:
+            with exc:
+                detail = exc.read().decode('utf-8', errors='replace')
+            removed_by_earlier_attempt = method == "DELETE" and exc.code == HTTPStatus.NOT_FOUND and attempt > 0
+            if removed_by_earlier_attempt:
+                return {}
+            failure = f"HTTP {exc.code} on {method} {url}: {detail}"
+            transient = exc.code in TRANSIENT_HTTP_STATUSES
+        except (OSError, http.client.HTTPException) as exc:
+            failure = f"network error on {method} {url}: {getattr(exc, 'reason', exc)!r}"
+            transient = True
+        if not transient or attempt == len(retry_delays):
+            sys.exit(failure)
+        print(f"[zenodo] {failure}; retrying in {retry_delays[attempt]} s")
+        time.sleep(retry_delays[attempt])
+
+
+def _decode(method: str, url: str, raw: bytes):
     if not raw:
         return {}
     try:
@@ -131,7 +154,7 @@ def main(*, verify_only: bool = False) -> None:
     print(f"[zenodo] latest published version: id={latest_id} version={latest_version}")
     if latest_version == version:
         files = latest.get("files", [])
-        same_file = len(files) == 1 and files[0].get("key") == "paper.pdf" and files[0].get("checksum") == pdf_checksum
+        same_file = len(files) == 1 and files[0].get("key") == PDF_PATH.name and files[0].get("checksum") == pdf_checksum
         same_metadata = all(latest["metadata"].get(key) == base_meta[key]
                             for key in ("title", "description", "keywords"))
         same_authors = [author.get("name") for author in latest["metadata"].get("creators", [])] == [
@@ -178,14 +201,17 @@ def main(*, verify_only: bool = False) -> None:
 
     uploaded = _req(
         "PUT",
-        f"{bucket}/paper.pdf",
+        f"{bucket}/{PDF_PATH.name}",
         token=token,
         body=pdf_bytes,
         content_type="application/octet-stream",
     )
     if uploaded.get("checksum") != pdf_checksum or uploaded.get("size") != len(pdf_bytes):
         sys.exit("uploaded PDF checksum or size mismatch; draft left unpublished for inspection")
-    print(f"[zenodo] uploaded paper.pdf ({len(pdf_bytes)} bytes)")
+    print(f"[zenodo] uploaded {PDF_PATH.name} ({len(pdf_bytes)} bytes)")
+    draft_files = [entry.get("filename") for entry in _req("GET", draft_url, token=token).get("files") or []]
+    if draft_files != [PDF_PATH.name]:
+        sys.exit(f"draft holds {draft_files}, not only {PDF_PATH.name}; draft left unpublished for inspection")
 
     metadata = {
         "upload_type": base_meta.get("upload_type", "publication"),

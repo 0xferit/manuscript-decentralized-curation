@@ -11,7 +11,7 @@ context: inherit
 Trigger when the user asks to review, critique, evaluate, assess, audit, or peer-review `paper.qmd`, `projects/*/blueprint.md`, `projects/*/design.md`, or `projects/*/implementation-report.md`. Also trigger as a self-check before finalizing any substantive prose change.
 
 ## Delegate methodology to
-`claude-scientific-writer:peer-review` for the general toolkit. Apply the 7-stage rubric below for this project.
+`peer-review` for the general toolkit. Apply the 7-stage rubric below for this project.
 
 ## Project-specific rubric (7 stages)
 

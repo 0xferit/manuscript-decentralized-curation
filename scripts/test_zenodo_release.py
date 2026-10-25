@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import hashlib
+import http.client
 import importlib.util
 import io
 import json
@@ -61,6 +62,8 @@ class ZenodoReleaseTests(unittest.TestCase):
         self.requests = []
         self.queue = []
         self.enterContext(patch('urllib.request.urlopen', side_effect=self.http))
+        self.sleeps = []
+        self.enterContext(patch('time.sleep', side_effect=self.sleeps.append))
         self.enterContext(contextlib.redirect_stdout(io.StringIO()))
 
     def write_manifest(self):
@@ -84,14 +87,16 @@ class ZenodoReleaseTests(unittest.TestCase):
             'files': files if files is not None else [],
         }]}}
 
-    def publication_queue(self, checksum=None):
+    def publication_queue(self, checksum=None, deletion=({},), draft_files=('paper.pdf',)):
         return [
             self.latest(), [],
             {'links': {'latest_draft': publisher.API + '/deposit/depositions/43'}},
             {'id': 43, 'conceptrecid': publisher.CONCEPT_RECID, 'submitted': False,
              'links': {'bucket': publisher.API + '/files/bucket'},
              'files': [{'filename': 'old.pdf', 'links': {'self': publisher.API + '/old-file'}}]},
-            {}, {'checksum': checksum or 'md5:' + hashlib.md5(self.pdf).hexdigest(), 'size': len(self.pdf)},
+            *deletion,
+            {'checksum': checksum or 'md5:' + hashlib.md5(self.pdf).hexdigest(), 'size': len(self.pdf)},
+            {'files': [{'filename': name} for name in draft_files]},
             {}, {'doi': '10.5281/zenodo.43', 'links': {'html': 'https://zenodo.org/records/43'},
                  'submitted': True, 'conceptrecid': publisher.CONCEPT_RECID,
                  'metadata': {'version': '1.1.0'}},
@@ -217,6 +222,60 @@ class ZenodoReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, 'HTTP 401'):
             publisher.main()
         self.assertEqual(len(self.requests), 1)
+
+    def server_error(self, code=500):
+        return urllib.error.HTTPError(publisher.API, code, 'Server Error', {}, io.BytesIO(b'busy'))
+
+    def test_transient_error_on_a_repeatable_request_is_retried(self):
+        self.queue = [self.server_error(503), *self.publication_queue()]
+        publisher.main()
+        self.assertEqual([r.method for r in self.requests[:2]], ['GET', 'GET'])
+        self.assertEqual(len(self.sleeps), 1)
+        self.assertTrue(self.requests[-1].full_url.endswith('/actions/publish'))
+
+    def not_found(self):
+        return urllib.error.HTTPError(publisher.API, 404, 'Not Found', {}, io.BytesIO(b''))
+
+    def test_carryover_file_gone_on_retry_counts_as_removed(self):
+        self.queue = self.publication_queue(deletion=(self.server_error(), self.not_found()))
+        publisher.main()
+        self.assertEqual([r.method for r in self.requests].count('DELETE'), 2)
+        self.assertTrue(self.requests[-1].full_url.endswith('/actions/publish'))
+
+    def test_missing_file_on_first_delete_is_not_assumed_removed(self):
+        self.queue = self.publication_queue(deletion=(self.not_found(),))
+        with self.assertRaisesRegex(SystemExit, 'HTTP 404'):
+            publisher.main()
+
+    def test_dropped_connection_on_a_repeatable_request_is_retried(self):
+        for dropped in (ConnectionResetError('reset by peer'), http.client.IncompleteRead(b'')):
+            with self.subTest(dropped=type(dropped).__name__):
+                self.requests.clear()
+                self.queue = [dropped, *self.publication_queue()]
+                publisher.main()
+                self.assertTrue(self.requests[-1].full_url.endswith('/actions/publish'))
+
+    def test_draft_holding_another_file_is_never_published(self):
+        self.queue = self.publication_queue(draft_files=('old.pdf', 'paper.pdf'))
+        with self.assertRaisesRegex(SystemExit, 'old.pdf'):
+            publisher.main()
+        self.assertFalse(any(r.full_url.endswith('/actions/publish') for r in self.requests))
+
+    def test_publish_request_is_never_retried(self):
+        queue = self.publication_queue()
+        queue[-1] = self.server_error()
+        self.queue = queue
+        with self.assertRaisesRegex(SystemExit, 'HTTP 500'):
+            publisher.main()
+        self.assertEqual(sum(r.full_url.endswith('/actions/publish') for r in self.requests), 1)
+        self.assertEqual(self.sleeps, [])
+
+    def test_persistent_server_error_gives_up_after_bounded_retries(self):
+        self.queue = [self.server_error() for _ in range(len(publisher.RETRY_DELAYS_SECONDS) + 1)]
+        with self.assertRaisesRegex(SystemExit, 'HTTP 500'):
+            publisher.main()
+        self.assertEqual(len(self.requests), len(publisher.RETRY_DELAYS_SECONDS) + 1)
+        self.assertEqual(self.sleeps, list(publisher.RETRY_DELAYS_SECONDS))
 
 
 if __name__ == '__main__':

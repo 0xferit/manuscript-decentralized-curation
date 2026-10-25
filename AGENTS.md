@@ -61,17 +61,18 @@ This file is the canonical agent-facing guidance for the repository. `CLAUDE.md`
 
 ### Scientific writing toolkit
 
-Project-local skill wrappers under `.claude/skills/` engrave this project's conventions (source-of-truth file map, writing constraints, design principles, 7-stage peer-review rubric) over the upstream `claude-scientific-writer:*` plugin skills. Wrappers auto-surface when their triggers match and delegate methodology to the upstream plugin while applying this project's invariants. Each wrapper's `SKILL.md` documents its own triggers and inlined rules.
+Project-local skill wrappers under `.claude/skills/` engrave this project's conventions (source-of-truth file map, writing constraints, design principles, 7-stage peer-review rubric) over K-Dense's [Scientific Agent Skills](https://github.com/K-Dense-AI/scientific-agent-skills), installed as personal skills. Wrappers auto-surface when their triggers match and delegate methodology to those skills while applying this project's invariants. Each wrapper's `SKILL.md` documents its own triggers and inlined rules.
 
-| Project wrapper | Wraps upstream plugin skill |
+| Project wrapper | Wraps K-Dense skill |
 |---|---|
-| `paper-draft` | `claude-scientific-writer:scientific-writing` |
-| `paper-review` | `claude-scientific-writer:peer-review` |
-| `paper-audit-claims` | `claude-scientific-writer:scientific-critical-thinking` |
-| `paper-refs` | `claude-scientific-writer:citation-management` |
-| `paper-fact-check` | `claude-scientific-writer:research-lookup` and `:parallel-web` |
-| `paper-schematic` | `claude-scientific-writer:scientific-schematics` |
-| `paper-slides` | `claude-scientific-writer:scientific-slides` |
+| `paper-draft` | `scientific-writing` |
+| `paper-review` | `peer-review` |
+| `paper-pr-review` | `peer-review`, `scientific-critical-thinking` and `citation-management`, through the wrappers below, for a pull request's changes |
+| `paper-audit-claims` | `scientific-critical-thinking` |
+| `paper-refs` | `citation-management` |
+| `paper-fact-check` | `research-lookup` and `parallel-web` |
+| `paper-schematic` | `scientific-schematics` |
+| `paper-slides` | `scientific-slides` |
 
 Skills NOT relevant to this project: clinical / healthcare, market research, DOCX / PPTX / XLSX processing, LaTeX posters, venue-templates, generate-image, infographics, hypothesis-generation.
 

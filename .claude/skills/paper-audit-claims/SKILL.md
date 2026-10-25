@@ -11,7 +11,7 @@ context: inherit
 Trigger when the user asks to audit claims, check for overclaims, verify causal chains, test assertions, or evaluate whether an argument is supported by the evidence and mechanisms actually available. Also trigger as a pre-merge check on any prose change that adds or strengthens a causal claim.
 
 ## Delegate methodology to
-`claude-scientific-writer:scientific-critical-thinking` for the claim-extraction and evidence-sufficiency workflow.
+`scientific-critical-thinking` for the claim-extraction and evidence-sufficiency workflow.
 
 ## Project-specific targets
 - **Causal claims** about incentive alignment and mechanism-as-proof reasoning in `paper.qmd`.
