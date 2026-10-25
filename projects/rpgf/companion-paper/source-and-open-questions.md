@@ -32,6 +32,7 @@ Inspection date: 14 October 2026; E001 and E002 were re-inspected on 25 October 
 | E008 | Timothy Kassis, Vinayak Agarwal, Yuhuan He, Darshil Patel and Aubrey M. Brueckner, *Scientific Agent Skills: A Library of Procedural Knowledge for Research Agents*, 2026. [arXiv record](https://arxiv.org/abs/2609.00065). | Current record opened; version 2 lists these authors. Included only for the preparation method. |
 | E009 | [Worked example](worked-example.json). | Synthetic parameters and exact arithmetic generated for this manuscript. No observations, participant data, costs, market prices or study results are implied. |
 | E010 | Author decisions supplied in the current conversation and this revision request. | The author stated that current decisions are more up to date than project documents and requested correction of inherited stale assumptions. The revision brief confirms the ongoing profile, optional later beneficiary funding, preserved immediate claimability, nomination-scoped challenges and separate relevance procedures. This is an instruction/provenance record, not empirical evidence. |
+| E011 | Vitalik Buterin, *SchellingCoin: A Minimal-Trust Universal Data Feed*, Ethereum Foundation blog, 28 March 2014. [Blog post](https://blog.ethereum.org/2014/03/28/schellingcoin-a-minimal-trust-universal-data-feed). | Post opened. Supports attribution of the Schelling-point oracle pattern and of the coalition and bribery limits the proposal itself states; it is not evidence about this application's payoffs. |
 
 ### Exact source fingerprints
 

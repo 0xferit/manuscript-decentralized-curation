@@ -242,6 +242,30 @@
         "verified_by": "",
         "verified_on": ""
       }
+    },
+    {
+      "evidence_id": "E011",
+      "source_type": "other",
+      "title": "SchellingCoin: A Minimal-Trust Universal Data Feed",
+      "authors": [
+        "Vitalik Buterin"
+      ],
+      "year": 2014,
+      "identifiers": {
+        "doi": "",
+        "pmid": "",
+        "pmcid": "",
+        "isbn": "",
+        "url": "https://blog.ethereum.org/2014/03/28/schellingcoin-a-minimal-trust-universal-data-feed"
+      },
+      "locator": "Ethereum Foundation blog post of 28 March 2014: commit-reveal submission, reward to values between the 25th and 75th percentiles, truth as the strongest focal point, and the coalition and bribery attacks the post discusses",
+      "confidentiality": "public",
+      "verification": {
+        "status": "unverified",
+        "source_opened": false,
+        "verified_by": "",
+        "verified_on": ""
+      }
     }
   ]
 }
