@@ -258,7 +258,7 @@
         "isbn": "",
         "url": "https://blog.ethereum.org/2014/03/28/schellingcoin-a-minimal-trust-universal-data-feed"
       },
-      "locator": "Ethereum Foundation blog post of 28 March 2014: commit-reveal submission, reward to values between the 25th and 75th percentiles, truth as the strongest focal point, and the coalition and bribery attacks the post discusses",
+      "locator": "Ethereum Foundation blog post of 28 March 2014: commit-reveal submission, reward to values between the 25th and 75th percentiles, truth as arguably the most powerful Schelling point, the coalition attacks the post grants and the small-briber attack it judges impractical",
       "confidentiality": "public",
       "verification": {
         "status": "unverified",
