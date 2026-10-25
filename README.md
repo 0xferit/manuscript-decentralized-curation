@@ -13,7 +13,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 make setup
 make render-html            # cold-safe HTML render; regenerates analysis outputs first when needed
-make render-pdf             # cold-safe PDF render of the Quarto project
+make render-pdf             # cold-safe PDF render of the thesis (outputs/paper.pdf)
 make render-companion       # standalone public-goods companion PDF
 make render-papers          # both paper PDFs, plus Quarto project PDFs
 ```
