@@ -124,6 +124,7 @@ AGGREGATION_RULE_LABELS = {
     AGGREGATION_RULE_TRIMMED_MEAN: f"{AGGREGATION_TRIM_SHARE:.0%} trimmed mean",
 }
 WEIGHTED_MEDIAN_TIE_TOLERANCE = 1e-9
+PANDOC_NATURAL_WIDTH_MAX_LINE = 72
 
 
 def utc_now_iso() -> str:
@@ -2004,6 +2005,20 @@ def _single_round_aggregation_rows(params: E2PrimeAggregationParams) -> list[dic
     return rows
 
 
+def _natural_width_pipe_row(cells: Sequence[str]) -> str:
+    """One unpadded pipe-table row. Pandoc keeps natural column widths only while
+    every line of a table fits ``PANDOC_NATURAL_WIDTH_MAX_LINE`` characters, its
+    default ``--columns``; past that it wraps cells to relative widths
+    (https://pandoc.org/MANUAL.html#extension-pipe_tables)."""
+    row = "|" + "|".join(cells) + "|"
+    if len(row) > PANDOC_NATURAL_WIDTH_MAX_LINE:
+        raise RuntimeError(
+            f"Pipe-table row longer than {PANDOC_NATURAL_WIDTH_MAX_LINE} characters "
+            f"would make pandoc wrap the table's columns: {row}"
+        )
+    return row
+
+
 def _write_e2_prime_aggregation_table(
     single_round: pd.DataFrame, params: E2PrimeAggregationParams
 ) -> None:
@@ -2017,21 +2032,21 @@ def _write_e2_prime_aggregation_table(
 
     measures = [
         (
-            "Root-mean-square error",
+            "RMSE",
             "rmse",
             [
                 (f"{share:.0%} careless reports" if share > 0.0 else honest_only, share, 0)
                 for share in params.careless_shares
             ],
         ),
-        ("Shift from one far report", "far_report_shift", [(honest_only, 0.0, 0)]),
+        ("Shift", "far_report_shift", [(honest_only, 0.0, 0)]),
         (
             "Bias",
             "bias",
             [(colluding(n), 0.0, n) for n in (1, majority - 1, majority)],
         ),
         (
-            "Honest reports outside the band",
+            "Outside band",
             "honest_outside_band_share",
             [(honest_only, 0.0, 0), (colluding(majority), 0.0, majority)],
         ),
@@ -2050,19 +2065,25 @@ def _write_e2_prime_aggregation_table(
             )
         return float(match[column].iloc[0])
 
-    rule_headers = " | ".join(
-        AGGREGATION_RULE_LABELS[rule] for rule in params.aggregation_rules
-    )
-    n_rules = len(params.aggregation_rules)
-    lines = [f"| Setting | {rule_headers} |", "|---|" + "---:|" * n_rules]
+    rule_headers = [AGGREGATION_RULE_LABELS[rule] for rule in params.aggregation_rules]
+    lines = [
+        _natural_width_pipe_row(["Measure", "Setting", *rule_headers]),
+        _natural_width_pipe_row(["---", "---", *["---:"] * len(rule_headers)]),
+    ]
     for measure, column, settings in measures:
-        lines.append(f"| **{measure}** |" + " |" * n_rules)
         for setting, careless_share, colluders in settings:
-            cells = " | ".join(
-                f"{value(rule, careless_share, colluders, column):.3f}"
-                for rule in params.aggregation_rules
+            lines.append(
+                _natural_width_pipe_row(
+                    [
+                        measure,
+                        setting,
+                        *(
+                            f"{value(rule, careless_share, colluders, column):.3f}"
+                            for rule in params.aggregation_rules
+                        ),
+                    ]
+                )
             )
-            lines.append(f"| {setting} | {cells} |")
     caption = (
         f": Single-round comparison of aggregation rules: {params.trials:,} rounds per "
         f"setting, each with {seats} equal-weight seats, a true score drawn uniformly "
@@ -2071,10 +2092,11 @@ def _write_e2_prime_aggregation_table(
         f"probability and then drawn uniformly from $[0,1]$; colluding seats report the "
         f"true score plus {adversarial.colluder_bias:.2f} with noise of standard deviation "
         f"{adversarial.noise_sigma * adversarial.colluder_noise_factor:g}; reports are "
-        f"clipped to $[0,1]$. Bias is the mean signed error of the score. The far-report "
-        f"shift moves one honest report to the end of the scale farther from the true "
-        f"score. A report is outside the band when its distance from the score exceeds "
-        f"$K$ times the root-mean-square distance of all reports from the score. The "
+        f"clipped to $[0,1]$. Root-mean-square error (RMSE) and bias, the mean signed "
+        f"error, compare the score with the true score. Shift is the mean change "
+        f"in the score when one honest report moves to the end of the scale farther from "
+        f"the true score. Outside band is the share of honest reports farther from the "
+        f"score than $K$ times the root-mean-square distance of all reports from it. The "
         f"trimmed mean discards {AGGREGATION_TRIM_SHARE:.0%} of the weight from each tail. "
         "{#tbl-e2-prime-aggregation}"
     )
