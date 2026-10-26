@@ -148,6 +148,20 @@ class ZenodoReleaseTests(unittest.TestCase):
         self.assertEqual(metadata['publication_date'], '2026-10-11')
         self.assertEqual(self.queue, [])
 
+    def test_release_notes_asset_becomes_the_deposit_notes(self):
+        Path('outputs/deposit-notes.html').write_text('<ul><li>Changed rule</li></ul>\n')
+        self.queue = self.publication_queue()
+        publisher.main()
+        metadata = json.loads(self.requests[-2].data)['metadata']
+        self.assertEqual(metadata['notes'], '<ul><li>Changed rule</li></ul>\n')
+
+    def test_notes_do_not_decide_whether_a_published_version_matches(self):
+        Path('outputs/deposit-notes.html').write_text('<ul><li>Changed rule</li></ul>\n')
+        files = [{'key': 'paper.pdf', 'checksum': 'md5:' + hashlib.md5(self.pdf).hexdigest()}]
+        self.queue = [self.latest('1.1.0', files)]
+        publisher.main()
+        self.assertEqual(len(self.requests), 1)
+
     def test_checksum_failure_never_publishes(self):
         self.queue = self.publication_queue('md5:incorrect')
         with self.assertRaises(SystemExit):
