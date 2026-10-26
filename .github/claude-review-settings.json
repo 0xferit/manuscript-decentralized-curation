@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "blockReadsOutsideWorkingDirectories": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.github/scripts/remote_credentials.py\" strip"
+          }
+        ]
+      }
+    ]
+  }
+}
