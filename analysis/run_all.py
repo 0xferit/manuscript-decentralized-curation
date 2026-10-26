@@ -114,6 +114,12 @@ CURATOR_TYPE_COMPETENT = 0
 CURATOR_TYPE_NOISY = 1
 CURATOR_TYPE_COLLUDER = 2
 
+AGGREGATION_RULE_MEAN = 0
+AGGREGATION_RULE_MEDIAN = 1
+AGGREGATION_RULE_TRIMMED_MEAN = 2
+AGGREGATION_TRIM_SHARE = 0.10
+WEIGHTED_MEDIAN_TIE_TOLERANCE = 1e-9
+
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
@@ -1158,6 +1164,105 @@ def _draft_seats_njit(
 
 
 @njit(cache=True)
+def _weighted_median_njit(values: np.ndarray, weights: np.ndarray) -> float:
+    """Weighted median of ``values``.
+
+    Returns the report at which the cumulative weight, in ascending order of
+    reports, first exceeds half the total. When it reaches exactly half
+    (within ``WEIGHTED_MEDIAN_TIE_TOLERANCE`` of the total), returns the
+    midpoint of that report and the next, as for an unweighted median of an
+    even count.
+    """
+    order = np.argsort(values)
+    total = 0.0
+    for i in range(weights.shape[0]):
+        total += weights[i]
+    half = 0.5 * total
+    cumulative = 0.0
+    last = order.shape[0] - 1
+    for position in range(order.shape[0]):
+        index = order[position]
+        cumulative += weights[index]
+        if position < last and abs(cumulative - half) <= WEIGHTED_MEDIAN_TIE_TOLERANCE * total:
+            return 0.5 * (values[index] + values[order[position + 1]])
+        if cumulative > half:
+            return values[index]
+    return values[order[last]]
+
+
+@njit(cache=True)
+def _weighted_trimmed_mean_njit(
+    values: np.ndarray, weights: np.ndarray, trim_share: float
+) -> float:
+    """Weighted mean after removing ``trim_share`` of the total weight from
+    each tail, keeping the inner part of a report's weight where a cut falls
+    inside it."""
+    order = np.argsort(values)
+    total = 0.0
+    for i in range(weights.shape[0]):
+        total += weights[i]
+    lower_cut = trim_share * total
+    upper_cut = total - lower_cut
+    start = 0.0
+    weighted_sum = 0.0
+    kept_weight = 0.0
+    for position in range(order.shape[0]):
+        index = order[position]
+        end = start + weights[index]
+        kept = min(end, upper_cut) - max(start, lower_cut)
+        if kept > 0.0:
+            weighted_sum += kept * values[index]
+            kept_weight += kept
+        start = end
+    return weighted_sum / kept_weight
+
+
+@njit(cache=True)
+def _round_score_njit(
+    values: np.ndarray, weights: np.ndarray, aggregation_rule: int
+) -> float:
+    """Round score under ``aggregation_rule``. The weighted mean is the protocol's
+    rule; it accumulates in input order so runs made before the rule became a
+    parameter reproduce exactly."""
+    if aggregation_rule == AGGREGATION_RULE_MEDIAN:
+        return _weighted_median_njit(values, weights)
+    if aggregation_rule == AGGREGATION_RULE_TRIMMED_MEAN:
+        return _weighted_trimmed_mean_njit(values, weights, AGGREGATION_TRIM_SHARE)
+    weighted_sum = 0.0
+    total = 0.0
+    for i in range(values.shape[0]):
+        weighted_sum += weights[i] * values[i]
+        total += weights[i]
+    return weighted_sum / total
+
+
+def _assert_aggregation_rules_exact() -> None:
+    def check(values, weights, aggregation_rule, expected, label):
+        got = _round_score_njit(
+            np.array(values, dtype=np.float64),
+            np.array(weights, dtype=np.float64),
+            aggregation_rule,
+        )
+        if abs(got - expected) > 1e-12:
+            raise RuntimeError(
+                f"Aggregation rule guard failed ({label}): got {got}, expected {expected}"
+            )
+
+    check([0.2, 0.4], [1.0, 3.0], AGGREGATION_RULE_MEAN, 0.35, "weighted mean")
+    check([0.9, 0.1, 0.4], [1.0, 1.0, 1.0], AGGREGATION_RULE_MEDIAN, 0.4, "odd median")
+    check([0.6, 0.2], [1.0, 1.0], AGGREGATION_RULE_MEDIAN, 0.4, "even median midpoint")
+    check([0.1, 0.5, 0.9], [1.0, 1.0, 3.0], AGGREGATION_RULE_MEDIAN, 0.9, "heavy report")
+    check(
+        [0.1, 0.3, 0.5, 0.7], [0.2, 0.2, 0.2, 0.2], AGGREGATION_RULE_MEDIAN, 0.4,
+        "seat weights reaching half",
+    )
+    check(
+        [0.0, 0.2, 0.4, 0.6, 1.0], [1.0] * 5, AGGREGATION_RULE_TRIMMED_MEAN, 0.425,
+        "partial trim at both tails",
+    )
+
+
+@njit(cache=True)
 def _relevance_core_prime(
     rng: np.random.Generator,
     n_curators: int,
@@ -1181,6 +1286,7 @@ def _relevance_core_prime(
     colluder_bias: float,
     colluder_noise_factor: float,
     trojan_delay: int,
+    aggregation_rule: int,
 ):
     """E2' core: one seed run of the historical single-balance scenario.
 
@@ -1191,7 +1297,9 @@ def _relevance_core_prime(
     p_i = min(1, max(0, (|v_i - mu|/sigma - K) / K)) applies to
     revealers (skipped when sigma < epsilon_sigma); (4) abstainer w_i
     is removed from the modeled curator balances (the simulation does
-    not model a separate pool budget).
+    not model a separate pool budget). mu is the round score under
+    ``aggregation_rule``, the weighted mean in the protocol, and sigma the
+    weighted root-mean-square distance of reports from it.
 
     Ambiguity is a sim-only extension (the blueprint has no third
     verdict): a hidden Bernoulli(ambig_prob) flag drives a noisy
@@ -1305,9 +1413,11 @@ def _relevance_core_prime(
             revealer_idx[j] = cur
             j += 1
 
+        revealer_w = np.empty(n_revealers)
         wsum = 0.0
         for i in range(n_revealers):
-            wsum += w[revealer_idx[i]]
+            revealer_w[i] = w[revealer_idx[i]]
+            wsum += revealer_w[i]
         if wsum <= 0.0:
             for i in range(n_committee):
                 idx = committee[i]
@@ -1315,10 +1425,7 @@ def _relevance_core_prime(
                     stakes[idx] += w[idx]
             cancelled_rounds += 1
             continue
-        mu = 0.0
-        for i in range(n_revealers):
-            mu += w[revealer_idx[i]] * votes[i]
-        mu /= wsum
+        mu = _round_score_njit(votes, revealer_w, aggregation_rule)
         varw = 0.0
         for i in range(n_revealers):
             d = votes[i] - mu
@@ -1450,6 +1557,7 @@ def _e2_prime_single_run(
         0.0,  # no collusion bias for E2'
         1.0,
         0,
+        AGGREGATION_RULE_MEAN,
     )
 
     competent_mask = types == CURATOR_TYPE_COMPETENT
@@ -1641,6 +1749,7 @@ def _e2_prime_adv_single_run(
         params.colluder_bias,
         params.colluder_noise_factor,
         0,
+        AGGREGATION_RULE_MEAN,
     )
 
     colluder_mask = types == CURATOR_TYPE_COLLUDER
@@ -1832,6 +1941,7 @@ def _e2_prime_sigma_sweep_single_run(
         params.colluder_bias,
         params.colluder_noise_factor,
         0,
+        AGGREGATION_RULE_MEAN,
     )
 
     colluder_mask = types == CURATOR_TYPE_COLLUDER
@@ -2043,6 +2153,7 @@ def _e2_prime_trojan_single_run(
         params.colluder_bias,
         params.colluder_noise_factor,
         trojan_delay,
+        AGGREGATION_RULE_MEAN,
     )
 
     colluder_mask = types == CURATOR_TYPE_COLLUDER
@@ -3059,6 +3170,7 @@ def write_reading_time() -> None:
 
 def run_full() -> None:
     _assert_weighted_sample_deterministic()
+    _assert_aggregation_rules_exact()
     ensure_dirs()
     save_metadata()
     run_e1(E1Params())
