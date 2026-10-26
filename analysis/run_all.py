@@ -9,7 +9,7 @@ import platform
 import re
 from collections.abc import Callable, Sequence
 from concurrent.futures import ProcessPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -118,6 +118,11 @@ AGGREGATION_RULE_MEAN = 0
 AGGREGATION_RULE_MEDIAN = 1
 AGGREGATION_RULE_TRIMMED_MEAN = 2
 AGGREGATION_TRIM_SHARE = 0.10
+AGGREGATION_RULE_LABELS = {
+    AGGREGATION_RULE_MEAN: "Weighted mean",
+    AGGREGATION_RULE_MEDIAN: "Weighted median",
+    AGGREGATION_RULE_TRIMMED_MEAN: f"{AGGREGATION_TRIM_SHARE:.0%} trimmed mean",
+}
 WEIGHTED_MEDIAN_TIE_TOLERANCE = 1e-9
 
 
@@ -1705,7 +1710,10 @@ class E2PrimeAdvParams:
 
 
 def _e2_prime_adv_single_run(
-    params: E2PrimeAdvParams, col_frac: float, seed_idx: int
+    params: E2PrimeAdvParams,
+    col_frac: float,
+    seed_idx: int,
+    aggregation_rule: int = AGGREGATION_RULE_MEAN,
 ) -> dict:
     rng = np.random.default_rng(int(10_000 * col_frac + seed_idx) + 17)
     n_comp = int(round(params.n_curators * params.competent_frac))
@@ -1749,7 +1757,7 @@ def _e2_prime_adv_single_run(
         params.colluder_bias,
         params.colluder_noise_factor,
         0,
-        AGGREGATION_RULE_MEAN,
+        aggregation_rule,
     )
 
     colluder_mask = types == CURATOR_TYPE_COLLUDER
@@ -1772,38 +1780,47 @@ def _e2_prime_adv_single_run(
     }
 
 
+def _e2_prime_adv_summary_row(
+    params: E2PrimeAdvParams,
+    col_frac: float,
+    aggregation_rule: int,
+    executor: ProcessPoolExecutor,
+) -> dict:
+    seed_results = list(
+        executor.map(
+            functools.partial(
+                _e2_prime_adv_single_run, params, col_frac, aggregation_rule=aggregation_rule
+            ),
+            range(params.n_seeds),
+        )
+    )
+    errors = np.array([r["mean_abs_error"] for r in seed_results])
+    stake_shares = np.array([r["final_colluder_stake_share"] for r in seed_results])
+    draft_shares = np.array([r["colluder_draft_share"] for r in seed_results])
+    cancelled = np.array([r["cancelled_round_share"] for r in seed_results])
+    ambig = np.array([r["ambiguous_cancel_share"] for r in seed_results])
+    return {
+        "colluding_frac": float(col_frac),
+        "n_seeds": params.n_seeds,
+        "mean_abs_error_mean": float(errors.mean()),
+        "mean_abs_error_ci95": _ci95(errors),
+        "final_colluder_stake_share_mean": float(stake_shares.mean()),
+        "final_colluder_stake_share_ci95": _ci95(stake_shares),
+        "colluder_draft_share_mean": float(draft_shares.mean()),
+        "colluder_draft_share_ci95": _ci95(draft_shares),
+        "cancelled_round_share_mean": float(cancelled.mean()),
+        "ambiguous_cancel_share_mean": float(ambig.mean()),
+        "initial_colluder_stake_share": float(col_frac),
+    }
+
+
 def run_e2_prime_adversarial(
     params: E2PrimeAdvParams, executor: ProcessPoolExecutor
 ) -> None:
-    rows: list[dict] = []
-    for col_frac in params.colluding_fracs:
-        seed_results = list(
-            executor.map(
-                functools.partial(_e2_prime_adv_single_run, params, col_frac),
-                range(params.n_seeds),
-            )
-        )
-        errors = np.array([r["mean_abs_error"] for r in seed_results])
-        stake_shares = np.array([r["final_colluder_stake_share"] for r in seed_results])
-        draft_shares = np.array([r["colluder_draft_share"] for r in seed_results])
-        cancelled = np.array([r["cancelled_round_share"] for r in seed_results])
-        ambig = np.array([r["ambiguous_cancel_share"] for r in seed_results])
-
-        rows.append(
-            {
-                "colluding_frac": float(col_frac),
-                "n_seeds": params.n_seeds,
-                "mean_abs_error_mean": float(errors.mean()),
-                "mean_abs_error_ci95": _ci95(errors),
-                "final_colluder_stake_share_mean": float(stake_shares.mean()),
-                "final_colluder_stake_share_ci95": _ci95(stake_shares),
-                "colluder_draft_share_mean": float(draft_shares.mean()),
-                "colluder_draft_share_ci95": _ci95(draft_shares),
-                "cancelled_round_share_mean": float(cancelled.mean()),
-                "ambiguous_cancel_share_mean": float(ambig.mean()),
-                "initial_colluder_stake_share": float(col_frac),
-            }
-        )
+    rows = [
+        _e2_prime_adv_summary_row(params, col_frac, AGGREGATION_RULE_MEAN, executor)
+        for col_frac in params.colluding_fracs
+    ]
 
     df = pd.DataFrame(rows)
     df.to_csv(OUT_DIR / "e2_prime_adversarial_results.csv", index=False)
@@ -1857,6 +1874,287 @@ def run_e2_prime_adversarial(
 
     plt.tight_layout()
     _save_figure_variants(plt.gcf(), FIG_DIR / "e2_prime_adversarial.png", dpi=200)
+    plt.close()
+
+
+# -- E2'-Adv aggregation rules: the round score under the mean, median and --
+# -- trimmed mean -------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class E2PrimeAggregationParams:
+    """E2'-Adv aggregation rules: the protocol's weighted-mean round score
+    against a weighted median and a weighted trimmed mean, each with a
+    coherence band of K times the root-mean-square distance of reports from
+    that rule's score. Single rounds of equal-weight seats isolate accuracy
+    and manipulability; the E2'-Adv collusion sweep then runs under each
+    rule."""
+
+    adversarial: E2PrimeAdvParams = field(default_factory=E2PrimeAdvParams)
+    aggregation_rules: tuple[int, ...] = (
+        AGGREGATION_RULE_MEAN,
+        AGGREGATION_RULE_MEDIAN,
+        AGGREGATION_RULE_TRIMMED_MEAN,
+    )
+    careless_shares: tuple[float, ...] = (0.0, 0.05, 0.10, 0.20, 0.40)
+    colluding_seats: tuple[int, ...] = (1, 2, 3, 4, 5, 6, 7, 8)
+    trials: int = 20_000
+
+
+@njit(cache=True)
+def _single_round_aggregation_njit(
+    rng: np.random.Generator,
+    aggregation_rules: np.ndarray,
+    seats: int,
+    honest_noise: float,
+    careless_share: float,
+    colluders: int,
+    colluder_bias: float,
+    colluder_noise: float,
+    K: float,
+    epsilon_sigma: float,
+    trials: int,
+):
+    """One equal-weight round per trial, scored by every rule on the same
+    reports. The first ``colluders`` seats report the colluder target; each
+    other seat reports uniformly at random with probability
+    ``careless_share`` and otherwise reports the true score plus honest
+    noise. The far-report shift moves the last seat's report to the end of
+    the scale farther from the true score."""
+    n_rules = aggregation_rules.shape[0]
+    errors = np.empty((n_rules, trials))
+    far_report_shifts = np.empty((n_rules, trials))
+    honest_outside_shares = np.empty((n_rules, trials))
+    weights = np.ones(seats)
+    reports = np.empty(seats)
+    moved = np.empty(seats)
+    honest = np.zeros(seats, dtype=np.bool_)
+    for trial in range(trials):
+        r_true = rng.uniform(0.0, 1.0)
+        n_honest = 0
+        for i in range(seats):
+            if i < colluders:
+                v = min(r_true + colluder_bias, 1.0) + rng.normal(0.0, colluder_noise)
+                honest[i] = False
+            elif rng.random() < careless_share:
+                v = rng.uniform(0.0, 1.0)
+                honest[i] = False
+            else:
+                v = r_true + rng.normal(0.0, honest_noise)
+                honest[i] = True
+                n_honest += 1
+            reports[i] = min(1.0, max(0.0, v))
+            moved[i] = reports[i]
+        moved[seats - 1] = 1.0 if r_true < 0.5 else 0.0
+        for k in range(n_rules):
+            score = _round_score_njit(reports, weights, aggregation_rules[k])
+            errors[k, trial] = score - r_true
+            far_report_shifts[k, trial] = abs(
+                _round_score_njit(moved, weights, aggregation_rules[k]) - score
+            )
+            squared = 0.0
+            for i in range(seats):
+                squared += (reports[i] - score) ** 2
+            band = K * max(np.sqrt(squared / seats), epsilon_sigma)
+            outside = 0
+            for i in range(seats):
+                if honest[i] and abs(reports[i] - score) > band:
+                    outside += 1
+            honest_outside_shares[k, trial] = (
+                outside / n_honest if n_honest > 0 else np.nan
+            )
+    return errors, far_report_shifts, honest_outside_shares
+
+
+def _single_round_aggregation_rows(params: E2PrimeAggregationParams) -> list[dict]:
+    adversarial = params.adversarial
+    rules = np.array(params.aggregation_rules, dtype=np.int64)
+    settings = [(share, 0) for share in params.careless_shares] + [
+        (0.0, seats) for seats in params.colluding_seats
+    ]
+    rows: list[dict] = []
+    for setting_index, (careless_share, colluders) in enumerate(settings):
+        errors, shifts, outside = _single_round_aggregation_njit(
+            np.random.default_rng(setting_index),
+            rules,
+            adversarial.target_seats,
+            adversarial.noise_sigma,
+            careless_share,
+            colluders,
+            adversarial.colluder_bias,
+            adversarial.noise_sigma * adversarial.colluder_noise_factor,
+            adversarial.K,
+            adversarial.epsilon_sigma,
+            params.trials,
+        )
+        for k, rule in enumerate(params.aggregation_rules):
+            rows.append(
+                {
+                    "aggregation_rule": AGGREGATION_RULE_LABELS[rule],
+                    "seats": adversarial.target_seats,
+                    "careless_share": careless_share,
+                    "colluding_seats": colluders,
+                    "trials": params.trials,
+                    "rmse": float(np.sqrt(np.mean(errors[k] ** 2))),
+                    "bias": float(errors[k].mean()),
+                    "far_report_shift": float(shifts[k].mean()),
+                    "honest_outside_band_share": float(np.nanmean(outside[k])),
+                }
+            )
+    return rows
+
+
+def _write_e2_prime_aggregation_table(
+    single_round: pd.DataFrame, params: E2PrimeAggregationParams
+) -> None:
+    adversarial = params.adversarial
+    seats = adversarial.target_seats
+    majority = seats // 2 + 1
+    honest_only = "Honest reports only"
+
+    def colluding(n: int) -> str:
+        return f"{n} of {seats} seats colluding"
+
+    measures = [
+        (
+            "Root-mean-square error",
+            "rmse",
+            [
+                (f"{share:.0%} careless reports" if share > 0.0 else honest_only, share, 0)
+                for share in params.careless_shares
+            ],
+        ),
+        ("Shift from one far report", "far_report_shift", [(honest_only, 0.0, 0)]),
+        (
+            "Bias",
+            "bias",
+            [(colluding(n), 0.0, n) for n in (1, majority - 1, majority)],
+        ),
+        (
+            "Honest reports outside the band",
+            "honest_outside_band_share",
+            [(honest_only, 0.0, 0), (colluding(majority), 0.0, majority)],
+        ),
+    ]
+
+    def value(rule: int, careless_share: float, colluders: int, column: str) -> float:
+        match = single_round[
+            (single_round["aggregation_rule"] == AGGREGATION_RULE_LABELS[rule])
+            & (single_round["careless_share"] == careless_share)
+            & (single_round["colluding_seats"] == colluders)
+        ]
+        if len(match) != 1:
+            raise RuntimeError(
+                f"Expected one single-round result for rule {rule}, careless share "
+                f"{careless_share} and {colluders} colluding seats; found {len(match)}"
+            )
+        return float(match[column].iloc[0])
+
+    rule_headers = " | ".join(
+        AGGREGATION_RULE_LABELS[rule] for rule in params.aggregation_rules
+    )
+    n_rules = len(params.aggregation_rules)
+    lines = [f"| Setting | {rule_headers} |", "|---|" + "---:|" * n_rules]
+    for measure, column, settings in measures:
+        lines.append(f"| **{measure}** |" + " |" * n_rules)
+        for setting, careless_share, colluders in settings:
+            cells = " | ".join(
+                f"{value(rule, careless_share, colluders, column):.3f}"
+                for rule in params.aggregation_rules
+            )
+            lines.append(f"| {setting} | {cells} |")
+    caption = (
+        f": Single-round comparison of aggregation rules: {params.trials:,} rounds per "
+        f"setting, each with {seats} equal-weight seats, a true score drawn uniformly "
+        f"from $[0,1]$, honest noise $\\sigma_{{\\text{{honest}}}}={adversarial.noise_sigma}$ "
+        f"and $K={adversarial.K}$. Each non-colluding report is careless with the stated "
+        f"probability and then drawn uniformly from $[0,1]$; colluding seats report the "
+        f"true score plus {adversarial.colluder_bias:.2f} with noise of standard deviation "
+        f"{adversarial.noise_sigma * adversarial.colluder_noise_factor:g}; reports are "
+        f"clipped to $[0,1]$. Bias is the mean signed error of the score. The far-report "
+        f"shift moves one honest report to the end of the scale farther from the true "
+        f"score. A report is outside the band when its distance from the score exceeds "
+        f"$K$ times the root-mean-square distance of all reports from the score. The "
+        f"trimmed mean discards {AGGREGATION_TRIM_SHARE:.0%} of the weight from each tail. "
+        "{#tbl-e2-prime-aggregation}"
+    )
+    (OUT_DIR / "e2_prime_aggregation_table.md").write_text(
+        "\n".join(lines) + "\n\n" + caption + "\n", encoding="utf-8"
+    )
+
+
+def run_e2_prime_aggregation(
+    params: E2PrimeAggregationParams, executor: ProcessPoolExecutor
+) -> None:
+    single_round = pd.DataFrame(_single_round_aggregation_rows(params))
+    single_round.to_csv(OUT_DIR / "e2_prime_aggregation_single_round.csv", index=False)
+    _write_e2_prime_aggregation_table(single_round, params)
+
+    adversarial = params.adversarial
+    sweep = pd.DataFrame(
+        [
+            {
+                "aggregation_rule": AGGREGATION_RULE_LABELS[rule],
+                **_e2_prime_adv_summary_row(adversarial, col_frac, rule, executor),
+            }
+            for rule in params.aggregation_rules
+            for col_frac in adversarial.colluding_fracs
+        ]
+    )
+    sweep.to_csv(OUT_DIR / "e2_prime_aggregation_sweep_results.csv", index=False)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.0, 4.5))
+    rule_colors = [_AC, _ALT, _ALT2]
+    for rule, color in zip(params.aggregation_rules, rule_colors):
+        sub = sweep[sweep["aggregation_rule"] == AGGREGATION_RULE_LABELS[rule]]
+        x = sub["colluding_frac"]
+        for ax, column in (
+            (ax1, "mean_abs_error"),
+            (ax2, "final_colluder_stake_share"),
+        ):
+            ax.plot(
+                x,
+                sub[f"{column}_mean"],
+                marker="o",
+                color=color,
+                label=AGGREGATION_RULE_LABELS[rule],
+            )
+            ax.fill_between(
+                x,
+                sub[f"{column}_mean"] - sub[f"{column}_ci95"],
+                sub[f"{column}_mean"] + sub[f"{column}_ci95"],
+                alpha=0.15,
+                color=color,
+            )
+    ax1.set_xlabel("Fraction of colluding curators")
+    ax1.set_ylabel("Mean |score - r|")
+    ax1.set_title(
+        f"E2'-Adv: Signal error by aggregation rule\n(K={adversarial.K}, N={adversarial.n_seeds} seeds)"
+    )
+    ax2.plot(
+        adversarial.colluding_fracs,
+        adversarial.colluding_fracs,
+        linestyle="--",
+        color=_MUT,
+        label="Initial stake share",
+    )
+    ax2.set_xlabel("Fraction of colluding curators")
+    ax2.set_ylabel("Colluder stake share")
+    ax2.set_title(
+        f"E2'-Adv: Colluder stake share by aggregation rule\n(N={adversarial.n_seeds} seeds)"
+    )
+    stake_ceiling = max(
+        max(adversarial.colluding_fracs),
+        (
+            sweep["final_colluder_stake_share_mean"]
+            + sweep["final_colluder_stake_share_ci95"]
+        ).max(),
+    )
+    ax2.set_ylim(0.0, max(0.4, stake_ceiling * 1.2))
+    ax1.legend(frameon=False, fontsize=11)
+    ax2.legend(frameon=False, fontsize=11)
+    plt.tight_layout()
+    _save_figure_variants(plt.gcf(), FIG_DIR / "e2_prime_aggregation.png", dpi=200)
     plt.close()
 
 
@@ -3066,6 +3364,21 @@ def write_eval_summary() -> None:
     e2p_sigma = pd.read_csv(OUT_DIR / "e2_prime_sigma_sweep_results.csv")
     e2p_sigma_low = e2p_sigma[(e2p_sigma["noise_sigma"] == 0.05) & (e2p_sigma["colluding_frac"] == 0.15)].iloc[0]
     e2p_sigma_high = e2p_sigma[(e2p_sigma["noise_sigma"] == 0.20) & (e2p_sigma["colluding_frac"] == 0.15)].iloc[0]
+    e2p_agg = pd.read_csv(OUT_DIR / "e2_prime_aggregation_sweep_results.csv")
+    e2p_agg_points = {
+        (rule, colluding_frac): e2p_agg[
+            (e2p_agg["aggregation_rule"] == label)
+            & (e2p_agg["colluding_frac"] == colluding_frac)
+        ].iloc[0]
+        for rule, label in AGGREGATION_RULE_LABELS.items()
+        for colluding_frac in (0.15, 0.30)
+    }
+    e2p_agg_mean_015 = e2p_agg_points[(AGGREGATION_RULE_MEAN, 0.15)]
+    e2p_agg_median_015 = e2p_agg_points[(AGGREGATION_RULE_MEDIAN, 0.15)]
+    e2p_agg_trimmed_015 = e2p_agg_points[(AGGREGATION_RULE_TRIMMED_MEAN, 0.15)]
+    e2p_agg_mean_030 = e2p_agg_points[(AGGREGATION_RULE_MEAN, 0.30)]
+    e2p_agg_median_030 = e2p_agg_points[(AGGREGATION_RULE_MEDIAN, 0.30)]
+    e2p_agg_trimmed_030 = e2p_agg_points[(AGGREGATION_RULE_TRIMMED_MEAN, 0.30)]
     e2p_trojan = pd.read_csv(OUT_DIR / "e2_prime_trojan_results.csv")
     e2p_trojan_base = e2p_trojan[e2p_trojan["trojan_delay"] == 0].iloc[0]
     e2p_trojan_100 = e2p_trojan[e2p_trojan["trojan_delay"] == 100].iloc[0]
@@ -3084,6 +3397,7 @@ def write_eval_summary() -> None:
 - **E2-Adv (predecessor mechanism):** A 15% colluding bloc shifts mean relevance error from **{e2_adv_base["mean_abs_error_mean"]:.3f}** to **{e2_adv_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2_adv_point["mean_abs_error_ci95"]:.3f}** and ends with **{e2_adv_point["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2_adv_point["final_colluder_stake_share_ci95"]:.3f}** stake share.
 - **E2'-Adv (selected rules and simulation-only ambiguity):** Under draw-and-lock + graduated slashing + ambiguity abstention, a 15% colluding bloc shifts mean relevance error from **{e2p_adv_base["mean_abs_error_mean"]:.3f}** to **{e2p_adv_point["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_adv_point["mean_abs_error_ci95"]:.3f}** and ends with **{e2p_adv_point["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_adv_point["final_colluder_stake_share_ci95"]:.3f}** stake share.
 - **E2'-Adv $\\sigma$ sweep:** At $\\phi=0.15$, mean relevance error is **{e2p_sigma_low["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_sigma_low["mean_abs_error_ci95"]:.3f}** at $\\sigma_{{\\text{{honest}}}}=0.05$ versus **{e2p_sigma_high["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_sigma_high["mean_abs_error_ci95"]:.3f}** at $\\sigma_{{\\text{{honest}}}}=0.20$ (95% CI, $N=100$ seeds). Higher honest noise makes collusion harder to distinguish from legitimate disagreement.
+- **E2'-Adv aggregation rules:** At $\\phi=0.15$, mean relevance error is **{e2p_agg_mean_015["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_agg_mean_015["mean_abs_error_ci95"]:.3f}** under the weighted mean, **{e2p_agg_median_015["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_agg_median_015["mean_abs_error_ci95"]:.3f}** under the weighted median and **{e2p_agg_trimmed_015["mean_abs_error_mean"]:.3f} $\\pm$ {e2p_agg_trimmed_015["mean_abs_error_ci95"]:.3f}** under the {AGGREGATION_TRIM_SHARE:.0%} trimmed mean, and terminal colluder stake share is **{e2p_agg_mean_015["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_agg_mean_015["final_colluder_stake_share_ci95"]:.3f}**, **{e2p_agg_median_015["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_agg_median_015["final_colluder_stake_share_ci95"]:.3f}** and **{e2p_agg_trimmed_015["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_agg_trimmed_015["final_colluder_stake_share_ci95"]:.3f}**. At $\\phi=0.30$, terminal colluder stake share is **{e2p_agg_mean_030["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_agg_mean_030["final_colluder_stake_share_ci95"]:.3f}**, **{e2p_agg_median_030["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_agg_median_030["final_colluder_stake_share_ci95"]:.3f}** and **{e2p_agg_trimmed_030["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_agg_trimmed_030["final_colluder_stake_share_ci95"]:.3f}** under the same three rules (95% CI, $N={int(e2p_agg_mean_030["n_seeds"])}$ seeds).
 - **E2'-Adv Trojan:** At $\\phi=0.15$, each delay gets 200 attack rounds (total rounds = $T + 200$). Final colluder stake share at $T=0$: **{e2p_trojan_base["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_trojan_base["final_colluder_stake_share_ci95"]:.3f}**; at $T=100$: **{e2p_trojan_100["final_colluder_stake_share_mean"]:.3f} $\\pm$ {e2p_trojan_100["final_colluder_stake_share_ci95"]:.3f}** (95% CI, $N=100$ seeds). Delayed onset leaves colluders with less terminal stake than attacking immediately.
 - **E4a (prescribed-outcome reputation model):** By event round {int(e4a_point["round"])}, median honest-author reputation reaches **{e4a_point["honest_median_rep_mean"]:.2f} $\\pm$ {e4a_point["honest_median_rep_ci95"]:.2f}** (95% CI, $N={int(e4a_point["n_seeds"])}$ seeds) while median dishonest-author reputation remains at **{e4a_point["dishonest_median_rep_mean"]:.2f} $\\pm$ {e4a_point["dishonest_median_rep_ci95"]:.2f}**.
 - **E4b:** In a counterfactual reputation-weighted committee with decay $\\delta=0.01$, a random high-reputation attacker has above-median weight in **{e4b_random["above_median_rounds_mean"]:.0f} $\\pm$ {e4b_random["above_median_rounds_ci95"]:.0f}** rounds, while a $+0.15$ strategic-bias attacker has above-median weight in **{e4b_biased["above_median_rounds_mean"]:.0f} $\\pm$ {e4b_biased["above_median_rounds_ci95"]:.0f}** rounds and shifts the signal upward by an across-round mean of **{e4b_biased["mean_signal_shift_mean"]:.3f} $\\pm$ {e4b_biased["mean_signal_shift_ci95"]:.3f}**.
@@ -3184,6 +3498,7 @@ def run_full() -> None:
         run_e2_adversarial(E2AdvParams(), executor)
         run_e2_prime(E2PrimeParams(), executor)
         run_e2_prime_adversarial(E2PrimeAdvParams(), executor)
+        run_e2_prime_aggregation(E2PrimeAggregationParams(), executor)
         run_e2_prime_sigma_sweep(E2PrimeSigmaSweepParams(), executor)
         run_e2_prime_trojan(E2PrimeTrojanParams(), executor)
         run_e4b(E4bParams(), executor)
@@ -3212,6 +3527,7 @@ def run_eval_summary_only() -> None:
             OUT_DIR / "e1_adversarial_results.csv",
             OUT_DIR / "e2_adversarial_results.csv",
             OUT_DIR / "e2_prime_adversarial_results.csv",
+            OUT_DIR / "e2_prime_aggregation_sweep_results.csv",
             OUT_DIR / "e2_prime_sigma_sweep_results.csv",
             OUT_DIR / "e2_prime_trojan_results.csv",
             OUT_DIR / "e4a_author_reputation.csv",
