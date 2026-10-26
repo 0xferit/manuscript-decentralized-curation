@@ -1,6 +1,6 @@
 # Archival source evidence for the public-goods companion paper
 
-This supplement preserves selected source passages underpinning *Decentralized Curation for Public Goods: A blueprint for contestable assessment and funding*. It records the source text inspected on 25 October 2026. It is archival evidence, not a second authoritative design or evidence of a validated deployment.
+This supplement preserves selected source passages underpinning *Decentralized Curation for Public Goods: A blueprint for contestable assessment and funding*. It records the source text inspected on 25 October 2026; excerpt P14 was taken from the same source snapshot on 26 October 2026. It is archival evidence, not a second authoritative design or evidence of a validated deployment.
 
 The parent is Ferit Tunçer's *Decentralized Curation: Trustless Transformation of Information into Knowledge*, version 1.3.0, [Zenodo Digital Object Identifier (DOI) 10.5281/zenodo.23636842](https://doi.org/10.5281/zenodo.23636842). Its published source revision is `8dafde2cd6407cfb4631d70677a3fa22801a9c69`. The P excerpts below quote that published source.
 
@@ -10,7 +10,7 @@ The 256-bit Secure Hash Algorithm (SHA-256) identifies the exact complete source
 
 | Source | Role | Complete-source SHA-256 |
 | --- | --- | --- |
-| P: published parent manuscript, version 1.3.0 | Shared accuracy, jury, fee and appeal rules. `paper.qmd` at the published source revision `8dafde2cd6407cfb4631d70677a3fa22801a9c69`. | `9cb527b355bad111e6cd5956be38fa4f6a42aff849e19e5c3bc48889b7e15e6f` |
+| P: published parent manuscript, version 1.3.0 | Architectural commitments and shared accuracy, jury, fee and appeal rules. `paper.qmd` at the published source revision `8dafde2cd6407cfb4631d70677a3fa22801a9c69`. | `9cb527b355bad111e6cd5956be38fa4f6a42aff849e19e5c3bc48889b7e15e6f` |
 | R: current presentation evidence register | Author clarifications about the ongoing public-goods application, including immediate collection of earned funds. Captured from repository commit `73000c9e696ee08c91681e729d0d0927630c11de`. | `ca74354d104da4f1eaff64d23f4efa6a3038f40a9c9a8658f2782c6d731908c8` |
 
 The companion follows the author's current application decisions. The parent's generic preservation of existing payout conditions does not itself decide those conditions; the ongoing profile's immediate-claimability rule is supplied by source R. Its distinct treatment of new accrual during a pending dispute is not inferred from the right to collect already-earned funds. The earlier fixed-round application document is not a source for the ongoing profile's adopted rules.
@@ -344,6 +344,22 @@ Raw-excerpt SHA-256: `9852fd59ee087ca13d52d282bc24f0730cb384fc82c7fdaf6ce189711d
 Displayed-excerpt SHA-256: `9852fd59ee087ca13d52d282bc24f0730cb384fc82c7fdaf6ce189711d1bd520`.
 
 > Escalation is intended to discipline initial reports through the threat of appeal. Because step 7 grades every committee against the chain's terminal adjudicated score, an appeal ruling that moves the score exposes earlier reports far from it to distance-based penalties. Curators must anticipate both the initial committee and a possible appeal committee; whether this makes policy-faithful reporting a best response depends on the full reward and penalty rules, as discussed in Claim 3. Under a continuous-signal model with unbiased independent signals of uniformly bounded variance, the weighted mean concentrates around the policy-implied target as the normalized voting weights become sufficiently dispersed; a sufficient condition is that the sum of their squares tends to zero. Dependence requires additional control of covariance, and finite variance of each signal alone is insufficient. In the seat-based draft model, increasing seats alone is not sufficient: multiple seats held by one curator still map to a single revealed score. A larger appeal committee can improve precision when it adds independent signals of comparable quality and sufficiently disperses voting weight. A minority can seek correction by appealing. For an adjudicated correction, the appeal must be funded, bring additional information, and satisfy the specified outcome and settlement rules; neither successful correction nor a truthful equilibrium is guaranteed. A win by forfeiture records a procedural funding outcome; it is neither a jury finding nor evidence of consensus.
+
+## P14. Architectural commitments and minimal governance
+
+Source P, lines 179–185.
+
+Raw-excerpt SHA-256: `d95c4e489b0d349e1c8e100fdb3a979da18b6c3ae852857ecfbd887a5563d1f5`.
+
+Displayed-excerpt SHA-256: `d95c4e489b0d349e1c8e100fdb3a979da18b6c3ae852857ecfbd887a5563d1f5`.
+
+> Three architectural commitments anchor the design:
+>
+> 1. **Permissionless pools.** Any address may create a pool with a domain, a claim template, an evidence policy, and a relevance policy. If the pool is bad, interfaces and users can ignore it.
+> 2. **Immutable contracts.** Protocol changes require new deployments and cross-version aggregation, not in-place upgrades.
+> 3. **Minimal governance.** The preference ordering is: eliminating the need for governance is best; good governance is acceptable; bad governance is worse; and no governance at all (ungoverned failure modes) is worst. If a design can eliminate a governance surface, it should.
+>
+> These commitments limit discretionary control over shared protocol rules. They do not eliminate governance of pool purposes, funding, interfaces, or migration. Here, **trustless** refers to reducing dependence on a single operator through inspectable state and enforceable procedures; readers still depend on evidence producers, adjudicators, and policy choices.
 
 ## R01. Active-nomination challenges and ongoing-funding entitlement rules
 
