@@ -62,7 +62,7 @@ The parent framework supplies the decomposition and candidate mechanisms. The pu
 | Nomination template | What work is nominated, which claims are testable and which evidence is required? |
 | Attribution | How are shared work, overlapping nominations and beneficiary identity handled? |
 | Relevance rubric | What does a score mean, including its intended use as a relative weight? |
-| Accuracy process | Which violations can be challenged, who bears the burden and which arbitrator decides? |
+| Accuracy process | Which violations can be challenged, who bears the burden and which Kleros-like court decides? |
 | Participation economics | What capital, service funding, costs and penalties apply to each role? |
 | Lifecycle | When are changes permitted, when may challenges begin and when can a new assessment occur? |
 | Funding adapter | Which nominations may earn, how are weights normalized and when do entitlements arise? |
@@ -105,7 +105,7 @@ The inherited accuracy rules require the challenger to post the greater of the p
 
 The expected return still depends on detection, admissible evidence, adjudication, fees and investigation cost. A bounty can be too small to justify scrutiny; a profitable successful case can still have an unattractive expected return before investigation. Defined cashflows create an opportunity for fact-checking, not a guarantee that enough scrutiny will occur. <!-- [claim:C013] [evidence:E001,E002] -->
 
-An accuracy challenge may begin while the nomination is active, including before its first relevance assessment and during a relevance appeal. An external arbitrator decides the challenge; the relevance jury does not decide whether a factual assertion is false. The shared grounds cover factual falsification, lack of testability, violation of the declared topic scope and semantic template violations. A successful ruling closes the nomination rather than banning the person or project. A new nomination requires its own identity and deposit and does not reopen the closed nomination's entitlements. <!-- [claim:C014] [evidence:E002,E003] -->
+An accuracy challenge may begin while the nomination is active, including before its first relevance assessment and during a relevance appeal. An external arbitrator decides the challenge; the relevance jury does not decide whether a factual assertion is false. As in the parent, that arbitrator is a decentralized court reached through the `IArbitrable` interface, with Kleros v1 as the modeled provider. The design commits to a Kleros-like court, not to Kleros's implementation: an improved or patched Kleros, or a fork that redistributes the court's tokens away from concentrated holders, would also serve. The shared grounds cover factual falsification, lack of testability, violation of the declared topic scope and semantic template violations. A successful ruling closes the nomination rather than banning the person or project. A new nomination requires its own identity and deposit and does not reopen the closed nomination's entitlements. <!-- [claim:C014] [evidence:E001,E002,E003,E013] -->
 
 This design makes correction possible, not inevitable. A nomination that nobody successfully challenges has survived the process so far. That is different from independent confirmation that all its claims are true. <!-- [claim:C015] [evidence:E001,E003] -->
 
