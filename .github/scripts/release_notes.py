@@ -27,8 +27,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlencode
 
-from release_version import (MAIN_BRANCH, Bump, ReleaseLabelError, bump_from_labels, gh_api, latest_release_tag,
-                             pull_labels, release_pulls)
+from release_version import MAIN_BRANCH, Bump, ReleaseLabelError, gh_api, latest_release_tag, pull_bump, release_pulls
 
 RELEASE_NOTES_PATH = Path("outputs/release-notes.md")
 DEPOSIT_NOTES_PATH = Path("outputs/deposit-notes.html")
@@ -108,13 +107,6 @@ def _all(changes: Iterable[Change]) -> Iterator[dict]:
         yield from _all(change.stacked)
 
 
-def _changes_paper(pull: dict) -> bool:
-    try:
-        return bump_from_labels(pull_labels(pull)) is not Bump.NONE
-    except ReleaseLabelError as exc:
-        raise ReleaseLabelError(f"pull request #{pull['number']}: {exc}; label it and re-run") from exc
-
-
 def _plain_title(title: str) -> str:
     prefix = CONVENTIONAL_PREFIX.match(title)
     plain = title[prefix.end():] if prefix else title
@@ -124,7 +116,7 @@ def _plain_title(title: str) -> str:
 def deposit_notes(changes: Iterable[Change], previous_tag: str) -> str:
     items = [f'<li>{html.escape(_plain_title(pull["title"]))} '
              f'(<a href="{html.escape(pull["html_url"])}">#{pull["number"]}</a>)</li>'
-             for pull in _all(changes) if _changes_paper(pull)]
+             for pull in _all(changes) if pull_bump(pull) is not Bump.NONE]
     return "\n".join([f"<p>Changes since {previous_tag}:</p>", "<ul>", *items, "</ul>", ""])
 
 
