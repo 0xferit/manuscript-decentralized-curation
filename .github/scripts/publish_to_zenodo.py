@@ -7,7 +7,8 @@ Zenodo's default GitHub-integration deposit (which the webhook must be turned
 off for) with a clean PDF-only deposit under the existing concept DOI.
 
 Reads metadata from .zenodo.json and verifies the release manifest before
-any network request. Use --verify-only for the credential-free check and
+any network request. When the release carries deposit-notes.html, written by
+release_notes.py, its contents become the version's notes. Use --verify-only for the credential-free check and
 --write-manifest to bind a freshly rendered PDF to the checked-out commit.
 """
 
@@ -28,6 +29,7 @@ from datetime import datetime
 from http import HTTPStatus
 from pathlib import Path
 
+from release_notes import DEPOSIT_NOTES_PATH
 from release_version import TAG_PATTERN
 
 API = "https://zenodo.org/api"
@@ -123,6 +125,7 @@ def main(*, verify_only: bool = False) -> None:
         sys.exit("missing reviewed PDF, release manifest, or .zenodo.json")
     except json.JSONDecodeError as exc:
         sys.exit(f"invalid release JSON: {exc.msg} at line {exc.lineno} col {exc.colno}")
+    notes = DEPOSIT_NOTES_PATH.read_text(encoding="utf-8") if DEPOSIT_NOTES_PATH.exists() else None
     expected = release_manifest(tag, pdf_bytes)
     commit = expected["source_commit"]
     for key, value in expected.items():
@@ -225,6 +228,8 @@ def main(*, verify_only: bool = False) -> None:
         "version": version,
         "publication_date": publication_date,
     }
+    if notes is not None:
+        metadata["notes"] = notes
     _req("PUT", f"{API}/deposit/depositions/{draft_id}", token=token, body={"metadata": metadata})
     print(f"[zenodo] metadata set: version={version} date={metadata['publication_date']}")
 
