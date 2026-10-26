@@ -1,6 +1,6 @@
 # Archival source evidence for the public-goods companion paper
 
-This supplement preserves selected source passages underpinning *Decentralized Curation for Public Goods: A blueprint for contestable assessment and funding*. It records the source text inspected on 25 October 2026; excerpt P14 was taken from the same source snapshot on 26 October 2026. It is archival evidence, not a second authoritative design or evidence of a validated deployment.
+This supplement preserves selected source passages underpinning *Decentralized Curation for Public Goods: A blueprint for contestable assessment and funding*. It records the source text inspected on 25 October 2026; excerpts P14 and P15 were taken from the same source snapshot on 26 October 2026. It is archival evidence, not a second authoritative design or evidence of a validated deployment.
 
 The parent is Ferit Tunçer's *Decentralized Curation: Trustless Transformation of Information into Knowledge*, version 1.3.0, [Zenodo Digital Object Identifier (DOI) 10.5281/zenodo.23636842](https://doi.org/10.5281/zenodo.23636842). Its published source revision is `8dafde2cd6407cfb4631d70677a3fa22801a9c69`. The P excerpts below quote that published source.
 
@@ -10,7 +10,7 @@ The 256-bit Secure Hash Algorithm (SHA-256) identifies the exact complete source
 
 | Source | Role | Complete-source SHA-256 |
 | --- | --- | --- |
-| P: published parent manuscript, version 1.3.0 | Architectural commitments and shared accuracy, jury, fee and appeal rules. `paper.qmd` at the published source revision `8dafde2cd6407cfb4631d70677a3fa22801a9c69`. | `9cb527b355bad111e6cd5956be38fa4f6a42aff849e19e5c3bc48889b7e15e6f` |
+| P: published parent manuscript, version 1.3.0 | Architectural commitments, the modeled dispute-resolution provider and shared accuracy, jury, fee and appeal rules. `paper.qmd` at the published source revision `8dafde2cd6407cfb4631d70677a3fa22801a9c69`. | `9cb527b355bad111e6cd5956be38fa4f6a42aff849e19e5c3bc48889b7e15e6f` |
 | R: current presentation evidence register | Author clarifications about the ongoing public-goods application, including immediate collection of earned funds. Captured from repository commit `73000c9e696ee08c91681e729d0d0927630c11de`. | `ca74354d104da4f1eaff64d23f4efa6a3038f40a9c9a8658f2782c6d731908c8` |
 
 The companion follows the author's current application decisions. The parent's generic preservation of existing payout conditions does not itself decide those conditions; the ongoing profile's immediate-claimability rule is supplied by source R. Its distinct treatment of new accrual during a pending dispute is not inferred from the right to collect already-earned funds. The earlier fixed-round application document is not a source for the ongoing profile's adopted rules.
@@ -360,6 +360,16 @@ Displayed-excerpt SHA-256: `d95c4e489b0d349e1c8e100fdb3a979da18b6c3ae852857ecfbd
 > 3. **Minimal governance.** The preference ordering is: eliminating the need for governance is best; good governance is acceptable; bad governance is worse; and no governance at all (ungoverned failure modes) is worst. If a design can eliminate a governance surface, it should.
 >
 > These commitments limit discretionary control over shared protocol rules. They do not eliminate governance of pool purposes, funding, interfaces, or migration. Here, **trustless** refers to reducing dependence on a single operator through inspectable state and enforceable procedures; readers still depend on evidence producers, adjudicators, and policy choices.
+
+## P15. Modeled dispute-resolution provider
+
+Source P, lines 651–651.
+
+Raw-excerpt SHA-256: `d884678b6b9d7ed7a3db03204c6698fef7445e07253462ac415d656b4afbf492`.
+
+Displayed-excerpt SHA-256: `d884678b6b9d7ed7a3db03204c6698fef7445e07253462ac415d656b4afbf492`.
+
+> **Schelling-style coordination and decentralized courts.** Kleros and related systems show how stake, commit-reveal, and appeals can implement decentralized adjudication [@kleros2019shortpaper; @kleros2024yellowpaper]. The modeled Truth Post design assumes Kleros v1 as the external DDR provider, with the challenge manager implementing the `IArbitrable` interface. The mechanism is a deliberate Keynesian beauty contest: participants coordinate on expected consensus rather than on truth directly [@bergolla2022kleros; @kleros2021cryptoeconomics]. This structure is intended to aggregate information by anchoring coordination to a substantive standard: in Kleros, the legally correct answer is the intended focal point. The coherence game in this paper adopts that design intention, substituting a public curation policy for the legal standard. An arbitrary or self-referential focal point can undermine this aim; a public standard alone does not establish informed reporting or equilibrium selection [@schelling1960strategy; @rojoarjona2021focalpoints; @george2023strategic]. George and Lesaege catalogue concrete $p+\varepsilon$ attack variants on Schelling-game-based systems [@george2021ppsilon], and George separately analyzes griefing factors that arise in Schelling-based mechanisms [@george2023griefing]. Ast et al. survey the state of decentralized justice more broadly, cataloguing recurring criticisms and next-generation research directions [@ast2023decentralized]. Random drafting makes advance identification of committee members harder, but does not prevent bribes conditional on selection. Graduated slashing can increase the cost of deviations that incur a penalty; a coherent coalition may avoid that penalty. Neither feature removes the coordination risk.
 
 ## R01. Active-nomination challenges and ongoing-funding entitlement rules
 
