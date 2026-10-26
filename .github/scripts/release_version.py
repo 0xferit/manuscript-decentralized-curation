@@ -49,8 +49,19 @@ def bump_from_labels(labels: Iterable[str]) -> Bump:
     return Bump[name]
 
 
-def bump_for_pulls(label_sets: Iterable[Iterable[str]]) -> Bump:
-    return max((bump_from_labels(labels) for labels in label_sets), default=Bump.NONE)
+def pull_labels(pull: dict) -> list[str]:
+    return [label["name"] for label in pull["labels"]]
+
+
+def pull_bump(pull: dict) -> Bump:
+    try:
+        return bump_from_labels(pull_labels(pull))
+    except ReleaseLabelError as exc:
+        raise ReleaseLabelError(f"pull request #{pull['number']}: {exc}; label it and re-run") from exc
+
+
+def bump_for_pulls(pulls: Iterable[dict]) -> Bump:
+    return max((pull_bump(pull) for pull in pulls), default=Bump.NONE)
 
 
 def _version(tag: str) -> tuple[int, int, int]:
@@ -83,36 +94,43 @@ def _git(*args: str) -> list[str]:
     return subprocess.check_output(["git", *args], text=True).split()
 
 
+def gh_api(path: str):
+    return json.loads(subprocess.check_output(["gh", "api", path], text=True))
+
+
+def latest_release_tag() -> str:
+    return latest_tag(_git("tag", "--list", "v*"))
+
+
 def _merged_pull(repository: str, commit: str) -> dict | None:
-    pulls = json.loads(subprocess.check_output(
-        ["gh", "api", f"repos/{repository}/commits/{commit}/pulls"], text=True))
+    pulls = gh_api(f"repos/{repository}/commits/{commit}/pulls")
     merged = [pull for pull in pulls if pull.get("merged_at") and pull["base"]["ref"] == MAIN_BRANCH]
     return merged[0] if merged else None
 
 
-def _push_bump(repository: str, since: str) -> Bump:
+def release_pulls(repository: str, since: str, until: str = "HEAD") -> dict[int, dict]:
+    """The pull requests that merged the commits on main in since..until, keyed by number."""
     pulls = {}
-    for commit in _git("rev-list", f"{since}..HEAD"):
+    for commit in _git("rev-list", f"{since}..{until}"):
         pull = _merged_pull(repository, commit)
         if pull is None:
-            print(f"::warning::{commit} reached {MAIN_BRANCH} without a pull request; it does not affect the version")
+            print(f"::warning::{commit} reached {MAIN_BRANCH} without a pull request; "
+                  "it does not affect the version or the release notes")
             continue
-        pulls[pull["number"]] = [label["name"] for label in pull["labels"]]
-    for number, labels in pulls.items():
-        try:
-            bump_from_labels(labels)
-        except ReleaseLabelError as exc:
-            raise ReleaseLabelError(f"pull request #{number}: {exc}; label it and re-run") from exc
-    return bump_for_pulls(pulls.values())
+        pulls[pull["number"]] = pull
+    return pulls
+
+
+def _push_bump(repository: str, since: str) -> Bump:
+    return bump_for_pulls(release_pulls(repository, since).values())
 
 
 def plan() -> dict[str, str]:
     event_name = os.environ["GITHUB_EVENT_NAME"]
-    tags = _git("tag", "--list", "v*")
-    current = latest_tag(tags)
+    current = latest_release_tag()
     if event_name == "pull_request":
         event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text(encoding="utf-8"))
-        bump = bump_from_labels(label["name"] for label in event["pull_request"]["labels"])
+        bump = bump_from_labels(pull_labels(event["pull_request"]))
     elif event_name == "push":
         head_tags = [tag for tag in _git("tag", "--points-at", "HEAD", "--list", "v*") if TAG_PATTERN.fullmatch(tag)]
         if head_tags:

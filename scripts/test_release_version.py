@@ -11,6 +11,11 @@ SPEC.loader.exec_module(planner)
 Bump = planner.Bump
 
 
+def pulls(*label_sets):
+    return [{'number': number, 'labels': [{'name': label} for label in labels]}
+            for number, labels in enumerate(label_sets, start=1)]
+
+
 class NextTagTests(unittest.TestCase):
     def test_each_bump_resets_the_lower_components(self):
         self.assertEqual(planner.next_tag('v1.3.7', Bump.PATCH), 'v1.3.8')
@@ -32,13 +37,13 @@ class LabelTests(unittest.TestCase):
                 planner.bump_from_labels(labels)
 
     def test_a_push_releases_the_highest_bump_among_its_pull_requests(self):
-        pulls = [['release:patch'], ['release:none'], ['release:major'], ['release:minor']]
-        self.assertIs(planner.bump_for_pulls(pulls), Bump.MAJOR)
-        self.assertIs(planner.bump_for_pulls([['release:none'], ['release:none']]), Bump.NONE)
+        merged = pulls(['release:patch'], ['release:none'], ['release:major'], ['release:minor'])
+        self.assertIs(planner.bump_for_pulls(merged), Bump.MAJOR)
+        self.assertIs(planner.bump_for_pulls(pulls(['release:none'], ['release:none'])), Bump.NONE)
 
     def test_an_unlabelled_merged_pull_request_blocks_the_release(self):
-        with self.assertRaises(planner.ReleaseLabelError):
-            planner.bump_for_pulls([['release:major'], []])
+        with self.assertRaisesRegex(planner.ReleaseLabelError, '#2'):
+            planner.bump_for_pulls(pulls(['release:major'], []))
 
 
 if __name__ == '__main__':

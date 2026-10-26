@@ -43,6 +43,10 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           gh release download "$RELEASE_TAG" --pattern paper.pdf --pattern manifest.json --dir outputs
+          assets=$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
+          if grep -qx 'deposit-notes.html' <<< "$assets"; then
+            gh release download "$RELEASE_TAG" --pattern deposit-notes.html --dir outputs
+          fi
           echo "RELEASE_PUBLISHED_AT=$(gh release view "$RELEASE_TAG" --json publishedAt --jq .publishedAt)" >> "$GITHUB_ENV"
 
       - name: Verify release binding and publication checks
