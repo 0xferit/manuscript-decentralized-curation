@@ -266,6 +266,30 @@
         "verified_by": "",
         "verified_on": ""
       }
+    },
+    {
+      "evidence_id": "E012",
+      "source_type": "other",
+      "title": "Author decision on exceptional-intervention authority",
+      "authors": [
+        "Ferit Tunçer"
+      ],
+      "year": 2026,
+      "identifiers": {
+        "doi": "",
+        "pmid": "",
+        "pmcid": "",
+        "isbn": "",
+        "url": "https://github.com/0xferit/manuscript-decentralized-curation/issues/183"
+      },
+      "locator": "Issue 183 body, filed 25 October 2026 and unedited when opened on 26 October 2026: its Decision line states that the reference design has no exceptional-intervention authority and that the disclosure rule applies to deployments that add one",
+      "confidentiality": "public",
+      "verification": {
+        "status": "unverified",
+        "source_opened": false,
+        "verified_by": "",
+        "verified_on": ""
+      }
     }
   ]
 }
