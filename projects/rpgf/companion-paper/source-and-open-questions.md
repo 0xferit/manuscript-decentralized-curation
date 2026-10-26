@@ -33,6 +33,7 @@ Inspection date: 14 October 2026; E001 and E002 were re-inspected on 25 October 
 | E009 | [Worked example](worked-example.json). | Synthetic parameters and exact arithmetic generated for this manuscript. No observations, participant data, costs, market prices or study results are implied. |
 | E010 | Author decisions supplied in the current conversation and this revision request. | The author stated that current decisions are more up to date than project documents and requested correction of inherited stale assumptions. The revision brief confirms the ongoing profile, optional later beneficiary funding, preserved immediate claimability, nomination-scoped challenges and separate relevance procedures. This is an instruction/provenance record, not empirical evidence. |
 | E011 | Vitalik Buterin, *SchellingCoin: A Minimal-Trust Universal Data Feed*, Ethereum Foundation blog, 28 March 2014. [Blog post](https://blog.ethereum.org/2014/03/28/schellingcoin-a-minimal-trust-universal-data-feed). | Post opened. Supports attribution of the Schelling-point oracle pattern, its interquartile payout and its hedged premise that the truth is the most powerful Schelling point. It raises a small briber's attack only to judge it impractical, so it is not a source for that attack, and it is not evidence about this application's payoffs. |
+| E012 | Ferit Tunçer, [author decision on exceptional-intervention authority](https://github.com/0xferit/manuscript-decentralized-curation/issues/183), issue #183, filed 25 October 2026. | Issue opened on 26 October 2026; its body had no edits. Supports only the design's position on exceptional-intervention authority and the scope of the disclosure rule. |
 
 ### Exact source fingerprints
 
@@ -62,6 +63,7 @@ The published source revision is [8dafde2cd6407cfb4631d70677a3fa22801a9c69](http
 | Relevance | Private reports, separate service fees and utility-token coherence incentives; honesty, care and competence are distinct. Competence selection is conditional, not proved by winning a round. | E002, E003, E010 |
 | Appeals and reassessment | Fixed-target public score positions and a common appeal jury/pot; periodic reassessment is separate. Issuance, finality, refunds, prior funded contests and qualifying post-exit continuation retain their specified meanings. | E002, E003 |
 | Attribution | The research-infrastructure example credits shared work once while permitting distinct contributions by the same beneficiary. | E005 |
+| Intervention authority | The design gives no actor a power to pause, upgrade or override execution outside the published rules. A deployment that adds such an authority, or relies on an asset, registry or arbitrator that holds one, must make that authority and its duration visible. | E001, E012 |
 
 ## Documentation drift corrected in this draft
 
