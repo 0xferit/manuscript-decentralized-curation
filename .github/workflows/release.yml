@@ -30,11 +30,31 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Test release scripts
+        run: python3 -m unittest discover -s scripts -p 'test_*release*.py'
+
       - name: Plan release version
         id: plan
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 .github/scripts/release_version.py
+
+      - name: Write release notes
+        if: steps.plan.outputs.tag != '' && steps.plan.outputs.tagged != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.plan.outputs.tag }}
+        run: python3 .github/scripts/release_notes.py
+
+      - name: Upload release notes
+        if: github.event_name == 'push' && steps.plan.outputs.tag != '' && steps.plan.outputs.tagged != 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-notes-${{ steps.plan.outputs.tag }}
+          path: |
+            outputs/release-notes.md
+            outputs/deposit-notes.html
+          if-no-files-found: error
 
   render-pdf:
     needs: plan
@@ -83,14 +103,20 @@ jobs:
           name: release-${{ needs.plan.outputs.tag }}
           path: outputs
 
+      - name: Download release notes
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-notes-${{ needs.plan.outputs.tag }}
+          path: outputs
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ needs.plan.outputs.tag }}
         run: >-
-          gh release create "$RELEASE_TAG" outputs/paper.pdf outputs/manifest.json
-          --target "$GITHUB_SHA" --title "$RELEASE_TAG" --generate-notes --latest
+          gh release create "$RELEASE_TAG" outputs/paper.pdf outputs/manifest.json outputs/deposit-notes.html
+          --target "$GITHUB_SHA" --title "$RELEASE_TAG" --notes-file outputs/release-notes.md --latest
 
   zenodo:
     needs: [plan, create-release]
