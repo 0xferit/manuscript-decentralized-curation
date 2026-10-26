@@ -40,7 +40,7 @@
         "isbn": "",
         "url": "https://github.com/0xferit/manuscript-decentralized-curation/blob/8dafde2cd6407cfb4631d70677a3fa22801a9c69/paper.qmd"
       },
-      "locator": "paper.qmd at published source revision 8dafde2cd6407cfb4631d70677a3fa22801a9c69, SHA-256 9cb527b355bad111e6cd5956be38fa4f6a42aff849e19e5c3bc48889b7e15e6f; Architectural stance, Accuracy layer, Relevance layer and Public appeal funding rules; relevant passages archived in source-evidence.md",
+      "locator": "paper.qmd at published source revision 8dafde2cd6407cfb4631d70677a3fa22801a9c69, SHA-256 9cb527b355bad111e6cd5956be38fa4f6a42aff849e19e5c3bc48889b7e15e6f; Architectural stance, Accuracy layer, Relevance layer and Public appeal funding rules, and the Related Work paragraph on decentralized courts; relevant passages archived in source-evidence.md",
       "confidentiality": "public",
       "verification": {
         "status": "unverified",
@@ -283,6 +283,30 @@
         "url": "https://github.com/0xferit/manuscript-decentralized-curation/issues/183"
       },
       "locator": "Issue 183 body, filed 25 October 2026 and unedited when opened on 26 October 2026: its Decision line states that the reference design has no exceptional-intervention authority and that the disclosure rule applies to deployments that add one",
+      "confidentiality": "public",
+      "verification": {
+        "status": "unverified",
+        "source_opened": false,
+        "verified_by": "",
+        "verified_on": ""
+      }
+    },
+    {
+      "evidence_id": "E013",
+      "source_type": "other",
+      "title": "Author decision on the dispute-resolution commitment",
+      "authors": [
+        "Ferit Tunçer"
+      ],
+      "year": 2026,
+      "identifiers": {
+        "doi": "",
+        "pmid": "",
+        "pmcid": "",
+        "isbn": "",
+        "url": "https://github.com/0xferit/manuscript-decentralized-curation/issues/181#issuecomment-6404599850"
+      },
+      "locator": "Issue 181 body and the author's refining comment, both filed 25 October 2026 and unedited when inspected on 26 October 2026: the design commits to Kleros-like decentralized dispute resolution, not to Kleros's implementation; an improved or patched Kleros, or a fork that redistributes tokens away from whales, would serve",
       "confidentiality": "public",
       "verification": {
         "status": "unverified",
