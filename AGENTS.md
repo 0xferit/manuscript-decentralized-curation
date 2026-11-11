@@ -61,7 +61,7 @@ This file is the canonical agent-facing guidance for the repository. `CLAUDE.md`
 
 ### Scientific writing toolkit
 
-Project-local skill wrappers under `.claude/skills/` engrave this project's conventions (source-of-truth file map, writing constraints, design principles, 7-stage peer-review rubric) over K-Dense's [Scientific Agent Skills](https://github.com/K-Dense-AI/scientific-agent-skills), installed as personal skills. Wrappers auto-surface when their triggers match and delegate methodology to those skills while applying this project's invariants. Each wrapper's `SKILL.md` documents its own triggers and inlined rules.
+Project-local skill wrappers under `.claude/skills/` engrave this project's conventions (source-of-truth file map, writing constraints, design principles, 7-stage peer-review rubric) over K-Dense's [Scientific Agent Skills](https://github.com/K-Dense-AI/scientific-agent-skills), which this repository does not ship. Install them as personal skills, or link the ones in the table below into `.claude/skills/` and list each link in `.git/info/exclude` so it stays untracked. Wrappers auto-surface when their triggers match and delegate methodology to those skills while applying this project's invariants. Each wrapper's `SKILL.md` documents its own triggers and inlined rules.
 
 | Project wrapper | Wraps K-Dense skill |
 |---|---|
