@@ -1,8 +1,8 @@
 # Source record and author-review questions
 
-This record accompanies [the manuscript](manuscript.md). It records agent inspection, not human scientific verification. No source or claim has been marked human-verified. The author authorized publication of version 0.1.0 as a preprint on 14 October 2026 and of version 0.2.0 on 25 October 2026. Author identity and identifier are taken from the parent manuscript metadata; no affiliation, funding declaration or consent statement is inferred. Human source-verification flags remain unchanged.
+This record accompanies [the manuscript](manuscript.md). It records agent inspection, not human scientific verification. No source or claim has been marked human-verified. The author authorized publication of version 0.1.0 as a preprint on 14 October 2026, of version 0.2.0 on 25 October 2026 and of version 0.3.0 on 20 November 2026. Author identity and identifier are taken from the parent manuscript metadata; no affiliation, funding declaration or consent statement is inferred. Human source-verification flags remain unchanged.
 
-Version 0.1.0 quoted the shared mechanism rules from an unpublished working copy of the parent manuscript. The parent's version 1.3.0 publishes those rules, so version 0.2.0 cites and quotes that release instead. The version 0.1.0 source record remains at the `public-goods-v0.1.0` tag, and its publication-preparation checks remain under `publication_preparation` in [the verification record](verification-results.json). Availability notes may record later removal of working documents without changing their recorded digests or verification status.
+Version 0.1.0 quoted the shared mechanism rules from an unpublished working copy of the parent manuscript. The parent's version 1.3.0 publishes those rules, so version 0.2.0 cites and quotes that release instead. Version 0.3.0 keeps that release as its source for shared rules. It retitles the paper, states that the design is retroactive and that its intended output is a credible consensus, names what an accuracy challenge contests, cites SchellingCoin for the Schelling-point pattern, states that the design holds no exceptional-intervention authority and names the arbitrator as a Kleros-like decentralized court. Evidence records E011 to E014 and excerpts P14 and P15 support these additions. Each earlier version's source record remains at its `public-goods-v*` tag, and its publication checks remain in [the verification record](verification-results.json): under `publication_preparation` for version 0.1.0 and under `release_0_2_0` for version 0.2.0. Availability notes may record later removal of working documents without changing their recorded digests or verification status.
 
 ## Authority and scope
 
@@ -18,7 +18,7 @@ The [claim register](claims.csv) maps numbered evidence comments in the manuscri
 
 Relevant parent and presentation-register passages are preserved in [the archival evidence supplement](source-evidence.md); the full-source digests identify the versions from which they were extracted.
 
-Inspection date: 14 October 2026; E001 and E002 were re-inspected on 25 October 2026 for version 0.2.0. Local source digests identify the bytes inspected even where the working tree was uncommitted. They do not make those bytes a publicly archived release.
+Inspection date: 14 October 2026; E001 and E002 were re-inspected on 25 October 2026 for version 0.2.0. For version 0.3.0, the line ranges and digests of the fifteen parent excerpts were checked again against the published source on 20 November 2026. Local source digests identify the bytes inspected even where the working tree was uncommitted. They do not make those bytes a publicly archived release.
 
 | ID | Source and role | Inspection and boundary |
 | --- | --- | --- |

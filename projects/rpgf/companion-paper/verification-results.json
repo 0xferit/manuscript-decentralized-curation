@@ -196,5 +196,26 @@
       "pdf_sha256": "80f30c8c805715cce1b0be78707e908c48ac69e242845ff3301ccdbb0222dc0d",
       "renderer": "pandoc 3.10.1 with XeTeX (TeX Live 2025)"
     }
+  },
+  "release_0_3_0": {
+    "version": "0.3.0",
+    "author_authorized": true,
+    "date": "2026-11-20",
+    "human_source_verification_completed": false,
+    "scope": "Carries the working-revision corrections made since version 0.2.0 into a preprint version: the title and subtitle, the retroactive scope and intended output, what an accuracy challenge contests, the SchellingCoin attribution, the position on exceptional-intervention authority and the Kleros-like court. The parent stays at version 1.3.0 (DOI 10.5281/zenodo.23636842, source revision 8dafde2cd6407cfb4631d70677a3fa22801a9c69)",
+    "checks": {
+      "repository_invariants_and_tests": "pass; 72 tests",
+      "claim_hashes": "51 recomputed under the register rule; 2 changed with their edited source-record links (C004, C050)",
+      "parent_excerpts": "15 checked against the published source by line range, raw digest, displayed digest and quoted text; all match",
+      "parent_source_sha256": "9cb527b355bad111e6cd5956be38fa4f6a42aff849e19e5c3bc48889b7e15e6f",
+      "publication_metadata": "title, abstract, version and date equal the manuscript front matter and abstract",
+      "manuscript_sha256": "2b551ba8349a34aa2bca71228d57859b1b108552ef31a3f47d364270b7d23ea8",
+      "bibliography_sha256": "a3ad2077260a45ab7a229b22e9111f991b7f0c69f625c158769d88a2b1beb884",
+      "pdf": "11 A4 pages; every page visually inspected; title, author, date, parent citation and six references checked; three tables continue across a page break between rows and none splits a row",
+      "pdf_text": "differs from the version 0.2.0 PDF only by the manuscript changes since that version",
+      "pdf_links": "7 distinct targets; 4 return HTTP 200; the Miller and parent DOIs refuse a direct request with HTTP 403 and are registered with the DOI resolver; the source-record link resolves once the public-goods-v0.3.0 tag exists",
+      "pdf_sha256": "6336dcc355bd627ab13b4c99085ad171507aba6550b99b43a6f7cd9f64142e0f",
+      "renderer": "pandoc 3.10.1 with XeTeX (TinyTeX v2026.10, TeX Live 2026)"
+    }
   }
 }

@@ -1,6 +1,6 @@
 # Archival source evidence for the public-goods companion paper
 
-This supplement preserves selected source passages underpinning *Decentralized Curation for Public Goods: A blueprint for contestable assessment and funding*. It records the source text inspected on 25 October 2026; excerpts P14 and P15 were taken from the same source snapshot on 26 October 2026. It is archival evidence, not a second authoritative design or evidence of a validated deployment.
+This supplement preserves selected source passages underpinning *Decentralized Curation for Retroactive Public Goods Funding: A Blueprint for Credible Consensus*. It records the source text inspected on 25 October 2026; excerpts P14 and P15 were taken from the same source snapshot on 26 October 2026. It is archival evidence, not a second authoritative design or evidence of a validated deployment.
 
 The parent is Ferit Tunçer's *Decentralized Curation: Trustless Transformation of Information into Knowledge*, version 1.3.0, [Zenodo Digital Object Identifier (DOI) 10.5281/zenodo.23636842](https://doi.org/10.5281/zenodo.23636842). Its published source revision is `8dafde2cd6407cfb4631d70677a3fa22801a9c69`. The P excerpts below quote that published source.
 
