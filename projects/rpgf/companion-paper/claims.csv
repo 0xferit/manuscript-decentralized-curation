@@ -1,7 +1,7 @@
 claim_id,section,claim_kind,claim_text_sha256,evidence_ids,verification_status,uncertainty,analysis_intent
 C048,Abstract,factual,930d48352104345c07c8de764c6600cd978ddafda02a3638d8c9792174f3d8a9,E001;E002;E003,unverified,not_estimated,not_applicable
 C001,1. From a funding decision to a curation problem,factual,32d94b7d2bbea47c2e249043957f7d81db755a290ac18ac1868ed03dc27f9da0,E001,unverified,not_estimated,not_applicable
-C002,1. From a funding decision to a curation problem,factual,206ab5fcc3babbf90abd761fe51e31810ee134332cc02f881e4ef8509ac14742,E003;E005,unverified,not_estimated,not_applicable
+C002,1. From a funding decision to a curation problem,factual,7a6fb035519091d76c01083ef5a570c7b122936d88eaff98e503c4a89fe56f9e,E003;E005;E014,unverified,not_estimated,not_applicable
 C003,1. From a funding decision to a curation problem,factual,4ecdc4adc1b4085b987e4ec862580b4808bbe2d0afe0dcd77ecf2fcd11615df9,E001;E003,unverified,not_estimated,not_applicable
 C004,1. From a funding decision to a curation problem,factual,b4ebd7a63f5a02af491dc3c166ced82cdf72946ea0a886d845b4f60c917d2526,E001;E002;E003;E010,unverified,not_estimated,not_applicable
 C005,2. What the application must configure,factual,b2afe526b6bc75f20cb8ed218245d43e0a79c39f7a139d0e93d1d8fa9e75c254,E001;E003,unverified,not_estimated,not_applicable

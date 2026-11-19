@@ -314,6 +314,30 @@
         "verified_by": "",
         "verified_on": ""
       }
+    },
+    {
+      "evidence_id": "E014",
+      "source_type": "other",
+      "title": "Review of Optimism Retro Funding Round 1",
+      "authors": [
+        "Vitalik Buterin"
+      ],
+      "year": 2021,
+      "identifiers": {
+        "doi": "",
+        "pmid": "",
+        "pmcid": "",
+        "isbn": "",
+        "url": "https://vitalik.eth.limo/general/2021/11/16/retro1.html"
+      },
+      "locator": "Blog post of 16 November 2021: the objective of retroactive public-goods funding is to reward work already done, and Optimism ran its first round of it in October 2021 with a vote among 22 participants",
+      "confidentiality": "public",
+      "verification": {
+        "status": "unverified",
+        "source_opened": false,
+        "verified_by": "",
+        "verified_on": ""
+      }
     }
   ]
 }
