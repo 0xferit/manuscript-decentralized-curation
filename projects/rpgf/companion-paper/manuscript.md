@@ -1,6 +1,6 @@
 ---
-title: "Decentralized Curation for Public Goods"
-subtitle: "A blueprint for contestable assessment and funding"
+title: "Decentralized Curation for Retroactive Public Goods Funding"
+subtitle: "A Blueprint for Credible Consensus"
 author: "Ferit Tunçer"
 orcid: "0009-0004-1449-9348"
 date: 2026-10-25
