@@ -9,7 +9,12 @@ Companion preprint: **A Blueprint for Credible Consensus**, by Ferit Tunçer.
 - [Publication metadata](zenodo-metadata.json)
 - [Shared bibliography](../../../references.bib)
 
-The companion is a separate publication that cites the parent preprint. The repository’s parent-paper Zenodo uploader must not be used for this paper because it creates a new version of the parent record.
+The companion is a separate publication that cites the parent preprint and has its own Zenodo concept record. To deposit a version after its source merges:
+
+1. Tag the merged commit `public-goods-vX.Y.Z`. The verification record at that commit holds the reviewed PDF's SHA-256 as `release_X_Y_Z.checks.pdf_sha256`.
+2. Publish a GitHub pre-release of the tag with the reviewed PDF attached as `decentralized-curation-public-goods-vX.Y.Z.pdf`. It must be a pre-release, because every other published release starts the parent's deposit.
+3. Run the [Zenodo workflow](../../../.github/workflows/publish-zenodo.yml) on `main` with that tag. It verifies the release, builds an unpublished draft and prints it.
+4. Check the draft, then run the workflow again with the draft's ID as `publish_draft`.
 
 The website renders the current source. Each `public-goods-v*` tag preserves the source of a deposited preprint version, and the verification record keeps each version's publication checks. Corrections made after a release appear on the website before the next preprint version.
 
