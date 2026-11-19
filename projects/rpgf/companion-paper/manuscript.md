@@ -3,8 +3,8 @@ title: "Decentralized Curation for Retroactive Public Goods Funding"
 subtitle: "A Blueprint for Credible Consensus"
 author: "Ferit Tunçer"
 orcid: "0009-0004-1449-9348"
-date: 2026-10-25
-version: 0.2.0
+date: 2026-11-20
+version: 0.3.0
 bibliography: ../../../references.bib
 lang: en
 status: preprint
@@ -48,7 +48,7 @@ The contribution is a blueprint connecting these operations while keeping their 
 
 ### Scope and status
 
-This paper develops the author's current ongoing-funding design. The parent paper, version 1.3.0, establishes the framework's research context and supplies the shared accuracy, jury and appeal rules. This is a design specification and evaluation agenda, not evidence that historical contracts implement every rule. Detailed provenance and remaining implementation questions are in [the source record](https://github.com/0xferit/manuscript-decentralized-curation/blob/public-goods-v0.2.0/projects/rpgf/companion-paper/source-and-open-questions.md). <!-- [claim:C004] [evidence:E001,E002,E003,E010] -->
+This paper develops the author's current ongoing-funding design. The parent paper, version 1.3.0, establishes the framework's research context and supplies the shared accuracy, jury and appeal rules. This is a design specification and evaluation agenda, not evidence that historical contracts implement every rule. Detailed provenance and remaining implementation questions are in [the source record](https://github.com/0xferit/manuscript-decentralized-curation/blob/public-goods-v0.3.0/projects/rpgf/companion-paper/source-and-open-questions.md). <!-- [claim:C004] [evidence:E001,E002,E003,E010] -->
 
 ## 2. What the application must configure
 
@@ -238,7 +238,7 @@ Scientific Agent Skills informed the drafting and evidence workflow [@kassis2026
 
 ## References
 
-The parent paper establishes the framework context [@tuncer2026decentralizedcuration]. Kleros and peer prediction supply related mechanism literature [@kleros2019shortpaper; @miller2005peerprediction]. Source identifiers and inspection scope appear in the [source record](https://github.com/0xferit/manuscript-decentralized-curation/blob/public-goods-v0.2.0/projects/rpgf/companion-paper/source-and-open-questions.md). <!-- [claim:C050] [evidence:E001,E006,E007] -->
+The parent paper establishes the framework context [@tuncer2026decentralizedcuration]. Kleros and peer prediction supply related mechanism literature [@kleros2019shortpaper; @miller2005peerprediction]. Source identifiers and inspection scope appear in the [source record](https://github.com/0xferit/manuscript-decentralized-curation/blob/public-goods-v0.3.0/projects/rpgf/companion-paper/source-and-open-questions.md). <!-- [claim:C050] [evidence:E001,E006,E007] -->
 
 ::: {#refs}
 :::
