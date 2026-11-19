@@ -1,6 +1,6 @@
-# Decentralized Curation for Public Goods
+# Decentralized Curation for Retroactive Public Goods Funding
 
-Companion preprint: **A blueprint for contestable assessment and funding**, by Ferit Tunçer.
+Companion preprint: **A Blueprint for Credible Consensus**, by Ferit Tunçer.
 
 - [Manuscript source](manuscript.md)
 - [Source record and remaining questions](source-and-open-questions.md)

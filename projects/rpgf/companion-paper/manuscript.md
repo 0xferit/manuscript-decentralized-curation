@@ -1,6 +1,6 @@
 ---
-title: "Decentralized Curation for Public Goods"
-subtitle: "A blueprint for contestable assessment and funding"
+title: "Decentralized Curation for Retroactive Public Goods Funding"
+subtitle: "A Blueprint for Credible Consensus"
 author: "Ferit Tunçer"
 orcid: "0009-0004-1449-9348"
 date: 2026-10-25
@@ -28,7 +28,7 @@ header-includes:
 
 ## Abstract
 
-Public-goods funding requires judgments about what was contributed, which claims are credible and how contributions serve a stated goal. Decentralized Curation proposes using private incentives to support useful information production, assessment and correction. This paper develops an application blueprint in which nominators publish bonded nominations, challengers can earn rewards for establishing false claims or other specified violations, and paid jurors assess relevance under a public policy. It separates factual contestability from policy-relative judgment, and both from the later use of assessment in funding. The main profile supports ongoing curation: relative weights can exist before a beneficiary budget arrives, while subsequent funding follows eligible weights and preserves amounts already earned. We distinguish honesty, care and competence, explain the intended role of private reports and coherence incentives, and identify the conditions under which repeated competition could select for informed judgment. A worked example connects nomination, assessment, appeal, reassessment and funding. The contribution is an application architecture and evaluation agenda. Truthful best responses, reliable competence selection, affordable correction and improved public outcomes remain questions for analysis and testing. <!-- [claim:C048] [evidence:E001,E002,E003] -->
+Public-goods funding requires judgments about what was contributed, which claims are credible and how contributions serve a stated goal. Decentralized Curation proposes using private incentives to support useful information production, assessment and correction. This paper develops an application blueprint in which nominators publish bonded nominations, challengers can earn rewards for establishing false claims or other specified violations, and paid jurors assess relevance under a public policy. The intended output is a credible consensus: relative weights that a funder can rely on because the claims behind them are open to challenge and the relevance scores are open to appeal. It separates factual contestability from policy-relative judgment, and both from the later use of assessment in funding. The main profile supports ongoing curation: relative weights can exist before a beneficiary budget arrives, while subsequent funding follows eligible weights and preserves amounts already earned. We distinguish honesty, care and competence, explain the intended role of private reports and coherence incentives, and identify the conditions under which repeated competition could select for informed judgment. A worked example connects nomination, assessment, appeal, reassessment and funding. The contribution is an application architecture and evaluation agenda. Truthful best responses, reliable competence selection, affordable correction and improved public outcomes remain questions for analysis and testing. <!-- [claim:C048] [evidence:E001,E002,E003] -->
 
 ## 1. From a funding decision to a curation problem
 
@@ -36,7 +36,7 @@ A public-goods funder needs answers to different questions. Did the nominated co
 
 The parent paper, *Decentralized Curation: Trustless Transformation of Information into Knowledge*, proposes a framework for identifying an information problem, selecting the relevant dimensions of quality and designing incentives for each dimension [@tuncer2026decentralizedcuration]. Its central ambition is to make useful assessment and correction privately worthwhile. Public-goods funding is an application of that framework, not its definition. <!-- [claim:C001] [evidence:E001] -->
 
-This paper concentrates on openly usable contributions with diffuse beneficiaries, such as research software, shared standards and maintained infrastructure. Its reference question is how to sustain a credible, revisable assessment of completed and maintained work. Funding can then use that assessment. Whether another grant would produce the greatest additional benefit is a different question and requires a policy and evidence designed for that purpose. <!-- [claim:C002] [evidence:E003,E005] -->
+This paper concentrates on openly usable contributions with diffuse beneficiaries, such as research software, shared standards and maintained infrastructure. Its reference question is how to sustain a credible, revisable assessment of completed and maintained work. In this sense the design is retroactive: it assesses work that has been done, not work that is proposed. It differs from round-based retroactive funding [@buterin2021retroreview] in that assessment is ongoing: weights can be revised, and they can exist before a budget does. Funding can then use that assessment. Whether another grant would produce the greatest additional benefit is a different question and requires a policy and evidence designed for that purpose. <!-- [claim:C002] [evidence:E003,E005,E014] -->
 
 The proposed application separates three operations:
 
