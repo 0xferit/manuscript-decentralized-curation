@@ -20,6 +20,7 @@ sys.path.insert(0, str(SCRIPTS))
 SCRIPT = SCRIPTS / 'publish_to_zenodo.py'
 SPEC = importlib.util.spec_from_file_location('zenodo_release', SCRIPT)
 publisher = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = publisher
 SPEC.loader.exec_module(publisher)
 
 
@@ -36,12 +37,7 @@ class ZenodoReleaseTests(unittest.TestCase):
         subprocess.run(['git', 'init', '-q'], check=True)
         Path('paper.qmd').write_text('Reviewed manuscript\n')
         subprocess.run(['git', 'add', 'paper.qmd'], check=True)
-        tree = subprocess.check_output(['git', 'write-tree'], text=True).strip()
-        self.commit = subprocess.check_output(
-            ['git', '-c', 'user.name=Release Test', '-c', 'user.email=test@example.org',
-             'commit-tree', tree], input='test fixture\n', text=True,
-        ).strip()
-        subprocess.run(['git', 'update-ref', 'HEAD', self.commit], check=True)
+        self.commit = self.commit_index()
         Path('outputs').mkdir()
         self.pdf = b'%PDF-1.7\nreviewed bytes\n%%EOF\n'
         Path('outputs/paper.pdf').write_bytes(self.pdf)
@@ -66,6 +62,16 @@ class ZenodoReleaseTests(unittest.TestCase):
         self.enterContext(patch('time.sleep', side_effect=self.sleeps.append))
         self.enterContext(contextlib.redirect_stdout(io.StringIO()))
 
+    def commit_index(self, *parents):
+        tree = subprocess.check_output(['git', 'write-tree'], text=True).strip()
+        parent_args = [arg for parent in parents for arg in ('-p', parent)]
+        commit = subprocess.check_output(
+            ['git', '-c', 'user.name=Release Test', '-c', 'user.email=test@example.org',
+             'commit-tree', tree, *parent_args], input='test fixture\n', text=True,
+        ).strip()
+        subprocess.run(['git', 'update-ref', 'HEAD', commit], check=True)
+        return commit
+
     def write_manifest(self):
         Path('outputs/manifest.json').write_text(json.dumps(self.manifest))
 
@@ -80,7 +86,7 @@ class ZenodoReleaseTests(unittest.TestCase):
 
     def latest(self, version='1.0.4', files=None):
         return {'hits': {'hits': [{
-            'id': 42, 'conceptrecid': publisher.CONCEPT_RECID,
+            'id': 42, 'conceptrecid': publisher.PARENT_CONCEPT_RECID,
             'metadata': {'version': version, 'title': 'Reviewed title',
                                  'description': 'Reviewed description',
                                  'creators': [{'name': 'Author'}], 'keywords': ['curation']},
@@ -91,14 +97,14 @@ class ZenodoReleaseTests(unittest.TestCase):
         return [
             self.latest(), [],
             {'links': {'latest_draft': publisher.API + '/deposit/depositions/43'}},
-            {'id': 43, 'conceptrecid': publisher.CONCEPT_RECID, 'submitted': False,
+            {'id': 43, 'conceptrecid': publisher.PARENT_CONCEPT_RECID, 'submitted': False,
              'links': {'bucket': publisher.API + '/files/bucket'},
              'files': [{'filename': 'old.pdf', 'links': {'self': publisher.API + '/old-file'}}]},
             *deletion,
             {'checksum': checksum or 'md5:' + hashlib.md5(self.pdf).hexdigest(), 'size': len(self.pdf)},
             {'files': [{'filename': name} for name in draft_files]},
             {}, {'doi': '10.5281/zenodo.43', 'links': {'html': 'https://zenodo.org/records/43'},
-                 'submitted': True, 'conceptrecid': publisher.CONCEPT_RECID,
+                 'submitted': True, 'conceptrecid': publisher.PARENT_CONCEPT_RECID,
                  'metadata': {'version': '1.1.0'}},
         ]
 
@@ -182,7 +188,7 @@ class ZenodoReleaseTests(unittest.TestCase):
             publisher.main()
 
     def test_existing_human_draft_is_untouched(self):
-        self.queue = [self.latest(), [{'id': 99, 'conceptrecid': publisher.CONCEPT_RECID,
+        self.queue = [self.latest(), [{'id': 99, 'conceptrecid': publisher.PARENT_CONCEPT_RECID,
                                       'submitted': False}]]
         with self.assertRaises(SystemExit):
             publisher.main()
@@ -190,8 +196,8 @@ class ZenodoReleaseTests(unittest.TestCase):
 
     def test_checks_later_deposition_pages_before_creating_draft(self):
         self.queue = [self.latest(),
-                      [{'id': 42, 'conceptrecid': publisher.CONCEPT_RECID, 'submitted': True}],
-                      [{'id': 99, 'conceptrecid': publisher.CONCEPT_RECID, 'submitted': False}]]
+                      [{'id': 42, 'conceptrecid': publisher.PARENT_CONCEPT_RECID, 'submitted': True}],
+                      [{'id': 99, 'conceptrecid': publisher.PARENT_CONCEPT_RECID, 'submitted': False}]]
         with self.assertRaises(SystemExit):
             publisher.main()
         self.assertEqual(len(self.requests), 3)
@@ -290,6 +296,124 @@ class ZenodoReleaseTests(unittest.TestCase):
             publisher.main()
         self.assertEqual(len(self.requests), len(publisher.RETRY_DELAYS_SECONDS) + 1)
         self.assertEqual(self.sleeps, list(publisher.RETRY_DELAYS_SECONDS))
+
+    COMPANION_TAG = 'public-goods-v0.3.0'
+
+    def companion_release(self, *, recorded_pdf=None, metadata_version='0.3.0'):
+        sources = Path('projects/rpgf/companion-paper')
+        sources.mkdir(parents=True, exist_ok=True)
+        self.companion_metadata = {
+            'upload_type': 'publication', 'publication_type': 'preprint', 'title': 'Companion title',
+            'creators': [{'name': 'Author', 'orcid': '0009-0004-1449-9348'}],
+            'description': 'Companion description', 'access_right': 'open', 'license': 'CC-BY-4.0',
+            'keywords': ['public goods'], 'version': metadata_version, 'publication_date': '2026-11-20',
+            'related_identifiers': [{'relation': 'cites', 'identifier': '10.5281/zenodo.23636842',
+                                     'scheme': 'doi'}],
+        }
+        (sources / 'zenodo-metadata.json').write_text(json.dumps(self.companion_metadata))
+        recorded = hashlib.sha256(recorded_pdf or self.pdf).hexdigest()
+        (sources / 'verification-results.json').write_text(
+            json.dumps({'release_0_3_0': {'checks': {'pdf_sha256': recorded}}}))
+        self.companion_pdf = Path('outputs/decentralized-curation-public-goods-v0.3.0.pdf')
+        self.companion_pdf.write_bytes(self.pdf)
+        subprocess.run(['git', 'add', str(sources)], check=True)
+        commit = self.commit_index('HEAD')
+        subprocess.run(['git', 'update-ref', f'refs/tags/{self.COMPANION_TAG}', commit], check=True)
+        os.environ['RELEASE_TAG'] = self.COMPANION_TAG
+
+    def companion_draft(self):
+        return {
+            'id': 77, 'conceptrecid': publisher.COMPANION_CONCEPT_RECID, 'submitted': False,
+            'files': [{'filename': self.companion_pdf.name, 'checksum': hashlib.md5(self.pdf).hexdigest()}],
+            'metadata': {'title': 'Companion title', 'version': '0.3.0', 'publication_date': '2026-11-20',
+                         'prereserve_doi': {'doi': '10.5281/zenodo.77'}},
+            'links': {'html': 'https://zenodo.org/deposit/77'},
+        }
+
+    def companion_draft_queue(self):
+        return [
+            {'hits': {'hits': [{'id': 70, 'conceptrecid': publisher.COMPANION_CONCEPT_RECID,
+                                'metadata': {'version': '0.2.0'}, 'files': []}]}},
+            [],
+            {'links': {'latest_draft': publisher.API + '/deposit/depositions/77'}},
+            {'id': 77, 'conceptrecid': publisher.COMPANION_CONCEPT_RECID, 'submitted': False,
+             'links': {'bucket': publisher.API + '/files/companion-bucket'},
+             'files': [{'filename': 'decentralized-curation-public-goods-v0.2.0.pdf',
+                        'links': {'self': publisher.API + '/old-file'}}]},
+            {},
+            {'checksum': 'md5:' + hashlib.md5(self.pdf).hexdigest(), 'size': len(self.pdf)},
+            {'files': [{'filename': self.companion_pdf.name}]},
+            {},
+            self.companion_draft(),
+        ]
+
+    def test_companion_draft_carries_its_tagged_metadata_and_never_the_parent_record(self):
+        self.companion_release()
+        self.queue = self.companion_draft_queue()
+        publisher.main(publisher.Paper.COMPANION, draft_only=True)
+        self.assertEqual(self.queue, [])
+        self.assertIn(f'conceptrecid:{publisher.COMPANION_CONCEPT_RECID}', self.requests[0].full_url)
+        self.assertFalse(any(publisher.PARENT_CONCEPT_RECID in r.full_url for r in self.requests))
+        upload = next(r for r in self.requests if r.full_url.endswith('/' + self.companion_pdf.name))
+        self.assertEqual(upload.data, self.pdf)
+        metadata_update = next(r for r in self.requests
+                               if r.method == 'PUT' and r.full_url.endswith('/deposit/depositions/77'))
+        self.assertEqual(json.loads(metadata_update.data)['metadata'], self.companion_metadata)
+        self.assertFalse(any(r.full_url.endswith('/actions/publish') for r in self.requests))
+
+    def test_companion_release_unlike_its_tagged_record_fails_before_network(self):
+        cases = {
+            'records': {'recorded_pdf': b'%PDF-1.7\nanother render\n%%EOF\n'},
+            'describes version 0.2.0': {'metadata_version': '0.2.0'},
+        }
+        for reason, fixture in cases.items():
+            with self.subTest(reason):
+                self.companion_release(**fixture)
+                with self.assertRaisesRegex(SystemExit, reason):
+                    publisher.main(publisher.Paper.COMPANION, draft_only=True)
+        with self.subTest('checkout past the tag'):
+            self.companion_release()
+            self.commit_index('HEAD')
+            with self.assertRaisesRegex(SystemExit, f'not at {self.COMPANION_TAG}'):
+                publisher.main(publisher.Paper.COMPANION, draft_only=True)
+        self.assertEqual(self.requests, [])
+
+    def test_publish_draft_refuses_a_draft_unlike_the_release(self):
+        self.companion_release()
+        draft = self.companion_draft()
+        variants = {
+            'another file': {'files': [*draft['files'], {'filename': 'old.pdf', 'checksum': '0' * 32}]},
+            'other bytes': {'files': [{'filename': self.companion_pdf.name, 'checksum': 'f' * 32}]},
+            'other version': {'metadata': draft['metadata'] | {'version': '0.2.0'}},
+            'other title': {'metadata': draft['metadata'] | {'title': 'Previous title'}},
+            'other concept': {'conceptrecid': publisher.PARENT_CONCEPT_RECID},
+            'already published': {'submitted': True},
+        }
+        for name, change in variants.items():
+            with self.subTest(name):
+                self.queue = [draft | change]
+                with self.assertRaisesRegex(SystemExit, 'differs from the reviewed release'):
+                    publisher.main(publisher.Paper.COMPANION, publish_draft=77)
+        self.assertTrue(all(r.method == 'GET' for r in self.requests))
+
+    def test_publish_draft_publishes_the_confirmed_draft(self):
+        self.companion_release()
+        self.queue = [self.companion_draft(),
+                      {'submitted': True, 'conceptrecid': publisher.COMPANION_CONCEPT_RECID,
+                       'doi': '10.5281/zenodo.77', 'metadata': {'version': '0.3.0'},
+                       'links': {'html': 'https://zenodo.org/records/77'}}]
+        publisher.main(publisher.Paper.COMPANION, publish_draft=77)
+        self.assertEqual([(r.method, r.full_url) for r in self.requests], [
+            ('GET', publisher.API + '/deposit/depositions/77'),
+            ('POST', publisher.API + '/deposit/depositions/77/actions/publish'),
+        ])
+
+    def test_command_line_verifies_a_companion_release(self):
+        self.companion_release()
+        result = subprocess.run([sys.executable, str(SCRIPT), '--paper', 'companion', '--verify-only'],
+                                capture_output=True, text=True, env=os.environ | {'ZENODO_TOKEN': ''})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(f'verified {self.COMPANION_TAG}', result.stdout)
 
 
 if __name__ == '__main__':
