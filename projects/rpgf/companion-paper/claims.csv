@@ -1,9 +1,9 @@
 claim_id,section,claim_kind,claim_text_sha256,evidence_ids,verification_status,uncertainty,analysis_intent
-C048,Abstract,factual,930d48352104345c07c8de764c6600cd978ddafda02a3638d8c9792174f3d8a9,E001;E002;E003,unverified,not_estimated,not_applicable
+C048,Abstract,factual,c66a1ba95e179cd10aae81a15e233f7a2cd950c0b3f7d129c1b169bb1863aa05,E001;E002;E003,unverified,not_estimated,not_applicable
 C001,1. From a funding decision to a curation problem,factual,32d94b7d2bbea47c2e249043957f7d81db755a290ac18ac1868ed03dc27f9da0,E001,unverified,not_estimated,not_applicable
-C002,1. From a funding decision to a curation problem,factual,206ab5fcc3babbf90abd761fe51e31810ee134332cc02f881e4ef8509ac14742,E003;E005,unverified,not_estimated,not_applicable
+C002,1. From a funding decision to a curation problem,factual,7a6fb035519091d76c01083ef5a570c7b122936d88eaff98e503c4a89fe56f9e,E003;E005;E014,unverified,not_estimated,not_applicable
 C003,1. From a funding decision to a curation problem,factual,4ecdc4adc1b4085b987e4ec862580b4808bbe2d0afe0dcd77ecf2fcd11615df9,E001;E003,unverified,not_estimated,not_applicable
-C004,1. From a funding decision to a curation problem,factual,b4ebd7a63f5a02af491dc3c166ced82cdf72946ea0a886d845b4f60c917d2526,E001;E002;E003;E010,unverified,not_estimated,not_applicable
+C004,1. From a funding decision to a curation problem,factual,8dbf03c47e404a3d82a507eb090e3fd2cc38e2c3b60b75307904ce97eeb4f4bc,E001;E002;E003;E010,unverified,not_estimated,not_applicable
 C005,2. What the application must configure,factual,b2afe526b6bc75f20cb8ed218245d43e0a79c39f7a139d0e93d1d8fa9e75c254,E001;E003,unverified,not_estimated,not_applicable
 C006,2. What the application must configure,factual,27856e0ecf21454a4d4e877f134af9678519efcda0a8e16ea70c4ce1eb38e545,E001;E002;E003;E005;E010,unverified,not_estimated,not_applicable
 C007,2. What the application must configure,factual,b6c0ef0175a9d0bfb62b332a5130e3630096c289d3537d9ca552ac0a4f8ecf35,E005,unverified,not_estimated,not_applicable
@@ -49,4 +49,4 @@ C042,8. Governance and operational boundaries,factual,a5aa9878f8c1533c33501140e9
 C043,9. Failure modes and evaluation priorities,method,92d85e7d95b76082b3409a76627e0030273cd4d9ea1e445e2c177f0a53419c5f,E001;E002;E003,unverified,not_estimated,not_applicable
 C044,9. Failure modes and evaluation priorities,method,6202e3f8776c13d18a0a3d0397bafc941b48c0e520b602a7762ab43d4f2ea7cb,E001;E002,unverified,not_estimated,not_applicable
 C045,Preparation note,factual,e1cc858d137ff08d4c6fb07dfe320078488df9c9f0ac237e72215f18a4b6f452,E008,unverified,not_estimated,not_applicable
-C050,References,factual,e349a14883ed487ace70ca2049cebcc3c0f42e97a6d9cccc7612dc786693a7c4,E001;E006;E007,unverified,not_estimated,not_applicable
+C050,References,factual,5d1678e5cbd5558f9fe4d6cf42e81f44de968670589f363d0961c91e6aa90ecc,E001;E006;E007,unverified,not_estimated,not_applicable

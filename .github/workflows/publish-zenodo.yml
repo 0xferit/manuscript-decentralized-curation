@@ -12,13 +12,29 @@ on:
     secrets:
       ZENODO_TOKEN:
         required: true
+  workflow_dispatch:
+    inputs:
+      paper:
+        description: Paper whose release to deposit (companion or parent).
+        required: true
+        type: string
+        default: companion
+      tag:
+        description: Release tag whose attached PDF to deposit.
+        required: true
+        type: string
+      publish_draft:
+        description: ID of a reviewed draft to publish; leave empty to build a draft and stop.
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
 
 jobs:
   deposit-pdf:
-    if: ${{ github.event_name != 'release' || !github.event.release.prerelease }}
+    if: ${{ github.event_name != 'workflow_dispatch' && (github.event_name != 'release' || !github.event.release.prerelease) }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
@@ -58,3 +74,61 @@ jobs:
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
         run: python3 .github/scripts/publish_to_zenodo.py
+
+  deposit-reviewed-draft:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: zenodo-publication
+      cancel-in-progress: false
+    env:
+      PAPER: ${{ inputs.paper }}
+      RELEASE_TAG: ${{ inputs.tag }}
+      PUBLISH_DRAFT: ${{ inputs.publish_draft }}
+    steps:
+      - name: Checkout the uploader from main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: uploader
+          persist-credentials: false
+
+      - name: Checkout the release sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          path: release
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require a release from main
+        working-directory: release
+        run: git merge-base --is-ancestor HEAD origin/main
+
+      - name: Download release assets
+        working-directory: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release download "$RELEASE_TAG" --dir outputs
+          echo "RELEASE_PUBLISHED_AT=$(gh release view "$RELEASE_TAG" --json publishedAt --jq .publishedAt)" >> "$GITHUB_ENV"
+
+      - name: Test the uploader
+        working-directory: uploader
+        run: python3 -m unittest discover -s scripts -p 'test_*release*.py'
+
+      - name: Verify release binding and publication checks
+        working-directory: release
+        run: python3 ../uploader/.github/scripts/publish_to_zenodo.py --paper "$PAPER" --verify-only
+
+      - name: Build the draft, or publish the reviewed one
+        working-directory: release
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+        run: |
+          if [ -n "$PUBLISH_DRAFT" ]; then
+            python3 ../uploader/.github/scripts/publish_to_zenodo.py --paper "$PAPER" --publish-draft "$PUBLISH_DRAFT"
+          else
+            python3 ../uploader/.github/scripts/publish_to_zenodo.py --paper "$PAPER" --draft-only
+          fi

@@ -6,7 +6,7 @@ resource-path: [".", "../../projects/rpgf/companion-paper"]
 ---
 
 ::: {.callout-note appearance="minimal"}
-[Working source and evidence records](https://github.com/0xferit/manuscript-decentralized-curation/tree/main/projects/rpgf/companion-paper) · [Published preprint source snapshot](https://github.com/0xferit/manuscript-decentralized-curation/tree/public-goods-v0.1.0/projects/rpgf/companion-paper)
+[Working source and evidence records](https://github.com/0xferit/manuscript-decentralized-curation/tree/main/projects/rpgf/companion-paper) · [Published preprint source snapshot](https://github.com/0xferit/manuscript-decentralized-curation/tree/public-goods-v0.3.0/projects/rpgf/companion-paper)
 :::
 
 {{< include ../../projects/rpgf/companion-paper/manuscript.md >}}
